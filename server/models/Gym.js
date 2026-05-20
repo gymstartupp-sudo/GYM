@@ -26,7 +26,8 @@ const gymSchema = new mongoose.Schema({
     logo: String,
     addressOnBill: { type: String, maxlength: 25 },
     regards: { type: String, maxlength: 20 },
-    greetingText: { type: String, maxlength: 20 }
+    greetingText: { type: String, maxlength: 20 },
+    invoiceSupportEmail: { type: String, trim: true }
   },
   reminderSettings: {
     whatsappNumber: String,

@@ -37,7 +37,7 @@ exports.registerGymOwner = async (req, res, next) => {
       gymIdPrefix, gymName, gst, tagline, address, location, gymEmail, gymContact, socialMediaLinks, gymType, operatingDays, operatingHours, password,
       name, mobileNo, mailId, role = 'Owner',
       whatsappNumber, gmail, phoneNumber,
-      billingIdPrefix, helpContact, addressOnBill, regards, greetingText
+      billingIdPrefix, helpContact, addressOnBill, regards, greetingText, invoiceSupportEmail
     } = req.body;
 
     const gymExists = await Gym.findOne({ gymEmail });
@@ -67,7 +67,8 @@ exports.registerGymOwner = async (req, res, next) => {
         logo: buildLogoPath(req.file),
         addressOnBill,
         regards,
-        greetingText
+        greetingText,
+        invoiceSupportEmail: invoiceSupportEmail || ''
       },
       reminderSettings: { whatsappNumber, gmail, phoneNumber }
     });
