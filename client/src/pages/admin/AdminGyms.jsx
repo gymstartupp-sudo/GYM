@@ -4,11 +4,28 @@ import { toast } from 'react-toastify';
 import { AdminSidebar } from './AdminDashboard';
 import Button from '../../components/Button';
 import { useNavigate } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 
 const AdminGyms = () => {
     const [gyms, setGyms] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+
+    const [isMobile, setIsMobile] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 1024;
+            setIsMobile(mobile);
+            if (!mobile) {
+                setIsSidebarOpen(false);
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const fetchGyms = async () => {
         try {
@@ -35,13 +52,37 @@ const AdminGyms = () => {
     };
 
     return (
-        <div className="flex bg-dark h-screen overflow-hidden">
-            <AdminSidebar />
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
-                <h1 className="text-3xl font-bold text-white mb-8 tracking-tight">All Vendor Gyms</h1>
+        <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
+            {/* MOBILE HEADER BAR */}
+            {isMobile && (
+                <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <span className="text-purple-500 font-bold text-base tracking-tight">Super Admin</span>
+                    </div>
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="p-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
+                    >
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </header>
+            )}
 
-                <div className="bg-card rounded-xl border border-gray-800 overflow-hidden shadow-lg">
-                    <table className="w-full text-left border-collapse">
+            {/* MOBILE DRAWER BACKDROP */}
+            {isMobile && isSidebarOpen && (
+                <div 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
+                />
+            )}
+
+            <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
+            
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-8 tracking-tight">All Vendor Gyms</h1>
+
+                <div className="bg-card rounded-xl border border-gray-800 overflow-x-auto shadow-lg">
+                    <table className="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr className="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-sm tracking-wider uppercase">
                                 <th className="p-4 font-medium">Gym Details</th>

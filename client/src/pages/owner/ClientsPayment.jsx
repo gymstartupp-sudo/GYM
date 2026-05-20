@@ -151,20 +151,20 @@ const Transactions = () => {
 
     return (
         <div className="flex bg-dark h-screen overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
-                <div className="flex justify-between items-center mb-8">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">Clients Payment</h1>
-                        <p className="text-gray-400 mt-1">Manage and track all member transactions.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Clients Payment</h1>
+                        <p className="text-gray-400 mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
                     </div>
-                    <Button onClick={() => setShowModal(true)} className="flex items-center gap-2">
+                    <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
                         <Plus size={18} /> Record Payment
                     </Button>
                 </div>
 
                 <div className="bg-gray-900/40 rounded-2xl border border-gray-800 overflow-hidden shadow-2xl backdrop-blur-sm">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse whitespace-nowrap">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
                             <thead>
                                 <tr className="bg-gray-800/30 border-b border-gray-800 text-gray-400 text-[11px] font-black tracking-widest uppercase">
                                     <th className="p-5">Receipt Info</th>

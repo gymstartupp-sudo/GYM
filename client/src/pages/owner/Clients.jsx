@@ -185,15 +185,15 @@ const Clients = () => {
   return (
     <div className="flex bg-dark h-screen overflow-hidden">
       <></>
-      <div className="flex-1 overflow-y-auto p-8 pt-10">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
 
         {/* ── Page Header ── */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Clients</h1>
-            <p className="text-gray-400 mt-1">Manage and monitor all your gym members.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Clients</h1>
+            <p className="text-gray-400 mt-1 text-sm md:text-base">Manage and monitor all your gym members.</p>
           </div>
-          <Button onClick={() => setShowAddModal(true)} className="gap-2">
+          <Button onClick={() => setShowAddModal(true)} className="gap-2 w-full sm:w-auto justify-center">
             <Plus size={18} /> Add Client
           </Button>
         </div>

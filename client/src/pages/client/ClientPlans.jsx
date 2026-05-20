@@ -2,30 +2,37 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Home, List, Eye, X } from 'lucide-react';
+import { LogOut, Home, List, Eye, X, Menu } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
 
 // Re-usable sidebar for client pages
-const ClientSidebar = () => {
+const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
     const { logout, user } = useAuth();
     const navigate = useNavigate();
     return (
-        <div className="h-screen w-64 bg-gray-900 border-r border-gray-800 flex flex-col pt-6 px-4 shrink-0">
-            <div className="flex items-center gap-3 mb-10 px-2">
-                <div className="w-10 h-10 rounded-xl bg-accent flex justify-center items-center font-bold text-lg text-white shadow-lg shadow-accent/20">
-                    {user?.avatar || 'C'}
+        <div className={`${isMobile ? `fixed inset-y-0 left-0 z-50 w-64 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out` : 'w-64'} h-screen bg-gray-900 border-r border-gray-800 flex flex-col pt-6 px-4 shrink-0`}>
+            <div className="flex items-center justify-between gap-3 mb-10 px-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-accent flex justify-center items-center font-bold text-lg text-white shadow-lg shadow-accent/20">
+                        {user?.avatar || 'C'}
+                    </div>
+                    <div>
+                        <h2 className="font-bold text-white text-lg tracking-tight -mb-1 truncate max-w-[120px]">{user?.personalInfo?.name}</h2>
+                        <span className="text-xs text-gray-400 uppercase tracking-wider truncate max-w-[120px] block">{user?.gymName}</span>
+                    </div>
                 </div>
-                <div>
-                    <h2 className="font-bold text-white text-lg tracking-tight -mb-1 truncate max-w-[140px]">{user?.personalInfo?.name}</h2>
-                    <span className="text-xs text-gray-400 uppercase tracking-wider">{user?.gymName}</span>
-                </div>
+                {isMobile && (
+                    <button onClick={onClose} className="text-gray-400 hover:text-white p-1">
+                        <X size={20} />
+                    </button>
+                )}
             </div>
             <div className="flex-1 space-y-2">
-                <NavLink to="/client" end className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}>
+                <NavLink to="/client" end onClick={() => isMobile && onClose()} className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}>
                     <Home size={20} /> Profile
                 </NavLink>
-                <NavLink to="/client/plans" className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}>
+                <NavLink to="/client/plans" onClick={() => isMobile && onClose()} className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}>
                     <List size={20} /> Plans
                 </NavLink>
             </div>
@@ -102,9 +109,26 @@ const PlanCard = ({ plan, onViewDetails }) => (
 );
 
 const ClientPlans = () => {
+    const { user } = useAuth();
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [detailPlan, setDetailPlan] = useState(null);
+
+    const [isMobile, setIsMobile] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 1024;
+            setIsMobile(mobile);
+            if (!mobile) {
+                setIsSidebarOpen(false);
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -121,12 +145,42 @@ const ClientPlans = () => {
     }, []);
 
     return (
-        <div className="flex bg-dark h-screen overflow-hidden">
-            <ClientSidebar />
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
+        <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
+            {/* MOBILE HEADER BAR */}
+            {isMobile && (
+                <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-accent flex justify-center items-center font-bold text-sm text-white shadow-md">
+                            {user?.avatar || 'C'}
+                        </div>
+                        <div>
+                            <span className="text-white font-bold text-base tracking-tight truncate max-w-[120px] inline-block">{user?.personalInfo?.name}</span>
+                            <span className="text-xs text-gray-500 block -mt-1 uppercase tracking-wider truncate max-w-[120px]">{user?.gymName}</span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="p-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
+                    >
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </header>
+            )}
+
+            {/* MOBILE DRAWER BACKDROP */}
+            {isMobile && isSidebarOpen && (
+                <div 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
+                />
+            )}
+
+            <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
+            
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Available Gym Plans</h1>
-                    <p className="text-gray-400 mt-1">Browse all membership plans offered by your gym.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Available Gym Plans</h1>
+                    <p className="text-gray-400 mt-1 text-sm md:text-base">Browse all membership plans offered by your gym.</p>
                 </div>
 
                 {loading ? (
