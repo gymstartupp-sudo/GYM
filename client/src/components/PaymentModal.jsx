@@ -485,7 +485,7 @@ const PaymentModal = ({
                         )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Total Amount</label>
                             <div className="relative">
@@ -535,7 +535,7 @@ const PaymentModal = ({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
                                 <input
@@ -586,11 +586,11 @@ const PaymentModal = ({
                         </div>
                     </div>
 
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex flex-col sm:flex-row gap-3 pt-4">
                         <Button
                             type="button"
                             variant="secondary"
-                            className="flex-1 py-3.5 text-xs font-black uppercase tracking-widest"
+                            className="w-full sm:flex-1 py-3.5 text-xs font-black uppercase tracking-widest"
                             onClick={onClose}
                             disabled={isSubmitting}
                         >
@@ -598,7 +598,7 @@ const PaymentModal = ({
                         </Button>
                         <Button
                             type="submit"
-                            className={`flex-1 py-3.5 text-xs font-black uppercase tracking-widest ${paymentType === 'full' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' : 'bg-primary shadow-primary/20'}`}
+                            className={`w-full sm:flex-1 py-3.5 text-xs font-black uppercase tracking-widest ${paymentType === 'full' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' : 'bg-primary shadow-primary/20'}`}
                             isLoading={isSubmitting}
                             disabled={isSubmitting || !selectedClient || !selectedPlan}
                         >

@@ -4,7 +4,7 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { AdminSidebar } from './AdminDashboard';
 import Button from '../../components/Button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Menu, X } from 'lucide-react';
 
 const AdminClients = () => {
     const { gymId } = useParams();
@@ -12,6 +12,22 @@ const AdminClients = () => {
     const [gymInfo, setGymInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+
+    const [isMobile, setIsMobile] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 1024;
+            setIsMobile(mobile);
+            if (!mobile) {
+                setIsSidebarOpen(false);
+            }
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -31,19 +47,43 @@ const AdminClients = () => {
     }, [gymId]);
 
     return (
-        <div className="flex bg-dark h-screen overflow-hidden">
-            <AdminSidebar />
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
+        <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
+            {/* MOBILE HEADER BAR */}
+            {isMobile && (
+                <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <span className="text-purple-500 font-bold text-base tracking-tight">Super Admin</span>
+                    </div>
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="p-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
+                    >
+                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </header>
+            )}
+
+            {/* MOBILE DRAWER BACKDROP */}
+            {isMobile && isSidebarOpen && (
+                <div 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
+                />
+            )}
+
+            <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
+            
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
                 <div className="mb-8 flex items-center gap-4">
                    <Button variant="secondary" onClick={() => navigate(-1)} className="!p-2 rounded-full"><ArrowLeft size={20}/></Button>
                    <div>
-                       <h1 className="text-3xl font-bold text-white tracking-tight">Gym Clients</h1>
-                       <p className="text-gray-400 mt-1">Viewing clients for gym: {gymId}</p>
+                       <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Gym Clients</h1>
+                       <p className="text-gray-400 mt-1 text-sm md:text-base">Viewing clients for gym: {gymId}</p>
                    </div>
                 </div>
 
-                <div className="bg-card rounded-xl border border-gray-800 overflow-hidden shadow-lg">
-                    <table className="w-full text-left border-collapse">
+                <div className="bg-card rounded-xl border border-gray-800 overflow-x-auto shadow-lg">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
                         <thead>
                             <tr className="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-sm tracking-wider uppercase">
                                 <th className="p-4 font-medium">Client Info</th>

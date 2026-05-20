@@ -220,18 +220,18 @@ const Dues = () => {
 
     return (
         <div className="flex bg-dark h-screen overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
-                <div className="flex justify-between items-center mb-8">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
                             Due & Expired Clients
                         </h1>
-                        <p className="text-gray-400 mt-1">Manage and collect pending payments or renew expired memberships.</p>
+                        <p className="text-gray-400 mt-1 text-sm md:text-base">Manage and collect pending payments or renew expired memberships.</p>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-1 mb-6 bg-gray-800/50 p-1 rounded-xl w-fit">
+                <div className="flex flex-wrap gap-1 mb-6 bg-gray-800/50 p-1 rounded-xl w-full sm:w-fit">
                     {[
                         { id: 'pending', label: 'Pending', icon: Clock },
                         { id: 'overdue', label: 'Overdue', icon: AlertCircle },
@@ -240,7 +240,7 @@ const Dues = () => {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
+                            className={`flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
                                 ? 'bg-primary text-white shadow-lg'
                                 : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
                                 }`}
@@ -265,7 +265,7 @@ const Dues = () => {
 
                 <div className="bg-card rounded-xl border border-gray-800 overflow-hidden shadow-lg">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse whitespace-nowrap">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[850px]">
                             <thead>
                                 <tr className="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-xs tracking-wider uppercase">
                                     <th className="p-4 font-bold">Client Info</th>
