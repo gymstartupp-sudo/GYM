@@ -24,7 +24,7 @@ const gymSchema = new mongoose.Schema({
     helpContact: String,
     gst: String,
     logo: String,
-    addressOnBill: { type: String, maxlength: 25 },
+    addressOnBill: { type: String, maxlength: 100 },
     regards: { type: String, maxlength: 20 },
     greetingText: { type: String, maxlength: 20 },
     invoiceSupportEmail: { type: String, trim: true }
