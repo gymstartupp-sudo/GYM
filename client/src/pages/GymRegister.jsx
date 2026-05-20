@@ -217,12 +217,12 @@ const GymRegister = () => {
   }, [gymName, setValue, touchedFields.regards, touchedFields.greetingText, errors.regards, errors.greetingText]);
 
   const showFieldError = (field) => Boolean(errors[field]);
-  
+
   const fieldClassName = (field, extra = '') => {
     const isError = showFieldError(field);
     return `input-field bg-slate-900/50 border border-slate-800 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${extra}
-      ${isError 
-        ? 'border-red-500/80 focus:ring-red-500/30 text-red-200 shadow-[0_0_8px_rgba(239,68,68,0.25)]' 
+      ${isError
+        ? 'border-red-500/80 focus:ring-red-500/30 text-red-200 shadow-[0_0_8px_rgba(239,68,68,0.25)]'
         : 'focus:ring-blue-500/30 focus:border-blue-500/50 hover:border-slate-700/60'
       }`.trim();
   };
@@ -357,7 +357,7 @@ const GymRegister = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black py-16 px-4">
       <div className="card w-full max-w-2xl relative z-10 backdrop-blur-xl bg-slate-950/80 border border-slate-800/80 shadow-2xl p-8 rounded-2xl">
-        
+
         {/* Glow effect */}
         <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -z-10"></div>
         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
@@ -371,8 +371,8 @@ const GymRegister = () => {
         <div className="mb-10 select-none">
           <div className="flex items-center justify-between relative">
             <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800 -translate-y-1/2 -z-10 rounded-full"></div>
-            <div 
-              className="absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-blue-500 to-indigo-500 -translate-y-1/2 -z-10 rounded-full transition-all duration-500 ease-out" 
+            <div
+              className="absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-blue-500 to-indigo-500 -translate-y-1/2 -z-10 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${step === 1 ? '0%' : step === 2 ? '50%' : '100%'}` }}
             ></div>
 
@@ -384,15 +384,15 @@ const GymRegister = () => {
               const Icon = s.icon;
               const isCompleted = step > s.num;
               const isActive = step === s.num;
-              
+
               return (
                 <div key={s.num} className="flex flex-col items-center flex-1 relative">
-                  <div 
+                  <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 relative z-10
-                      ${isCompleted 
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]' 
-                        : isActive 
-                          ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)] scale-110' 
+                      ${isCompleted
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                        : isActive
+                          ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)] scale-110'
                           : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700/60'
                       }`}
                   >
@@ -402,7 +402,7 @@ const GymRegister = () => {
                       <Icon className="w-4 h-4" />
                     )}
                   </div>
-                  <span 
+                  <span
                     className={`mt-2 text-[11px] font-semibold tracking-wide transition-colors duration-300 text-center
                       ${isActive ? 'text-white font-bold' : isCompleted ? 'text-emerald-400' : 'text-slate-400'}`}
                   >
@@ -415,7 +415,7 @@ const GymRegister = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          
+
           {/* STEP 1: GYM INFORMATION */}
           {step === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
@@ -427,12 +427,12 @@ const GymRegister = () => {
               {/* LEFT COLUMN */}
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Client ID Prefix <span className="text-red-500">*</span></p>
-                  <input 
-                    {...register('gymIdPrefix')} 
-                    placeholder="E.g. DNB" 
-                    className={fieldClassName('gymIdPrefix', 'uppercase font-semibold tracking-wider')} 
-                    maxLength="3" 
+                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Client ID  <span className="text-red-500">*</span></p>
+                  <input
+                    {...register('gymIdPrefix')}
+                    placeholder="E.g. DNB"
+                    className={fieldClassName('gymIdPrefix', 'uppercase font-semibold tracking-wider')}
+                    maxLength="3"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">This 3-letter prefix will prefix all member IDs (e.g. DNB001).</p>
                   {showFieldError('gymIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymIdPrefix.message}</p>}
@@ -446,11 +446,11 @@ const GymRegister = () => {
 
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Address <span className="text-red-500">*</span></p>
-                  <textarea 
-                    {...register('address')} 
-                    placeholder="E.g. Plot 15, Sector 4, HSR Layout" 
-                    className={fieldClassName('address', 'h-20 resize-none')} 
-                    maxLength="100" 
+                  <textarea
+                    {...register('address')}
+                    placeholder="E.g. Plot 15, Sector 4, HSR Layout"
+                    className={fieldClassName('address', 'h-20 resize-none')}
+                    maxLength="100"
                   />
                   {showFieldError('address') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.address.message}</p>}
                 </div>
@@ -471,13 +471,13 @@ const GymRegister = () => {
 
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Contact Number <span className="text-red-500">*</span></p>
-                  <input 
-                    {...register('gymContact')} 
-                    type="tel" 
-                    placeholder="E.g. 9876543210" 
-                    className={fieldClassName('gymContact')} 
-                    onInput={handlePhoneInput} 
-                    maxLength="10" 
+                  <input
+                    {...register('gymContact')}
+                    type="tel"
+                    placeholder="E.g. 9876543210"
+                    className={fieldClassName('gymContact')}
+                    onInput={handlePhoneInput}
+                    maxLength="10"
                   />
                   {showFieldError('gymContact') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymContact.message}</p>}
                 </div>
@@ -528,19 +528,19 @@ const GymRegister = () => {
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {weekDays.map((day) => (
-                    <label 
-                      key={day} 
+                    <label
+                      key={day}
                       className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 cursor-pointer border select-none transition-all duration-200
                         ${watch('operatingDays')?.includes(day)
                           ? 'bg-blue-600/10 border-blue-500/40 text-blue-300 font-medium'
                           : 'bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60 hover:bg-slate-850'
                         }`}
                     >
-                      <input 
-                        type="checkbox" 
-                        value={day} 
-                        {...register('operatingDays')} 
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500" 
+                      <input
+                        type="checkbox"
+                        value={day}
+                        {...register('operatingDays')}
+                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500"
                       />
                       <span>{day}</span>
                     </label>
@@ -561,7 +561,7 @@ const GymRegister = () => {
                   </div>
                   {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
                 </button>
-                
+
                 {showAdvanced && (
                   <div className="p-5 border-t border-slate-800/60 bg-slate-950/20 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
                     <div>
@@ -616,13 +616,13 @@ const GymRegister = () => {
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Mobile Number <span className="text-red-500">*</span></p>
-                    <input 
-                      {...register('mobileNo')} 
-                      type="tel" 
-                      placeholder="10-digit mobile number" 
-                      className={fieldClassName('mobileNo')} 
-                      onInput={handlePhoneInput} 
-                      maxLength="10" 
+                    <input
+                      {...register('mobileNo')}
+                      type="tel"
+                      placeholder="10-digit mobile number"
+                      className={fieldClassName('mobileNo')}
+                      onInput={handlePhoneInput}
+                      maxLength="10"
                     />
                     {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mobileNo.message}</p>}
                   </div>
@@ -661,7 +661,7 @@ const GymRegister = () => {
                 </div>
 
                 <div className="space-y-4">
-                  
+
                   {/* WhatsApp Number Field */}
                   <div>
                     <div className="flex justify-between items-center mb-1.5 select-none">
@@ -679,13 +679,13 @@ const GymRegister = () => {
                       </label>
                     </div>
                     <div className="relative">
-                      <input 
-                        {...register('whatsappNumber')} 
-                        type="tel" 
-                        placeholder="10-digit WhatsApp number" 
-                        className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')} 
-                        onInput={handlePhoneInput} 
-                        maxLength="10" 
+                      <input
+                        {...register('whatsappNumber')}
+                        type="tel"
+                        placeholder="10-digit WhatsApp number"
+                        className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                        onInput={handlePhoneInput}
+                        maxLength="10"
                         readOnly={syncWhatsapp}
                       />
                       {syncWhatsapp && (
@@ -716,13 +716,13 @@ const GymRegister = () => {
                       </label>
                     </div>
                     <div className="relative">
-                      <input 
-                        {...register('phoneNumber')} 
-                        type="tel" 
-                        placeholder="10-digit SMS number" 
-                        className={fieldClassName('phoneNumber', syncSms ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')} 
-                        onInput={handlePhoneInput} 
-                        maxLength="10" 
+                      <input
+                        {...register('phoneNumber')}
+                        type="tel"
+                        placeholder="10-digit SMS number"
+                        className={fieldClassName('phoneNumber', syncSms ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                        onInput={handlePhoneInput}
+                        maxLength="10"
                         readOnly={syncSms}
                       />
                       {syncSms && (
@@ -753,11 +753,11 @@ const GymRegister = () => {
                       </label>
                     </div>
                     <div className="relative">
-                      <input 
-                        {...register('gmail')} 
-                        type="email" 
-                        placeholder="Email address used for reminders" 
-                        className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')} 
+                      <input
+                        {...register('gmail')}
+                        type="email"
+                        placeholder="Email address used for reminders"
+                        className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
                         readOnly={syncEmail}
                       />
                       {syncEmail && (
@@ -787,12 +787,12 @@ const GymRegister = () => {
               {/* LEFT COLUMN */}
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Billing Prefix <span className="text-red-500">*</span></p>
-                  <input 
-                    {...register('billingIdPrefix')} 
-                    placeholder="E.g. INV" 
-                    className={fieldClassName('billingIdPrefix', 'uppercase font-bold tracking-widest')} 
-                    maxLength="5" 
+                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Billing ID <span className="text-red-500">*</span></p>
+                  <input
+                    {...register('billingIdPrefix')}
+                    placeholder="E.g. INV"
+                    className={fieldClassName('billingIdPrefix', 'uppercase font-bold tracking-widest')}
+                    maxLength="5"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">Shorthand for invoice records (e.g. INV-0001).</p>
                   {showFieldError('billingIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.billingIdPrefix.message}</p>}
@@ -814,11 +814,11 @@ const GymRegister = () => {
                     </label>
                   </div>
                   <div className="relative">
-                    <textarea 
-                      {...register('addressOnBill')} 
-                      placeholder="Billing address for invoices" 
-                      className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)} 
-                      maxLength="100" 
+                    <textarea
+                      {...register('addressOnBill')}
+                      placeholder="Billing address for invoices"
+                      className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
+                      maxLength="100"
                       readOnly={syncAddress}
                     />
                     {syncAddress && (
@@ -877,13 +877,13 @@ const GymRegister = () => {
                     </label>
                   </div>
                   <div className="relative">
-                    <input 
-                      {...register('helpContact')} 
-                      type="tel" 
-                      placeholder="Support / Helpdesk number" 
-                      className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')} 
-                      onInput={handlePhoneInput} 
-                      maxLength="10" 
+                    <input
+                      {...register('helpContact')}
+                      type="tel"
+                      placeholder="Support / Helpdesk number"
+                      className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      onInput={handlePhoneInput}
+                      maxLength="10"
                       readOnly={syncHelpContact}
                     />
                     {syncHelpContact && (
@@ -905,11 +905,11 @@ const GymRegister = () => {
 
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Invoice Support Email <span className="text-slate-500 font-normal">(Optional)</span></p>
-                  <input 
-                    {...register('invoiceSupportEmail')} 
-                    type="email" 
-                    placeholder="E.g. billing@gym.com" 
-                    className={fieldClassName('invoiceSupportEmail')} 
+                  <input
+                    {...register('invoiceSupportEmail')}
+                    type="email"
+                    placeholder="E.g. billing@gym.com"
+                    className={fieldClassName('invoiceSupportEmail')}
                   />
                   <p className="text-[10px] text-slate-500 mt-1">If client invoices have dedicated support email.</p>
                   {showFieldError('invoiceSupportEmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.invoiceSupportEmail.message}</p>}
@@ -921,10 +921,10 @@ const GymRegister = () => {
           {/* Form Actions Button Row */}
           <div className="flex items-center justify-between pt-6 border-t border-slate-800/80 mt-8">
             {step > 1 ? (
-              <Button 
-                type="button" 
-                variant="secondary" 
-                onClick={handlePrev} 
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handlePrev}
                 disabled={loading}
                 className="px-5 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg"
               >
@@ -935,9 +935,9 @@ const GymRegister = () => {
             )}
 
             {step < 3 ? (
-              <Button 
-                type="button" 
-                onClick={handleNext} 
+              <Button
+                type="button"
+                onClick={handleNext}
                 className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-lg"
                 isLoading={loading}
                 disabled={isStepDisabled}
@@ -945,13 +945,13 @@ const GymRegister = () => {
                 Save & Continue
               </Button>
             ) : (
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 onClick={async () => {
                   const valid = await trigger(stepRequiredFields[step]);
                   if (valid) handleSubmit(onSubmit)();
-                }} 
-                isLoading={loading} 
+                }}
+                isLoading={loading}
                 disabled={isStepDisabled}
                 className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-xl"
               >
@@ -962,7 +962,7 @@ const GymRegister = () => {
         </form>
 
         <div className="mt-8 text-center text-xs text-slate-400 border-t border-slate-900 pt-5">
-          Already have an account? 
+          Already have an account?
           <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold ml-1.5 transition-colors">
             Login here &rarr;
           </Link>
