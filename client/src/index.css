@@ -22,3 +22,46 @@
     @apply shadow-2xl shadow-black/40 -translate-y-1 border-gray-700;
   }
 }
+
+/* Print invoice styles */
+@media print {
+  /* Hide all elements on the screen except the printable invoice container */
+  body * {
+    visibility: hidden;
+  }
+  
+  .print-invoice-container,
+  .print-invoice-container * {
+    visibility: visible;
+  }
+  
+  .print-invoice-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  /* Force text colors to be dark gray/black for printing readability */
+  .print-invoice-container * {
+    color: #111827 !important;
+  }
+  
+  /* Hide close and print action buttons during print */
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  /* Page margins and layout defaults */
+  @page {
+    size: auto;
+    margin: 10mm 15mm 10mm 15mm;
+  }
+}

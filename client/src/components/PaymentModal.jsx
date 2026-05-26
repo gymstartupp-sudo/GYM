@@ -125,7 +125,6 @@ const PaymentModal = ({
             if (pendingPayment) {
                 // Auto-switch to update mode
                 setDetectedPendingPayment(pendingPayment);
-                const balance = pendingPayment.amount - (pendingPayment.paidAmount || 0);
                 const plan = plans.find(p => p._id === pendingPayment.planId);
                 if (plan) {
                     setSelectedPlan(plan);
@@ -133,7 +132,7 @@ const PaymentModal = ({
                 }
                 setFormData(prev => ({
                     ...prev,
-                    amount: balance,
+                    amount: pendingPayment.invoiceAmount || pendingPayment.amount || pendingPayment.paidAmount || 0,
                     paidAmount: '',
                     dueDate: pendingPayment.dueDate ? new Date(pendingPayment.dueDate).toISOString().split('T')[0] : '',
                     startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : prev.startDate
@@ -209,9 +208,11 @@ const PaymentModal = ({
     const handlePaymentTypeChange = (type) => {
         setPaymentType(type);
         if (type === 'full') {
+            // In update mode, "fully paid" means pay the REMAINING balance, not the full plan price
+            const fullPayAmt = isUpdateMode ? outstandingBalance : formData.amount;
             setFormData(prev => ({
                 ...prev,
-                paidAmount: prev.amount,
+                paidAmount: fullPayAmt,
                 dueDate: ''
             }));
         } else {
@@ -223,11 +224,29 @@ const PaymentModal = ({
         }
     };
 
-    const balance = formData.amount - (Number(formData.paidAmount) || 0);
-
     // Determine if we're in update mode (either from initialData or auto-detected)
     const isUpdateMode = !!(initialData.id || detectedPendingPayment);
     const activePaymentId = initialData.id || detectedPendingPayment?._id;
+
+    const originalPlanPrice = isUpdateMode 
+        ? (detectedPendingPayment 
+            ? (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount) 
+            : (initialData.amount || 0)
+          )
+        : (selectedPlan?.price || planData?.price || formData.amount || 0);
+
+    const totalPaidSoFar = isUpdateMode
+        ? (detectedPendingPayment
+            ? (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+            : (initialData.totalPaidSoFar || 0)
+          )
+        : 0;
+
+    const outstandingBalance = originalPlanPrice - totalPaidSoFar;
+    const balance = outstandingBalance - (Number(formData.paidAmount) || 0);
+
+    // Auto-detect: does this payment clear the remaining balance?
+    const isEffectivelyFullPayment = (Number(formData.paidAmount) || 0) >= outstandingBalance && outstandingBalance > 0;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -240,15 +259,17 @@ const PaymentModal = ({
         const paid = Number(formData.paidAmount) || 0;
 
         // Validations
-        if (paid > formData.amount) {
-            const errorMsg = isUpdateMode
-                ? `You cannot pay more than the outstanding balance of ₹${formData.amount}`
-                : `You cannot pay more than the plan price of ₹${formData.amount}`;
+        if (paid > outstandingBalance) {
+            const errorMsg = `You cannot pay more than the outstanding balance of ₹${outstandingBalance}`;
             alert(errorMsg);
             return;
         }
 
-        if (paymentType === 'partial' && !formData.dueDate) {
+        // Determine REAL status from the actual numbers, not from button selection
+        const realStatus = (paid >= outstandingBalance) ? 'paid' : 'partial';
+
+        // Due date is only required for TRUE partial payments (balance remains after this payment)
+        if (realStatus === 'partial' && !formData.dueDate) {
             return alert("Due Date is required for partial payments");
         }
 
@@ -260,8 +281,8 @@ const PaymentModal = ({
                 clientId: selectedClient._id,
                 planId: selectedPlan._id,
                 planName: selectedPlan.name,
-                status: paymentType === 'full' ? 'paid' : 'partial',
-                balance,
+                status: realStatus,
+                balance: realStatus === 'paid' ? 0 : balance,
                 _isUpdate: isUpdateMode,
                 _paymentId: activePaymentId
             });
@@ -293,7 +314,7 @@ const PaymentModal = ({
                             <div>
                                 <p className="text-amber-400 text-sm font-bold">Pending Balance Detected</p>
                                 <p className="text-gray-400 text-xs mt-1">
-                                    This client has an outstanding balance of <span className="text-white font-bold">₹{detectedPendingPayment.amount - (detectedPendingPayment.paidAmount || 0)}</span> for <span className="text-white font-medium">{detectedPendingPayment.planName}</span>. Pay the remaining amount below.
+                                    This client has an outstanding balance of <span className="text-white font-bold">₹{detectedPendingPayment.remainingBalance !== undefined ? detectedPendingPayment.remainingBalance : ((detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidAmount || 0))}</span> for <span className="text-white font-medium">{detectedPendingPayment.planName}</span>. Pay the remaining amount below.
                                 </p>
                             </div>
                         </div>
@@ -494,7 +515,7 @@ const PaymentModal = ({
                                     type="number"
                                     readOnly
                                     className="w-full bg-gray-800/30 border border-gray-800 rounded-xl pl-8 pr-4 py-3 text-white font-bold outline-none cursor-not-allowed"
-                                    value={formData.amount}
+                                    value={originalPlanPrice}
                                 />
                             </div>
                         </div>
@@ -542,13 +563,12 @@ const PaymentModal = ({
                                     type="number"
                                     required
                                     min="0"
-                                    max={formData.amount}
+                                    max={outstandingBalance}
                                     className={`w-full bg-dark border rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-gray-800' : 'border-gray-700'}`}
                                     value={formData.paidAmount}
                                     onChange={(e) => {
                                         const val = e.target.value;
-                                        // Allow empty string or numbers within range
-                                        if (val === '' || (Number(val) >= 0 && Number(val) <= formData.amount)) {
+                                        if (val === '' || (Number(val) >= 0 && Number(val) <= outstandingBalance)) {
                                             setFormData({ ...formData, paidAmount: val });
                                         }
                                     }}
@@ -556,31 +576,51 @@ const PaymentModal = ({
                                     placeholder="Enter amount"
                                 />
                                 <p className="text-[10px] text-gray-500 mt-1.5 ml-1 font-bold uppercase tracking-tight">
-                                    Max Allowed: <span className="text-primary">₹{formData.amount}</span> 
-                                    {isUpdateMode ? ' (Balance)' : ' (Plan Price)'}
+                                    {isUpdateMode ? (
+                                        <>
+                                            Already Paid: <span className="text-emerald-500">₹{totalPaidSoFar}</span> | Bal: <span className="text-primary">₹{outstandingBalance}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            Max Allowed: <span className="text-primary">₹{originalPlanPrice}</span> (Plan Price)
+                                        </>
+                                    )}
                                 </p>
                                 {paymentType === 'partial' && (
-                                    <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-rose-500 flex justify-between px-1">
-                                        <span>Balance Due:</span>
-                                        <span>₹{balance.toFixed(2)}</span>
-                                    </p>
+                                    isEffectivelyFullPayment ? (
+                                        <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-emerald-500 flex justify-between px-1 animate-in fade-in duration-200">
+                                            <span>✓ Full Balance Covered</span>
+                                            <span>₹0.00 remaining</span>
+                                        </p>
+                                    ) : (
+                                        <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-rose-500 flex justify-between px-1">
+                                            <span>Balance Due:</span>
+                                            <span>₹{balance.toFixed(2)}</span>
+                                        </p>
+                                    )
                                 )}
                             </div>
                             <div>
-                                {paymentType === 'partial' && (
+                                {paymentType === 'partial' && !isEffectivelyFullPayment && (
                                     <>
                                         <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
                                             Due Date <span className="text-rose-500">*</span>
                                         </label>
                                         <input
                                             type="date"
-                                            required={paymentType === 'partial'}
+                                            required
                                             className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in slide-in-from-bottom-1"
                                             value={formData.dueDate}
                                             onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                                             disabled={isSubmitting}
                                         />
                                     </>
+                                )}
+                                {paymentType === 'partial' && isEffectivelyFullPayment && (
+                                    <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
+                                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
+                                        <p className="text-[9px] text-gray-400 mt-1">Amount covers full remaining balance</p>
+                                    </div>
                                 )}
                             </div>
                         </div>

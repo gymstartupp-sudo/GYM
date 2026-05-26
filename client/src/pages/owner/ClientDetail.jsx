@@ -16,6 +16,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     const [activeTab, setActiveTab] = useState('personal'); // 'personal' or 'payment'
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState(null);
+    const [gymInfo, setGymInfo] = useState(null);
 
     const getPaidAmount = (p) => {
         const paid = p.paidAmount !== undefined ? p.paidAmount : p.amount;
@@ -29,7 +30,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
     const getStatusBadge = (status) => {
         if (!status || status === 'paid') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">PAID</span>;
-        if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">PARTIAL</span>;
+        if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">PARTIALLY</span>;
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase">OVERDUE</span>;
     };
 
@@ -47,6 +48,26 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
         };
         fetchClient();
     }, [id, navigate]);
+
+    useEffect(() => {
+        const fetchGymProfile = async () => {
+            try {
+                const res = await api.get('/gym/profile');
+                if (res.data?.success) {
+                    setGymInfo(res.data.data.gym);
+                }
+            } catch (e) {
+                console.error("Failed to load gym profile in ClientDetail", e);
+            }
+        };
+        fetchGymProfile();
+    }, []);
+
+    const getLogoUrl = () => {
+        if (!gymInfo?.billingInfo?.logo) return null;
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '');
+        return `${backendUrl}${gymInfo.billingInfo.logo}`;
+    };
 
     if (loading) {
         return (
@@ -344,32 +365,145 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
             {/* Receipt Modal */}
             {showReceiptModal && selectedPayment && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-                    <div className="bg-white text-gray-900 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                        <div className="p-8 border-b-2 border-dashed border-gray-200 relative">
-                            <button onClick={() => setShowReceiptModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900"><X size={20} /></button>
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <CheckCircle2 size={32} className="text-primary" />
-                                </div>
-                                <h2 className="text-2xl font-black uppercase tracking-tight">Payment Receipt</h2>
-                                <p className="text-gray-500 font-medium mt-1">Transaction ID: #{selectedPayment.paymentId}</p>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+                    <div className="bg-white text-gray-900 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print-invoice-container my-8 relative">
+                        {/* Actions Header (Hidden in print) */}
+                        <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Invoice Preview</span>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => window.print()} 
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-all shadow-sm"
+                                >
+                                    Print Invoice
+                                </button>
+                                <button 
+                                    onClick={() => setShowReceiptModal(false)} 
+                                    className="p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
+                                >
+                                    <X size={18} />
+                                </button>
                             </div>
                         </div>
+
+                        {/* Invoice Printable Body */}
                         <div className="p-8 space-y-6">
-                            <div className="grid grid-cols-2 gap-y-4">
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client Name</p><p className="font-bold">{client.personalInfo.name}</p></div>
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Plan Name</p><p className="font-bold">{selectedPayment.planName}</p></div>
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</p><p className="font-bold">{new Date(selectedPayment.createdAt || selectedPayment.date || selectedPayment.paymentDate).toLocaleDateString('en-GB')}</p></div>
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Method</p><p className="font-bold uppercase">{selectedPayment.paymentMethod || selectedPayment.mode || 'CASH'}</p></div>
+                            {/* Header: Gym Info */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-gray-200">
+                                <div className="flex items-center gap-3">
+                                    {getLogoUrl() ? (
+                                        <img 
+                                            src={getLogoUrl()} 
+                                            alt={gymInfo?.gymName || "Gym Logo"} 
+                                            className="w-16 h-16 object-contain rounded-lg border border-gray-100" 
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center font-black text-primary text-xl">
+                                            {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="text-left sm:text-right text-xs text-gray-600 space-y-1">
+                                    <p className="font-bold text-gray-900">Address:</p>
+                                    <p className="max-w-[220px] leading-relaxed whitespace-pre-line">{gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || "Address details"}</p>
+                                    {gymInfo?.billingInfo?.helpContact && (
+                                        <p className="font-medium">Support: +91 {gymInfo.billingInfo.helpContact}</p>
+                                    )}
+                                    {(gymInfo?.billingInfo?.gst || gymInfo?.gst) && (
+                                        <p className="font-bold text-primary">GSTIN: {gymInfo?.billingInfo?.gst || gymInfo?.gst}</p>
+                                    )}
+                                </div>
                             </div>
-                            <div className="bg-gray-50 rounded-xl p-4 space-y-2 border border-gray-100">
-                                <div className="flex justify-between text-sm"><span className="text-gray-500">Total Billable</span><span className="font-bold">₹{selectedPayment.amount}</span></div>
-                                <div className="flex justify-between text-sm"><span className="text-gray-500">Amount Paid</span><span className="font-bold text-emerald-600">₹{getPaidAmount(selectedPayment)}</span></div>
-                                <div className="flex justify-between pt-2 border-t border-gray-200"><span className="font-black uppercase text-xs tracking-wider">Balance Due</span><span className="font-black text-rose-600">₹{getBalance(selectedPayment)}</span></div>
+
+                            {/* Middle Section: Meta & Client details */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-6 border-b border-gray-200 text-xs">
+                                <div>
+                                    <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1.5">Billed To (Client Details)</h4>
+                                    <p className="font-bold text-gray-900 text-sm">{client.personalInfo.name}</p>
+                                    <p className="text-gray-500 font-medium mt-1">Client ID: {client.clientId || 'N/A'}</p>
+                                </div>
+                                <div className="text-left sm:text-right">
+                                    <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1.5">Invoice Info</h4>
+                                    <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
+                                    <p className="text-gray-500 font-medium mt-1">Date: {new Date(selectedPayment.createdAt || selectedPayment.date || selectedPayment.paymentDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                                    <p className="mt-1.5">{getStatusBadge(selectedPayment.status)}</p>
+                                </div>
+                            </div>
+
+                            {/* Subscription Details Table */}
+                            <div className="space-y-4">
+                                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Membership Details</h4>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs border-collapse">
+                                        <thead>
+                                            <tr className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200">
+                                                <th className="p-3">Plan Name / Description</th>
+                                                <th className="p-3 text-center">Payment Method</th>
+                                                <th className="p-3 text-right">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="border-b border-gray-100 text-gray-800">
+                                                <td className="p-3 font-semibold">
+                                                    {selectedPayment.planName} Subscription
+                                                    {selectedPayment.startDate && (
+                                                        <span className="block text-[10px] text-gray-500 font-normal mt-0.5">
+                                                            Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB') : 'Expiry'}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="p-3 text-center font-bold uppercase tracking-wider text-slate-700">
+                                                    {(selectedPayment.paymentMethod || selectedPayment.mode || 'cash') === 'cash' ? 'Cash' : 'Online'}
+                                                </td>
+                                                <td className="p-3 text-right font-black text-gray-900">₹{selectedPayment.invoiceAmount || selectedPayment.amount || 0}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Calculations & Balance Section */}
+                            <div className="flex justify-end pt-4">
+                                <div className="w-full max-w-[260px] bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-2">
+                                    <div className="flex justify-between text-xs font-semibold text-gray-500">
+                                        <span>Subtotal</span>
+                                        <span>₹{selectedPayment.invoiceAmount || selectedPayment.amount || 0}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-semibold text-gray-500">
+                                        <span>Paid Now</span>
+                                        <span className="text-blue-600 font-bold">₹{selectedPayment.paidNow || selectedPayment.paidAmount || 0}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-bold text-gray-900 pt-1 border-t border-gray-200">
+                                        <span>Cumulative Paid</span>
+                                        <span className="text-emerald-600">₹{selectedPayment.totalPaid || selectedPayment.paidAmount || 0}</span>
+                                    </div>
+                                    
+                                    {/* Partial Payment Balance Display */}
+                                    {selectedPayment.status !== 'paid' && (getBalance(selectedPayment) > 0) && (
+                                        <div className="flex justify-between text-xs font-black text-rose-600 pt-1.5 border-t border-dashed border-gray-300">
+                                            <span>Balance Amount</span>
+                                            <span>₹{getBalance(selectedPayment)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Footer: Greetings & Regards */}
+                            <div className="pt-8 border-t border-gray-200 text-center space-y-3">
+                                {gymInfo?.billingInfo?.greetingText && (
+                                    <p className="text-xs text-gray-500 font-medium italic">"{gymInfo.greetingText}"</p>
+                                )}
+                                <div className="text-[11px] text-gray-400">
+                                    <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
+                                    <p className="mt-1 font-medium">Thank you for your business!</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="p-8 bg-gray-50 text-center"><p className="text-xs text-gray-400 font-medium italic">Thank you for your business!</p></div>
                     </div>
                 </div>
             )}

@@ -161,7 +161,7 @@ const Profile = () => {
       if (bi.helpContact && !phoneRegex.test(bi.helpContact)) newErrors.billHelp = 'Enter a valid Indian mobile number';
       if (bi.regards?.length > 20) newErrors.billRegards = 'Max 20 characters';
       if (bi.greetingText?.length > 20) newErrors.billGreeting = 'Max 20 characters';
-      if (bi.addressOnBill?.length > 25) newErrors.billAddress = 'Max 25 characters';
+      if (bi.addressOnBill?.length > 100) newErrors.billAddress = 'Max 100 characters';
     }
 
     setErrors(newErrors);
@@ -308,7 +308,7 @@ const Profile = () => {
             <Field label="Register GST" value={formState.gym.billingInfo?.gst} disabled={editingSection !== 'billing'} onChange={e => setFormState(c => ({ ...c, gym: { ...c.gym, billingInfo: { ...c.gym.billingInfo, gst: e.target.value } } }))} />
             <Field label="Logo File Path" value={formState.gym.billingInfo?.logo} disabled />
             <div className="md:col-span-2">
-              <Field label="Address On Invoice" value={formState.gym.billingInfo?.addressOnBill} textarea disabled={editingSection !== 'billing'} maxLength={25} error={errors.billAddress} onChange={e => setFormState(c => ({ ...c, gym: { ...c.gym, billingInfo: { ...c.gym.billingInfo, addressOnBill: e.target.value } } }))} />
+              <Field label="Address On Invoice" value={formState.gym.billingInfo?.addressOnBill} textarea disabled={editingSection !== 'billing'} maxLength={100} error={errors.billAddress} onChange={e => setFormState(c => ({ ...c, gym: { ...c.gym, billingInfo: { ...c.gym.billingInfo, addressOnBill: e.target.value } } }))} />
             </div>
             <Field label="Regards Name" value={formState.gym.billingInfo?.regards} disabled={editingSection !== 'billing'} maxLength={20} error={errors.billRegards} onChange={e => setFormState(c => ({ ...c, gym: { ...c.gym, billingInfo: { ...c.gym.billingInfo, regards: e.target.value } } }))} />
             <Field label="Greeting Footer" value={formState.gym.billingInfo?.greetingText} disabled={editingSection !== 'billing'} maxLength={20} error={errors.billGreeting} onChange={e => setFormState(c => ({ ...c, gym: { ...c.gym, billingInfo: { ...c.gym.billingInfo, greetingText: e.target.value } } }))} />

@@ -15,6 +15,7 @@ const Transactions = () => {
     const [clients, setClients] = useState([]);
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [gymInfo, setGymInfo] = useState(null);
     
     // Modal states
     const [showModal, setShowModal] = useState(false);
@@ -39,10 +40,11 @@ const Transactions = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [paymentsRes, clientsRes, plansRes] = await Promise.all([
+            const [paymentsRes, clientsRes, plansRes, gymRes] = await Promise.all([
                 api.get('/payment'),
                 api.get('/client'),
-                api.get('/plan')
+                api.get('/plan'),
+                api.get('/gym/profile').catch(() => null)
             ]);
             setPayments(paymentsRes.data.data.filter(p => {
                 const paid = p.paidAmount !== undefined ? p.paidAmount : p.amount;
@@ -50,11 +52,20 @@ const Transactions = () => {
             }));
             setClients(clientsRes.data.data);
             setPlans(plansRes.data.data);
+            if (gymRes && gymRes.data?.success) {
+                setGymInfo(gymRes.data.data.gym);
+            }
         } catch(e) {
             toast.error("Failed to load data");
         } finally {
             setLoading(false);
         }
+    };
+
+    const getLogoUrl = () => {
+        if (!gymInfo?.billingInfo?.logo) return null;
+        const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '');
+        return `${backendUrl}${gymInfo.billingInfo.logo}`;
     };
 
     useEffect(() => {
@@ -104,14 +115,15 @@ const Transactions = () => {
 
     const handlePaymentSave = async (paymentData) => {
         try {
-            if (selectedPayment) {
+            if (selectedPayment || paymentData._isUpdate) {
                 // Update existing payment
                 const additionalAmount = Number(paymentData.paidAmount);
                 if (additionalAmount <= 0) {
                     setShowModal(false);
                     return;
                 }
-                await api.put(`/payment/${selectedPayment._id}`, { additionalAmount });
+                const paymentIdToUpdate = selectedPayment?._id || paymentData._paymentId;
+                await api.put(`/payment/${paymentIdToUpdate}`, { additionalAmount });
                 toast.success("Payment updated successfully");
             } else {
                 // Record new payment
@@ -133,20 +145,27 @@ const Transactions = () => {
         return Number(val) || 0;
     };
     const getBalance = (p) => {
-        if (p.amount === 0) return 0; // Installment record, doesn't carry a balance itself
-        const total = Number(p.amount) || 0;
-        return Math.max(0, total - getPaidAmount(p));
+        if (p.remainingBalance !== undefined) return p.remainingBalance;
+        if (p.amount === 0) return 0;
+        const total = Number(p.invoiceAmount || p.amount) || 0;
+        const paid = Number(p.totalPaid || p.paidAmount) || 0;
+        return Math.max(0, total - paid);
     };
 
     const getStatusBadge = (status) => {
         if (!status || status === 'paid') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-widest">PAID</span>;
-        if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">PARTIAL</span>;
+        if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">PARTIALLY</span>;
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-widest">OVERDUE</span>;
     };
 
     const getClientDisplayId = (mongoId) => {
         const client = clients.find(c => c._id === mongoId);
         return client?.clientId || 'N/A';
+    };
+
+    const getClientAddress = (mongoId) => {
+        const client = clients.find(c => c._id === mongoId);
+        return client?.personalInfo?.address || 'N/A';
     };
 
     return (
@@ -171,7 +190,7 @@ const Transactions = () => {
                                     <th className="p-5">Client Info</th>
                                     <th className="p-5">Plan</th>
                                     <th className="p-5">Mode</th>
-                                    <th className="p-5 text-right">Invoice Amount</th>
+                                    <th className="p-5 text-right">Plan Amount</th>
                                     <th className="p-5 text-right">Paid Now</th>
                                     <th className="p-5 text-right">Total Paid</th>
                                     <th className="p-5 text-right">Remaining Balance</th>
@@ -202,7 +221,7 @@ const Transactions = () => {
                                     payments.map(payment => (
                                         <tr key={payment._id} className="hover:bg-gray-800/30 transition-all group">
                                             <td className="p-5">
-                                                <p className="font-bold text-white text-sm">#{payment.paymentId}</p>
+                                                <p className="font-bold text-white text-sm">{payment.paymentId}</p>
                                                 <p className="text-[10px] text-gray-500 mt-0.5">{new Date(payment.createdAt || payment.date).toLocaleDateString('en-GB')}</p>
                                             </td>
                                             <td className="p-5">
@@ -250,17 +269,7 @@ const Transactions = () => {
                                                     >
                                                         <Eye size={18} />
                                                     </button>
-                                                    <button 
-                                                        disabled={payment.status === 'paid'}
-                                                        onClick={() => { 
-                                                            setSelectedPayment(payment); 
-                                                            setShowModal(true); 
-                                                        }}
-                                                        className={`p-2 rounded-lg transition-all ${payment.status === 'paid' ? 'opacity-20 cursor-not-allowed' : 'text-gray-400 hover:text-blue-400 hover:bg-blue-400/10'}`}
-                                                        title="Update Payment"
-                                                    >
-                                                        <Edit2 size={18} />
-                                                    </button>
+
                                                 </div>
                                             </td>
                                         </tr>
@@ -286,7 +295,8 @@ const Transactions = () => {
                 clientData={selectedPayment ? clients.find(c => c._id === selectedPayment.clientId) : null}
                 planData={selectedPayment ? plans.find(p => p._id === selectedPayment.planId) : null}
                 initialData={selectedPayment ? {
-                    amount: getBalance(selectedPayment),
+                    amount: selectedPayment.invoiceAmount || selectedPayment.amount || 0,
+                    totalPaidSoFar: selectedPayment.totalPaid || selectedPayment.paidAmount || 0,
                     paidAmount: '',
                     dueDate: selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toISOString().split('T')[0] : '',
                     startDate: selectedPayment.startDate ? new Date(selectedPayment.startDate).toISOString().split('T')[0] : '',
@@ -299,33 +309,152 @@ const Transactions = () => {
 
             {/* Receipt / Bill Modal */}
             {showReceiptModal && selectedPayment && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-                    <div className="bg-white text-gray-900 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                        <div className="p-8 border-b-2 border-dashed border-gray-200 relative">
-                            <button onClick={() => setShowReceiptModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900"><X size={20} /></button>
-                            <div className="text-center">
-                                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <CheckCircle2 size={32} className="text-primary" />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+                    <div className="bg-white text-gray-900 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print-invoice-container my-8 relative">
+                        {/* Actions Header (Hidden in print) */}
+                        <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Invoice Preview</span>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => window.print()} 
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-all shadow-sm"
+                                >
+                                    Print Invoice
+                                </button>
+                                <button 
+                                    onClick={() => setShowReceiptModal(false)} 
+                                    className="p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Invoice Printable Body */}
+                        <div className="p-5 space-y-4">
+                            {/* Header: Gym Info */}
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-gray-200">
+                                <div className="flex items-center gap-2.5">
+                                    {getLogoUrl() ? (
+                                        <img 
+                                            src={getLogoUrl()} 
+                                            alt={gymInfo?.gymName || "Gym Logo"} 
+                                            className="w-12 h-12 object-contain rounded-lg border border-gray-100" 
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center font-black text-primary text-lg">
+                                            {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h2 className="text-lg font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
+                                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                                    </div>
                                 </div>
-                                <h2 className="text-2xl font-black uppercase tracking-tight">Payment Receipt</h2>
-                                <p className="text-gray-500 font-medium mt-1">Transaction ID: #{selectedPayment.paymentId}</p>
+                                
+                                <div className="text-left sm:text-right text-[11px] text-gray-600 space-y-0.5">
+                                    <p className="font-bold text-gray-900">Address:</p>
+                                    <p className="max-w-[200px] leading-snug whitespace-pre-line">{gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || "Address details"}</p>
+                                    {gymInfo?.billingInfo?.helpContact && (
+                                        <p className="font-medium">Support: +91 {gymInfo.billingInfo.helpContact}</p>
+                                    )}
+                                    {(gymInfo?.billingInfo?.gst || gymInfo?.gst) && (
+                                        <p className="font-bold text-primary">GSTIN: {gymInfo?.billingInfo?.gst || gymInfo?.gst}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Middle Section: Meta & Client details */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-gray-200 text-xs">
+                                <div>
+                                    <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Billed To (Client Details)</h4>
+                                    <p className="font-bold text-gray-900 text-sm">{selectedPayment.clientName}</p>
+                                    <p className="text-gray-500 font-medium mt-0.5">Client ID: {getClientDisplayId(selectedPayment.clientId)}</p>
+                                </div>
+                                <div className="text-left sm:text-right">
+                                    <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
+                                    <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
+                                    <p className="text-gray-500 font-medium mt-0.5">Date: {new Date(selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                                    <p className="mt-1">{getStatusBadge(selectedPayment.status)}</p>
+                                </div>
+                            </div>
+
+                            {/* Subscription Details Table */}
+                            <div className="space-y-2">
+                                <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Membership Details</h4>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs border-collapse">
+                                        <thead>
+                                            <tr className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200">
+                                                <th className="p-2.5">Plan Name / Description</th>
+                                                <th className="p-2.5 text-center">Payment Method</th>
+                                                <th className="p-2.5 text-right">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="border-b border-gray-100 text-gray-800">
+                                                <td className="p-2.5 font-semibold">
+                                                    {selectedPayment.planName} Subscription
+                                                    {selectedPayment.startDate && (
+                                                        <span className="block text-[10px] text-gray-500 font-normal mt-0.5">
+                                                            Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB') : 'Expiry'}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="p-2.5 text-center font-bold uppercase tracking-wider text-slate-700">
+                                                    {selectedPayment.paymentMethod === 'cash' ? 'Cash' : 'Online'}
+                                                </td>
+                                                <td className="p-2.5 text-right font-black text-gray-900">
+                                                    ₹{selectedPayment.paidNow || selectedPayment.paidAmount || 0}
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Payment Summary: show when this single payment did NOT cover the full plan
+                                 (i.e. any partial payment or the final clearing payment in a partial series).
+                                 Hide only when a SINGLE payment covers the entire plan amount. */}
+                            {(() => {
+                                const paidNow = selectedPayment.paidNow || selectedPayment.paidAmount || 0;
+                                const planAmt = selectedPayment.invoiceAmount || selectedPayment.amount || 0;
+                                const showSummary = paidNow < planAmt;
+                                if (!showSummary) return null;
+                                return (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1.5 text-xs">
+                                        <h4 className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Payment Summary</h4>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 font-medium">Plan Amount:</span>
+                                            <span className="font-bold text-gray-900">₹{planAmt}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 font-medium">Paid Now:</span>
+                                            <span className="font-bold text-blue-600">₹{paidNow}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600 font-medium">Total Paid:</span>
+                                            <span className="font-bold text-emerald-600">₹{selectedPayment.totalPaid || selectedPayment.paidAmount || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between pt-1.5 border-t border-amber-300">
+                                            <span className="text-gray-800 font-bold">Balance Due:</span>
+                                            <span className="font-black text-rose-600">₹{selectedPayment.remainingBalance !== undefined ? selectedPayment.remainingBalance : getBalance(selectedPayment)}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Footer: Greetings & Regards */}
+                            <div className="pt-4 border-t border-gray-200 text-center space-y-2">
+                                {gymInfo?.billingInfo?.greetingText && (
+                                    <p className="text-[11px] text-gray-500 font-medium italic">"{gymInfo.billingInfo.greetingText}"</p>
+                                )}
+                                <div className="text-[10px] text-gray-400">
+                                    <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
+                                    <p className="mt-0.5 font-medium">Thank you for your business!</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="p-8 space-y-6">
-                            <div className="grid grid-cols-2 gap-y-4">
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client Name</p><p className="font-bold">{selectedPayment.clientName}</p></div>
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Plan Name</p><p className="font-bold">{selectedPayment.planName}</p></div>
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Date</p><p className="font-bold">{new Date(selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB')}</p></div>
-                                <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Method</p><p className="font-bold uppercase">{selectedPayment.paymentMethod || 'CASH'}</p></div>
-                            </div>
-                            <div className="bg-gray-50 rounded-xl p-4 space-y-2 border border-gray-100">
-                                <div className="flex justify-between text-sm"><span className="text-gray-500">Invoice Amount</span><span className="font-bold">₹{selectedPayment.invoiceAmount || selectedPayment.amount || 0}</span></div>
-                                <div className="flex justify-between text-sm"><span className="text-gray-500">Amount Paid Now</span><span className="font-bold text-blue-600">₹{selectedPayment.paidNow || selectedPayment.paidAmount || 0}</span></div>
-                                <div className="flex justify-between text-sm pt-1"><span className="text-gray-500 text-xs">Cumulative Paid</span><span className="font-bold text-emerald-600 text-xs">₹{selectedPayment.totalPaid || selectedPayment.paidAmount || 0}</span></div>
-                                <div className="flex justify-between pt-2 border-t border-gray-200"><span className="font-black uppercase text-xs tracking-wider">Remaining Balance</span><span className="font-black text-rose-600">₹{selectedPayment.remainingBalance !== undefined ? selectedPayment.remainingBalance : (selectedPayment.amount - (selectedPayment.paidAmount || 0))}</span></div>
-                            </div>
-                        </div>
-                        <div className="p-8 bg-gray-50 text-center"><p className="text-xs text-gray-400 font-medium italic">Thank you for your business!</p></div>
                     </div>
                 </div>
             )}
