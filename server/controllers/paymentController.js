@@ -202,11 +202,25 @@ exports.updatePayment = async (req, res, next) => {
     
     const newPaymentId = await generatePaymentId(gymIdStr, gym.billingInfo?.billingIdPrefix || 'BILL');
 
-    // 2. Create a NEW payment record (Installment transaction)
     const invAmt = payment.invoiceAmount || payment.amount || 0;
-    const currentTotalPaid = (payment.totalPaid || payment.paidAmount || 0) + addedAmount;
-    const currentBalance = Math.max(0, invAmt - currentTotalPaid);
 
+    // 2. Compute TRUE cumulative paid by summing paidNow across ALL related transactions
+    //    (same client, same plan, same subscription start date)
+    //    This ensures each installment record stays an immutable snapshot and is not
+    //    mutated when a subsequent payment is recorded.
+    const allRelated = await Payment.find({
+      gymId: gymIdStr,
+      clientId: payment.clientId,
+      planId: payment.planId,
+      startDate: payment.startDate
+    });
+    const actualPrevTotalPaid = allRelated.reduce((sum, p) => sum + (p.paidNow || 0), 0);
+
+    const currentTotalPaid = actualPrevTotalPaid + addedAmount;
+    const currentBalance = Math.max(0, invAmt - currentTotalPaid);
+    const newStatus = currentBalance === 0 ? 'paid' : 'partial';
+
+    // 3. Create a NEW immutable payment record (installment snapshot)
     const newTransaction = await Payment.create({
       paymentId: newPaymentId,
       gymId: gymIdStr,
@@ -214,50 +228,44 @@ exports.updatePayment = async (req, res, next) => {
       clientName: payment.clientName,
       planId: payment.planId,
       planName: payment.planName,
-      amount: invAmt, // Store original total as requested
+      amount: invAmt,
       paidAmount: addedAmount,
       invoiceAmount: invAmt,
       paidNow: addedAmount,
       totalPaid: currentTotalPaid,
       remainingBalance: currentBalance,
-      status: currentBalance === 0 ? 'paid' : 'partial',
+      status: newStatus,
       paymentMethod: payment.paymentMethod || 'cash',
       mode: payment.paymentMethod || 'cash',
       paymentDate: new Date(),
       startDate: payment.startDate,
+      dueDate: payment.dueDate,
       isPlanActivated: false,
       date: new Date()
     });
 
-    // 3. Update the original payment's totals and status (Anchor record)
-    payment.totalPaid = currentTotalPaid;
-    payment.remainingBalance = currentBalance;
-    payment.paidAmount = currentTotalPaid; // Sync legacy field
-    payment.status = currentBalance === 0 ? 'paid' : 'partial';
-    await payment.save();
+    // 4. Each payment row is a FULLY IMMUTABLE snapshot.
+    //    Previous rows keep their original totalPaid, balance, and status.
+    //    Only the NEW transaction record carries the correct cumulative state.
 
-    // 4. Sync back to client document
+    // 5. Sync back to client document
     const client = await Client.findById(payment.clientId);
     if (client) {
-      // Add the new transaction to history
       if (!client.paymentHistory) client.paymentHistory = [];
       client.paymentHistory.push(newTransaction._id);
 
       if (client.memberships && Array.isArray(client.memberships)) {
-        // Find the membership matching this payment's plan and start date
-        const mIdx = client.memberships.findIndex(m => 
+        const mIdx = client.memberships.findIndex(m =>
           m.planId && payment.planId &&
-          m.planId.toString() === payment.planId.toString() && 
+          m.planId.toString() === payment.planId.toString() &&
           new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
         );
 
         if (mIdx !== -1) {
-          client.memberships[mIdx].totalPaid = (client.memberships[mIdx].totalPaid || 0) + addedAmount;
-          
-          // Update legacy field if it matches
-          if (client.membership && client.membership.planId && payment.planId && 
+          client.memberships[mIdx].totalPaid = currentTotalPaid;
+          if (client.membership && client.membership.planId && payment.planId &&
               client.membership.planId.toString() === payment.planId.toString()) {
-            client.membership.totalPaid = (client.membership.totalPaid || 0) + addedAmount;
+            client.membership.totalPaid = currentTotalPaid;
           }
         }
       }
@@ -275,3 +283,5 @@ exports.updatePayment = async (req, res, next) => {
     next(err);
   }
 };
+
+

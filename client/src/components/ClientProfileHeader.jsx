@@ -10,7 +10,7 @@ const planStatusConfig = {
 
 const paymentStatusConfig = {
     paid: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', label: 'Paid' },
-    partial: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', label: 'Partial Paid' },
+    partial: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', label: 'Partially Paid' },
     overdue: { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', label: 'Payment Overdue ⚠️' },
 };
 

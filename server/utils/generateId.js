@@ -60,23 +60,35 @@ const generateClientId = async (gymIdStr) => {
 };
 
 const generatePaymentId = async (gymId, billingPrefix) => {
-  // Use a more robust way to find the next ID than just countDocuments
-  // Find the highest existing number for this gym's prefix
-  const lastPayment = await Payment.findOne({ 
-    gymId, 
-    paymentId: new RegExp(`^${billingPrefix}-`) 
+  const counterName = `paymentId:${gymId}:${billingPrefix.toUpperCase()}`;
+  let sequence = await getNextSequenceValue(counterName);
+
+  // Sync/Correction: check highest existing paymentId for this prefix to avoid collisions
+  const escapedPrefix = billingPrefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const lastPayment = await Payment.findOne({
+    gymId,
+    paymentId: new RegExp(`^${escapedPrefix}-`)
   }).sort({ paymentId: -1 });
 
-  let nextNum = 1;
+  let lastCount = 0;
   if (lastPayment && lastPayment.paymentId) {
     const parts = lastPayment.paymentId.split('-');
     const lastNum = parseInt(parts[parts.length - 1], 10);
     if (!isNaN(lastNum)) {
-      nextNum = lastNum + 1;
+      lastCount = lastNum;
     }
   }
 
-  const paddedCount = nextNum.toString().padStart(4, '0');
+  if (sequence <= lastCount) {
+    const correctedCounter = await Counter.findOneAndUpdate(
+      { name: counterName },
+      { $set: { value: lastCount + 1 } },
+      { new: true, upsert: true }
+    );
+    sequence = correctedCounter.value;
+  }
+
+  const paddedCount = sequence.toString().padStart(3, '0');
   return `${billingPrefix}-${paddedCount}`;
 };
 
