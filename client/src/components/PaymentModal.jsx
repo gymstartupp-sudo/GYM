@@ -250,6 +250,7 @@ const PaymentModal = ({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
 
         if (isSubmitting) return;
 

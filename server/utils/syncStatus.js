@@ -7,33 +7,29 @@ const syncClientStatus = async (clientId) => {
     const client = await Client.findById(clientId);
     if (!client) return null;
 
-    // First check if any pending or partial payments are actually overdue right now
-    const pastDuePayments = await Payment.find({
-      clientId: client._id,
-      status: { $in: ['pending', 'partial'] },
-      dueDate: { $lt: new Date() }
-    });
+    // Calculate payment status based on membership balances instead of immutable payment snapshots
+    let hasOverdue = false;
+    let hasPartial = false;
 
-    // Update those payments to 'overdue' if they slipped past the cron
-    for (let p of pastDuePayments) {
-      p.status = 'overdue';
-      await p.save();
+    if (client.memberships && Array.isArray(client.memberships)) {
+      for (const m of client.memberships) {
+        const finalPrice = m.finalPrice || 0;
+        const totalPaid = m.totalPaid || 0;
+        const balance = finalPrice - totalPaid;
+
+        if (balance > 0) {
+          if (m.dueDate && new Date(m.dueDate) < new Date()) {
+            hasOverdue = true;
+          } else {
+            hasPartial = true;
+          }
+        }
+      }
     }
 
-    // Now check if the client has any overdue payments
-    const overduePayment = await Payment.findOne({
-      clientId: client._id,
-      status: 'overdue'
-    });
-
-    const partialPayment = await Payment.findOne({
-      clientId: client._id,
-      status: 'partial'
-    });
-
-    if (overduePayment) {
+    if (hasOverdue) {
       client.paymentStatus = 'overdue';
-    } else if (partialPayment) {
+    } else if (hasPartial) {
       client.paymentStatus = 'partial';
     } else {
       client.paymentStatus = 'paid';

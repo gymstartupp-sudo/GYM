@@ -453,29 +453,31 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const submitDisabled = isOwner ? ownerSubmitDisabled : selfStepTwoDisabled;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left">
-      {(!isOwner && step === 1) || isOwner ? renderPersonalInfo() : null}
-      {(!isOwner && step === 2) || isOwner ? renderMembershipInfo() : null}
+    <>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left">
+        {(!isOwner && step === 1) || isOwner ? renderPersonalInfo() : null}
+        {(!isOwner && step === 2) || isOwner ? renderMembershipInfo() : null}
 
-      <div className="flex justify-between pt-6 border-t border-gray-700 mt-6 !mt-8">
-        {!isOwner && step === 2 ? (
-          <Button type="button" variant="secondary" onClick={() => setStep(1)}>Back</Button>
-        ) : showCancel ? (
-          <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-        ) : (
-          <div></div>
-        )}
+        <div className="flex justify-between pt-6 border-t border-gray-700 mt-6 !mt-8">
+          {!isOwner && step === 2 ? (
+            <Button type="button" variant="secondary" onClick={() => setStep(1)}>Back</Button>
+          ) : showCancel ? (
+            <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+          ) : (
+            <div></div>
+          )}
 
-        {!isOwner && step === 1 ? (
-          <Button type="button" onClick={handleNextStep} className="ml-auto" isLoading={loading}>
-            Next
-          </Button>
-        ) : (
-          <Button type="button" isLoading={loading} className="ml-auto w-full md:w-auto" onClick={isOwner ? handleOwnerSubmit : () => { handleSubmit(onSubmit)() }}>
-            {isOwner ? 'Add Client' : 'Submit Membership Request'}
-          </Button>
-        )}
-      </div>
+          {!isOwner && step === 1 ? (
+            <Button type="button" onClick={handleNextStep} className="ml-auto" isLoading={loading}>
+              Next
+            </Button>
+          ) : (
+            <Button type="button" isLoading={loading} className="ml-auto w-full md:w-auto" onClick={isOwner ? handleOwnerSubmit : () => { handleSubmit(onSubmit)() }}>
+              {isOwner ? 'Add Client' : 'Submit Membership Request'}
+            </Button>
+          )}
+        </div>
+      </form>
 
       <PaymentModal 
         isOpen={showPaymentModal}
@@ -484,7 +486,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         clientData={pendingClientData}
         planData={plans.find(p => p._id === values.planId)}
       />
-    </form>
+    </>
   );
 };
 

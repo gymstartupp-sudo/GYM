@@ -305,39 +305,48 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
                             {client.paymentHistory && client.paymentHistory.length > 0 ? (
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse whitespace-nowrap">
+                                    <table className="w-full text-left border-collapse whitespace-nowrap min-w-[700px]">
                                         <thead>
-                                            <tr className="bg-gray-800/30 border-b border-gray-800 text-gray-400 text-[10px] font-black tracking-widest uppercase">
-                                                <th className="px-6 py-4">Receipt Info</th>
-                                                <th className="px-6 py-4">Plan</th>
-                                                <th className="px-6 py-4">Mode</th>
-                                                <th className="px-6 py-4 text-right">Total</th>
-                                                <th className="px-6 py-4 text-right">Paid</th>
-                                                <th className="px-6 py-4 text-right">Balance</th>
-                                                <th className="px-6 py-4 text-center">Status</th>
-                                                <th className="px-6 py-4 text-center">Bill</th>
+                                            <tr className="bg-gray-800/30 border-b border-gray-800 text-gray-400 text-[11px] font-black tracking-widest uppercase">
+                                                <th className="p-5">Receipt Info</th>
+                                                <th className="p-5">Plan</th>
+                                                <th className="p-5">Mode</th>
+                                                <th className="p-5 text-right">Plan Amount</th>
+                                                <th className="p-5 text-right">Paid Now</th>
+                                                <th className="p-5 text-right">Total Paid</th>
+                                                <th className="p-5 text-right">Remaining Balance</th>
+                                                <th className="p-5 text-center">Status</th>
+                                                <th className="p-5 text-center">Bill</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-800/50">
                                             {client.paymentHistory.map((payment) => (
                                                 <tr key={payment._id} className="hover:bg-gray-800/30 transition-all group">
-                                                    <td className="px-6 py-4">
-                                                        <p className="font-bold text-white text-sm">#{payment.paymentId}</p>
+                                                    <td className="p-5">
+                                                        <p className="font-bold text-white text-sm">{payment.paymentId}</p>
                                                         <p className="text-[10px] text-gray-500 mt-0.5">{new Date(payment.createdAt || payment.date || payment.paymentDate).toLocaleDateString('en-GB')}</p>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="p-5">
                                                         <span className="text-gray-300 text-xs font-medium">{payment.planName}</span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className="p-5">
                                                         <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${(payment.paymentMethod || payment.mode || 'cash') === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
                                                             {payment.paymentMethod || payment.mode || 'cash'}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-right text-gray-200 font-bold text-sm">₹{payment.amount || 0}</td>
-                                                    <td className="px-6 py-4 text-right text-emerald-400 font-bold text-sm">₹{getPaidAmount(payment)}</td>
-                                                    <td className="px-6 py-4 text-right text-rose-500 font-bold text-sm">₹{getBalance(payment)}</td>
-                                                    <td className="px-6 py-4 text-center">{getStatusBadge(payment.status)}</td>
-                                                    <td className="px-6 py-4 text-center">
+                                                    <td className="p-5 text-right text-gray-200 font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
+                                                    <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
+                                                    <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
+                                                    <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
+                                                    <td className="p-5 text-center">
+                                                        {getStatusBadge(payment.status)}
+                                                        {payment.status === 'partial' && payment.dueDate && (
+                                                            <div className="mt-1 text-[10px] text-gray-500 font-medium">
+                                                                Due: {new Date(payment.dueDate).toLocaleDateString('en-GB')}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-5 text-center">
                                                         <button 
                                                             onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
                                                             className="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-all"

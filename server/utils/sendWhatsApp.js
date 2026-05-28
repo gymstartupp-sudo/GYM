@@ -13,14 +13,21 @@ const sendWhatsApp = async (options) => {
       formattedPhone = '+91' + formattedPhone; 
     }
 
+    let fromNumber = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
+    if (!fromNumber.startsWith('whatsapp:')) {
+      fromNumber = 'whatsapp:' + fromNumber;
+    }
+
     const messageResponse = await client.messages.create({
       body: options.message,
-      from: process.env.TWILIO_WHATSAPP_FROM,
+      from: fromNumber,
       to: `whatsapp:${formattedPhone}`
     });
     console.log(`WhatsApp Sent: ${messageResponse.sid}`);
+    return { success: true, sid: messageResponse.sid, status: messageResponse.status };
   } catch (error) {
     console.error('Error sending WhatsApp: ', error);
+    return { success: false, error: error.message };
   }
 };
 

@@ -363,12 +363,20 @@ const Dues = () => {
                                                         </button>
                                                     </div>
                                                 ) : (
-                                                    <button
-                                                        onClick={() => handlePayNow(due)}
-                                                        className="px-4 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-xs font-black transition-all border border-primary/20 uppercase tracking-widest"
-                                                    >
-                                                        Pay Now
-                                                    </button>
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => setViewClientId(due.clientId)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-gray-700"
+                                                        >
+                                                            <Eye size={14} /> View
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handlePayNow(due)}
+                                                            className="px-4 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-xs font-black transition-all border border-primary/20 uppercase tracking-widest"
+                                                        >
+                                                            Pay Now
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </td>
                                         </tr>

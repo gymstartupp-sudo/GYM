@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import ClientForm from '../../components/ClientForm';
 import ClientDetail from './ClientDetail';
 import PaymentModal from '../../components/PaymentModal';
+import ClientCard from '../../components/ClientCard';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../../utils/membership';
 
 const planStatusStyles = {
@@ -40,78 +41,42 @@ const StatCard = ({ title, value, icon, color }) => (
 
 const ClientDashboardTable = ({ clients, onView }) => (
     <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[700px]">
+        <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
                 <tr className="bg-gray-800/40 text-gray-500 uppercase text-[10px] font-bold tracking-widest border-b border-gray-800">
                     <th className="px-6 py-4">Client Info</th>
-                    <th className="px-6 py-4">Plan</th>
-                    <th className="px-6 py-4">Duration</th>
-                    <th className="px-6 py-4">Days Left</th>
-                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Contact Info</th>
                     <th className="px-6 py-4 text-right">Action</th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-800/50">
-                {clients.map(client => {
-                    const currentPlan = client?.memberships?.find(p => {
-                        const s = getPlanStatus(p);
-                        return s === 'Active';
-                    }) || (client?.membership?.startDate ? client.membership : null);
-                    
-                    const planStatus = currentPlan ? getPlanStatus(currentPlan) : 'Expired';
-                    const paymentStatus = client?.paymentStatus || 'paid';
-                    const dynamicDaysLeft = calculateDaysLeft(currentPlan?.startDate, currentPlan?.endDate);
-                    const daysLeft = dynamicDaysLeft !== null ? dynamicDaysLeft : '-';
-
-                    return (
-                        <tr key={client._id} className="hover:bg-white/[0.02] transition-colors group">
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-base border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                                        {client.personalInfo?.name?.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="text-white font-bold truncate group-hover:text-primary transition-colors">{client.personalInfo?.name}</span>
-                                        <span className="text-gray-500 text-[10px] font-mono tracking-tighter uppercase">{client.clientId || 'N/A'}</span>
-                                    </div>
+                {clients.map(client => (
+                    <tr key={client._id} className="hover:bg-white/[0.02] transition-colors group">
+                        <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-base border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                    {client.personalInfo?.name?.charAt(0).toUpperCase()}
                                 </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className="text-gray-300 text-sm font-medium">{currentPlan?.planName || 'No Active Plan'}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="flex flex-col">
-                                    <span className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Start: {formatDisplayDate(currentPlan?.startDate)}</span>
-                                    <span className="text-gray-400 text-[10px] uppercase font-bold tracking-widest">End: {formatDisplayDate(currentPlan?.endDate)}</span>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-white font-bold truncate group-hover:text-primary transition-colors">{client.personalInfo?.name}</span>
+                                    <span className="text-gray-500 text-[10px] font-mono tracking-tighter uppercase">{client.clientId || 'N/A'}</span>
                                 </div>
-                            </td>
-                            <td className="px-6 py-4">
-                                <span className="text-white font-bold">{daysLeft}</span>
-                            </td>
-                            <td className="px-6 py-4">
-                                <div className="flex flex-col gap-1 items-start">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase whitespace-nowrap text-center ${planStatusStyles[planStatus]}`}>
-                                        {planStatus}
-                                    </span>
-                                    {paymentStatus !== 'paid' && (
-                                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase whitespace-nowrap text-center ${paymentStatusStyles[paymentStatus]}`}>
-                                            Dues
-                                        </span>
-                                    )}
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                                <button 
-                                    onClick={() => onView(client)}
-                                    className="p-2 bg-gray-800 text-gray-400 hover:text-white hover:bg-primary rounded-lg transition-all shadow-lg border border-gray-700/50"
-                                    title="View Details"
-                                >
-                                    <Eye size={16} />
-                                </button>
-                            </td>
-                        </tr>
-                    );
-                })}
+                            </div>
+                        </td>
+                        <td className="px-6 py-4">
+                            <span className="text-gray-300 text-sm font-medium">{client.personalInfo?.mobileNo || '-'}</span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                            <button 
+                                onClick={() => onView(client)}
+                                className="p-2 bg-gray-800 text-gray-400 hover:text-white hover:bg-primary rounded-lg transition-all shadow-lg border border-gray-700/50"
+                                title="View Details"
+                            >
+                                <Eye size={16} />
+                            </button>
+                        </td>
+                    </tr>
+                ))}
             </tbody>
         </table>
     </div>
@@ -132,6 +97,7 @@ const Dashboard = () => {
    const [showPaymentModal, setShowPaymentModal] = useState(false);
    const [plans, setPlans] = useState([]);
    const [allPayments, setAllPayments] = useState([]);
+   const [allClientsSearchTerm, setAllClientsSearchTerm] = useState('');
 
    const closeAddModal = (force = false) => {
        if (!force && isFormDirty) {
@@ -145,57 +111,55 @@ const Dashboard = () => {
    };
 
    const fetchStats = async () => {
-       try {
-           const res = await api.get('/gym/dashboard');
-           setStats(res.data.data);
-           
-           // Fetch all clients to get the 'first' ones for the dashboard table
-           const [activeRes, inactiveRes, plansRes, paymentsRes] = await Promise.all([
-               api.get('/client'),
-               api.get('/client/inactive'),
-               api.get('/plan'),
-               api.get('/payment')
-           ]);
-           const combined = [...(activeRes.data.data || []), ...(inactiveRes.data.data || [])];
-           const sorted = combined.sort((a, b) => {
-               const idA = a.clientId || '';
-               const idB = b.clientId || '';
-               return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
-           });
-           setAllClients(sorted);
-           setDashboardTableClients(sorted.slice(0, 4));
+        try {
+            const res = await api.get('/gym/dashboard');
+            setStats(res.data.data);
+            
+            // Fetch all clients to get the 'first' ones for the dashboard table
+            const [activeRes, plansRes, paymentsRes] = await Promise.all([
+                api.get('/client?status=all'),
+                api.get('/plan'),
+                api.get('/payment')
+            ]);
+            const combined = activeRes.data.data || [];
+            const sorted = combined.sort((a, b) => {
+                const idA = a.clientId || '';
+                const idB = b.clientId || '';
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            setAllClients(sorted);
+            setDashboardTableClients(sorted.slice(0, 4));
 
-           setPlans(plansRes.data.data);
-           setAllPayments(paymentsRes.data.data || []);
-       } catch (error) {
-           toast.error("Failed to load dashboard data");
-       } finally {
-           setLoading(false);
-       }
-   };
+            setPlans(plansRes.data.data);
+            setAllPayments(paymentsRes.data.data || []);
+        } catch (error) {
+            toast.error("Failed to load dashboard data");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-   const fetchAllClients = async () => {
-       // We already have allClients from fetchStats, but we can refresh it
-       setLoadingAllClients(true);
-       setShowAllClientsModal(true);
-       try {
-           const [activeRes, inactiveRes] = await Promise.all([
-               api.get('/client'),
-               api.get('/client/inactive')
-           ]);
-           const combined = [...(activeRes.data.data || []), ...(inactiveRes.data.data || [])];
-           const sorted = combined.sort((a, b) => {
-               const idA = a.clientId || '';
-               const idB = b.clientId || '';
-               return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
-           });
-           setAllClients(sorted);
-       } catch (error) {
-           toast.error("Failed to refresh client list");
-       } finally {
-           setLoadingAllClients(false);
-       }
-   };
+    const fetchAllClients = async () => {
+        // We already have allClients from fetchStats, but we can refresh it
+        setLoadingAllClients(true);
+        setShowAllClientsModal(true);
+        try {
+            const [activeRes] = await Promise.all([
+                api.get('/client?status=all')
+            ]);
+            const combined = activeRes.data.data || [];
+            const sorted = combined.sort((a, b) => {
+                const idA = a.clientId || '';
+                const idB = b.clientId || '';
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            setAllClients(sorted);
+        } catch (error) {
+            toast.error("Failed to refresh client list");
+        } finally {
+            setLoadingAllClients(false);
+        }
+    };
 
    useEffect(() => {
        fetchStats();
@@ -372,7 +336,7 @@ const Dashboard = () => {
                             </button>
                         </div>
                         <div className="overflow-y-auto custom-scrollbar flex-1 bg-gray-900">
-                            <ClientDetail clientId={viewClient._id} onClose={() => setViewClient(null)} simplified={true} />
+                            <ClientDetail clientId={viewClient._id} onClose={() => setViewClient(null)} />
                         </div>
                     </div>
                 </div>
@@ -387,9 +351,21 @@ const Dashboard = () => {
                                  <h2 className="text-xl font-bold text-white">All Gym Members</h2>
                                  <p className="text-gray-500 text-xs mt-1">Sorted by Client ID ascending</p>
                              </div>
-                             <button onClick={() => setShowAllClientsModal(false)} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                             <button onClick={() => { setShowAllClientsModal(false); setAllClientsSearchTerm(''); }} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
                                  <X size={24} />
                              </button>
+                         </div>
+
+                         <div className="p-4 border-b border-gray-800 bg-gray-900/50">
+                             <div className="relative w-full">
+                                 <input 
+                                     type="text" 
+                                     placeholder="Search by ID or Name..." 
+                                     className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2.5 px-4 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                     value={allClientsSearchTerm}
+                                     onChange={(e) => setAllClientsSearchTerm(e.target.value)}
+                                 />
+                             </div>
                          </div>
                          
                          <div className="overflow-y-auto flex-1 custom-scrollbar">
@@ -402,9 +378,13 @@ const Dashboard = () => {
                                  <div className="py-20 text-center text-gray-500 italic">No clients found</div>
                              ) : (
                                  <ClientDashboardTable 
-                                     clients={allClients} 
+                                     clients={allClients.filter(c => 
+                                         (c.personalInfo?.name || '').toLowerCase().includes(allClientsSearchTerm.toLowerCase()) || 
+                                         (c.clientId || '').toLowerCase().includes(allClientsSearchTerm.toLowerCase())
+                                     )} 
                                      onView={(c) => {
                                          setShowAllClientsModal(false);
+                                         setAllClientsSearchTerm('');
                                          setViewClient(c);
                                      }} 
                                  />

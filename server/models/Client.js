@@ -13,8 +13,12 @@ const clientSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     mobileNo: { type: String, required: true, unique: true },
     emergencyContact: { type: String },
-    medicalCondition: { type: String, maxlength: 100 }
+    medicalCondition: { type: String, maxlength: 100 },
+    whatsappNumber: { type: String }
   },
+  whatsappNumber: { type: String },
+  expiryReminderSent: { type: Boolean, default: false },
+  expiredReminderSent: { type: Boolean, default: false },
   password: { type: String, required: true },
   memberships: [{
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan' },
@@ -40,7 +44,10 @@ const clientSchema = new mongoose.Schema({
     startDate: { type: Date },
     endDate: { type: Date },
     daysLeft: { type: Number },
-    requestApproved: { type: Boolean, default: false }
+    status: { type: String },
+    requestApproved: { type: Boolean, default: false },
+    expiryReminderSent: { type: Boolean, default: false },
+    expiredReminderSent: { type: Boolean, default: false }
   },
   paymentHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
   avatar: { type: String },
