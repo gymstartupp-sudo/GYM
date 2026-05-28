@@ -77,14 +77,14 @@ exports.getClients = async (req, res, next) => {
       } else if (s === 'expiring soon') {
         query['membership.requestApproved'] = true;
         query.memberships = { 
-          $elemMatch: { endDate: { $gte: today, $lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) } } 
+          $elemMatch: { endDate: { $gte: today, $lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) } } 
         };
       } else if (s === 'dues') {
         query.paymentStatus = { $in: ['overdue', 'partial'] };
       } else if (s === 'pending') {
         query['membership.requestApproved'] = false;
       }
-    } else {
+    } else if (!status) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       query.$or = [

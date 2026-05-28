@@ -111,7 +111,7 @@ exports.getDashboardStats = async (req, res, next) => {
       isActive: true,
       memberships: { 
         $elemMatch: { 
-          endDate: { $gte: today, $lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) } 
+          endDate: { $gte: today, $lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) } 
         } 
       }
     });
@@ -124,7 +124,7 @@ exports.getDashboardStats = async (req, res, next) => {
       isActive: true,
       memberships: { 
         $elemMatch: { 
-          endDate: { $gte: today, $lte: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000) } 
+          endDate: { $gte: today, $lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) } 
         } 
       }
     }).limit(3);
