@@ -12,7 +12,7 @@ exports.getOverdueClients = async (req, res, next) => {
       gymId: gymIdStr, 
       isActive: true,
       paymentStatus: 'overdue'
-    }).sort({ 'membership.endDate': 1 });
+    }).sort({ 'membership.endDate': 1 }).lean();
     
     res.status(200).json({ success: true, count: clients.length, data: clients });
   } catch (err) {
@@ -32,7 +32,7 @@ exports.getExpiredClients = async (req, res, next) => {
     const clients = await Client.find({ 
       gymId: gymIdStr, 
       isActive: true 
-    });
+    }).lean();
 
     const expiredClients = clients.filter(client => {
       const memberships = client.memberships || (client.membership?.startDate ? [client.membership] : []);

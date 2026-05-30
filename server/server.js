@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const compression = require('compression');
 
 // Import Middlewares
 const { errorHandler } = require('./middleware/errorHandler');
@@ -12,6 +13,7 @@ const Admin = require('./models/Admin');
 
 const app = express();
 
+app.use(compression({ level: 6 }));
 // Middleware
 app.use(cors({
   origin: [

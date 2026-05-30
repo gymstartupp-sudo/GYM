@@ -118,7 +118,7 @@ exports.getDashboardStats = async (req, res, next) => {
 
     const totalPlans = await Plan.countDocuments({ gymId: gymIdStr, isActive: true });
 
-    // Fetch lists
+    // Fetch lists with highly efficient lean queries
     const expiringSoonList = await Client.find({ 
       gymId: gymIdStr, 
       isActive: true,
@@ -127,9 +127,9 @@ exports.getDashboardStats = async (req, res, next) => {
           endDate: { $gte: today, $lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) } 
         } 
       }
-    }).limit(3);
+    }).limit(3).lean();
 
-    const clients = await Client.find({ gymId: gymIdStr, isActive: true });
+    const clients = await Client.find({ gymId: gymIdStr, isActive: true }).lean();
     
     const expiredClientsList = clients.filter(client => {
       const memberships = client.memberships || (client.membership?.startDate ? [client.membership] : []);
@@ -146,49 +146,119 @@ exports.getDashboardStats = async (req, res, next) => {
     const expiredClients = expiredClientsList.length;
     const expiredList = expiredClientsList.slice(0, 3);
 
-    const pendingList = await Client.find({ gymId: gymIdStr, 'membership.requestApproved': false, isActive: true });
+    const pendingList = await Client.find({ gymId: gymIdStr, 'membership.requestApproved': false, isActive: true }).lean();
 
     const recentClients = await Client.find({ gymId: gymIdStr, isActive: true })
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(5)
+      .lean();
 
-    // Financial calculations
-    const payments = await Payment.find({ gymId: gymIdStr });
-    const totalRevenue = payments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+    // Financial calculations via database-level mathematical reductions (highly scalable)
+    const [revenueAgg, expenseAgg] = await Promise.all([
+      Payment.aggregate([
+        { $match: { gymId: gymIdStr } },
+        { $group: { _id: null, total: { $sum: "$paidAmount" } } }
+      ]),
+      Expense.aggregate([
+        { $match: { gymId: gymIdStr, isReminder: { $ne: true } } },
+        { $group: { _id: null, total: { $sum: "$amount" } } }
+      ])
+    ]);
 
-    const expenses = await Expense.find({ gymId: gymIdStr, isReminder: { $ne: true } });
-    const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-
+    const totalRevenue = revenueAgg[0]?.total || 0;
+    const totalExpenses = expenseAgg[0]?.total || 0;
     const netProfit = totalRevenue - totalExpenses;
 
-    // Monthly data for chart (Last 6 months)
+    // Monthly data for chart (Last 6 months comparative aggregation)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    const [monthlyRevenueAgg, monthlyExpensesAgg] = await Promise.all([
+      Payment.aggregate([
+        {
+          $match: {
+            gymId: gymIdStr,
+            $or: [
+              { paymentDate: { $gte: sixMonthsAgo } },
+              { createdAt: { $gte: sixMonthsAgo } }
+            ]
+          }
+        },
+        {
+          $project: {
+            paidAmount: 1,
+            date: { $ifNull: ["$paymentDate", "$createdAt"] }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$date" },
+              month: { $month: "$date" }
+            },
+            revenue: { $sum: "$paidAmount" }
+          }
+        }
+      ]),
+      Expense.aggregate([
+        {
+          $match: {
+            gymId: gymIdStr,
+            isReminder: { $ne: true },
+            $or: [
+              { date: { $gte: sixMonthsAgo } },
+              { createdAt: { $gte: sixMonthsAgo } }
+            ]
+          }
+        },
+        {
+          $project: {
+            amount: 1,
+            date: { $ifNull: ["$date", "$createdAt"] }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$date" },
+              month: { $month: "$date" }
+            },
+            expenses: { $sum: "$amount" }
+          }
+        }
+      ])
+    ]);
+
+    const revenueMap = new Map();
+    monthlyRevenueAgg.forEach(item => {
+      if (item._id) {
+        revenueMap.set(`${item._id.year}-${item._id.month}`, item.revenue);
+      }
+    });
+
+    const expensesMap = new Map();
+    monthlyExpensesAgg.forEach(item => {
+      if (item._id) {
+        expensesMap.set(`${item._id.year}-${item._id.month}`, item.expenses);
+      }
+    });
+
     const chartData = [];
     for (let i = 5; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        const monthName = d.toLocaleString('default', { month: 'short' });
-        const monthNum = d.getMonth();
-        const yearNum = d.getFullYear();
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthName = d.toLocaleString('default', { month: 'short' });
+      const monthNum = d.getMonth() + 1; // MongoDB $month is 1-12
+      const yearNum = d.getFullYear();
+      const key = `${yearNum}-${monthNum}`;
 
-        const monthlyRevenue = payments
-            .filter(p => {
-                const pDate = new Date(p.paymentDate || p.createdAt);
-                return pDate.getMonth() === monthNum && pDate.getFullYear() === yearNum;
-            })
-            .reduce((sum, p) => sum + (p.paidAmount || 0), 0);
-
-        const monthlyExpenses = expenses
-            .filter(e => {
-                const eDate = new Date(e.date || e.createdAt);
-                return eDate.getMonth() === monthNum && eDate.getFullYear() === yearNum;
-            })
-            .reduce((sum, e) => sum + (e.amount || 0), 0);
-
-        chartData.push({
-            month: monthName,
-            revenue: monthlyRevenue,
-            expenses: monthlyExpenses
-        });
+      chartData.push({
+        month: monthName,
+        revenue: revenueMap.get(key) || 0,
+        expenses: expensesMap.get(key) || 0
+      });
     }
 
     res.status(200).json({

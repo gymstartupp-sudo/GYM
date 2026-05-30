@@ -123,4 +123,4 @@ const ClientCard = ({ client, onView, onDelete, onRenew, onReactivate, onDuesCli
   );
 };
 
-export default ClientCard;
+export default React.memo(ClientCard);

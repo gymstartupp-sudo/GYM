@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
@@ -170,11 +170,15 @@ const Clients = () => {
   };
 
   // Client-side search on top of server-side status+plan filter
-  const filteredClients = clients.filter(c =>
-    c.personalInfo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.clientId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.personalInfo.mobileNo.includes(searchTerm)
-  );
+  const filteredClients = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+    if (!term) return clients;
+    return clients.filter(c =>
+      c.personalInfo?.name?.toLowerCase().includes(term) ||
+      (c.clientId || '').toLowerCase().includes(term) ||
+      c.personalInfo?.mobileNo?.includes(term)
+    );
+  }, [clients, searchTerm]);
 
   const hasStatusFilter = filterStatus !== 'All';
   const hasPlanFilter = filterPlan !== 'All';

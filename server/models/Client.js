@@ -56,6 +56,8 @@ const clientSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 clientSchema.index({ gymId: 1, clientId: 1 }, { unique: true, sparse: true });
+clientSchema.index({ gymId: 1, isActive: 1 });
+clientSchema.index({ gymId: 1, isActive: 1, paymentStatus: 1 });
 
 clientSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();

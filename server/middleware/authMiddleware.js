@@ -16,19 +16,19 @@ const protect = async (req, res, next) => {
 
       // Determine user type based on token role embedded during authentication
       if (decoded.role === 'client') {
-        user = await Client.findById(decoded.id).select('-password');
+        user = await Client.findById(decoded.id).select('-password').lean();
         role = 'client';
       } else if (decoded.role === 'owner') {
-        user = await Gym.findById(decoded.id).select('-password');
-        if(!user) {
-           // Also fetch owner separately if needed or link to gym.
-           // Because Gym is the entity logging in, but it belongs to an Owner account.
-           // However, login specs say for owner: "GYM OWNER LOGIN: gymId + gymName + phone + password"
-           // It logs into the Gym document itself or Owner. Let's use Gym as user.
+        if (decoded.gymId) {
+          // Fast-path: Construct user object from token payload directly, completely bypassing DB lookup!
+          user = { _id: decoded.id, gymId: decoded.gymId, gymName: decoded.gymName };
+        } else {
+          user = await Gym.findById(decoded.id).select('-password').lean();
         }
         role = 'owner';
       } else if (decoded.role === 'superadmin') {
-        user = await Admin.findById(decoded.id).select('-password');
+        // Fast-path: Superadmin does not have gym-specific variables in authMiddleware
+        user = { _id: decoded.id };
         role = 'superadmin';
       }
 
