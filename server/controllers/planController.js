@@ -57,7 +57,7 @@ exports.getPlans = async (req, res, next) => {
         return res.status(400).json({ success: false, message: 'gymId is required' });
     }
 
-    const plans = await Plan.find({ gymId, isActive: true });
+    const plans = await Plan.find({ gymId, isActive: true }).lean();
     
     res.status(200).json({ success: true, data: plans });
   } catch (err) {

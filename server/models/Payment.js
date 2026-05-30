@@ -24,4 +24,8 @@ const paymentSchema = new mongoose.Schema({
   billSentViaWhatsApp: { type: Boolean, default: false }
 }, { timestamps: true });
 
+paymentSchema.index({ clientId: 1 });
+paymentSchema.index({ gymId: 1, createdAt: -1 });
+paymentSchema.index({ gymId: 1, clientId: 1, planId: 1, startDate: 1 });
+
 module.exports = mongoose.model('Payment', paymentSchema);

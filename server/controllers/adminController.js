@@ -26,17 +26,21 @@ exports.getDashboardStats = async (req, res, next) => {
 // @access  Private (SuperAdmin)
 exports.getAllGyms = async (req, res, next) => {
   try {
-    const gyms = await Gym.find().select('-password');
-    // For admin list, we might want to also fetch owner info, we can do it via a join/aggregation or manual mapping
-    const owners = await Owner.find();
+    const gyms = await Gym.find().select('-password').lean();
+    const owners = await Owner.find().lean();
     
-    const data = gyms.map(gym => {
-        const owner = owners.find(o => o.gymId.toString() === gym._id.toString());
-        return {
-            ...gym.toObject(),
-            ownerName: owner ? owner.name : 'N/A'
-        }
+    // Build O(1) Map for gym owners lookup
+    const ownersMap = new Map();
+    owners.forEach(owner => {
+      if (owner.gymId) {
+        ownersMap.set(owner.gymId.toString(), owner.name);
+      }
     });
+    
+    const data = gyms.map(gym => ({
+      ...gym,
+      ownerName: ownersMap.get(gym._id.toString()) || 'N/A'
+    }));
 
     res.status(200).json({ success: true, data });
   } catch (err) {

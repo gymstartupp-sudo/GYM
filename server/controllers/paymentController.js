@@ -67,10 +67,32 @@ const assignOrRenewPlan = async (client, planId, startDateStr, paymentData = {})
 // @access  Private (Owner)
 exports.recordPayment = async (req, res, next) => {
   try {
-    const { clientId, planId, planName, amount, paidAmount = 0, paymentMethod = 'cash', dueDate, startDate } = req.body;
-    const gymIdStr = req.user.gymId;
+    let { clientId, planId, planName, amount, paidAmount = 0, paymentMethod = 'cash', dueDate, startDate } = req.body;
+    let gymIdStr = req.user.gymId;
 
     if (!planId) return res.status(400).json({ success: false, message: 'Plan is required for payment' });
+
+    // Securely derive client parameters if call is initiated from client login
+    if (req.userRole === 'client') {
+      const Plan = require('../models/Plan');
+      clientId = req.user._id.toString();
+      gymIdStr = req.user.gymId;
+
+      const planDetails = await Plan.findOne({ _id: planId, gymId: gymIdStr, isActive: true });
+      if (!planDetails) {
+        return res.status(400).json({ success: false, message: 'Selected plan not found' });
+      }
+
+      planName = planDetails.name;
+      amount = planDetails.price;
+      
+      // Validate paidAmount and ensure it does not exceed the secure plan price
+      const requestedPaid = Number(paidAmount) || 0;
+      if (requestedPaid > planDetails.price) {
+        return res.status(400).json({ success: false, message: 'Paid amount cannot exceed plan price' });
+      }
+      paidAmount = requestedPaid;
+    }
 
     const client = await Client.findOne({ _id: clientId, gymId: gymIdStr });
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
@@ -155,11 +177,11 @@ exports.recordPayment = async (req, res, next) => {
 exports.getPayments = async (req, res, next) => {
   try {
     let gymIdStr = req.userRole === 'owner' ? req.user.gymId : req.query.gymId;
-    const rawPayments = await Payment.find({ gymId: gymIdStr }).sort({ createdAt: -1 });
+    const rawPayments = await Payment.find({ gymId: gymIdStr }).sort({ createdAt: -1 }).lean();
     
     // On-the-fly migration for old records
     const payments = rawPayments.map(p => {
-      const obj = p.toObject();
+      const obj = p.toObject ? p.toObject() : p;
       // If amount is 0 (old installment logic) and invoiceAmount is missing
       if ((obj.amount === 0 || !obj.invoiceAmount) && obj.paidAmount > 0) {
         // Try to reconstruct based on available data

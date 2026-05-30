@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
@@ -24,23 +24,31 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = (token, role) => {
+  const login = useCallback((token, role) => {
     localStorage.setItem('token', token);
     localStorage.setItem('role', role);
     const decoded = jwtDecode(token);
     setUser(decoded);
     setRole(role);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     setUser(null);
     setRole(null);
-  };
+  }, []);
+
+  const authValue = useMemo(() => ({
+    user,
+    role,
+    login,
+    logout,
+    loading
+  }), [user, role, login, logout, loading]);
 
   return (
-    <AuthContext.Provider value={{ user, role, login, logout, loading }}>
+    <AuthContext.Provider value={authValue}>
       {!loading && children}
     </AuthContext.Provider>
   );

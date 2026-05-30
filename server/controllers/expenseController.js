@@ -6,7 +6,7 @@ const Expense = require('../models/Expense');
 exports.getExpenses = async (req, res, next) => {
   try {
     const gymIdStr = req.user.gymId;
-    const expenses = await Expense.find({ gymId: gymIdStr }).sort({ date: -1 });
+    const expenses = await Expense.find({ gymId: gymIdStr }).sort({ date: -1 }).lean();
     res.status(200).json({ success: true, count: expenses.length, data: expenses });
   } catch (err) {
     next(err);

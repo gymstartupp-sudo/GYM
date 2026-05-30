@@ -102,9 +102,11 @@ exports.checkExists = async (req, res, next) => {
     let message = '';
 
     if (email) {
-      const gymEmailExists = await Gym.findOne({ gymEmail: email });
-      const clientEmailExists = await Client.findOne({ 'personalInfo.email': email });
-      const adminEmailExists = await Admin.findOne({ email });
+      const [gymEmailExists, clientEmailExists, adminEmailExists] = await Promise.all([
+        Gym.findOne({ gymEmail: email }).lean(),
+        Client.findOne({ 'personalInfo.email': email }).lean(),
+        Admin.findOne({ email }).lean()
+      ]);
 
       if (gymEmailExists || clientEmailExists || adminEmailExists) {
         exists = true;
@@ -113,8 +115,10 @@ exports.checkExists = async (req, res, next) => {
     }
 
     if (phone && !exists) {
-      const gymPhoneExists = await Gym.findOne({ gymContact: phone });
-      const clientPhoneExists = await Client.findOne({ 'personalInfo.mobileNo': phone });
+      const [gymPhoneExists, clientPhoneExists] = await Promise.all([
+        Gym.findOne({ gymContact: phone }).lean(),
+        Client.findOne({ 'personalInfo.mobileNo': phone }).lean()
+      ]);
 
       if (gymPhoneExists || clientPhoneExists) {
         exists = true;

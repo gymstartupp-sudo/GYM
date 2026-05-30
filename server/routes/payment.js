@@ -4,7 +4,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 const paymentController = require('../controllers/paymentController');
 
 router.route('/')
-  .post(protect, authorize('owner'), paymentController.recordPayment)
+  .post(protect, authorize('owner', 'client'), paymentController.recordPayment)
   .get(protect, authorize('owner', 'superadmin'), paymentController.getPayments);
 
 router.route('/:id')

@@ -98,14 +98,25 @@ exports.getClients = async (req, res, next) => {
       query['membership.planName'] = selectedPlan;
     }
 
-    const rawClients = await Client.find(query).sort({ createdAt: -1 });
+    const rawClients = await Client.find(query).sort({ createdAt: -1 }).lean();
     
-    // Optimization: Fetch all payments for these clients in one go
+    // Optimization: Fetch all payments for these clients in one go and build an O(1) Map lookup
     const Payment = require('../models/Payment');
     const clientIds = rawClients.map(c => c._id.toString());
-    const allPayments = await Payment.find({ clientId: { $in: clientIds } });
+    const allPayments = await Payment.find({ clientId: { $in: clientIds } }).lean();
 
-    const clients = rawClients.map(c => calculateBalances(c, allPayments));
+    const paymentsMap = new Map();
+    allPayments.forEach(p => {
+      const cId = p.clientId?.toString();
+      if (cId) {
+        if (!paymentsMap.has(cId)) {
+          paymentsMap.set(cId, []);
+        }
+        paymentsMap.get(cId).push(p);
+      }
+    });
+
+    const clients = rawClients.map(c => calculateBalances(c, paymentsMap.get(c._id.toString()) || []));
 
     res.status(200).json({ success: true, count: clients.length, data: clients });
   } catch (err) {
@@ -119,10 +130,10 @@ exports.getClients = async (req, res, next) => {
 exports.getClientProfile = async (req, res, next) => {
   try {
     const Payment = require('../models/Payment');
-    const client = await Client.findById(req.user._id).populate('membership.planId');
+    const client = await Client.findById(req.user._id).populate('membership.planId').lean();
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
     
-    const payments = await Payment.find({ clientId: client._id.toString() });
+    const payments = await Payment.find({ clientId: client._id.toString() }).lean();
     const enriched = calculateBalances(client, payments);
     res.status(200).json({ success: true, data: enriched });
   } catch (err) {
@@ -240,10 +251,10 @@ exports.addClient = async (req, res, next) => {
 exports.getClientById = async (req, res, next) => {
   try {
     const Payment = require('../models/Payment');
-    const clientDoc = await Client.findById(req.params.id);
+    const clientDoc = await Client.findById(req.params.id).lean();
     if (!clientDoc) return res.status(404).json({ success: false, message: 'Client not found' });
     
-    const payments = await Payment.find({ clientId: clientDoc._id.toString() });
+    const payments = await Payment.find({ clientId: clientDoc._id.toString() }).lean();
     const enriched = calculateBalances(clientDoc, payments);
     res.status(200).json({ success: true, data: enriched });
   } catch (err) {
@@ -326,14 +337,25 @@ exports.getInactiveClients = async (req, res, next) => {
       query['membership.planName'] = selectedPlan;
     }
 
-    const rawClients = await Client.find(query).sort({ deactivatedAt: -1 });
+    const rawClients = await Client.find(query).sort({ deactivatedAt: -1 }).lean();
     
-    // Optimization: Fetch all payments for these clients in one go
+    // Optimization: Fetch all payments for these clients in one go and build an O(1) Map lookup
     const Payment = require('../models/Payment');
     const clientIds = rawClients.map(c => c._id.toString());
-    const allPayments = await Payment.find({ clientId: { $in: clientIds } });
+    const allPayments = await Payment.find({ clientId: { $in: clientIds } }).lean();
 
-    const clients = rawClients.map(c => calculateBalances(c, allPayments));
+    const paymentsMap = new Map();
+    allPayments.forEach(p => {
+      const cId = p.clientId?.toString();
+      if (cId) {
+        if (!paymentsMap.has(cId)) {
+          paymentsMap.set(cId, []);
+        }
+        paymentsMap.get(cId).push(p);
+      }
+    });
+
+    const clients = rawClients.map(c => calculateBalances(c, paymentsMap.get(c._id.toString()) || []));
 
     res.status(200).json({ success: true, count: clients.length, data: clients });
   } catch (err) {
