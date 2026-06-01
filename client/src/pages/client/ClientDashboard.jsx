@@ -97,6 +97,7 @@ const ClientDashboard = () => {
   const [availablePlans, setAvailablePlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [detectedPendingPayment, setDetectedPendingPayment] = useState(null);
   const [showRazorpayModal, setShowRazorpayModal] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
 
@@ -162,22 +163,76 @@ const ClientDashboard = () => {
     return null;
   };
 
+  const getPendingPayment = (clientDoc) => {
+    if (!clientDoc || !clientDoc.paymentHistory || clientDoc.paymentHistory.length === 0) return null;
+    
+    const sortedPayments = [...clientDoc.paymentHistory].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+
+    const seenWindows = new Set();
+    let pendingPayment = null;
+
+    for (const p of sortedPayments) {
+      const startDateStr = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
+      const windowKey = `${p.planId}_${startDateStr}`;
+
+      if (seenWindows.has(windowKey)) continue;
+      seenWindows.add(windowKey);
+
+      if (p.status !== 'paid') {
+        pendingPayment = p;
+        break;
+      }
+    }
+    return pendingPayment;
+  };
+
   const handleRenewClick = async () => {
     setShowRenewModal(true);
     setLoadingPlans(true);
     try {
+      const pendingPayment = getPendingPayment(profile);
       const res = await api.get('/plan');
-      setAvailablePlans(res.data.data || []);
-      
-      // Auto-select active plan by default
-      if (profile?.membership?.planId) {
-        const pId = typeof profile.membership.planId === 'object' ? profile.membership.planId._id : profile.membership.planId;
-        const current = res.data.data.find(p => p._id === pId);
-        if (current) {
-          handlePlanSelect(current);
+      const plansList = res.data.data || [];
+      setAvailablePlans(plansList);
+
+      if (pendingPayment) {
+        setDetectedPendingPayment(pendingPayment);
+        const plan = plansList.find(p => p._id === pendingPayment.planId);
+        if (plan) {
+          setSelectedPlan(plan);
+          setPlanSearchQuery(plan.name);
+        } else {
+          setSelectedPlan({
+            _id: pendingPayment.planId,
+            name: pendingPayment.planName,
+            price: pendingPayment.invoiceAmount || pendingPayment.amount
+          });
+          setPlanSearchQuery(pendingPayment.planName);
         }
-      } else if (res.data.data.length > 0) {
-        handlePlanSelect(res.data.data[0]);
+        
+        const originalPlanPrice = pendingPayment.invoiceAmount || pendingPayment.amount || 0;
+        const totalPaidSoFar = pendingPayment.totalPaid || pendingPayment.paidNow || pendingPayment.paidAmount || 0;
+        const outstandingBalance = originalPlanPrice - totalPaidSoFar;
+        
+        setPaymentType('full');
+        setRenewalForm({
+          startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          paymentMethod: 'upi',
+          paidAmount: outstandingBalance,
+          dueDate: ''
+        });
+      } else {
+        setDetectedPendingPayment(null);
+        // Auto-select active plan by default
+        if (profile?.membership?.planId) {
+          const pId = typeof profile.membership.planId === 'object' ? profile.membership.planId._id : profile.membership.planId;
+          const current = plansList.find(p => p._id === pId);
+          if (current) {
+            handlePlanSelect(current);
+          }
+        } else if (plansList.length > 0) {
+          handlePlanSelect(plansList[0]);
+        }
       }
     } catch {
       toast.error('Failed to load available plans');
@@ -211,9 +266,13 @@ const ClientDashboard = () => {
   const handlePaymentTypeChange = (type) => {
     setPaymentType(type);
     if (type === 'full') {
+      const outstanding = detectedPendingPayment ? (
+        (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+      ) : (selectedPlan ? selectedPlan.price : 0);
+
       setRenewalForm(prev => ({
         ...prev,
-        paidAmount: selectedPlan ? selectedPlan.price : 0,
+        paidAmount: outstanding,
         dueDate: ''
       }));
     } else {
@@ -232,13 +291,17 @@ const ClientDashboard = () => {
       return;
     }
 
+    const maxLimit = detectedPendingPayment ? (
+      (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+    ) : selectedPlan.price;
+
     const paid = Number(renewalForm.paidAmount) || 0;
-    if (paid > selectedPlan.price) {
-      alert(`Paid amount cannot exceed plan price of ₹${selectedPlan.price}`);
+    if (paid > maxLimit) {
+      alert(`Paid amount cannot exceed outstanding balance of ₹${maxLimit}`);
       return;
     }
 
-    if (paymentType === 'partial' && paid < selectedPlan.price && !renewalForm.dueDate) {
+    if (paymentType === 'partial' && paid < maxLimit && !renewalForm.dueDate) {
       alert("Due Date is required for partial payments");
       return;
     }
@@ -254,20 +317,27 @@ const ClientDashboard = () => {
     setIsPaying(true);
     try {
       const paidValue = paidAmtOverride !== undefined ? paidAmtOverride : (Number(renewalForm.paidAmount) || 0);
-      const payload = {
-        planId: selectedPlan._id,
-        startDate: renewalForm.startDate,
-        paymentMethod: renewalForm.paymentMethod,
-        paidAmount: paidValue,
-        dueDate: paymentType === 'full' ? '' : renewalForm.dueDate
-      };
 
-      await api.post('/payment', payload);
-      toast.success(`Membership successfully renewed for ${selectedPlan.name}!`);
+      if (detectedPendingPayment) {
+        await api.put(`/payment/${detectedPendingPayment._id}`, { additionalAmount: paidValue });
+        toast.success(`Outstanding balance successfully paid!`);
+      } else {
+        const payload = {
+          planId: selectedPlan._id,
+          startDate: renewalForm.startDate,
+          paymentMethod: renewalForm.paymentMethod,
+          paidAmount: paidValue,
+          dueDate: paymentType === 'full' ? '' : renewalForm.dueDate
+        };
+
+        await api.post('/payment', payload);
+        toast.success(`Membership successfully renewed for ${selectedPlan.name}!`);
+      }
 
       setShowRazorpayModal(false);
       setShowRenewModal(false);
       setSelectedPlan(null);
+      setDetectedPendingPayment(null);
       await fetchProfile();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Membership renewal failed');
@@ -420,7 +490,9 @@ const ClientDashboard = () => {
               </>
             ) : (
               <>
-                <Button type="button" onClick={handleRenewClick}>Renew Membership</Button>
+                <Button type="button" onClick={handleRenewClick}>
+                  {getPendingPayment(profile) ? 'Pay Pending Dues' : 'Renew Membership'}
+                </Button>
                 <Button type="button" variant="secondary" onClick={() => setEditing(true)}>Edit Profile</Button>
               </>
             )}
@@ -609,12 +681,24 @@ const ClientDashboard = () => {
                 <Receipt className="text-primary" />
                 Renew Membership
               </h2>
-              <button onClick={() => setShowRenewModal(false)} className="text-gray-400 hover:text-white transition-colors" disabled={loadingPlans}>
+              <button onClick={() => { setShowRenewModal(false); setDetectedPendingPayment(null); }} className="text-gray-400 hover:text-white transition-colors" disabled={loadingPlans}>
                 <X size={24} />
               </button>
             </div>
 
             <form onSubmit={handleRenewSubmit} className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+              {/* Pending Payment Banner */}
+              {detectedPendingPayment && (
+                <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                  <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
+                  <div>
+                    <p className="text-amber-400 text-sm font-bold">Pending Balance Detected</p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      You have an outstanding balance of <span className="text-white font-bold">₹{detectedPendingPayment.remainingBalance !== undefined ? detectedPendingPayment.remainingBalance : ((detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0))}</span> for <span className="text-white font-medium">{detectedPendingPayment.planName}</span>. Pay the remaining amount below.
+                    </p>
+                  </div>
+                </div>
+              )}
               {/* Locked Client Display */}
               <div className="space-y-4">
                 <div className="relative">
@@ -644,13 +728,15 @@ const ClientDashboard = () => {
                           <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan.price?.toLocaleString('en-IN')}</p>
                         </div>
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); }} 
-                        className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700"
-                      >
-                        Change
-                      </button>
+                      {!detectedPendingPayment && (
+                        <button 
+                          type="button" 
+                          onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); }} 
+                          className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700"
+                        >
+                          Change
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="relative">
@@ -659,10 +745,11 @@ const ClientDashboard = () => {
                         type="text"
                         required
                         readOnly
-                        className="w-full bg-dark border border-gray-700 rounded-xl pl-11 pr-4 py-3.5 text-white focus:border-primary outline-none cursor-pointer"
+                        disabled={!!detectedPendingPayment}
+                        className={`w-full bg-dark border border-gray-700 rounded-xl pl-11 pr-4 py-3.5 text-white focus:border-primary outline-none ${detectedPendingPayment ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         placeholder="Click to select a membership plan"
                         value={planSearchQuery}
-                        onClick={() => setShowPlanDropdown(true)}
+                        onClick={() => !detectedPendingPayment && setShowPlanDropdown(true)}
                       />
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
 
@@ -698,7 +785,7 @@ const ClientDashboard = () => {
                 </div>
 
                 {/* Scheduling Section */}
-                {selectedPlan && (
+                {!detectedPendingPayment && selectedPlan && (
                   <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 space-y-4">
                     <div className="flex items-center gap-2 mb-1">
                       <Calendar className="text-primary" size={16} />
@@ -756,7 +843,7 @@ const ClientDashboard = () => {
                           type="number"
                           readOnly
                           className="w-full bg-gray-800/30 border border-gray-800 rounded-xl pl-8 pr-4 py-3 text-white font-bold outline-none cursor-not-allowed"
-                          value={selectedPlan.price}
+                          value={detectedPendingPayment ? (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) : selectedPlan.price}
                         />
                       </div>
                     </div>
@@ -803,27 +890,51 @@ const ClientDashboard = () => {
                           type="number"
                           required
                           min="0"
-                          max={selectedPlan.price}
+                          max={detectedPendingPayment ? (
+                            (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                          ) : selectedPlan.price}
                           className={`w-full bg-dark border rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-gray-800' : 'border-gray-700'}`}
                           value={renewalForm.paidAmount}
                           onChange={(e) => {
                             const val = e.target.value;
-                            if (val === '' || (Number(val) >= 0 && Number(val) <= selectedPlan.price)) {
+                            const maxLimit = detectedPendingPayment ? (
+                              (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                            ) : selectedPlan.price;
+                            if (val === '' || (Number(val) >= 0 && Number(val) <= maxLimit)) {
                               setRenewalForm({ ...renewalForm, paidAmount: val });
                             }
                           }}
                           disabled={paymentType === 'full'}
                           placeholder="Enter paid amount"
                         />
+                        <p className="text-[10px] text-gray-500 mt-1.5 ml-1 font-bold uppercase tracking-tight">
+                          {detectedPendingPayment ? (
+                            <>
+                              Already Paid: <span className="text-emerald-500">₹{detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0}</span> | Bal: <span className="text-primary">₹{(detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)}</span>
+                            </>
+                          ) : (
+                            <>
+                              Max Allowed: <span className="text-primary">₹{selectedPlan.price}</span> (Plan Price)
+                            </>
+                          )}
+                        </p>
                         {paymentType === 'partial' && (
                           <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-rose-500 flex justify-between px-1">
                             <span>Balance Due:</span>
-                            <span>₹{(selectedPlan.price - (Number(renewalForm.paidAmount) || 0)).toFixed(2)}</span>
+                            <span>₹{(
+                              (detectedPendingPayment ? (
+                                (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                              ) : selectedPlan.price) - (Number(renewalForm.paidAmount) || 0)
+                            ).toFixed(2)}</span>
                           </p>
                         )}
                       </div>
                       <div>
-                        {paymentType === 'partial' && (Number(renewalForm.paidAmount) || 0) < selectedPlan.price && (
+                        {paymentType === 'partial' && (Number(renewalForm.paidAmount) || 0) < (
+                          detectedPendingPayment ? (
+                            (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                          ) : selectedPlan.price
+                        ) && (
                           <>
                             <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
                               Due Date <span className="text-rose-500">*</span>
@@ -848,7 +959,7 @@ const ClientDashboard = () => {
                   type="button"
                   variant="secondary"
                   className="w-full sm:flex-1 py-3.5 text-xs font-black uppercase tracking-widest"
-                  onClick={() => setShowRenewModal(false)}
+                  onClick={() => { setShowRenewModal(false); setDetectedPendingPayment(null); }}
                 >
                   Cancel
                 </Button>
@@ -887,7 +998,7 @@ const ClientDashboard = () => {
             <div className="p-6 bg-gradient-to-b from-gray-900/50 to-gray-900/10 border-b border-gray-800 text-center">
               <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider">Simulated Sandbox</span>
               <h2 className="text-3xl font-black text-white mt-3">₹{(Number(renewalForm.paidAmount) || 0).toLocaleString('en-IN')}</h2>
-              <p className="text-xs text-gray-400 mt-1">{selectedPlan.name} • {paymentType === 'full' ? 'Fully Paid' : 'Partial Payment'}</p>
+              <p className="text-xs text-gray-400 mt-1">{selectedPlan.name} • {detectedPendingPayment ? (paymentType === 'full' ? 'Clear Remaining Dues' : 'Installment Payment') : (paymentType === 'full' ? 'Fully Paid' : 'Partial Payment')}</p>
             </div>
 
             {/* Checkout Options */}

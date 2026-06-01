@@ -259,6 +259,11 @@ exports.updatePayment = async (req, res, next) => {
     const payment = await Payment.findOne({ _id: id, gymId: gymIdStr });
     if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
 
+    // Secure client requests: check payment ownership
+    if (req.userRole === 'client' && payment.clientId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized access to payment record' });
+    }
+
     // FIX: Verify the payment belongs to this gym (already done above via gymId filter)
 
     const addedAmount = Number(additionalAmount) || 0;
