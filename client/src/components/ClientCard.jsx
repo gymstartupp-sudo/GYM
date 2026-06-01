@@ -4,9 +4,9 @@ import Button from './Button';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../utils/membership';
 
 const planStatusStyles = {
-  Active: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  Upcoming: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  Expired: 'bg-gray-500/10 text-gray-400 border border-gray-700/50',
+  active: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  upcoming: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  expired: 'bg-gray-500/10 text-gray-400 border border-gray-700/50',
 };
 
 const paymentStatusStyles = {
@@ -22,10 +22,10 @@ const ClientCard = ({ client, onView, onDelete, onRenew, onReactivate, onDuesCli
   // Calculate dynamic status based on dates
   const currentPlan = client?.memberships?.find(p => {
     const s = getPlanStatus(p);
-    return s === 'Active';
+    return s === 'active';
   }) || (client?.membership?.startDate ? client.membership : null);
   
-  const planStatus = currentPlan ? getPlanStatus(currentPlan) : 'Expired';
+  const planStatus = currentPlan ? getPlanStatus(currentPlan) : 'expired';
   const paymentStatus = client?.paymentStatus || 'paid';
 
   const dynamicDaysLeft = calculateDaysLeft(currentPlan?.startDate, currentPlan?.endDate);

@@ -28,8 +28,30 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
         return Math.max(0, total - getPaidAmount(p));
     };
 
-    const getStatusBadge = (status) => {
+    const isPaymentCleared = (payment) => {
+        if (!payment || payment.status !== 'partial') return false;
+        return client?.paymentHistory?.some(p => 
+            p.planId === payment.planId &&
+            new Date(p.startDate).getTime() === new Date(payment.startDate).getTime() &&
+            p.status === 'paid'
+        );
+    };
+
+    const getStatusBadge = (payment) => {
+        const status = typeof payment === 'object' ? payment.status : payment;
         if (!status || status === 'paid') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">PAID</span>;
+        
+        if (status === 'partial' && typeof payment === 'object') {
+            if (isPaymentCleared(payment)) {
+                return (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center gap-1 w-fit mx-auto">
+                        <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                        PARTIAL (CLEARED)
+                    </span>
+                );
+            }
+        }
+        
         if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">PARTIALLY</span>;
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase">OVERDUE</span>;
     };
@@ -339,8 +361,8 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                     <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
                                                     <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
                                                     <td className="p-5 text-center">
-                                                        {getStatusBadge(payment.status)}
-                                                        {payment.status === 'partial' && payment.dueDate && (
+                                                        {getStatusBadge(payment)}
+                                                        {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
                                                             <div className="mt-1 text-[10px] text-gray-500 font-medium">
                                                                 Due: {new Date(payment.dueDate).toLocaleDateString('en-GB')}
                                                             </div>
@@ -440,7 +462,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                     <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1.5">Invoice Info</h4>
                                     <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
                                     <p className="text-gray-500 font-medium mt-1">Date: {new Date(selectedPayment.createdAt || selectedPayment.date || selectedPayment.paymentDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                                    <p className="mt-1.5">{getStatusBadge(selectedPayment.status)}</p>
+                                    <p className="mt-1.5">{getStatusBadge(selectedPayment)}</p>
                                 </div>
                             </div>
 

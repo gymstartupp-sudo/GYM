@@ -1,13 +1,26 @@
 const Client = require('../models/Client');
 const Payment = require('../models/Payment');
-const { buildMembershipWindow } = require('./membership');
+const { getPlanStatus, getPaymentStatus, getClientPlans, normalizeDate } = require('./membership');
 
+/**
+ * Single authoritative sync point for a client's status.
+ * 
+ * This function:
+ * 1. Recalculates `paymentStatus` from membership balances
+ * 2. Sets `client.membership` (singular) to the current/next plan with correct status + daysLeft
+ * 
+ * This is the ONLY function that should write to `client.membership` and `client.paymentStatus`.
+ * No other cron job or controller should directly modify these fields.
+ */
 const syncClientStatus = async (clientId) => {
   try {
     const client = await Client.findById(clientId);
     if (!client) return null;
 
-    // Calculate payment status based on membership balances instead of immutable payment snapshots
+    const today = new Date();
+    const normalizedToday = normalizeDate(today);
+
+    // ── 1. Calculate payment status based on membership balances ──
     let hasOverdue = false;
     let hasPartial = false;
 
@@ -18,7 +31,7 @@ const syncClientStatus = async (clientId) => {
         const balance = finalPrice - totalPaid;
 
         if (balance > 0) {
-          if (m.dueDate && new Date(m.dueDate) < new Date()) {
+          if (m.dueDate && new Date(m.dueDate) < today) {
             hasOverdue = true;
           } else {
             hasPartial = true;
@@ -35,22 +48,34 @@ const syncClientStatus = async (clientId) => {
       client.paymentStatus = 'paid';
     }
 
-    // 2. Synchronize Membership (Automatic Continuation)
-    // Find the currently active plan, or the next upcoming one if no active exists
-    const { currentPlan, nextPlan } = require('./membership').getClientPlans(client.memberships || []);
-    
-    if (currentPlan) {
+    // ── 2. Synchronize `client.membership` (singular) from `memberships[]` ──
+    const { currentPlan, nextPlan } = getClientPlans(client.memberships || [], today);
+    const bestPlan = currentPlan || nextPlan;
+
+    if (bestPlan) {
+      // Compute daysLeft dynamically
+      const endDate = normalizeDate(bestPlan.endDate);
+      const diffTime = endDate.getTime() - normalizedToday.getTime();
+      const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      // Compute status dynamically
+      let status = getPlanStatus(bestPlan, today);
+      if (status === 'active' && daysLeft <= 3 && daysLeft > 0) {
+        status = 'expiring_soon';
+      }
+
       client.membership = {
-        ...currentPlan,
-        requestApproved: true
-      };
-    } else if (nextPlan && (!client.membership || new Date(client.membership.endDate) < new Date())) {
-      // If no active plan, but we have an upcoming one, and the previous one is expired
-      // Note: We don't necessarily make it 'Active' here, the getPlanStatus will handle it dynamically.
-      // But we update the primary field to point to the next relevant plan.
-      client.membership = {
-        ...nextPlan,
-        requestApproved: true
+        planId: bestPlan.planId,
+        planName: bestPlan.planName,
+        planDurationMonths: bestPlan.planDurationMonths,
+        durationMonths: bestPlan.planDurationMonths, // backward compat
+        startDate: bestPlan.startDate,
+        endDate: bestPlan.endDate,
+        daysLeft: daysLeft,
+        status: status,
+        requestApproved: true,
+        expiryReminderSent: client.membership?.expiryReminderSent || false,
+        expiredReminderSent: client.membership?.expiredReminderSent || false
       };
     }
 

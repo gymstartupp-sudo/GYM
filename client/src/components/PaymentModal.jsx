@@ -116,11 +116,26 @@ const PaymentModal = ({
         setSearchQuery(client.personalInfo?.name || client.name);
         setShowClientDropdown(false);
 
-        // Check if this client has any unpaid/partial payment
+        // Check if this client has any active unpaid/partial payment using grouped-latest logic
         if (payments.length > 0 && !initialData.id) {
-            const pendingPayment = [...payments]
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .find(p => p.clientId === client._id && p.status !== 'paid');
+            const clientPayments = payments.filter(p => p.clientId === client._id);
+            const sortedPayments = [...clientPayments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            const seenWindows = new Set();
+            let pendingPayment = null;
+
+            for (const p of sortedPayments) {
+                const startDateStr = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
+                const windowKey = `${p.planId}_${startDateStr}`;
+
+                if (seenWindows.has(windowKey)) continue;
+                seenWindows.add(windowKey);
+
+                if (p.status !== 'paid') {
+                    pendingPayment = p;
+                    break;
+                }
+            }
 
             if (pendingPayment) {
                 // Auto-switch to update mode
@@ -247,6 +262,24 @@ const PaymentModal = ({
 
     // Auto-detect: does this payment clear the remaining balance?
     const isEffectivelyFullPayment = (Number(formData.paidAmount) || 0) >= outstandingBalance && outstandingBalance > 0;
+
+    const billingPeriodText = (() => {
+        const start = isUpdateMode 
+            ? (detectedPendingPayment?.startDate || initialData.startDate) 
+            : formData.startDate;
+        const duration = selectedPlan?.durationMonths || planData?.durationMonths || 1;
+        if (!start) return null;
+        
+        try {
+            const startDateObj = new Date(start);
+            const endDateStr = calculateEndDate(start, duration);
+            const endDateObj = new Date(endDateStr);
+            
+            return `${startDateObj.toLocaleDateString('en-GB')} - ${endDateObj.toLocaleDateString('en-GB')}`;
+        } catch (e) {
+            return null;
+        }
+    })();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -395,14 +428,22 @@ const PaymentModal = ({
                         <div className="relative" ref={planDropdownRef}>
                             <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
                             {(planData || detectedPendingPayment) ? (
-                                <div className={`flex items-center gap-3 p-3 bg-gray-800/50 border rounded-xl ${detectedPendingPayment ? 'border-amber-500/30' : 'border-gray-700'}`}>
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                        <Package size={18} />
+                                <div className={`flex flex-col gap-2.5 p-3.5 bg-gray-800/50 border rounded-xl ${detectedPendingPayment ? 'border-amber-500/30' : 'border-gray-700'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                                            <Package size={18} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-white font-bold text-sm">{selectedPlan?.name || planData?.name}</p>
+                                            <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan?.price || planData?.price}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-white font-bold text-sm">{selectedPlan?.name || planData?.name}</p>
-                                        <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan?.price || planData?.price}</p>
-                                    </div>
+                                    {billingPeriodText && (
+                                        <div className="pt-2 border-t border-gray-800/50 flex items-center justify-between text-xs text-gray-400">
+                                            <span>Billing Period:</span>
+                                            <span className="text-white font-bold">{billingPeriodText}</span>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <>
@@ -422,6 +463,13 @@ const PaymentModal = ({
                                         />
                                         <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-transform duration-300 ${showPlanDropdown ? 'rotate-180' : ''}`} size={18} />
                                     </div>
+
+                                    {selectedPlan && billingPeriodText && (
+                                        <div className="mt-2.5 p-3 bg-gray-800/30 border border-gray-800/50 rounded-xl flex items-center justify-between text-xs text-gray-400 animate-in fade-in duration-300">
+                                            <span>Billing Period:</span>
+                                            <span className="text-white font-bold">{billingPeriodText}</span>
+                                        </div>
+                                    )}
 
                                     {showPlanDropdown && (
                                         <div className="absolute z-[10000] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-200">

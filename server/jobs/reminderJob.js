@@ -47,21 +47,8 @@ const runReminders = async () => {
         continue;
       }
 
-      // 2. Recalculate daysLeft dynamically
-      const endDate = new Date(updatedClient.membership.endDate);
-      endDate.setHours(0, 0, 0, 0);
-      const diffTime = endDate.getTime() - today.getTime();
-      const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      // Update daysLeft and status in the DB
-      updatedClient.membership.daysLeft = daysLeft;
-      if (daysLeft <= 0) {
-        updatedClient.membership.status = 'expired';
-      } else if (daysLeft <= 3) {
-        updatedClient.membership.status = 'expiring_soon';
-      } else {
-        updatedClient.membership.status = 'active';
-      }
+      // 2. Read daysLeft from the synced membership field
+      const daysLeft = updatedClient.membership.daysLeft;
 
       // Flag Reset Rules:
       // If renewed, reset expiryReminderSent (daysLeft > 3)

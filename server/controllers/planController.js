@@ -71,8 +71,16 @@ exports.getPlans = async (req, res, next) => {
 exports.updatePlan = async (req, res, next) => {
   try {
     const { name, durationMonths, price, description } = req.body;
-    const plan = await Plan.findByIdAndUpdate(req.params.id, { name, durationMonths, price, description }, { new: true, runValidators: true });
+    const gymId = req.user.gymId;
+
+    let plan = await Plan.findById(req.params.id);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+
+    if (plan.gymId !== gymId) {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    plan = await Plan.findByIdAndUpdate(req.params.id, { name, durationMonths, price, description }, { new: true, runValidators: true });
     res.status(200).json({ success: true, data: plan });
   } catch (err) {
     next(err);
@@ -84,8 +92,16 @@ exports.updatePlan = async (req, res, next) => {
 // @access  Private (Owner)
 exports.deletePlan = async (req, res, next) => {
   try {
-    const plan = await Plan.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+    const gymId = req.user.gymId;
+
+    const plan = await Plan.findById(req.params.id);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+
+    if (plan.gymId !== gymId) {
+      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    }
+
+    await Plan.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
     res.status(200).json({ success: true, data: {} });
   } catch (err) {
     next(err);

@@ -64,3 +64,20 @@ exports.toggleGymStatus = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Trigger Overdue Check manually
+// @route   POST /api/admin/overdue-check
+// @access  Private (SuperAdmin)
+exports.triggerOverdueCheck = async (req, res, next) => {
+  try {
+    const { runOverdueCheck } = require('../jobs/statusUpdater');
+    const stats = await runOverdueCheck();
+    
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -166,7 +166,11 @@ exports.updateClientProfile = async (req, res, next) => {
 
     client.personalInfo = { ...client.personalInfo.toObject(), ...personalInfo };
     await client.save();
-    const enriched = await calculateBalances(client);
+
+    // Fetch payments before calling calculateBalances to avoid showing zero balances
+    const Payment = require('../models/Payment');
+    const payments = await Payment.find({ clientId }).lean();
+    const enriched = calculateBalances(client, payments);
     res.status(200).json({ success: true, data: enriched });
   } catch (err) {
     next(err);
@@ -208,13 +212,18 @@ exports.addClient = async (req, res, next) => {
     const clientId = await generateClientId(gymIdStr);
     const membershipWindow = buildMembershipWindow({ startDate: membership?.startDate || Date.now(), durationMonths: planDurationMonths });
 
+    const planPriceVal = Number(planPrice) || 0;
+    const paidAmountVal = Number(payment.paidAmount) || 0;
+    const remainingBalanceVal = Math.max(0, planPriceVal - paidAmountVal);
+    const resolvedDueDate = remainingBalanceVal === 0 ? null : (payment.dueDate ? new Date(payment.dueDate) : null);
+
     const client = await Client.create({
       clientId, gymId: gymIdStr, gymName: gymNameStr, personalInfo, password,
       avatar: personalInfo.name.charAt(0).toUpperCase(),
-      paymentStatus: payment.paidAmount >= planPrice ? 'paid' : (payment.paidAmount > 0 ? 'partial' : 'overdue'),
+      paymentStatus: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
       memberships: [{
         planId, planName, planDurationMonths, startDate: membershipWindow.startDate, endDate: membershipWindow.endDate,
-        finalPrice: planPrice, totalPaid: payment.paidAmount, dueDate: payment.dueDate
+        finalPrice: planPrice, totalPaid: payment.paidAmount, dueDate: resolvedDueDate
       }],
       membership: {
         planId, planName, planDurationMonths, durationMonths: planDurationMonths,
@@ -231,8 +240,8 @@ exports.addClient = async (req, res, next) => {
     const paymentRecord = await Payment.create({
       paymentId, gymId: gymIdStr, clientId: client._id.toString(), clientName: personalInfo.name, planId, planName,
       amount: planPrice, paidAmount: payment.paidAmount,
-      status: payment.paidAmount >= planPrice ? 'paid' : (payment.paidAmount > 0 ? 'partial' : 'overdue'),
-      paymentMethod: payment.paymentMethod, dueDate: payment.dueDate, startDate: membershipWindow.startDate, isPlanActivated: true
+      status: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
+      paymentMethod: payment.paymentMethod, dueDate: resolvedDueDate, startDate: membershipWindow.startDate, isPlanActivated: true
     });
 
     client.paymentHistory = [paymentRecord._id];
@@ -391,12 +400,14 @@ exports.approveClient = async (req, res, next) => {
 
     let planName = client.membership.planName;
     let planDurationMonths = client.membership.planDurationMonths || 1;
+    let planPrice = 0;
 
     if (client.membership.planId) {
       const plan = await Plan.findOne({ _id: client.membership.planId, gymId: client.gymId, isActive: true });
       if (plan) {
         planName = plan.name;
         planDurationMonths = plan.durationMonths;
+        planPrice = plan.price || 0;
       }
     } else if (client.membership.customMonths) {
       planDurationMonths = client.membership.customMonths;
@@ -411,12 +422,44 @@ exports.approveClient = async (req, res, next) => {
       client.clientId = await generateClientId(client.gymId);
     }
 
+    // 1. Create a Payment record (amount = planPrice, status = 'pending') so there is an audit trail
+    const Payment = require('../models/Payment');
+    const Gym = require('../models/Gym');
+    const { generatePaymentId } = require('../utils/generateId');
+
+    const gym = await Gym.findOne({ gymId: client.gymId });
+    const paymentId = await generatePaymentId(client.gymId, gym?.billingInfo?.billingIdPrefix || 'BILL');
+
+    const paymentRecord = await Payment.create({
+      paymentId,
+      gymId: client.gymId,
+      clientId: client._id.toString(),
+      clientName: client.personalInfo.name,
+      planId: client.membership.planId,
+      planName,
+      amount: planPrice,
+      paidAmount: 0,
+      invoiceAmount: planPrice,
+      paidNow: 0,
+      totalPaid: 0,
+      remainingBalance: planPrice,
+      status: 'pending',
+      paymentMethod: 'cash',
+      startDate: membershipWindow.startDate,
+      dueDate: client.membership.dueDate || null,
+      isPlanActivated: true
+    });
+
+    // 2. Build the new memberships entry
     const newPlan = {
       planId: client.membership.planId,
       planName,
       planDurationMonths,
       startDate: membershipWindow.startDate,
-      endDate: membershipWindow.endDate
+      endDate: membershipWindow.endDate,
+      finalPrice: planPrice,
+      totalPaid: 0,
+      dueDate: client.membership.dueDate || null
     };
 
     if (!client.memberships) client.memberships = [];
@@ -431,8 +474,21 @@ exports.approveClient = async (req, res, next) => {
     client.membership.planDurationMonths = planDurationMonths;
     client.membership.durationMonths = planDurationMonths; // backward compat
 
+    if (!client.paymentHistory) client.paymentHistory = [];
+    client.paymentHistory.push(paymentRecord._id);
+
     await client.save();
-    res.status(200).json({ success: true, data: client });
+
+    // Sync client status using syncClientStatus utility
+    const { syncClientStatus } = require('../utils/syncStatus');
+    await syncClientStatus(client._id);
+
+    // Fetch the updated client doc to return enriched with balances
+    const updatedClient = await Client.findById(client._id);
+    const payments = await Payment.find({ clientId: client._id.toString() }).lean();
+    const enriched = calculateBalances(updatedClient, payments);
+
+    res.status(200).json({ success: true, data: enriched });
   } catch (err) {
     next(err);
   }
