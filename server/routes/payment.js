@@ -8,6 +8,6 @@ router.route('/')
   .get(protect, authorize('owner', 'superadmin'), paymentController.getPayments);
 
 router.route('/:id')
-  .put(protect, authorize('owner'), paymentController.updatePayment);
+  .put(protect, authorize('owner', 'client'), paymentController.updatePayment);
 
 module.exports = router;
