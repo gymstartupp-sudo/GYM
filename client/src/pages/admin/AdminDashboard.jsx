@@ -39,6 +39,23 @@ const AdminDashboard = () => {
     const [isMobile, setIsMobile] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+    const [runningCheck, setRunningCheck] = useState(false);
+    const [checkResults, setCheckResults] = useState(null);
+
+    const handleRunOverdueCheck = async () => {
+        setRunningCheck(true);
+        setCheckResults(null);
+        try {
+            const res = await api.post('/admin/overdue-check');
+            setCheckResults(res.data.data);
+            toast.success("Overdue check executed successfully");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to execute overdue check");
+        } finally {
+            setRunningCheck(false);
+        }
+    };
+
     useEffect(() => {
         const handleResize = () => {
             const mobile = window.innerWidth < 1024;
@@ -111,6 +128,39 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 )}
+
+                {/* System Diagnostics / Overdue Manual Trigger */}
+                <div className="mt-12 max-w-xl">
+                    <div className="card border-gray-800 bg-gray-900/50 p-6 rounded-2xl border">
+                        <h2 className="text-lg font-bold text-white mb-2">System Diagnostics</h2>
+                        <p className="text-gray-400 text-xs mb-5">Manually run status updater overdue calculations. This runs identical backend business rules as the daily automated schedule.</p>
+                        
+                        <button
+                            type="button"
+                            onClick={handleRunOverdueCheck}
+                            disabled={runningCheck}
+                            className="px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-all shadow-md shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {runningCheck ? 'Running Overdue Check...' : 'Run Overdue Check'}
+                        </button>
+
+                        {checkResults && (
+                            <div className="mt-5 p-4 bg-gray-800/30 border border-gray-800 rounded-xl space-y-2 text-xs font-mono text-gray-300 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <p className="text-emerald-400 font-bold mb-1">Execution Statistics:</p>
+                                <div className="grid grid-cols-2 gap-y-1 text-[11px]">
+                                    <span>Clients Checked:</span>
+                                    <span className="text-white font-bold">{checkResults.clientsChecked}</span>
+                                    <span>Clients Marked Overdue:</span>
+                                    <span className="text-white font-bold">{checkResults.clientsMarkedOverdue}</span>
+                                    <span>Clients Skipped:</span>
+                                    <span className="text-white font-bold">{checkResults.clientsSkipped}</span>
+                                    <span>Execution Time:</span>
+                                    <span className="text-white font-bold">{checkResults.executionTime}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

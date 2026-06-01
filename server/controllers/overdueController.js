@@ -41,7 +41,7 @@ exports.getExpiredClients = async (req, res, next) => {
       // Check if any plan is currently Active or Upcoming
       const hasActiveOrUpcoming = memberships.some(m => {
         const status = getPlanStatus(m, today);
-        return status === 'Active' || status === 'Upcoming';
+        return status === 'active' || status === 'upcoming';
       });
 
       // If they have no active/upcoming plans, and at least one expired plan

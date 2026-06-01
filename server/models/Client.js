@@ -44,7 +44,7 @@ const clientSchema = new mongoose.Schema({
     startDate: { type: Date },
     endDate: { type: Date },
     daysLeft: { type: Number },
-    status: { type: String },
+    status: { type: String, enum: ['active', 'expired', 'expiring_soon', 'upcoming', 'pending'] },
     requestApproved: { type: Boolean, default: false },
     expiryReminderSent: { type: Boolean, default: false },
     expiredReminderSent: { type: Boolean, default: false }

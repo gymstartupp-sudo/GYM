@@ -20,10 +20,17 @@ const protect = async (req, res, next) => {
         role = 'client';
       } else if (decoded.role === 'owner') {
         if (decoded.gymId) {
-          // Fast-path: Construct user object from token payload directly, completely bypassing DB lookup!
+          // Verify gym is active in the database
+          const gym = await Gym.findOne({ gymId: decoded.gymId }).select('isActive').lean();
+          if (!gym || gym.isActive === false) {
+            return res.status(403).json({ success: false, message: 'Not authorized, gym account is inactive or suspended' });
+          }
           user = { _id: decoded.id, gymId: decoded.gymId, gymName: decoded.gymName };
         } else {
           user = await Gym.findById(decoded.id).select('-password').lean();
+          if (user && user.isActive === false) {
+            return res.status(403).json({ success: false, message: 'Not authorized, gym account is inactive or suspended' });
+          }
         }
         role = 'owner';
       } else if (decoded.role === 'superadmin') {

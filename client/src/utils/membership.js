@@ -56,9 +56,9 @@ export const getPlanStatus = (plan, today = new Date()) => {
   const e = new Date(plan.endDate);
   e.setHours(0,0,0,0);
 
-  if (t < s) return 'Upcoming';
-  if (t > e) return 'Expired';
-  return 'Active';
+  if (t < s) return 'upcoming';
+  if (t > e) return 'expired';
+  return 'active';
 };
 
 export const getPaymentStatus = (plan, today = new Date()) => {
@@ -73,20 +73,20 @@ export const getPaymentStatus = (plan, today = new Date()) => {
   const totalPaid = Number(plan.totalPaid) || 0;
 
   if (totalPaid >= finalPrice && finalPrice > 0) {
-    return 'PAID';
+    return 'paid';
   }
 
   // Before start date
   if (t < s) {
-    return 'PENDING';
+    return 'pending';
   }
 
   // Grace period
   if (d && t <= d) {
-    return 'PENDING';
+    return 'pending';
   }
 
-  return 'OVERDUE';
+  return 'overdue';
 };
 
 export const getClientPlans = (memberships, today = new Date()) => {
@@ -112,11 +112,11 @@ export const getClientPlans = (memberships, today = new Date()) => {
       paymentStatus: pStatus 
     };
 
-    if (mStatus === 'Active') {
+    if (mStatus === 'active') {
       currentPlan = enrichedPlan;
-    } else if (mStatus === 'Upcoming' && !nextPlan) {
+    } else if (mStatus === 'upcoming' && !nextPlan) {
       nextPlan = enrichedPlan;
-    } else if (mStatus === 'Expired') {
+    } else if (mStatus === 'expired') {
       previousPlans.push(enrichedPlan);
     }
 
@@ -146,7 +146,15 @@ export const getClientPlans = (memberships, today = new Date()) => {
 
 export const calculateEndDate = (startDate, durationMonths) => {
   if (!startDate || !durationMonths) return null;
-  const date = new Date(startDate);
-  date.setMonth(date.getMonth() + Number(durationMonths));
-  return date;
+  const result = new Date(startDate);
+  const targetMonth = result.getMonth() + Number(durationMonths);
+  result.setMonth(targetMonth);
+
+  // If setMonth overflowed (e.g. Jan 31 + 1 = Mar 3), clamp to last day of target month
+  const expectedMonth = ((new Date(startDate).getMonth() + Number(durationMonths)) % 12 + 12) % 12;
+  if (result.getMonth() !== expectedMonth) {
+    // Set to day 0 of the overflowed month = last day of previous (target) month
+    result.setDate(0);
+  }
+  return result;
 };

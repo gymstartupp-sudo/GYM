@@ -44,11 +44,14 @@ const connectDB = async () => {
 
 const seedSuperAdmin = async () => {
   try {
-    const adminExists = await Admin.findOne({ email: 'admin@gymplatform.com' });
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gymplatform.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@1234';
+
+    const adminExists = await Admin.findOne({ email: adminEmail });
     if (!adminExists) {
       await Admin.create({
-        email: 'admin@gymplatform.com',
-        password: 'Admin@1234',
+        email: adminEmail,
+        password: adminPassword,
         role: 'superadmin'
       });
       console.log('Super Admin Seeded Successfully');

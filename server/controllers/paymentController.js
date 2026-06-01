@@ -67,7 +67,7 @@ const assignOrRenewPlan = async (client, planId, startDateStr, paymentData = {})
 // @access  Private (Owner)
 exports.recordPayment = async (req, res, next) => {
   try {
-    let { clientId, planId, planName, amount, paidAmount = 0, paymentMethod = 'cash', dueDate, startDate } = req.body;
+    let { clientId, planId, planName, amount, paidAmount = 0, paymentMethod = 'cash', dueDate, startDate, idempotencyKey } = req.body;
     let gymIdStr = req.user.gymId;
 
     if (!planId) return res.status(400).json({ success: false, message: 'Plan is required for payment' });
@@ -94,33 +94,49 @@ exports.recordPayment = async (req, res, next) => {
       paidAmount = requestedPaid;
     }
 
-    const client = await Client.findOne({ _id: clientId, gymId: gymIdStr });
-    if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
+    // FIX: Check that client is active
+    const client = await Client.findOne({ _id: clientId, gymId: gymIdStr, isActive: true });
+    if (!client) return res.status(404).json({ success: false, message: 'Client not found or is deactivated' });
 
-    // Duplicate prevention: Check if a similar payment was recorded in the last 5 seconds
-    const recentPayment = await Payment.findOne({
-      clientId: client._id,
-      gymId: gymIdStr,
-      planId: planId,
-      createdAt: { $gt: new Date(Date.now() - 5000) }
-    });
+    const numAmount = Number(amount) || 0;
+    const safePaidAmount = Number(paidAmount) || 0;
 
-    if (recentPayment) {
-      return res.status(400).json({ success: false, message: 'Duplicate payment detected. Please wait.' });
+    // FIX: Reject $0 payments with no amount
+    if (numAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero' });
+    }
+
+    // FIX: Idempotency key check (replaces fragile 5-second window)
+    if (idempotencyKey) {
+      const existingPayment = await Payment.findOne({ idempotencyKey });
+      if (existingPayment) {
+        // Return the existing payment — idempotent response
+        return res.status(200).json({ success: true, data: existingPayment, message: 'Payment already recorded (idempotent)' });
+      }
+    } else {
+      // Fallback: 5-second duplicate prevention for clients without idempotency keys
+      const recentPayment = await Payment.findOne({
+        clientId: client._id,
+        gymId: gymIdStr,
+        planId: planId,
+        createdAt: { $gt: new Date(Date.now() - 5000) }
+      });
+
+      if (recentPayment) {
+        return res.status(400).json({ success: false, message: 'Duplicate payment detected. Please wait.' });
+      }
     }
 
     const gym = await Gym.findOne({ gymId: gymIdStr });
     const paymentId = await generatePaymentId(gymIdStr, gym.billingInfo?.billingIdPrefix || 'BILL');
 
-    const numAmount = Number(amount) || 0;
-    const safePaidAmount = Number(paidAmount) || 0;
-    
     // Status logic for the Payment record itself
     let paymentStatus = 'pending';
     if (safePaidAmount >= numAmount) paymentStatus = 'paid';
     else if (safePaidAmount > 0) paymentStatus = 'partial';
 
-    const computedDueDate = dueDate ? new Date(dueDate) : null;
+    // ISSUE 3: Automatically clear dueDate when remainingBalance becomes 0
+    const computedDueDate = (safePaidAmount >= numAmount) ? null : (dueDate ? new Date(dueDate) : null);
 
     // Create/Update membership in client document
     let activatedPlan = await assignOrRenewPlan(client, planId, startDate, {
@@ -131,6 +147,7 @@ exports.recordPayment = async (req, res, next) => {
 
     const payment = await Payment.create({
       paymentId,
+      idempotencyKey: idempotencyKey || undefined,
       gymId: gymIdStr,
       clientId: client._id,
       clientName: client.personalInfo.name,
@@ -156,12 +173,18 @@ exports.recordPayment = async (req, res, next) => {
     client.paymentHistory.push(payment._id);
     await client.save();
 
-    // Send Bill via WhatsApp
-    payment.billSentViaWhatsApp = true;
-    await payment.save();
-
+    // FIX: Send Bill via WhatsApp — only mark as sent AFTER successful delivery
     const billMessage = `Hello ${client.personalInfo.name}, your payment of ₹${safePaidAmount} for ${activatedPlan.planName} is received. Receipt No: ${paymentId}. Regards, ${gym.billingInfo?.regards || gym.gymName}`;
-    sendWhatsApp({ phone: client.personalInfo.mobileNo, message: billMessage }).catch(console.error);
+    try {
+      const whatsappResult = await sendWhatsApp({ phone: client.personalInfo.mobileNo, message: billMessage });
+      if (whatsappResult && whatsappResult.success) {
+        payment.billSentViaWhatsApp = true;
+        await payment.save();
+      }
+    } catch (whatsappErr) {
+      console.error('WhatsApp bill send failed:', whatsappErr);
+      // Payment is still valid — just bill wasn't sent
+    }
 
     await syncClientStatus(client._id);
 
@@ -177,23 +200,46 @@ exports.recordPayment = async (req, res, next) => {
 exports.getPayments = async (req, res, next) => {
   try {
     let gymIdStr = req.userRole === 'owner' ? req.user.gymId : req.query.gymId;
-    const rawPayments = await Payment.find({ gymId: gymIdStr }).sort({ createdAt: -1 }).lean();
+    const rawPayments = await Payment.find({ gymId: gymIdStr }).sort({ createdAt: -1 });
     
-    // On-the-fly migration for old records
+    // On-the-fly migration for old records — persist corrections to DB
+    const bulkOps = [];
     const payments = rawPayments.map(p => {
       const obj = p.toObject ? p.toObject() : p;
+      let needsUpdate = false;
+
       // If amount is 0 (old installment logic) and invoiceAmount is missing
       if ((obj.amount === 0 || !obj.invoiceAmount) && obj.paidAmount > 0) {
-        // Try to reconstruct based on available data
-        // For display purposes, we'll try to find the anchor if needed, 
-        // but for now, we'll just ensure it doesn't show 0 if it's meant to be an invoice
-        if (!obj.invoiceAmount) obj.invoiceAmount = obj.amount || obj.paidAmount;
-        if (!obj.paidNow) obj.paidNow = obj.paidAmount;
-        if (!obj.totalPaid) obj.totalPaid = obj.paidAmount;
-        if (obj.remainingBalance === undefined) obj.remainingBalance = Math.max(0, obj.invoiceAmount - obj.totalPaid);
+        if (!obj.invoiceAmount) { obj.invoiceAmount = obj.amount || obj.paidAmount; needsUpdate = true; }
+        if (!obj.paidNow) { obj.paidNow = obj.paidAmount; needsUpdate = true; }
+        if (!obj.totalPaid) { obj.totalPaid = obj.paidAmount; needsUpdate = true; }
+        if (obj.remainingBalance === undefined) { obj.remainingBalance = Math.max(0, obj.invoiceAmount - obj.totalPaid); needsUpdate = true; }
       }
+
+      // FIX: Persist the migration to DB so we don't redo it every request
+      if (needsUpdate) {
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: obj._id },
+            update: {
+              $set: {
+                invoiceAmount: obj.invoiceAmount,
+                paidNow: obj.paidNow,
+                totalPaid: obj.totalPaid,
+                remainingBalance: obj.remainingBalance
+              }
+            }
+          }
+        });
+      }
+
       return obj;
     });
+
+    // Persist migrations in background (non-blocking)
+    if (bulkOps.length > 0) {
+      Payment.bulkWrite(bulkOps).catch(err => console.error('Migration bulkWrite error:', err));
+    }
 
     res.status(200).json({ success: true, count: payments.length, data: payments });
   } catch (err) {
@@ -213,6 +259,8 @@ exports.updatePayment = async (req, res, next) => {
     const payment = await Payment.findOne({ _id: id, gymId: gymIdStr });
     if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
 
+    // FIX: Verify the payment belongs to this gym (already done above via gymId filter)
+
     const addedAmount = Number(additionalAmount) || 0;
     if (addedAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Additional amount must be greater than zero' });
@@ -227,16 +275,13 @@ exports.updatePayment = async (req, res, next) => {
     const invAmt = payment.invoiceAmount || payment.amount || 0;
 
     // 2. Compute TRUE cumulative paid by summing paidNow across ALL related transactions
-    //    (same client, same plan, same subscription start date)
-    //    This ensures each installment record stays an immutable snapshot and is not
-    //    mutated when a subsequent payment is recorded.
     const allRelated = await Payment.find({
       gymId: gymIdStr,
       clientId: payment.clientId,
       planId: payment.planId,
       startDate: payment.startDate
     });
-    const actualPrevTotalPaid = allRelated.reduce((sum, p) => sum + (p.paidNow || 0), 0);
+    const actualPrevTotalPaid = allRelated.reduce((sum, p) => sum + (p.paidNow || p.paidAmount || 0), 0);
 
     const currentTotalPaid = actualPrevTotalPaid + addedAmount;
     const currentBalance = Math.max(0, invAmt - currentTotalPaid);
@@ -261,16 +306,12 @@ exports.updatePayment = async (req, res, next) => {
       mode: payment.paymentMethod || 'cash',
       paymentDate: new Date(),
       startDate: payment.startDate,
-      dueDate: payment.dueDate,
+      dueDate: currentBalance === 0 ? null : payment.dueDate,
       isPlanActivated: false,
       date: new Date()
     });
 
-    // 4. Each payment row is a FULLY IMMUTABLE snapshot.
-    //    Previous rows keep their original totalPaid, balance, and status.
-    //    Only the NEW transaction record carries the correct cumulative state.
-
-    // 5. Sync back to client document
+    // 4. Sync back to client document
     const client = await Client.findById(payment.clientId);
     if (client) {
       if (!client.paymentHistory) client.paymentHistory = [];
@@ -285,9 +326,8 @@ exports.updatePayment = async (req, res, next) => {
 
         if (mIdx !== -1) {
           client.memberships[mIdx].totalPaid = currentTotalPaid;
-          if (client.membership && client.membership.planId && payment.planId &&
-              client.membership.planId.toString() === payment.planId.toString()) {
-            client.membership.totalPaid = currentTotalPaid;
+          if (currentBalance === 0) {
+            client.memberships[mIdx].dueDate = null;
           }
         }
       }
@@ -305,5 +345,3 @@ exports.updatePayment = async (req, res, next) => {
     next(err);
   }
 };
-
-

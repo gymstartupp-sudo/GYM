@@ -4,7 +4,7 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { Receipt, Plus, X, Edit2, Eye, FileText, Calendar, CreditCard, User, CheckCircle2 } from 'lucide-react';
 import Button from '../../components/Button';
-import { getPlanStatus } from '../../utils/membership';
+import { getPlanStatus, calculateEndDate } from '../../utils/membership';
 import PaymentModal from '../../components/PaymentModal';
 import ClientDetail from './ClientDetail';
 
@@ -152,8 +152,31 @@ const Transactions = () => {
         return Math.max(0, total - paid);
     };
 
-    const getStatusBadge = (status) => {
+    const isPaymentCleared = (payment) => {
+        if (!payment || payment.status !== 'partial') return false;
+        return payments.some(p => 
+            p.clientId === payment.clientId &&
+            p.planId === payment.planId &&
+            new Date(p.startDate).getTime() === new Date(payment.startDate).getTime() &&
+            p.status === 'paid'
+        );
+    };
+
+    const getStatusBadge = (payment) => {
+        const status = typeof payment === 'object' ? payment.status : payment;
         if (!status || status === 'paid') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-widest">PAID</span>;
+        
+        if (status === 'partial' && typeof payment === 'object') {
+            if (isPaymentCleared(payment)) {
+                return (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-widest flex items-center justify-center gap-1 w-fit mx-auto">
+                        <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                        PARTIAL (CLEARED)
+                    </span>
+                );
+            }
+        }
+        
         if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">PARTIALLY</span>;
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-widest">OVERDUE</span>;
     };
@@ -166,6 +189,20 @@ const Transactions = () => {
     const getClientAddress = (mongoId) => {
         const client = clients.find(c => c._id === mongoId);
         return client?.personalInfo?.address || 'N/A';
+    };
+
+    const getBillingPeriod = (payment) => {
+        if (!payment.startDate) return null;
+        try {
+            const plan = plans.find(p => p._id === payment.planId);
+            const duration = plan?.durationMonths || 1;
+            const startDateObj = new Date(payment.startDate);
+            const endDateStr = calculateEndDate(payment.startDate, duration);
+            const endDateObj = new Date(endDateStr);
+            return `${startDateObj.toLocaleDateString('en-GB')} - ${endDateObj.toLocaleDateString('en-GB')}`;
+        } catch (e) {
+            return null;
+        }
     };
 
     return (
@@ -229,7 +266,15 @@ const Transactions = () => {
                                                 <p className="text-[10px] font-black text-primary uppercase tracking-tighter">{getClientDisplayId(payment.clientId)}</p>
                                             </td>
                                             <td className="p-5">
-                                                <span className="text-gray-300 text-xs font-medium">{payment.planName}</span>
+                                                <span className="text-gray-300 text-xs font-medium block">{payment.planName}</span>
+                                                {payment.startDate && (() => {
+                                                    const period = getBillingPeriod(payment);
+                                                    return period ? (
+                                                        <span className="text-[10px] text-gray-500 mt-0.5 block font-medium">
+                                                            {period}
+                                                        </span>
+                                                    ) : null;
+                                                })()}
                                             </td>
                                             <td className="p-5">
                                                 <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${payment.paymentMethod === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
@@ -241,8 +286,8 @@ const Transactions = () => {
                                             <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
                                             <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
                                             <td className="p-5 text-center">
-                                                {getStatusBadge(payment.status)}
-                                                {payment.status === 'partial' && payment.dueDate && (
+                                                {getStatusBadge(payment)}
+                                                {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
                                                     <div className="mt-1 text-[10px] text-gray-500 font-medium">
                                                         Due: {new Date(payment.dueDate).toLocaleDateString('en-GB')}
                                                     </div>
@@ -375,7 +420,7 @@ const Transactions = () => {
                                     <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
                                     <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
                                     <p className="text-gray-500 font-medium mt-0.5">Date: {new Date(selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                                    <p className="mt-1">{getStatusBadge(selectedPayment.status)}</p>
+                                    <p className="mt-1">{getStatusBadge(selectedPayment)}</p>
                                 </div>
                             </div>
 

@@ -3,9 +3,9 @@ import { Phone, Mail, Clock } from 'lucide-react';
 import { getPlanStatus } from '../utils/membership';
 
 const planStatusConfig = {
-    Active: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', label: 'Active' },
-    Expired: { color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/20', label: 'Expired' },
-    Upcoming: { color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', label: 'Upcoming' },
+    active: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', label: 'Active' },
+    expired: { color: 'text-gray-400', bg: 'bg-gray-500/10', border: 'border-gray-500/20', label: 'Expired' },
+    upcoming: { color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20', label: 'Upcoming' },
 };
 
 const paymentStatusConfig = {
@@ -17,11 +17,11 @@ const paymentStatusConfig = {
 const ClientProfileHeader = ({ client, compact = false, showStatus = true }) => {
     if (!client) return null;
 
-    const currentPlan = client?.memberships?.find(p => getPlanStatus(p) === 'Active') || client.membership;
-    const planStatus = currentPlan?.startDate ? getPlanStatus(currentPlan) : 'Expired';
+    const currentPlan = client?.memberships?.find(p => getPlanStatus(p) === 'active') || client.membership;
+    const planStatus = currentPlan?.startDate ? getPlanStatus(currentPlan) : 'expired';
     const paymentStatus = client.paymentStatus || 'paid';
 
-    const pStatus = planStatusConfig[planStatus] || planStatusConfig.Expired;
+    const pStatus = planStatusConfig[planStatus] || planStatusConfig.expired;
     const payStatus = paymentStatusConfig[paymentStatus] || paymentStatusConfig.paid;
     const name = client.personalInfo?.name || 'Unknown';
     const avatar = client.avatar;

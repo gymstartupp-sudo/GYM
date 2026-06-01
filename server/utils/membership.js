@@ -4,11 +4,31 @@ const normalizeDate = (value = new Date()) => {
   return date;
 };
 
+/**
+ * Safely add months to a date, clamping to last day of target month
+ * to avoid JavaScript's setMonth() overflow bug.
+ * Example: Jan 31 + 1 month = Feb 28 (not Mar 3)
+ */
+const addMonthsSafe = (date, months) => {
+  const result = new Date(date);
+  const targetMonth = result.getMonth() + Number(months);
+  result.setMonth(targetMonth);
+
+  // If setMonth overflowed (e.g. Jan 31 + 1 = Mar 3), clamp to last day of target month
+  const expectedMonth = ((date.getMonth() + Number(months)) % 12 + 12) % 12;
+  if (result.getMonth() !== expectedMonth) {
+    // Set to day 0 of the overflowed month = last day of previous (target) month
+    result.setDate(0);
+  }
+
+  return result;
+};
+
 const buildMembershipWindow = ({ startDate, durationMonths, today = new Date() }) => {
   const normalizedStartDate = normalizeDate(startDate);
   const normalizedToday = normalizeDate(today);
-  const endDate = new Date(normalizedStartDate);
-  endDate.setMonth(endDate.getMonth() + Number(durationMonths));
+  const endDate = addMonthsSafe(normalizedStartDate, durationMonths);
+  endDate.setHours(0, 0, 0, 0);
 
   const diffTime = endDate.getTime() - normalizedToday.getTime();
   const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -20,20 +40,28 @@ const buildMembershipWindow = ({ startDate, durationMonths, today = new Date() }
   };
 };
 
+/**
+ * All statuses are returned in LOWERCASE for consistency:
+ * 'active', 'expired', 'upcoming'
+ */
 const getPlanStatus = (plan, today = new Date()) => {
   const normalizedToday = normalizeDate(today);
   const normalizedStart = normalizeDate(plan.startDate);
   const normalizedEnd = normalizeDate(plan.endDate);
 
   if (normalizedToday < normalizedStart) {
-    return 'Upcoming';
+    return 'upcoming';
   }
   if (normalizedToday > normalizedEnd) {
-    return 'Expired';
+    return 'expired';
   }
-  return 'Active';
+  return 'active';
 };
 
+/**
+ * All statuses are returned in LOWERCASE for consistency:
+ * 'paid', 'pending', 'overdue'
+ */
 const getPaymentStatus = (plan, today = new Date()) => {
   const normalizedToday = normalizeDate(today);
   const normalizedStart = normalizeDate(plan.startDate);
@@ -43,21 +71,21 @@ const getPaymentStatus = (plan, today = new Date()) => {
   const totalPaid = Number(plan.totalPaid) || 0;
 
   if (totalPaid >= finalPrice && finalPrice > 0) {
-    return 'PAID';
+    return 'paid';
   }
 
   // Before start date, it's pending (cannot be overdue before start)
   if (normalizedToday < normalizedStart) {
-    return 'PENDING';
+    return 'pending';
   }
 
   // If due date exists and hasn't passed, it's pending (grace period)
   if (normalizedDue && normalizedToday <= normalizedDue) {
-    return 'PENDING';
+    return 'pending';
   }
 
   // Plan started (or expired) and payment incomplete and (due date passed or no due date)
-  return 'OVERDUE';
+  return 'overdue';
 };
 
 const getClientPlans = (memberships, today = new Date()) => {
@@ -84,11 +112,11 @@ const getClientPlans = (memberships, today = new Date()) => {
       paymentStatus: pStatus 
     };
 
-    if (mStatus === 'Active') {
+    if (mStatus === 'active') {
       currentPlan = enrichedPlan;
-    } else if (mStatus === 'Upcoming' && !nextPlan) {
+    } else if (mStatus === 'upcoming' && !nextPlan) {
       nextPlan = enrichedPlan;
-    } else if (mStatus === 'Expired') {
+    } else if (mStatus === 'expired') {
       previousPlans.push(enrichedPlan);
     }
 
@@ -120,5 +148,6 @@ module.exports = {
   getPlanStatus,
   getPaymentStatus,
   getClientPlans,
-  buildMembershipWindow
+  buildMembershipWindow,
+  addMonthsSafe
 };

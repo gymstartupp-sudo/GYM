@@ -355,54 +355,72 @@ const Clients = () => {
         )}
 
         {/* ── Dues Modal ── */}
-        {duesClient && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
-              <button onClick={() => setDuesClient(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <X size={20} />
-              </button>
-              
-              <div className="flex flex-col items-center mb-6 pt-2">
-                <div className="w-20 h-20 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center font-black text-3xl mb-4 border-2 border-red-500/20 shadow-inner">
-                  {duesClient.avatar || duesClient.personalInfo?.name.charAt(0).toUpperCase()}
-                </div>
-                <h3 className="text-2xl font-black text-white text-center leading-tight mb-1">{duesClient.personalInfo?.name}</h3>
-                <p className="text-gray-500 font-mono text-sm uppercase tracking-tighter mb-3">{duesClient.clientId || 'ABC-XX'}</p>
-                <div className="flex flex-col items-center gap-1 opacity-80">
-                  <p className="text-gray-400 text-sm font-medium">{duesClient.personalInfo?.mobileNo}</p>
-                  <p className="text-gray-500 text-xs truncate max-w-[200px]">{duesClient.personalInfo?.email}</p>
-                </div>
-              </div>
+        {duesClient && (() => {
+          const activeDuesMembership = duesClient.memberships?.find(m => {
+            const finalPrice = m.finalPrice || 0;
+            const totalPaid = m.totalPaid || 0;
+            return (finalPrice - totalPaid) > 0;
+          }) || duesClient.memberships?.[0] || duesClient.membership || {};
 
-              <div className="space-y-4 mb-8 bg-gray-800/20 p-4 rounded-xl border border-gray-800/50">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Plan Name</span>
-                  <span className="text-white font-bold">{duesClient.memberships?.[0]?.planName || duesClient.membership?.planName || 'No Plan'}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Total Amount</span>
-                  <span className="text-white font-bold">₹{duesClient.memberships?.[0]?.finalPrice || 0}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Paid Amount</span>
-                  <span className="text-emerald-400 font-bold">₹{duesClient.memberships?.[0]?.totalPaid || 0}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm pt-3 border-t border-gray-800">
-                  <span className="text-gray-400 font-medium">Balance Dues</span>
-                  <span className="text-red-400 font-black text-lg">₹{duesClient.memberships?.[0]?.balance || 0}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Due Date</span>
-                  <span className="text-white font-bold">{duesClient.memberships?.[0]?.dueDate ? new Date(duesClient.memberships[0].dueDate).toLocaleDateString('en-GB') : 'N/A'}</span>
-                </div>
-              </div>
+          const finalPrice = activeDuesMembership.finalPrice || 0;
+          const totalPaid = activeDuesMembership.totalPaid || 0;
+          const balance = finalPrice - totalPaid;
 
-              <Button onClick={() => { setDuesClient(null); navigate('/owner/clients-payment', { state: { showPaymentModal: true, client: duesClient } }); }} className="w-full !py-4 text-base font-bold shadow-xl shadow-primary/20">
-                Collect Payment
-              </Button>
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+                <button onClick={() => setDuesClient(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                  <X size={20} />
+                </button>
+                
+                <div className="flex flex-col items-center mb-6 pt-2">
+                  <div className="w-20 h-20 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center font-black text-3xl mb-4 border-2 border-red-500/20 shadow-inner">
+                    {duesClient.avatar || duesClient.personalInfo?.name.charAt(0).toUpperCase()}
+                  </div>
+                  <h3 className="text-2xl font-black text-white text-center leading-tight mb-1">{duesClient.personalInfo?.name}</h3>
+                  <p className="text-gray-500 font-mono text-sm uppercase tracking-tighter mb-3">{duesClient.clientId || 'ABC-XX'}</p>
+                  <div className="flex flex-col items-center gap-1 opacity-80">
+                    <p className="text-gray-400 text-sm font-medium">{duesClient.personalInfo?.mobileNo}</p>
+                    <p className="text-gray-500 text-xs truncate max-w-[200px]">{duesClient.personalInfo?.email}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 mb-8 bg-gray-800/20 p-4 rounded-xl border border-gray-800/50">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 font-medium">Plan Name</span>
+                    <span className="text-white font-bold">{activeDuesMembership.planName || 'No Plan'}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 font-medium">Billing Period</span>
+                    <span className="text-white font-bold">
+                      {activeDuesMembership.startDate ? `${new Date(activeDuesMembership.startDate).toLocaleDateString('en-GB')} - ${new Date(activeDuesMembership.endDate).toLocaleDateString('en-GB')}` : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 font-medium">Total Amount</span>
+                    <span className="text-white font-bold">₹{finalPrice}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 font-medium">Paid Amount</span>
+                    <span className="text-emerald-400 font-bold">₹{totalPaid}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm pt-3 border-t border-gray-800">
+                    <span className="text-gray-400 font-medium">Balance Dues</span>
+                    <span className="text-red-400 font-black text-lg">₹{balance}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-400 font-medium">Due Date</span>
+                    <span className="text-white font-bold">{activeDuesMembership.dueDate ? new Date(activeDuesMembership.dueDate).toLocaleDateString('en-GB') : 'N/A'}</span>
+                  </div>
+                </div>
+
+                <Button onClick={() => { setDuesClient(null); navigate('/owner/clients-payment', { state: { showPaymentModal: true, client: duesClient } }); }} className="w-full !py-4 text-base font-bold shadow-xl shadow-primary/20">
+                  Collect Payment
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
       </div>
     </div>
