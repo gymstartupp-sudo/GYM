@@ -143,11 +143,15 @@ const Dues = () => {
 
     const handlePayNow = (due) => {
         // Find the corresponding payment record to update
-        const payment = payments.find(p =>
-            p.clientId.toString() === due.clientId.toString() &&
-            p.planId.toString() === (due.planId?._id || due.planId)?.toString() &&
-            new Date(p.startDate).getTime() === new Date(due.startDate).getTime()
-        );
+        const payment = payments.find(p => {
+            const pId = p.planId?.toString();
+            const dId = (due.planId?._id || due.planId)?.toString();
+            const pDate = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
+            const dDate = due.startDate ? new Date(due.startDate).toISOString().split('T')[0] : '';
+            return p.clientId?.toString() === due.clientId?.toString() &&
+                   pId === dId &&
+                   pDate === dDate;
+        });
 
         setSelectedDue({
             ...due,
@@ -396,7 +400,8 @@ const Dues = () => {
                     clientData={selectedDue.rawClient || clients.find(c => c._id === selectedDue.clientId)}
                     planData={plans.find(p => p._id === selectedDue.planId)}
                     initialData={{
-                        amount: isUpdating ? selectedDue.balance : selectedDue.finalPrice,
+                        amount: selectedDue.finalPrice,
+                        totalPaidSoFar: isUpdating ? selectedDue.totalPaid : 0,
                         paidAmount: '',
                         dueDate: selectedDue.dueDate ? new Date(selectedDue.dueDate).toISOString().split('T')[0] : '',
                         startDate: isRenewing ? new Date().toISOString().split('T')[0] : (selectedDue.startDate ? new Date(selectedDue.startDate).toISOString().split('T')[0] : ''),
