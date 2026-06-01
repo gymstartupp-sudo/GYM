@@ -253,7 +253,7 @@ exports.getPayments = async (req, res, next) => {
 exports.updatePayment = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { additionalAmount } = req.body;
+    const { additionalAmount, paymentMethod } = req.body;
     const gymIdStr = req.user.gymId;
 
     const payment = await Payment.findOne({ _id: id, gymId: gymIdStr });
@@ -307,8 +307,8 @@ exports.updatePayment = async (req, res, next) => {
       totalPaid: currentTotalPaid,
       remainingBalance: currentBalance,
       status: newStatus,
-      paymentMethod: payment.paymentMethod || 'cash',
-      mode: payment.paymentMethod || 'cash',
+      paymentMethod: paymentMethod || payment.paymentMethod || 'cash',
+      mode: paymentMethod || payment.paymentMethod || 'cash',
       paymentDate: new Date(),
       startDate: payment.startDate,
       dueDate: currentBalance === 0 ? null : payment.dueDate,

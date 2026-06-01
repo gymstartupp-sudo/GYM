@@ -123,7 +123,10 @@ const Transactions = () => {
                     return;
                 }
                 const paymentIdToUpdate = selectedPayment?._id || paymentData._paymentId;
-                await api.put(`/payment/${paymentIdToUpdate}`, { additionalAmount });
+                await api.put(`/payment/${paymentIdToUpdate}`, { 
+                    additionalAmount, 
+                    paymentMethod: paymentData.paymentMethod 
+                });
                 toast.success("Payment updated successfully");
             } else {
                 // Record new payment
@@ -345,6 +348,7 @@ const Transactions = () => {
                     paidAmount: '',
                     dueDate: selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toISOString().split('T')[0] : '',
                     startDate: selectedPayment.startDate ? new Date(selectedPayment.startDate).toISOString().split('T')[0] : '',
+                    paymentMethod: selectedPayment.paymentMethod || 'cash',
                     id: selectedPayment._id
                 } : { 
                     startDate: new Date().toISOString().split('T')[0], 

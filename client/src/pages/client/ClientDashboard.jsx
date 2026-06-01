@@ -104,7 +104,7 @@ const ClientDashboard = () => {
   const [paymentType, setPaymentType] = useState('full'); // 'full' or 'partial'
   const [showPlanDropdown, setShowPlanDropdown] = useState(false);
   const [planSearchQuery, setPlanSearchQuery] = useState('');
-  
+
   const [renewalForm, setRenewalForm] = useState({
     startDate: new Date().toISOString().split('T')[0],
     paymentMethod: 'upi',
@@ -151,12 +151,12 @@ const ClientDashboard = () => {
     if (clientDoc.memberships && clientDoc.memberships.length > 0) {
       const sortedMemberships = [...clientDoc.memberships].sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
       const latest = sortedMemberships[0].endDate;
-      if (latest && new Date(latest) >= new Date().setHours(0,0,0,0)) {
+      if (latest && new Date(latest) >= new Date().setHours(0, 0, 0, 0)) {
         return latest;
       }
     } else if (clientDoc.membership?.endDate) {
       const latest = clientDoc.membership.endDate;
-      if (latest && new Date(latest) >= new Date().setHours(0,0,0,0)) {
+      if (latest && new Date(latest) >= new Date().setHours(0, 0, 0, 0)) {
         return latest;
       }
     }
@@ -165,7 +165,7 @@ const ClientDashboard = () => {
 
   const getPendingPayment = (clientDoc) => {
     if (!clientDoc || !clientDoc.paymentHistory || clientDoc.paymentHistory.length === 0) return null;
-    
+
     const sortedPayments = [...clientDoc.paymentHistory].sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
 
     const seenWindows = new Set();
@@ -209,11 +209,11 @@ const ClientDashboard = () => {
           });
           setPlanSearchQuery(pendingPayment.planName);
         }
-        
+
         const originalPlanPrice = pendingPayment.invoiceAmount || pendingPayment.amount || 0;
         const totalPaidSoFar = pendingPayment.totalPaid || pendingPayment.paidNow || pendingPayment.paidAmount || 0;
         const outstandingBalance = originalPlanPrice - totalPaidSoFar;
-        
+
         setPaymentType('full');
         setRenewalForm({
           startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -319,7 +319,10 @@ const ClientDashboard = () => {
       const paidValue = paidAmtOverride !== undefined ? paidAmtOverride : (Number(renewalForm.paidAmount) || 0);
 
       if (detectedPendingPayment) {
-        await api.put(`/payment/${detectedPendingPayment._id}`, { additionalAmount: paidValue });
+        await api.put(`/payment/${detectedPendingPayment._id}`, {
+          additionalAmount: paidValue,
+          paymentMethod: renewalForm.paymentMethod
+        });
         toast.success(`Outstanding balance successfully paid!`);
       } else {
         const payload = {
@@ -468,14 +471,14 @@ const ClientDashboard = () => {
 
       {/* MOBILE DRAWER BACKDROP */}
       {isMobile && isSidebarOpen && (
-        <div 
+        <div
           onClick={() => setIsSidebarOpen(false)}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
         />
       )}
 
       <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-      
+
       <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8 scrollbar-hide">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -504,22 +507,22 @@ const ClientDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Client ID" value={formState.clientId} disabled />
             <Field label="Home Gym ID" value={formState.gymId} disabled />
-            
-            <Field 
-              label="Full Name *" 
-              value={formState.personalInfo?.name} 
-              disabled={!editing} 
-              maxLength={20} 
+
+            <Field
+              label="Full Name *"
+              value={formState.personalInfo?.name}
+              disabled={!editing}
+              maxLength={20}
               error={errors.name}
-              onChange={e => setPersonalInfo('name', e.target.value)} 
+              onChange={e => setPersonalInfo('name', e.target.value)}
             />
-            
+
             <label className="space-y-1 block group">
               <span className="text-xs uppercase tracking-wider text-gray-500 group-focus-within:text-primary transition-colors font-medium">Gender *</span>
-              <select 
-                value={formState.personalInfo?.gender || ''} 
-                onChange={e => setPersonalInfo('gender', e.target.value)} 
-                disabled={!editing} 
+              <select
+                value={formState.personalInfo?.gender || ''}
+                onChange={e => setPersonalInfo('gender', e.target.value)}
+                disabled={!editing}
                 className={`input-field bg-gray-900 ${!editing ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed' : ''}`}
               >
                 <option value="Male">Male</option>
@@ -528,62 +531,62 @@ const ClientDashboard = () => {
               </select>
             </label>
 
-            <Field 
-              label="Email Address *" 
-              value={formState.personalInfo?.email} 
+            <Field
+              label="Email Address *"
+              value={formState.personalInfo?.email}
               type="email"
-              disabled={!editing} 
+              disabled={!editing}
               error={errors.email}
-              onChange={e => setPersonalInfo('email', e.target.value)} 
-            />
-            
-            <Field 
-              label="Mobile Number *" 
-              value={formState.personalInfo?.mobileNo} 
-              type="tel"
-              disabled={!editing} 
-              error={errors.mobileNo}
-              onChange={e => setPersonalInfo('mobileNo', e.target.value)} 
+              onChange={e => setPersonalInfo('email', e.target.value)}
             />
 
-            <Field 
-              label="Date of Birth *" 
-              value={formState.personalInfo?.dob ? formState.personalInfo.dob.slice(0, 10) : ''} 
-              type="date"
-              disabled={!editing} 
-              onChange={e => setPersonalInfo('dob', e.target.value)} 
-            />
-            
-            <Field 
-              label="Emergency Contact" 
-              value={formState.personalInfo?.emergencyContact} 
+            <Field
+              label="Mobile Number *"
+              value={formState.personalInfo?.mobileNo}
               type="tel"
-              disabled={!editing} 
+              disabled={!editing}
+              error={errors.mobileNo}
+              onChange={e => setPersonalInfo('mobileNo', e.target.value)}
+            />
+
+            <Field
+              label="Date of Birth *"
+              value={formState.personalInfo?.dob ? formState.personalInfo.dob.slice(0, 10) : ''}
+              type="date"
+              disabled={!editing}
+              onChange={e => setPersonalInfo('dob', e.target.value)}
+            />
+
+            <Field
+              label="Emergency Contact"
+              value={formState.personalInfo?.emergencyContact}
+              type="tel"
+              disabled={!editing}
               error={errors.emergencyContact}
-              onChange={e => setPersonalInfo('emergencyContact', e.target.value)} 
+              onChange={e => setPersonalInfo('emergencyContact', e.target.value)}
             />
 
             <div className="md:col-span-2">
-              <Field 
-                label="Residential Address *" 
-                value={formState.personalInfo?.address} 
-                textarea 
-                disabled={!editing} 
+              <Field
+                label="Residential Address *"
+                value={formState.personalInfo?.address}
+                textarea
+                disabled={!editing}
                 maxLength={100}
                 error={errors.address}
-                onChange={e => setPersonalInfo('address', e.target.value)} 
+                onChange={e => setPersonalInfo('address', e.target.value)}
               />
             </div>
 
             <div className="md:col-span-2">
-              <Field 
-                label="Medical Condition / Health Notes" 
-                value={formState.personalInfo?.medicalCondition} 
-                textarea 
-                disabled={!editing} 
+              <Field
+                label="Medical Condition / Health Notes"
+                value={formState.personalInfo?.medicalCondition}
+                textarea
+                disabled={!editing}
                 maxLength={100}
                 error={errors.medicalCondition}
-                onChange={e => setPersonalInfo('medicalCondition', e.target.value)} 
+                onChange={e => setPersonalInfo('medicalCondition', e.target.value)}
               />
             </div>
           </div>
@@ -597,26 +600,26 @@ const ClientDashboard = () => {
               <p className="text-white text-lg font-semibold">{formState.membership?.planName || 'N/A'}</p>
             </div>
             <div className="bg-gray-800/40 rounded-xl p-5 border border-gray-800 shadow-inner group hover:border-primary/30 transition-colors">
-               <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-2">Total Duration</p>
-               <p className="text-white text-lg font-semibold">{formState.membership?.durationMonths ? `${formState.membership.durationMonths} Months` : 'N/A'}</p>
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-2">Total Duration</p>
+              <p className="text-white text-lg font-semibold">{formState.membership?.durationMonths ? `${formState.membership.durationMonths} Months` : 'N/A'}</p>
             </div>
             <div className="bg-gray-800/40 rounded-xl p-5 border border-gray-800 bg-primary/5 shadow-inner group hover:border-primary/30 transition-colors">
-               <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-2 text-primary/70">Remaining Time</p>
-               <p className="text-white text-lg font-bold">{getDaysLeftDisplay()}</p>
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-widest mb-2 text-primary/70">Remaining Time</p>
+              <p className="text-white text-lg font-bold">{getDaysLeftDisplay()}</p>
             </div>
             <div className="bg-gray-800/40 rounded-xl p-5 border border-gray-800 shadow-inner group hover:border-primary/30 transition-colors">
-               <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-2">Start Date</p>
-               <p className="text-white text-lg font-semibold">{formatDisplayDate(formState.membership?.startDate)}</p>
+              <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-2">Start Date</p>
+              <p className="text-white text-lg font-semibold">{formatDisplayDate(formState.membership?.startDate)}</p>
             </div>
             <div className="bg-gray-800/40 rounded-xl p-5 border border-gray-800 shadow-inner group hover:border-primary/30 transition-colors">
-               <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-2">End Date</p>
-               <p className="text-white text-lg font-semibold">{formatDisplayDate(formState.membership?.endDate)}</p>
+              <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-2">End Date</p>
+              <p className="text-white text-lg font-semibold">{formatDisplayDate(formState.membership?.endDate)}</p>
             </div>
             <div className="bg-gray-800/40 rounded-xl p-5 border border-gray-800 shadow-inner group hover:border-primary/30 transition-colors">
-               <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-2">Member Status</p>
-               <p className={`text-lg font-bold uppercase ${formState.membership?.status === 'active' ? 'text-emerald-400' : 'text-orange-400'}`}>
-                 {formState.membership?.status?.replace('_', ' ') || 'N/A'}
-               </p>
+              <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-2">Member Status</p>
+              <p className={`text-lg font-bold uppercase ${formState.membership?.status === 'active' ? 'text-emerald-400' : 'text-orange-400'}`}>
+                {formState.membership?.status?.replace('_', ' ') || 'N/A'}
+              </p>
             </div>
           </div>
         </div>
@@ -652,9 +655,8 @@ const ClientDashboard = () => {
                       <td className="p-4">{pmt.planName || 'Custom'}</td>
                       <td className="p-4 uppercase text-xs">{pmt.paymentMethod || 'cash'}</td>
                       <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                          pmt.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                        }`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${pmt.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                          }`}>
                           {pmt.status}
                         </span>
                       </td>
@@ -729,9 +731,9 @@ const ClientDashboard = () => {
                         </div>
                       </div>
                       {!detectedPendingPayment && (
-                        <button 
-                          type="button" 
-                          onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); }} 
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); }}
                           className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700"
                         >
                           Change
@@ -796,7 +798,7 @@ const ClientDashboard = () => {
                       <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                         <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={14} />
                         <p className="text-[10px] text-amber-200 font-medium leading-relaxed">
-                          Your active/upcoming plan expires on <span className="text-white font-bold">{formatDisplayDate(getLatestExpiryDate(profile))}</span>. 
+                          Your active/upcoming plan expires on <span className="text-white font-bold">{formatDisplayDate(getLatestExpiryDate(profile))}</span>.
                           The renewed membership will start automatically after this to prevent overlap.
                         </p>
                       </div>
@@ -935,19 +937,19 @@ const ClientDashboard = () => {
                             (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
                           ) : selectedPlan.price
                         ) && (
-                          <>
-                            <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
-                              Due Date <span className="text-rose-500">*</span>
-                            </label>
-                            <input
-                              type="date"
-                              required
-                              className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in duration-200"
-                              value={renewalForm.dueDate}
-                              onChange={(e) => setRenewalForm({ ...renewalForm, dueDate: e.target.value })}
-                            />
-                          </>
-                        )}
+                            <>
+                              <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
+                                Due Date <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="date"
+                                required
+                                className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in duration-200"
+                                value={renewalForm.dueDate}
+                                onChange={(e) => setRenewalForm({ ...renewalForm, dueDate: e.target.value })}
+                              />
+                            </>
+                          )}
                       </div>
                     </div>
                   </div>

@@ -155,7 +155,8 @@ const Dues = () => {
 
         setSelectedDue({
             ...due,
-            paymentId: payment?._id
+            paymentId: payment?._id,
+            paymentMethod: payment?.paymentMethod || 'cash'
         });
         setIsUpdating(!!payment);
         setIsRenewing(false);
@@ -181,7 +182,10 @@ const Dues = () => {
                     return;
                 }
 
-                await api.put(`/payment/${selectedDue.paymentId}`, { additionalAmount });
+                await api.put(`/payment/${selectedDue.paymentId}`, { 
+                    additionalAmount,
+                    paymentMethod: paymentData.paymentMethod
+                });
                 toast.success("Payment updated successfully");
             } else if (isRenewing) {
                 // Renewal logic
@@ -405,6 +409,7 @@ const Dues = () => {
                         paidAmount: '',
                         dueDate: selectedDue.dueDate ? new Date(selectedDue.dueDate).toISOString().split('T')[0] : '',
                         startDate: isRenewing ? new Date().toISOString().split('T')[0] : (selectedDue.startDate ? new Date(selectedDue.startDate).toISOString().split('T')[0] : ''),
+                        paymentMethod: isUpdating ? (selectedDue.paymentMethod || 'cash') : 'cash',
                         id: selectedDue.paymentId // Pass id to show "Update Payment" title
                     }}
                     lockClient={isRenewing}

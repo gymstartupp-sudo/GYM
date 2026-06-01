@@ -411,7 +411,10 @@ const Dashboard = () => {
                                 setShowPaymentModal(false);
                                 return;
                             }
-                            await api.put(`/payment/${paymentData._paymentId}`, { additionalAmount });
+                            await api.put(`/payment/${paymentData._paymentId}`, { 
+                                additionalAmount,
+                                paymentMethod: paymentData.paymentMethod
+                            });
                             toast.success("Payment updated successfully");
                         } else {
                             // New payment
