@@ -89,9 +89,9 @@ const PaymentLedger = () => {
     // Calculate Metrics
     const totalRevenue = monthlyPayments.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
     
-    // Calculate online and cash payments
-    const onlinePaymentsList = monthlyPayments.filter(p => p.paymentMethod === 'upi' || p.paymentMethod === 'card');
-    const cashPaymentsList = monthlyPayments.filter(p => p.paymentMethod === 'cash');
+    // Calculate online and cash payments (any paymentMethod other than 'cash' is online)
+    const onlinePaymentsList = monthlyPayments.filter(p => p.paymentMethod && p.paymentMethod.toLowerCase() !== 'cash');
+    const cashPaymentsList = monthlyPayments.filter(p => !p.paymentMethod || p.paymentMethod.toLowerCase() === 'cash');
 
     const onlinePaymentsTotal = onlinePaymentsList.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
     const cashPaymentsTotal = cashPaymentsList.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
