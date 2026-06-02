@@ -99,6 +99,7 @@ const InactiveClients = () => {
   const location = useLocation();
   const [clients, setClients] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [allPayments, setAllPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -124,11 +125,15 @@ const InactiveClients = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedClientForRenewal, setSelectedClientForRenewal] = useState(null);
 
-  // Fetch plans once (for the plan filter dropdown)
+  // Fetch plans and payments once
   useEffect(() => {
-    api.get('/plan')
-      .then(res => setPlans(res.data.data || []))
-      .catch(() => { });
+    Promise.all([
+      api.get('/plan'),
+      api.get('/payment')
+    ]).then(([plansRes, paymentsRes]) => {
+      setPlans(plansRes.data.data || []);
+      setAllPayments(paymentsRes.data.data || []);
+    }).catch(() => { });
   }, []);
 
   // Build plan options dynamically from fetched plans
@@ -211,18 +216,32 @@ const InactiveClients = () => {
 
   const handleRenewalSave = async (paymentData) => {
     try {
-      // 1. Save payment
-      await api.post('/payment', paymentData);
-      
-      // 2. Reactivate client
-      await api.put(`/client/${selectedClientForRenewal._id}/reactivate`);
-      
-      toast.success('Membership renewed and client reactivated');
+      if (paymentData._isUpdate && paymentData._paymentId) {
+        // Update existing pending payment
+        const additionalAmount = Number(paymentData.paidAmount) || 0;
+        if (additionalAmount <= 0) {
+          setShowPaymentModal(false);
+          return;
+        }
+        await api.put(`/payment/${paymentData._paymentId}`, {
+          additionalAmount,
+          paymentMethod: paymentData.paymentMethod
+        });
+        toast.success('Payment updated successfully');
+      } else {
+        // New payment / renewal
+        await api.post('/payment', paymentData);
+        // Reactivate client
+        await api.put(`/client/${selectedClientForRenewal._id}/reactivate`);
+        toast.success('Membership renewed and client reactivated');
+      }
       setShowPaymentModal(false);
       setSelectedClientForRenewal(null);
       fetchClients();
+      // Refresh payments
+      api.get('/payment').then(res => setAllPayments(res.data.data || [])).catch(() => {});
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to renew membership');
+      toast.error(error.response?.data?.message || 'Failed to process payment');
       throw error;
     }
   };
@@ -497,6 +516,7 @@ const InactiveClients = () => {
                 clientData={selectedClientForRenewal}
                 lockClient={true}
                 plans={plans}
+                payments={allPayments}
             />
         )}
 

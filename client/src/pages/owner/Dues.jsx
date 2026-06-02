@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import ClientDetail from './ClientDetail';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
+import { calculateEndDate } from '../../utils/membership';
 
 const Dues = () => {
     const navigate = useNavigate();
@@ -143,15 +144,28 @@ const Dues = () => {
 
     const handlePayNow = (due) => {
         // Find the corresponding payment record to update
-        const payment = payments.find(p => {
+        let payment = payments.find(p => {
             const pId = p.planId?.toString();
             const dId = (due.planId?._id || due.planId)?.toString();
-            const pDate = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
-            const dDate = due.startDate ? new Date(due.startDate).toISOString().split('T')[0] : '';
-            return p.clientId?.toString() === due.clientId?.toString() &&
-                   pId === dId &&
-                   pDate === dDate;
+            if (p.clientId?.toString() !== due.clientId?.toString() || pId !== dId) {
+                return false;
+            }
+            if (p.startDate && due.startDate) {
+                return new Date(p.startDate).setHours(0, 0, 0, 0) === new Date(due.startDate).setHours(0, 0, 0, 0);
+            }
+            return !p.startDate && !due.startDate;
         });
+
+        // Fallback: If no date-exact match, find the latest unpaid payment record for this client and plan
+        if (!payment) {
+            payment = payments.find(p => {
+                const pId = p.planId?.toString();
+                const dId = (due.planId?._id || due.planId)?.toString();
+                return p.clientId?.toString() === due.clientId?.toString() &&
+                       pId === dId &&
+                       p.status !== 'paid';
+            });
+        }
 
         setSelectedDue({
             ...due,
@@ -214,6 +228,30 @@ const Dues = () => {
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to process payment");
             throw error;
+        }
+    };
+
+    const getBillingPeriod = (due) => {
+        if (!due.startDate) return null;
+        try {
+            const startDateObj = new Date(due.startDate);
+            let endDateObj = due.endDate ? new Date(due.endDate) : null;
+            
+            if (!endDateObj) {
+                const plan = plans.find(p => p._id === due.planId);
+                const duration = plan?.durationMonths || 1;
+                const endDateStr = calculateEndDate(due.startDate, duration);
+                if (endDateStr) {
+                    endDateObj = new Date(endDateStr);
+                }
+            }
+            
+            if (endDateObj) {
+                return `${startDateObj.toLocaleDateString('en-GB')} - ${endDateObj.toLocaleDateString('en-GB')}`;
+            }
+            return null;
+        } catch (e) {
+            return null;
         }
     };
 
@@ -324,7 +362,15 @@ const Dues = () => {
                                                 </td>
                                             )}
                                             <td className="p-4 text-gray-300 text-sm font-medium">
-                                                {due.planName}
+                                                <span className="block">{due.planName}</span>
+                                                {due.startDate && (() => {
+                                                    const period = getBillingPeriod(due);
+                                                    return period ? (
+                                                        <span className="text-[10px] text-gray-500 mt-0.5 block font-medium">
+                                                            {period}
+                                                        </span>
+                                                    ) : null;
+                                                })()}
                                             </td>
                                             {activeTab !== 'expired' && (
                                                 <>
@@ -414,6 +460,7 @@ const Dues = () => {
                     }}
                     lockClient={isRenewing}
                     plans={plans}
+                    payments={payments}
                 />
             )}
 
