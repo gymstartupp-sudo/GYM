@@ -11,6 +11,7 @@ const Expired = () => {
     const navigate = useNavigate();
     const [clients, setClients] = useState([]);
     const [plans, setPlans] = useState([]);
+    const [allPayments, setAllPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [viewClientId, setViewClientId] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -19,12 +20,14 @@ const Expired = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [expiredRes, plansRes] = await Promise.all([
+            const [expiredRes, plansRes, paymentsRes] = await Promise.all([
                 api.get('/overdue/expired'),
-                api.get('/plan')
+                api.get('/plan'),
+                api.get('/payment')
             ]);
             setClients(expiredRes.data.data);
             setPlans(plansRes.data.data);
+            setAllPayments(paymentsRes.data.data || []);
         } catch(e) {
             toast.error("Failed to load data");
         }
@@ -40,20 +43,32 @@ const Expired = () => {
 
     const handleRenewalSave = async (paymentData) => {
         try {
-            // 1. Record payment
-            await api.post('/payment', paymentData);
-            
-            // 2. Reactivate client if they were inactive (or just to ensure status update)
-            if (selectedClientForRenewal.status === 'inactive') {
-                await api.put(`/client/${selectedClientForRenewal._id}/reactivate`);
+            if (paymentData._isUpdate && paymentData._paymentId) {
+                // Update existing pending payment
+                const additionalAmount = Number(paymentData.paidAmount) || 0;
+                if (additionalAmount <= 0) {
+                    setShowPaymentModal(false);
+                    return;
+                }
+                await api.put(`/payment/${paymentData._paymentId}`, {
+                    additionalAmount,
+                    paymentMethod: paymentData.paymentMethod
+                });
+                toast.success('Payment updated successfully');
+            } else {
+                // New payment / renewal
+                await api.post('/payment', paymentData);
+                // Reactivate client if they were inactive
+                if (selectedClientForRenewal.status === 'inactive') {
+                    await api.put(`/client/${selectedClientForRenewal._id}/reactivate`);
+                }
+                toast.success("Membership renewed successfully");
             }
-            
-            toast.success("Membership renewed successfully");
             setShowPaymentModal(false);
             setSelectedClientForRenewal(null);
             fetchData();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to renew membership");
+            toast.error(error.response?.data?.message || "Failed to process payment");
             throw error;
         }
     };
@@ -134,6 +149,7 @@ const Expired = () => {
                     clientData={selectedClientForRenewal}
                     lockClient={true}
                     plans={plans}
+                    payments={allPayments}
                 />
             )}
         </div>

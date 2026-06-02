@@ -62,6 +62,48 @@ const PaymentModal = ({
             if (clientData) {
                 setSelectedClient(clientData);
                 setSearchQuery(clientData.personalInfo?.name || clientData.name || '');
+
+                // Auto-detect: Check if this client has any active unpaid/partial payment using grouped-latest logic
+                if (payments.length > 0 && !initialData.id) {
+                    const clientIdStr = String(clientData._id);
+                    const clientPayments = payments.filter(p => String(p.clientId) === clientIdStr);
+                    const sortedPayments = [...clientPayments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                    const seenWindows = new Set();
+                    let pendingPayment = null;
+
+                    for (const p of sortedPayments) {
+                        const startDateStr = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
+                        const windowKey = `${p.planId}_${startDateStr}`;
+
+                        if (seenWindows.has(windowKey)) continue;
+                        seenWindows.add(windowKey);
+
+                        if (p.status !== 'paid') {
+                            pendingPayment = p;
+                            break;
+                        }
+                    }
+
+                    if (pendingPayment) {
+                        setDetectedPendingPayment(pendingPayment);
+                        const plan = plans.find(p => p._id === pendingPayment.planId);
+                        if (plan) {
+                            setSelectedPlan(plan);
+                            setPlanSearchQuery(plan.name);
+                        }
+                        setFormData(prev => ({
+                            ...prev,
+                            amount: pendingPayment.invoiceAmount || pendingPayment.amount || pendingPayment.paidAmount || 0,
+                            paidAmount: '',
+                            paymentMethod: pendingPayment.paymentMethod || 'cash',
+                            dueDate: pendingPayment.dueDate ? new Date(pendingPayment.dueDate).toISOString().split('T')[0] : '',
+                            startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : prev.startDate
+                        }));
+                        setPaymentType('partial');
+                        return; // Skip standard planData setup since we are in auto-detected update mode
+                    }
+                }
             }
             if (planData) {
                 setSelectedPlan(planData);
@@ -119,7 +161,8 @@ const PaymentModal = ({
 
         // Check if this client has any active unpaid/partial payment using grouped-latest logic
         if (payments.length > 0 && !initialData.id) {
-            const clientPayments = payments.filter(p => p.clientId === client._id);
+            const clientIdStr = String(client._id);
+            const clientPayments = payments.filter(p => String(p.clientId) === clientIdStr);
             const sortedPayments = [...clientPayments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
             const seenWindows = new Set();

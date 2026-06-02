@@ -12,10 +12,12 @@ const Transactions = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [payments, setPayments] = useState([]);
+    const [allPayments, setAllPayments] = useState([]);
     const [clients, setClients] = useState([]);
     const [plans, setPlans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [gymInfo, setGymInfo] = useState(null);
+    const [preselectedClient, setPreselectedClient] = useState(null);
     
     // Modal states
     const [showModal, setShowModal] = useState(false);
@@ -46,6 +48,7 @@ const Transactions = () => {
                 api.get('/plan'),
                 api.get('/gym/profile').catch(() => null)
             ]);
+            setAllPayments(paymentsRes.data.data);
             setPayments(paymentsRes.data.data.filter(p => {
                 const paid = p.paidAmount !== undefined ? p.paidAmount : p.amount;
                 return paid > 0;
@@ -75,16 +78,20 @@ const Transactions = () => {
 
     useEffect(() => {
         if (location.state?.showPaymentModal && location.state?.client && clients.length > 0) {
-            const existingUnpaid = [...payments]
+            const client = clients.find(c => String(c._id) === String(location.state.client._id));
+            if (client) {
+                setPreselectedClient(client);
+            }
+
+            const existingUnpaid = [...allPayments]
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .find(p => p.clientId === location.state.client._id && p.status !== 'paid');
+                .find(p => String(p.clientId) === String(location.state.client._id) && p.status !== 'paid');
 
             if (existingUnpaid) {
                 setSelectedPayment(existingUnpaid);
                 setShowModal(true);
                 navigate(location.pathname, { replace: true });
             } else {
-                const client = clients.find(c => c._id === location.state.client._id);
                 if (client) {
                     handleClientChange(client._id);
                     setShowModal(true);
@@ -92,7 +99,7 @@ const Transactions = () => {
                 }
             }
         }
-    }, [location.state, clients, payments]);
+    }, [location.state, clients, allPayments]);
 
     const handleClientChange = (clientId) => {
         const client = clients.find(c => c._id === clientId);
@@ -335,12 +342,13 @@ const Transactions = () => {
                 onClose={() => {
                     setShowModal(false);
                     setSelectedPayment(null);
+                    setPreselectedClient(null);
                 }} 
                 onSave={handlePaymentSave} 
                 clients={clients} 
                 plans={plans}
-                payments={payments}
-                clientData={selectedPayment ? clients.find(c => c._id === selectedPayment.clientId) : null}
+                payments={allPayments}
+                clientData={selectedPayment ? clients.find(c => c._id === selectedPayment.clientId) : preselectedClient}
                 planData={selectedPayment ? plans.find(p => p._id === selectedPayment.planId) : null}
                 initialData={selectedPayment ? {
                     amount: selectedPayment.invoiceAmount || selectedPayment.amount || 0,
