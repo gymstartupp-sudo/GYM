@@ -7,6 +7,8 @@ router.route('/')
   .post(protect, authorize('owner', 'client'), paymentController.recordPayment)
   .get(protect, authorize('owner', 'superadmin'), paymentController.getPayments);
 
+router.post('/create-order', protect, authorize('owner', 'client'), paymentController.createRazorpayOrder);
+
 router.route('/:id')
   .put(protect, authorize('owner', 'client'), paymentController.updatePayment);
 

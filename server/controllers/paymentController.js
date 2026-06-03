@@ -5,6 +5,16 @@ const { generatePaymentId } = require('../utils/generateId');
 const sendWhatsApp = require('../utils/sendWhatsApp');
 const { buildMembershipWindow } = require('../utils/membership');
 const { syncClientStatus } = require('../utils/syncStatus');
+const Razorpay = require('razorpay');
+
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID.trim(),
+    key_secret: process.env.RAZORPAY_KEY_SECRET.trim()
+  });
+}
+
 
 // Helper to assign or renew a plan
 const assignOrRenewPlan = async (client, planId, startDateStr, paymentData = {}) => {
@@ -92,6 +102,23 @@ exports.recordPayment = async (req, res, next) => {
         return res.status(400).json({ success: false, message: 'Paid amount cannot exceed plan price' });
       }
       paidAmount = requestedPaid;
+
+      // Real Razorpay signature verification for client online payments
+      if (paymentMethod === 'upi' || paymentMethod === 'card') {
+        const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+        if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+          return res.status(400).json({ success: false, message: 'Razorpay payment parameters are missing' });
+        }
+        
+        const crypto = require('crypto');
+        const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET.trim());
+        hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+        const generatedSignature = hmac.digest('hex');
+
+        if (generatedSignature !== razorpay_signature) {
+          return res.status(400).json({ success: false, message: 'Payment signature verification failed' });
+        }
+      }
     }
 
     // FIX: Check that client is active
@@ -264,6 +291,23 @@ exports.updatePayment = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Unauthorized access to payment record' });
     }
 
+    // Verify Razorpay signature for clients online payments
+    if (req.userRole === 'client' && (paymentMethod === 'upi' || paymentMethod === 'card')) {
+      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
+      if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+        return res.status(400).json({ success: false, message: 'Razorpay payment parameters are missing' });
+      }
+
+      const crypto = require('crypto');
+      const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET.trim());
+      hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+      const generatedSignature = hmac.digest('hex');
+
+      if (generatedSignature !== razorpay_signature) {
+        return res.status(400).json({ success: false, message: 'Payment signature verification failed' });
+      }
+    }
+
     // FIX: Verify the payment belongs to this gym (already done above via gymId filter)
 
     const addedAmount = Number(additionalAmount) || 0;
@@ -350,3 +394,86 @@ exports.updatePayment = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Create Razorpay Order
+// @route   POST /api/payment/create-order
+// @access  Private (Client, Owner)
+exports.createRazorpayOrder = async (req, res, next) => {
+  try {
+    const { planId, paidAmount, paymentId, additionalAmount } = req.body;
+    let gymIdStr = req.user.gymId;
+    let finalAmountToPay = 0;
+
+    if (paymentId) {
+      // Dues payment
+      const payment = await Payment.findOne({ _id: paymentId, gymId: gymIdStr });
+      if (!payment) return res.status(404).json({ success: false, message: 'Payment record not found' });
+
+      // Secure client requests: check payment ownership
+      if (req.userRole === 'client' && payment.clientId.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ success: false, message: 'Unauthorized access to payment record' });
+      }
+
+      const invAmt = payment.invoiceAmount || payment.amount || 0;
+
+      // Compute TRUE cumulative paid
+      const allRelated = await Payment.find({
+        gymId: gymIdStr,
+        clientId: payment.clientId,
+        planId: payment.planId,
+        startDate: payment.startDate
+      });
+      const actualPrevTotalPaid = allRelated.reduce((sum, p) => sum + (p.paidNow || p.paidAmount || 0), 0);
+      const outstandingBalance = Math.max(0, invAmt - actualPrevTotalPaid);
+
+      const requestedAmt = Number(additionalAmount) || 0;
+      if (requestedAmt <= 0) {
+        return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero' });
+      }
+      if (requestedAmt > outstandingBalance) {
+        return res.status(400).json({ success: false, message: `Payment exceeds outstanding balance of ₹${outstandingBalance}` });
+      }
+      finalAmountToPay = requestedAmt;
+    } else if (planId) {
+      // New plan/Renewal payment
+      const Plan = require('../models/Plan');
+      const planDetails = await Plan.findOne({ _id: planId, gymId: gymIdStr, isActive: true });
+      if (!planDetails) {
+        return res.status(400).json({ success: false, message: 'Selected plan not found or is inactive' });
+      }
+
+      const requestedPaid = Number(paidAmount) || 0;
+      if (requestedPaid <= 0) {
+        return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero' });
+      }
+      if (requestedPaid > planDetails.price) {
+        return res.status(400).json({ success: false, message: 'Paid amount cannot exceed plan price' });
+      }
+      finalAmountToPay = requestedPaid;
+    } else {
+      return res.status(400).json({ success: false, message: 'Plan ID or Payment ID is required' });
+    }
+
+    if (!razorpay) {
+      return res.status(500).json({ success: false, message: 'Razorpay integration is not configured on the server.' });
+    }
+
+    const options = {
+      amount: Math.round(finalAmountToPay * 100), // in paise
+      currency: 'INR',
+      receipt: `rcpt_${Date.now()}`
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.status(200).json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      keyId: process.env.RAZORPAY_KEY_ID
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
