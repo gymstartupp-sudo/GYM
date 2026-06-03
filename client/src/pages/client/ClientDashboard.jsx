@@ -98,7 +98,6 @@ const ClientDashboard = () => {
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [detectedPendingPayment, setDetectedPendingPayment] = useState(null);
-  const [showRazorpayModal, setShowRazorpayModal] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
 
   const [paymentType, setPaymentType] = useState('full'); // 'full' or 'partial'
@@ -123,6 +122,16 @@ const ClientDashboard = () => {
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    // Dynamically load Razorpay Checkout script
+    if (!document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
   }, []);
 
   const fetchProfile = async () => {
@@ -307,7 +316,7 @@ const ClientDashboard = () => {
     }
 
     if (renewalForm.paymentMethod === 'upi' || renewalForm.paymentMethod === 'card') {
-      setShowRazorpayModal(true);
+      handleRealRazorpayPayment(paid);
     } else {
       executeRenewalPayment(paid);
     }
@@ -337,7 +346,6 @@ const ClientDashboard = () => {
         toast.success(`Membership successfully renewed for ${selectedPlan.name}!`);
       }
 
-      setShowRazorpayModal(false);
       setShowRenewModal(false);
       setSelectedPlan(null);
       setDetectedPendingPayment(null);
@@ -349,11 +357,85 @@ const ClientDashboard = () => {
     }
   };
 
-  const handleDummyPayment = async () => {
+  const handleRealRazorpayPayment = async (paidValue) => {
+    if (!window.Razorpay) {
+      toast.error("Razorpay SDK failed to load. Please refresh the page.");
+      return;
+    }
+
     setIsPaying(true);
-    // Simulate gateway authorization delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    await executeRenewalPayment();
+    try {
+      const payload = detectedPendingPayment 
+        ? { paymentId: detectedPendingPayment._id, additionalAmount: paidValue }
+        : { planId: selectedPlan._id, paidAmount: paidValue };
+      
+      const res = await api.post('/payment/create-order', payload);
+      const { orderId, amount, keyId } = res.data;
+
+      const options = {
+        key: keyId,
+        amount: amount,
+        currency: 'INR',
+        name: profile.gymName || 'GymPro',
+        description: detectedPendingPayment ? `Dues: ${detectedPendingPayment.planName}` : `Plan: ${selectedPlan.name}`,
+        order_id: orderId,
+        handler: async function (response) {
+          try {
+            setIsPaying(true);
+            if (detectedPendingPayment) {
+              await api.put(`/payment/${detectedPendingPayment._id}`, {
+                additionalAmount: paidValue,
+                paymentMethod: renewalForm.paymentMethod,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              });
+              toast.success(`Outstanding balance successfully paid!`);
+            } else {
+              const payloadPost = {
+                planId: selectedPlan._id,
+                startDate: renewalForm.startDate,
+                paymentMethod: renewalForm.paymentMethod,
+                paidAmount: paidValue,
+                dueDate: paymentType === 'full' ? '' : renewalForm.dueDate,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature
+              };
+              await api.post('/payment', payloadPost);
+              toast.success(`Membership successfully renewed for ${selectedPlan.name}!`);
+            }
+            setShowRenewModal(false);
+            setSelectedPlan(null);
+            setDetectedPendingPayment(null);
+            await fetchProfile();
+          } catch (error) {
+            toast.error(error.response?.data?.message || 'Payment signature verification failed');
+          } finally {
+            setIsPaying(false);
+          }
+        },
+        prefill: {
+          name: profile.personalInfo?.name || '',
+          email: profile.personalInfo?.email || '',
+          contact: profile.personalInfo?.mobileNo || ''
+        },
+        theme: {
+          color: '#3B82F6'
+        },
+        modal: {
+          ondismiss: function () {
+            setIsPaying(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to initiate checkout order');
+      setIsPaying(false);
+    }
   };
 
   const setPersonalInfo = (key, value) => {
@@ -974,79 +1056,6 @@ const ClientDashboard = () => {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Dummy Razorpay Modal */}
-      {showRazorpayModal && selectedPlan && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-[#172442] border border-gray-700/50 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="bg-[#0f172a] px-6 py-5 flex items-center justify-between border-b border-gray-800">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center font-bold text-white text-xs shadow-md">R</div>
-                <div>
-                  <h3 className="text-sm font-bold text-white tracking-wide">Razorpay Checkout</h3>
-                  <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">{formState.gymName}</p>
-                </div>
-              </div>
-              <button onClick={() => setShowRazorpayModal(false)} className="text-gray-500 hover:text-white transition-colors" disabled={isPaying}>
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Summary */}
-            <div className="p-6 bg-gradient-to-b from-gray-900/50 to-gray-900/10 border-b border-gray-800 text-center">
-              <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider">Simulated Sandbox</span>
-              <h2 className="text-3xl font-black text-white mt-3">₹{(Number(renewalForm.paidAmount) || 0).toLocaleString('en-IN')}</h2>
-              <p className="text-xs text-gray-400 mt-1">{selectedPlan.name} • {detectedPendingPayment ? (paymentType === 'full' ? 'Clear Remaining Dues' : 'Installment Payment') : (paymentType === 'full' ? 'Fully Paid' : 'Partial Payment')}</p>
-            </div>
-
-            {/* Checkout Options */}
-            <div className="p-6 space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-3.5 bg-gray-800/40 rounded-xl border border-primary/20 shadow-inner">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">💳</div>
-                  <div className="flex-1">
-                    <p className="text-xs font-bold text-white">Preferred Payment Method</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">UPI / Simulated Direct Bank</p>
-                  </div>
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                </div>
-              </div>
-
-              {isPaying ? (
-                <div className="py-6 flex flex-col items-center justify-center gap-3">
-                  <div className="w-9 h-9 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs font-semibold text-primary animate-pulse">Authorizing with secure bank gateway...</p>
-                </div>
-              ) : (
-                <div className="bg-[#0f172a]/40 p-4 rounded-xl border border-gray-800 text-center">
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    This is a <strong className="text-white font-semibold">Dummy Payment Transaction</strong> to verify the client renewal lifecycle. No real money will be charged.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="px-6 pb-6 shrink-0 flex flex-col gap-2">
-              <button
-                onClick={handleDummyPayment}
-                disabled={isPaying}
-                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-all text-sm disabled:opacity-50"
-              >
-                {isPaying ? 'Processing...' : `Pay ₹${(Number(renewalForm.paidAmount) || 0).toLocaleString('en-IN')}`}
-              </button>
-              <button
-                onClick={() => setShowRazorpayModal(false)}
-                disabled={isPaying}
-                className="w-full text-gray-400 hover:text-white font-semibold py-2 text-xs transition-colors"
-              >
-                Cancel Payment
-              </button>
-            </div>
           </div>
         </div>
       )}
