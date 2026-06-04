@@ -393,10 +393,21 @@ exports.reactivateClient = async (req, res, next) => {
 // @route   PUT /api/client/:id/approve
 // @access  Private (Owner)
 exports.approveClient = async (req, res, next) => {
+  const { acquireLock, releaseLock } = require('../utils/lock');
+  const lockKey = `approve-${req.params.id}`;
+
+  if (!acquireLock(lockKey)) {
+    return res.status(409).json({ success: false, message: 'Approval request is already in progress for this client' });
+  }
+
   try {
     const client = await Client.findById(req.params.id);
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
     if (client.gymId !== req.user.gymId) return res.status(403).json({ success: false, message: 'Unauthorized' });
+
+    if (client.membership && client.membership.requestApproved) {
+      return res.status(400).json({ success: false, message: 'Client is already approved' });
+    }
 
     let planName = client.membership.planName;
     let planDurationMonths = client.membership.planDurationMonths || 1;
@@ -491,5 +502,7 @@ exports.approveClient = async (req, res, next) => {
     res.status(200).json({ success: true, data: enriched });
   } catch (err) {
     next(err);
+  } finally {
+    releaseLock(lockKey);
   }
 };
