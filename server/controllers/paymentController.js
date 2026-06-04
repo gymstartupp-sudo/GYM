@@ -76,6 +76,9 @@ const assignOrRenewPlan = async (client, planId, startDateStr, paymentData = {})
 // @route   POST /api/payment
 // @access  Private (Owner)
 exports.recordPayment = async (req, res, next) => {
+  let lockKey = null;
+  const { acquireLock, releaseLock } = require('../utils/lock');
+
   try {
     let { clientId, planId, planName, amount, paidAmount = 0, paymentMethod = 'cash', dueDate, startDate, idempotencyKey } = req.body;
     let gymIdStr = req.user.gymId;
@@ -119,6 +122,15 @@ exports.recordPayment = async (req, res, next) => {
           return res.status(400).json({ success: false, message: 'Payment signature verification failed' });
         }
       }
+    }
+
+    if (!clientId) {
+      return res.status(400).json({ success: false, message: 'Client ID is required' });
+    }
+
+    lockKey = `payment-${clientId}`;
+    if (!acquireLock(lockKey)) {
+      return res.status(409).json({ success: false, message: 'Another payment transaction is already in progress for this client' });
     }
 
     // FIX: Check that client is active
@@ -218,6 +230,8 @@ exports.recordPayment = async (req, res, next) => {
     res.status(201).json({ success: true, data: payment });
   } catch (err) {
     next(err);
+  } finally {
+    if (lockKey) releaseLock(lockKey);
   }
 };
 
@@ -278,6 +292,9 @@ exports.getPayments = async (req, res, next) => {
 // @route   PUT /api/payment/:id
 // @access  Private (Owner)
 exports.updatePayment = async (req, res, next) => {
+  let lockKey = null;
+  const { acquireLock, releaseLock } = require('../utils/lock');
+
   try {
     const { id } = req.params;
     const { additionalAmount, paymentMethod } = req.body;
@@ -285,6 +302,11 @@ exports.updatePayment = async (req, res, next) => {
 
     const payment = await Payment.findOne({ _id: id, gymId: gymIdStr });
     if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
+
+    lockKey = `payment-${payment.clientId.toString()}`;
+    if (!acquireLock(lockKey)) {
+      return res.status(409).json({ success: false, message: 'Another payment transaction is already in progress for this client' });
+    }
 
     // Secure client requests: check payment ownership
     if (req.userRole === 'client' && payment.clientId.toString() !== req.user._id.toString()) {
@@ -392,6 +414,8 @@ exports.updatePayment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: err.message });
     }
     next(err);
+  } finally {
+    if (lockKey) releaseLock(lockKey);
   }
 };
 

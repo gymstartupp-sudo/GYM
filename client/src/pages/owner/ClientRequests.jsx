@@ -7,6 +7,8 @@ import Button from '../../components/Button';
 const ClientRequests = () => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [actionId, setActionId] = useState(null);
+    const [actionType, setActionType] = useState(null);
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -26,23 +28,33 @@ const ClientRequests = () => {
     }, []);
 
     const handleApprove = async (id) => {
+        setActionId(id);
+        setActionType('approve');
         try {
             await api.put(`/client/${id}/approve`);
             toast.success("Client Approved and ID Generated!");
             fetchRequests();
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to approve client");
+        } finally {
+            setActionId(null);
+            setActionType(null);
         }
     };
 
     const handleReject = async (id) => {
         if (!window.confirm("Are you sure you want to reject this request? This will delete the request permanently.")) return;
+        setActionId(id);
+        setActionType('reject');
         try {
             await api.delete(`/client/${id}`);
             toast.success("Request rejected and removed.");
             fetchRequests();
         } catch (error) {
             toast.error("Failed to reject request");
+        } finally {
+            setActionId(null);
+            setActionType(null);
         }
     };
 
@@ -103,12 +115,16 @@ const ClientRequests = () => {
                                             variant="secondary" 
                                             onClick={() => handleReject(req._id)}
                                             className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10"
+                                            isLoading={actionId === req._id && actionType === 'reject'}
+                                            disabled={actionId !== null}
                                         >
                                             <X size={16} className="mr-1" /> REJECT
                                         </Button>
                                         <Button 
                                             onClick={() => handleApprove(req._id)}
                                             className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
+                                            isLoading={actionId === req._id && actionType === 'approve'}
+                                            disabled={actionId !== null}
                                         >
                                             <Check size={16} className="mr-1" /> APPROVE
                                         </Button>
