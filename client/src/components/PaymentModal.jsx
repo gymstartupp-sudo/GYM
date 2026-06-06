@@ -30,12 +30,34 @@ const PaymentModal = ({
     const [detectedPendingPayment, setDetectedPendingPayment] = useState(null);
     const [latestExpiryDate, setLatestExpiryDate] = useState(null);
 
-    const [formData, setFormData] = useState({
-        amount: planData?.price || initialData.amount || 0,
-        paidAmount: planData?.price || initialData.paidAmount || 0,
-        paymentMethod: 'cash',
-        dueDate: initialData.dueDate || '',
-        startDate: initialData.startDate || new Date().toISOString().split('T')[0]
+    const [formData, setFormData] = useState(() => {
+        let defaultStartDate = new Date().toISOString().split('T')[0];
+        if (initialData.startDate) {
+            try {
+                const d = new Date(initialData.startDate);
+                if (!isNaN(d.getTime())) {
+                    defaultStartDate = d.toISOString().split('T')[0];
+                }
+            } catch (e) {}
+        } else {
+            const clientStart = clientData?.membership?.startDate || clientData?.startDate;
+            if (clientStart) {
+                try {
+                    const d = new Date(clientStart);
+                    if (!isNaN(d.getTime())) {
+                        defaultStartDate = d.toISOString().split('T')[0];
+                    }
+                } catch (e) {}
+            }
+        }
+
+        return {
+            amount: planData?.price || initialData.amount || 0,
+            paidAmount: planData?.price || initialData.paidAmount || 0,
+            paymentMethod: 'cash',
+            dueDate: initialData.dueDate || '',
+            startDate: defaultStartDate
+        };
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,15 +84,30 @@ const PaymentModal = ({
     // Reset all state when modal opens/closes
     useEffect(() => {
         if (isOpen) {
-            // Reset detected pending payment when modal freshly opens
+            setDetectedPendingPayment(null);
+            setIsSubmitting(false);
+
+            let customStartDate = null;
+            if (clientData) {
+                const rawDate = clientData.membership?.startDate || clientData.startDate;
+                if (rawDate) {
+                    try {
+                        const parsedDate = new Date(rawDate);
+                        if (!isNaN(parsedDate.getTime())) {
+                            customStartDate = parsedDate.toISOString().split('T')[0];
+                        }
+                    } catch (e) {
+                        console.error("Error parsing client start date:", e);
+                    }
+                }
+            }
+
             if (!clientData && !initialData.id) {
-                setDetectedPendingPayment(null);
                 setSelectedClient(null);
                 setSelectedPlan(null);
                 setSearchQuery('');
                 setPlanSearchQuery('');
                 setPaymentType('full');
-                setIsSubmitting(false);
                 setFormData({
                     amount: 0,
                     paidAmount: 0,
@@ -118,7 +155,7 @@ const PaymentModal = ({
                             paidAmount: '',
                             paymentMethod: pendingPayment.paymentMethod || 'cash',
                             dueDate: pendingPayment.dueDate ? new Date(pendingPayment.dueDate).toISOString().split('T')[0] : '',
-                            startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : prev.startDate
+                            startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : (customStartDate || prev.startDate)
                         }));
                         setPaymentType('partial');
                         return; // Skip standard planData setup since we are in auto-detected update mode
@@ -134,16 +171,21 @@ const PaymentModal = ({
                     paidAmount: initialData.paidAmount !== undefined ? initialData.paidAmount : planData.price,
                     paymentMethod: initialData.paymentMethod || prev.paymentMethod || 'cash',
                     dueDate: initialData.dueDate || prev.dueDate,
-                    startDate: initialData.startDate || prev.startDate
+                    startDate: initialData.startDate || customStartDate || prev.startDate
                 }));
                 if (initialData.paidAmount !== undefined && initialData.paidAmount < (initialData.amount || planData.price)) {
                     setPaymentType('partial');
                 } else {
                     setPaymentType('full');
                 }
+            } else if (clientData) {
+                setFormData(prev => ({
+                    ...prev,
+                    startDate: customStartDate || prev.startDate
+                }));
             }
         }
-    }, [clientData, planData, isOpen]);
+    }, [clientData, planData, isOpen, initialData]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -611,7 +653,7 @@ const PaymentModal = ({
                                                 const d = new Date(latestExpiryDate);
                                                 d.setDate(d.getDate() + 1);
                                                 return d.toISOString().split('T')[0];
-                                            })() : new Date().toISOString().split('T')[0]}
+                                            })() : undefined}
                                             className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all"
                                             value={formData.startDate}
                                             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
