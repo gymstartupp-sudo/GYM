@@ -111,6 +111,24 @@ const ClientDashboard = () => {
     dueDate: ''
   });
 
+  const allowPartialPayments = profile?.gym?.billingInfo?.allowPartialPayments !== false;
+
+  useEffect(() => {
+    if (!allowPartialPayments && showRenewModal) {
+      setPaymentType('full');
+      setRenewalForm(prev => {
+        const maxLimit = detectedPendingPayment ? (
+          (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+        ) : (selectedPlan ? selectedPlan.price : 0);
+        return {
+          ...prev,
+          paidAmount: maxLimit,
+          dueDate: ''
+        };
+      });
+    }
+  }, [allowPartialPayments, showRenewModal, selectedPlan, detectedPendingPayment]);
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
@@ -947,27 +965,29 @@ const ClientDashboard = () => {
 
                   {/* Payment Type Toggles */}
                   <div className="bg-gray-800/20 p-4 rounded-xl border border-gray-800 space-y-4 animate-in fade-in duration-200">
-                    <div>
-                      <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handlePaymentTypeChange('full')}
-                          className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
-                        >
-                          Fully Paid
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handlePaymentTypeChange('partial')}
-                          className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
-                        >
-                          Partially Paid
-                        </button>
+                    {allowPartialPayments && (
+                      <div>
+                        <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handlePaymentTypeChange('full')}
+                            className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                          >
+                            Fully Paid
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handlePaymentTypeChange('partial')}
+                            className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                          >
+                            Partially Paid
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2">
+                    <div className={`${allowPartialPayments ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2' : 'block col-span-2'}`}>
                       <div>
                         <label className="block text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
                         <input

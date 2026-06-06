@@ -174,6 +174,10 @@ exports.recordPayment = async (req, res, next) => {
     if (safePaidAmount >= numAmount) paymentStatus = 'paid';
     else if (safePaidAmount > 0) paymentStatus = 'partial';
 
+    if (gym && gym.billingInfo?.allowPartialPayments === false && safePaidAmount < numAmount) {
+      return res.status(400).json({ success: false, message: 'Partial payments are disabled. Payment must be made in full.' });
+    }
+
     // ISSUE 3: Automatically clear dueDate when remainingBalance becomes 0
     const computedDueDate = (safePaidAmount >= numAmount) ? null : (dueDate ? new Date(dueDate) : null);
 
@@ -358,6 +362,10 @@ exports.updatePayment = async (req, res, next) => {
     const currentBalance = Math.max(0, invAmt - currentTotalPaid);
     const newStatus = currentBalance === 0 ? 'paid' : 'partial';
 
+    if (gym.billingInfo?.allowPartialPayments === false && currentBalance > 0) {
+      return res.status(400).json({ success: false, message: 'Partial payments are disabled. Remaining balance must be paid in full.' });
+    }
+
     // 3. Create a NEW immutable payment record (installment snapshot)
     const newTransaction = await Payment.create({
       paymentId: newPaymentId,
@@ -428,6 +436,9 @@ exports.createRazorpayOrder = async (req, res, next) => {
     let gymIdStr = req.user.gymId;
     let finalAmountToPay = 0;
 
+    const gym = await Gym.findOne({ gymId: gymIdStr });
+    if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
+
     if (paymentId) {
       // Dues payment
       const payment = await Payment.findOne({ _id: paymentId, gymId: gymIdStr });
@@ -457,6 +468,9 @@ exports.createRazorpayOrder = async (req, res, next) => {
       if (requestedAmt > outstandingBalance) {
         return res.status(400).json({ success: false, message: `Payment exceeds outstanding balance of ₹${outstandingBalance}` });
       }
+      if (gym.billingInfo?.allowPartialPayments === false && requestedAmt < outstandingBalance) {
+        return res.status(400).json({ success: false, message: 'Partial payments are disabled. Remaining balance must be paid in full.' });
+      }
       finalAmountToPay = requestedAmt;
     } else if (planId) {
       // New plan/Renewal payment
@@ -472,6 +486,9 @@ exports.createRazorpayOrder = async (req, res, next) => {
       }
       if (requestedPaid > planDetails.price) {
         return res.status(400).json({ success: false, message: 'Paid amount cannot exceed plan price' });
+      }
+      if (gym.billingInfo?.allowPartialPayments === false && requestedPaid < planDetails.price) {
+        return res.status(400).json({ success: false, message: 'Partial payments are disabled. Payment must be made in full.' });
       }
       finalAmountToPay = requestedPaid;
     } else {
