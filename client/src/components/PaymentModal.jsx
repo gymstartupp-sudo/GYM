@@ -5,6 +5,20 @@ import Button from './Button';
 import { formatDisplayDate, calculateEndDate } from '../utils/membership';
 import api from '../utils/api';
 
+const toLocalYYYYMMDD = (val) => {
+    if (!val) return '';
+    try {
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return '';
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    } catch (e) {
+        return '';
+    }
+};
+
 const PaymentModal = ({
     isOpen,
     onClose,
@@ -31,23 +45,13 @@ const PaymentModal = ({
     const [latestExpiryDate, setLatestExpiryDate] = useState(null);
 
     const [formData, setFormData] = useState(() => {
-        let defaultStartDate = new Date().toISOString().split('T')[0];
+        let defaultStartDate = toLocalYYYYMMDD(new Date());
         if (initialData.startDate) {
-            try {
-                const d = new Date(initialData.startDate);
-                if (!isNaN(d.getTime())) {
-                    defaultStartDate = d.toISOString().split('T')[0];
-                }
-            } catch (e) {}
+            defaultStartDate = toLocalYYYYMMDD(initialData.startDate);
         } else {
             const clientStart = clientData?.membership?.startDate || clientData?.startDate;
             if (clientStart) {
-                try {
-                    const d = new Date(clientStart);
-                    if (!isNaN(d.getTime())) {
-                        defaultStartDate = d.toISOString().split('T')[0];
-                    }
-                } catch (e) {}
+                defaultStartDate = toLocalYYYYMMDD(clientStart);
             }
         }
 
@@ -91,14 +95,7 @@ const PaymentModal = ({
             if (clientData) {
                 const rawDate = clientData.membership?.startDate || clientData.startDate;
                 if (rawDate) {
-                    try {
-                        const parsedDate = new Date(rawDate);
-                        if (!isNaN(parsedDate.getTime())) {
-                            customStartDate = parsedDate.toISOString().split('T')[0];
-                        }
-                    } catch (e) {
-                        console.error("Error parsing client start date:", e);
-                    }
+                    customStartDate = toLocalYYYYMMDD(rawDate);
                 }
             }
 
@@ -113,7 +110,7 @@ const PaymentModal = ({
                     paidAmount: 0,
                     paymentMethod: 'cash',
                     dueDate: '',
-                    startDate: new Date().toISOString().split('T')[0]
+                    startDate: toLocalYYYYMMDD(new Date())
                 });
             }
             if (clientData) {
@@ -130,7 +127,7 @@ const PaymentModal = ({
                     let pendingPayment = null;
 
                     for (const p of sortedPayments) {
-                        const startDateStr = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
+                        const startDateStr = toLocalYYYYMMDD(p.startDate);
                         const windowKey = `${p.planId}_${startDateStr}`;
 
                         if (seenWindows.has(windowKey)) continue;
@@ -154,8 +151,8 @@ const PaymentModal = ({
                             amount: pendingPayment.invoiceAmount || pendingPayment.amount || pendingPayment.paidAmount || 0,
                             paidAmount: '',
                             paymentMethod: pendingPayment.paymentMethod || 'cash',
-                            dueDate: pendingPayment.dueDate ? new Date(pendingPayment.dueDate).toISOString().split('T')[0] : '',
-                            startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : (customStartDate || prev.startDate)
+                            dueDate: toLocalYYYYMMDD(pendingPayment.dueDate),
+                            startDate: toLocalYYYYMMDD(pendingPayment.startDate) || customStartDate || prev.startDate
                         }));
                         setPaymentType('partial');
                         return; // Skip standard planData setup since we are in auto-detected update mode
@@ -265,7 +262,7 @@ const PaymentModal = ({
             let pendingPayment = null;
 
             for (const p of sortedPayments) {
-                const startDateStr = p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : '';
+                const startDateStr = toLocalYYYYMMDD(p.startDate);
                 const windowKey = `${p.planId}_${startDateStr}`;
 
                 if (seenWindows.has(windowKey)) continue;
@@ -290,8 +287,8 @@ const PaymentModal = ({
                     amount: pendingPayment.invoiceAmount || pendingPayment.amount || pendingPayment.paidAmount || 0,
                     paidAmount: '',
                     paymentMethod: pendingPayment.paymentMethod || prev.paymentMethod || 'cash',
-                    dueDate: pendingPayment.dueDate ? new Date(pendingPayment.dueDate).toISOString().split('T')[0] : '',
-                    startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : prev.startDate
+                    dueDate: toLocalYYYYMMDD(pendingPayment.dueDate),
+                    startDate: toLocalYYYYMMDD(pendingPayment.startDate) || prev.startDate
                 }));
                 setPaymentType('partial');
                 return;
@@ -311,13 +308,13 @@ const PaymentModal = ({
                 nextDay.setDate(nextDay.getDate() + 1);
                 setFormData(prev => ({
                     ...prev,
-                    startDate: nextDay.toISOString().split('T')[0]
+                    startDate: toLocalYYYYMMDD(nextDay)
                 }));
             } else {
                 setLatestExpiryDate(null);
                 setFormData(prev => ({
                     ...prev,
-                    startDate: new Date().toISOString().split('T')[0]
+                    startDate: toLocalYYYYMMDD(new Date())
                 }));
             }
         } else if (client.membership?.endDate) {
@@ -329,7 +326,7 @@ const PaymentModal = ({
                 nextDay.setDate(nextDay.getDate() + 1);
                 setFormData(prev => ({
                     ...prev,
-                    startDate: nextDay.toISOString().split('T')[0]
+                    startDate: toLocalYYYYMMDD(nextDay)
                 }));
             } else {
                 setLatestExpiryDate(null);
@@ -338,7 +335,7 @@ const PaymentModal = ({
             setLatestExpiryDate(null);
             setFormData(prev => ({
                 ...prev,
-                startDate: new Date().toISOString().split('T')[0]
+                startDate: toLocalYYYYMMDD(new Date())
             }));
         }
 
@@ -652,7 +649,7 @@ const PaymentModal = ({
                                             min={latestExpiryDate ? (() => {
                                                 const d = new Date(latestExpiryDate);
                                                 d.setDate(d.getDate() + 1);
-                                                return d.toISOString().split('T')[0];
+                                                return toLocalYYYYMMDD(d);
                                             })() : undefined}
                                             className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all"
                                             value={formData.startDate}

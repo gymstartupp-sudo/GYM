@@ -3,12 +3,18 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { UserPlus, Check, X, Clock } from 'lucide-react';
 import Button from '../../components/Button';
+import PaymentModal from '../../components/PaymentModal';
 
 const ClientRequests = () => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);
     const [actionType, setActionType] = useState(null);
+
+    const [plans, setPlans] = useState([]);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [selectedPlan, setSelectedPlan] = useState(null);
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -23,19 +29,34 @@ const ClientRequests = () => {
         }
     };
 
+    const fetchPlans = async () => {
+        try {
+            const res = await api.get('/plan');
+            setPlans(res.data.data || []);
+        } catch (error) {
+            console.error("Failed to load plans", error);
+        }
+    };
+
     useEffect(() => {
         fetchRequests();
+        fetchPlans();
     }, []);
 
-    const handleApprove = async (id) => {
-        setActionId(id);
+    const handleApproveWithPayment = async (paymentData) => {
+        if (!selectedRequest) return;
+        setActionId(selectedRequest._id);
         setActionType('approve');
         try {
-            await api.put(`/client/${id}/approve`);
+            await api.put(`/client/${selectedRequest._id}/approve`, paymentData);
             toast.success("Client Approved and ID Generated!");
             fetchRequests();
+            setShowPaymentModal(false);
+            setSelectedRequest(null);
+            setSelectedPlan(null);
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to approve client");
+            throw error; // Let PaymentModal handle loading state reset
         } finally {
             setActionId(null);
             setActionType(null);
@@ -121,20 +142,40 @@ const ClientRequests = () => {
                                             <X size={16} className="mr-1" /> REJECT
                                         </Button>
                                         <Button 
-                                            onClick={() => handleApprove(req._id)}
+                                            onClick={() => {
+                                                const plan = plans.find(p => p._id === req.membership?.planId);
+                                                setSelectedRequest(req);
+                                                setSelectedPlan(plan);
+                                                setShowPaymentModal(true);
+                                            }}
                                             className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
-                                            isLoading={actionId === req._id && actionType === 'approve'}
                                             disabled={actionId !== null}
                                         >
                                             <Check size={16} className="mr-1" /> APPROVE
                                         </Button>
                                     </div>
                                 </div>
-                            </div>
+                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {showPaymentModal && selectedRequest && (
+                <PaymentModal
+                    isOpen={showPaymentModal}
+                    onClose={() => {
+                        setShowPaymentModal(false);
+                        setSelectedRequest(null);
+                        setSelectedPlan(null);
+                    }}
+                    onSave={handleApproveWithPayment}
+                    clientData={selectedRequest}
+                    planData={selectedPlan}
+                    plans={plans}
+                    lockClient={true}
+                />
+            )}
         </div>
     );
 };

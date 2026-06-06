@@ -428,8 +428,13 @@ exports.approveClient = async (req, res, next) => {
       planDurationMonths = client.membership.customMonths;
     }
 
+    const paidAmount = req.body.paidAmount !== undefined ? Number(req.body.paidAmount) : 0;
+    const paymentMethod = req.body.paymentMethod || 'cash';
+    const startDateVal = req.body.startDate || client.membership.startDate || Date.now();
+    const dueDateVal = req.body.dueDate || client.membership.dueDate || null;
+
     const membershipWindow = buildMembershipWindow({
-      startDate: client.membership.startDate || Date.now(),
+      startDate: startDateVal,
       durationMonths: planDurationMonths
     });
 
@@ -437,13 +442,23 @@ exports.approveClient = async (req, res, next) => {
       client.clientId = await generateClientId(client.gymId);
     }
 
-    // 1. Create a Payment record (amount = planPrice, status = 'pending') so there is an audit trail
+    // 1. Create a Payment record so there is an audit trail
     const Payment = require('../models/Payment');
     const Gym = require('../models/Gym');
     const { generatePaymentId } = require('../utils/generateId');
 
     const gym = await Gym.findOne({ gymId: client.gymId });
     const paymentId = await generatePaymentId(client.gymId, gym?.billingInfo?.billingIdPrefix || 'BILL');
+
+    const remainingBalance = Math.max(0, planPrice - paidAmount);
+    
+    // Validate partial payments restriction if disabled
+    if (gym?.billingInfo?.allowPartialPayments === false && remainingBalance > 0) {
+      return res.status(400).json({ success: false, message: 'Partial payments are disabled. Payment must be made in full.' });
+    }
+
+    const resolvedStatus = paidAmount >= planPrice ? 'paid' : (paidAmount > 0 ? 'partial' : 'overdue');
+    const resolvedDueDate = remainingBalance === 0 ? null : (dueDateVal ? new Date(dueDateVal) : null);
 
     const paymentRecord = await Payment.create({
       paymentId,
@@ -453,15 +468,15 @@ exports.approveClient = async (req, res, next) => {
       planId: client.membership.planId,
       planName,
       amount: planPrice,
-      paidAmount: 0,
+      paidAmount,
       invoiceAmount: planPrice,
-      paidNow: 0,
-      totalPaid: 0,
-      remainingBalance: planPrice,
-      status: 'pending',
-      paymentMethod: 'cash',
+      paidNow: paidAmount,
+      totalPaid: paidAmount,
+      remainingBalance,
+      status: resolvedStatus,
+      paymentMethod,
       startDate: membershipWindow.startDate,
-      dueDate: client.membership.dueDate || null,
+      dueDate: resolvedDueDate,
       isPlanActivated: true
     });
 
@@ -473,8 +488,8 @@ exports.approveClient = async (req, res, next) => {
       startDate: membershipWindow.startDate,
       endDate: membershipWindow.endDate,
       finalPrice: planPrice,
-      totalPaid: 0,
-      dueDate: client.membership.dueDate || null
+      totalPaid: paidAmount,
+      dueDate: resolvedDueDate
     };
 
     if (!client.memberships) client.memberships = [];
