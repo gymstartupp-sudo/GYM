@@ -17,6 +17,10 @@ const buildFormState = (data) => {
   return {
     gym: {
       ...data.gym,
+      billingInfo: {
+        allowPartialPayments: true,
+        ...data.gym?.billingInfo
+      },
       operatingDaysText: (data.gym?.operatingDays || []).join(', '),
       operatingOpen: data.gym?.operatingHours?.open || '',
       operatingClose: data.gym?.operatingHours?.close || '',
@@ -312,6 +316,38 @@ const Profile = () => {
             </div>
             <Field label="Regards Name" value={formState.gym.billingInfo?.regards} disabled={editingSection !== 'billing'} maxLength={20} error={errors.billRegards} onChange={e => setFormState(c => ({ ...c, gym: { ...c.gym, billingInfo: { ...c.gym.billingInfo, regards: e.target.value } } }))} />
             <Field label="Greeting Footer" value={formState.gym.billingInfo?.greetingText} disabled={editingSection !== 'billing'} maxLength={20} error={errors.billGreeting} onChange={e => setFormState(c => ({ ...c, gym: { ...c.gym, billingInfo: { ...c.gym.billingInfo, greetingText: e.target.value } } }))} />
+            <div className="flex items-center justify-between p-4 bg-gray-800/40 border border-gray-800 rounded-xl md:col-span-2">
+              <div className="space-y-1 pr-4">
+                <span className="text-xs uppercase tracking-wider text-gray-500 font-medium block">Allow Partial Payments</span>
+                <span className="text-xs text-gray-400">If disabled, client payments must be paid in full; due date and installments will not be prompt.</span>
+              </div>
+              <button
+                type="button"
+                disabled={editingSection !== 'billing'}
+                onClick={() => {
+                  const currentVal = formState.gym.billingInfo?.allowPartialPayments !== false;
+                  setFormState(c => ({
+                    ...c,
+                    gym: {
+                      ...c.gym,
+                      billingInfo: {
+                        ...c.gym.billingInfo,
+                        allowPartialPayments: !currentVal
+                      }
+                    }
+                  }));
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                  (formState.gym.billingInfo?.allowPartialPayments !== false) ? 'bg-primary' : 'bg-gray-700'
+                } ${editingSection === 'billing' ? 'cursor-pointer' : 'opacity-65 cursor-not-allowed'}`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    (formState.gym.billingInfo?.allowPartialPayments !== false) ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </ProfileSection>
       </div>

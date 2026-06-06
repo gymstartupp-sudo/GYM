@@ -27,7 +27,8 @@ const gymSchema = new mongoose.Schema({
     addressOnBill: { type: String, maxlength: 100 },
     regards: { type: String, maxlength: 20 },
     greetingText: { type: String, maxlength: 20 },
-    invoiceSupportEmail: { type: String, trim: true }
+    invoiceSupportEmail: { type: String, trim: true },
+    allowPartialPayments: { type: Boolean, default: true }
   },
   reminderSettings: {
     whatsappNumber: String,

@@ -130,12 +130,14 @@ exports.getClients = async (req, res, next) => {
 exports.getClientProfile = async (req, res, next) => {
   try {
     const Payment = require('../models/Payment');
+    const Gym = require('../models/Gym');
     const client = await Client.findById(req.user._id).populate('membership.planId').lean();
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
     
     const payments = await Payment.find({ clientId: client._id.toString() }).lean();
     const enriched = calculateBalances(client, payments);
-    res.status(200).json({ success: true, data: enriched });
+    const gym = await Gym.findOne({ gymId: client.gymId }).select('billingInfo').lean();
+    res.status(200).json({ success: true, data: { ...enriched, gym } });
   } catch (err) {
     next(err);
   }
@@ -169,9 +171,11 @@ exports.updateClientProfile = async (req, res, next) => {
 
     // Fetch payments before calling calculateBalances to avoid showing zero balances
     const Payment = require('../models/Payment');
+    const Gym = require('../models/Gym');
     const payments = await Payment.find({ clientId }).lean();
     const enriched = calculateBalances(client, payments);
-    res.status(200).json({ success: true, data: enriched });
+    const gym = await Gym.findOne({ gymId: client.gymId }).select('billingInfo').lean();
+    res.status(200).json({ success: true, data: { ...enriched, gym } });
   } catch (err) {
     next(err);
   }
