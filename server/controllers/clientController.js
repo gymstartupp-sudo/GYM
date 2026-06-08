@@ -83,14 +83,13 @@ exports.getClients = async (req, res, next) => {
         query.paymentStatus = { $in: ['overdue', 'partial'] };
       } else if (s === 'pending') {
         query['membership.requestApproved'] = false;
+      } else if (s === 'expired') {
+        query['membership.requestApproved'] = true;
+        query.$and = [
+          { 'memberships.0': { $exists: true } },
+          { memberships: { $not: { $elemMatch: { endDate: { $gte: today } } } } }
+        ];
       }
-    } else if (!status) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      query.$or = [
-        { memberships: { $elemMatch: { endDate: { $gte: today } } } },
-        { 'membership.requestApproved': false }
-      ];
     }
 
     const selectedPlan = planName || plan;

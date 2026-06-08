@@ -6,6 +6,7 @@ import { Search, Filter, Plus, X, ChevronDown, Check } from 'lucide-react';
 import Button from '../../components/Button';
 import ClientForm from '../../components/ClientForm';
 import ClientCard from '../../components/ClientCard';
+import { getPlanStatus } from '../../utils/membership';
 
 // ─── Status options config ───────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -14,6 +15,7 @@ const STATUS_OPTIONS = [
   { value: 'Active', label: 'Active', dot: 'bg-emerald-500' },
   { value: 'Expiring Soon', label: 'Expiring Soon', dot: 'bg-warning' },
   { value: 'Dues', label: 'Dues', dot: 'bg-red-500' },
+  { value: 'Expired', label: 'Expired', dot: 'bg-gray-500' },
 ];
 
 // ─── Custom Dropdown (replaces native <select> for Dark-theme compatibility) ──
@@ -169,15 +171,42 @@ const Clients = () => {
     }
   };
 
-  // Client-side search on top of server-side status+plan filter
+  // Client-side search and sorting based on days left ascending
   const filteredClients = useMemo(() => {
+    // 1. Filter
     const term = searchTerm.toLowerCase();
-    if (!term) return clients;
-    return clients.filter(c =>
-      c.personalInfo?.name?.toLowerCase().includes(term) ||
-      (c.clientId || '').toLowerCase().includes(term) ||
-      c.personalInfo?.mobileNo?.includes(term)
-    );
+    const list = term 
+      ? clients.filter(c =>
+          c.personalInfo?.name?.toLowerCase().includes(term) ||
+          (c.clientId || '').toLowerCase().includes(term) ||
+          c.personalInfo?.mobileNo?.includes(term)
+        )
+      : [...clients];
+
+    // 2. Sort by remaining days left ascending
+    const getDaysLeft = (client) => {
+      const currentPlan = client?.memberships?.find(p => {
+        const s = getPlanStatus(p);
+        return s === 'active';
+      }) || (client?.membership?.startDate ? client.membership : null);
+
+      if (!currentPlan || !currentPlan.endDate) {
+        return Infinity;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const endDate = new Date(currentPlan.endDate);
+      endDate.setHours(0, 0, 0, 0);
+
+      if (Number.isNaN(endDate.getTime())) {
+        return Infinity;
+      }
+
+      return Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    };
+
+    return list.sort((a, b) => getDaysLeft(a) - getDaysLeft(b));
   }, [clients, searchTerm]);
 
   const hasStatusFilter = filterStatus !== 'All';

@@ -434,7 +434,7 @@ const GymRegister = () => {
                     className={fieldClassName('gymIdPrefix', 'uppercase font-semibold tracking-wider')}
                     maxLength="3"
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">This 3-letter prefix will prefix all member IDs (e.g. DNB001).</p>
+                  <p className="text-[10px] text-slate-500 mt-1">This 3-letter prefix will prefix all member IDs (e.g. DNB-01).</p>
                   {showFieldError('gymIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymIdPrefix.message}</p>}
                 </div>
 
