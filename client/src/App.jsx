@@ -28,7 +28,9 @@ const ClientDetail = lazy(() => import('./pages/owner/ClientDetail'));
 const PaymentLedger = lazy(() => import('./pages/owner/PaymentLedger'));
 
 // Client - Lazy loaded for code splitting
-const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard'));
+const ClientHome = lazy(() => import('./pages/client/ClientHome'));
+const ClientProfile = lazy(() => import('./pages/client/ClientProfile'));
+const ClientPayments = lazy(() => import('./pages/client/ClientPayments'));
 const ClientPlans = lazy(() => import('./pages/client/ClientPlans'));
 
 // Admin - Lazy loaded for code splitting
@@ -84,7 +86,9 @@ const App = () => {
               </Route>
               
               {/* Client Routes */}
-              <Route path="/client" element={<ProtectedRoute allowedRoles={['client']}><ClientDashboard /></ProtectedRoute>} />
+              <Route path="/client" element={<ProtectedRoute allowedRoles={['client']}><ClientHome /></ProtectedRoute>} />
+              <Route path="/client/profile" element={<ProtectedRoute allowedRoles={['client']}><ClientProfile /></ProtectedRoute>} />
+              <Route path="/client/payments" element={<ProtectedRoute allowedRoles={['client']}><ClientPayments /></ProtectedRoute>} />
               <Route path="/client/plans" element={<ProtectedRoute allowedRoles={['client']}><ClientPlans /></ProtectedRoute>} />
               
               {/* Admin Routes */}
