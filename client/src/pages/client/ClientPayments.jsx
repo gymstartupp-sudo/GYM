@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, FileText, CheckCircle2 } from 'lucide-react';
 import Button from '../../components/Button';
 import ClientSidebar from '../../components/ClientSidebar';
 import ClientRenewModal from '../../components/ClientRenewModal';
+import { calculateEndDate } from '../../utils/membership';
 
 const getPendingPayment = (clientDoc) => {
   if (!clientDoc || !clientDoc.paymentHistory || clientDoc.paymentHistory.length === 0) return null;
@@ -37,6 +38,8 @@ const ClientPayments = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showRenewModal, setShowRenewModal] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -66,6 +69,62 @@ const ClientPayments = () => {
     fetchProfile();
   }, []);
 
+  const getLogoUrl = () => {
+    const gymInfo = profile?.gym;
+    if (!gymInfo?.billingInfo?.logo) return null;
+    const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '');
+    return `${backendUrl}${gymInfo.billingInfo.logo}`;
+  };
+
+  const getBalance = (p) => {
+    if (p.remainingBalance !== undefined) return p.remainingBalance;
+    if (p.amount === 0) return 0;
+    const total = Number(p.invoiceAmount || p.amount) || 0;
+    const paid = Number(p.totalPaid || p.paidAmount) || 0;
+    return Math.max(0, total - paid);
+  };
+
+  const isPaymentCleared = (payment) => {
+    if (!payment || payment.status !== 'partial' || !profile?.paymentHistory) return false;
+    return profile.paymentHistory.some(p => 
+      p.planId === payment.planId &&
+      new Date(p.startDate).getTime() === new Date(payment.startDate).getTime() &&
+      p.status === 'paid'
+    );
+  };
+
+  const getStatusBadge = (payment) => {
+    const status = typeof payment === 'object' ? payment.status : payment;
+    if (!status || status === 'paid') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">PAID</span>;
+    
+    if (status === 'partial' && typeof payment === 'object') {
+      if (isPaymentCleared(payment)) {
+        return (
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest flex items-center justify-center gap-1 w-fit mx-auto">
+            <CheckCircle2 size={10} className="text-emerald-400 shrink-0" />
+            PARTIAL (CLEARED)
+          </span>
+        );
+      }
+    }
+    
+    if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-widest">PARTIALLY</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 uppercase tracking-widest">OVERDUE</span>;
+  };
+
+  const getBillingPeriod = (payment) => {
+    if (!payment.startDate) return null;
+    try {
+      const duration = payment.planDurationMonths || 1;
+      const startDateObj = new Date(payment.startDate);
+      const endDateStr = calculateEndDate(payment.startDate, duration);
+      const endDateObj = new Date(endDateStr);
+      return `${startDateObj.toLocaleDateString('en-GB')} - ${endDateObj.toLocaleDateString('en-GB')}`;
+    } catch (e) {
+      return null;
+    }
+  };
+
   if (loading || !profile) {
     return (
       <div className={`flex bg-dark h-screen overflow-hidden text-white ${isMobile ? 'flex-col' : 'flex-row'}`}>
@@ -83,6 +142,7 @@ const ClientPayments = () => {
   }
 
   const pendingPmt = getPendingPayment(profile);
+  const gymInfo = profile.gym;
 
   return (
     <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
@@ -131,46 +191,75 @@ const ClientPayments = () => {
         </div>
 
         {/* Payment History Ledger */}
-        <div className="card space-y-6 bg-gray-900 border-gray-800 rounded-2xl p-6 md:p-8 shadow-xl">
-          <h2 className="text-xl font-semibold text-white border-b border-gray-800 pb-4 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Payment History
-          </h2>
+        <div className="bg-gray-900/40 rounded-2xl border border-gray-800 overflow-hidden shadow-2xl backdrop-blur-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
               <thead>
-                <tr className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-800">
-                  <th className="p-4">Receipt No</th>
-                  <th className="p-4">Plan Name</th>
-                  <th className="p-4">Payment Method</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Date</th>
-                  <th className="p-4">Amount</th>
+                <tr className="bg-gray-800/30 border-b border-gray-800 text-gray-400 text-[11px] font-black tracking-widest uppercase">
+                  <th className="p-5">Receipt Info</th>
+                  <th className="p-5">Plan</th>
+                  <th className="p-5">Mode</th>
+                  <th className="p-5 text-right">Plan Amount</th>
+                  <th className="p-5 text-right">Paid Now</th>
+                  <th className="p-5 text-right">Total Paid</th>
+                  <th className="p-5 text-right">Remaining Balance</th>
+                  <th className="p-5 text-center">Status</th>
+                  <th className="p-5 text-center">Bill</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-gray-800/50">
                 {!profile.paymentHistory || profile.paymentHistory.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-gray-500">
+                    <td colSpan="9" className="text-center py-20 text-gray-500">
                       No payment records found.
                     </td>
                   </tr>
                 ) : (
                   profile.paymentHistory.map((pmt) => (
-                    <tr key={pmt._id || pmt.paymentId} className="hover:bg-gray-800/30 transition-colors text-sm text-gray-300">
-                      <td className="p-4 font-semibold text-white">{pmt.paymentId || 'N/A'}</td>
-                      <td className="p-4">{pmt.planName || 'Custom'}</td>
-                      <td className="p-4 uppercase text-xs">{pmt.paymentMethod || 'cash'}</td>
-                      <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                          pmt.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                        }`}>
-                          {pmt.status}
+                    <tr key={pmt._id || pmt.paymentId} className="hover:bg-gray-800/30 transition-all group">
+                      <td className="p-5">
+                        <p className="font-bold text-white text-sm">{pmt.paymentId || 'N/A'}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          {new Date(pmt.paymentDate || pmt.createdAt || pmt.date).toLocaleDateString('en-GB')}
+                        </p>
+                      </td>
+                      <td className="p-5">
+                        <span className="text-gray-300 text-xs font-medium block">{pmt.planName || 'Custom'}</span>
+                        {pmt.startDate && (() => {
+                          const period = getBillingPeriod(pmt);
+                          return period ? (
+                            <span className="text-[10px] text-gray-500 mt-0.5 block font-medium">
+                              {period}
+                            </span>
+                          ) : null;
+                        })()}
+                      </td>
+                      <td className="p-5">
+                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${pmt.paymentMethod === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
+                          {pmt.paymentMethod || pmt.mode || 'cash'}
                         </span>
                       </td>
-                      <td className="p-4">
-                        {pmt.paymentDate ? new Date(pmt.paymentDate).toLocaleDateString('en-GB') : 'N/A'}
+                      <td className="p-5 text-right text-gray-200 font-bold text-sm">₹{pmt.invoiceAmount || pmt.amount || 0}</td>
+                      <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{pmt.paidNow || pmt.paidAmount || 0}</td>
+                      <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{pmt.totalPaid || pmt.paidAmount || 0}</td>
+                      <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{pmt.remainingBalance !== undefined ? pmt.remainingBalance : (pmt.amount - (pmt.paidAmount || 0))}</td>
+                      <td className="p-5 text-center">
+                        {getStatusBadge(pmt)}
+                        {pmt.status === 'partial' && !isPaymentCleared(pmt) && pmt.dueDate && (
+                          <div className="mt-1 text-[10px] text-gray-500 font-medium">
+                            Due: {new Date(pmt.dueDate).toLocaleDateString('en-GB')}
+                          </div>
+                        )}
                       </td>
-                      <td className="p-4 font-black text-white">₹{pmt.paidAmount?.toLocaleString('en-IN') || 0}</td>
+                      <td className="p-5 text-center">
+                        <button 
+                          onClick={() => { setSelectedPayment(pmt); setShowReceiptModal(true); }}
+                          className="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-all"
+                          title="View Bill"
+                        >
+                          <FileText size={18} />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -186,6 +275,156 @@ const ClientPayments = () => {
         profile={profile} 
         onSuccess={fetchProfile} 
       />
+
+      {/* Receipt / Bill Modal */}
+      {showReceiptModal && selectedPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="bg-white text-gray-900 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print-invoice-container my-8 relative">
+            {/* Actions Header (Hidden in print) */}
+            <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Invoice Preview</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => window.print()} 
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-all shadow-sm"
+                >
+                  Print Invoice
+                </button>
+                <button 
+                  onClick={() => setShowReceiptModal(false)} 
+                  className="p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Invoice Printable Body */}
+            <div className="p-5 space-y-4">
+              {/* Header: Gym Info */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-2.5">
+                  {getLogoUrl() ? (
+                    <img 
+                      src={getLogoUrl()} 
+                      alt={gymInfo?.gymName || "Gym Logo"} 
+                      className="w-12 h-12 object-contain rounded-lg border border-gray-100" 
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center font-black text-primary text-lg">
+                      {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-lg font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
+                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                  </div>
+                </div>
+                
+                <div className="text-left sm:text-right text-[11px] text-gray-600 space-y-0.5">
+                  <p className="font-bold text-gray-900">Address:</p>
+                  <p className="max-w-[200px] leading-snug whitespace-pre-line">{gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || "Address details"}</p>
+                  {gymInfo?.billingInfo?.helpContact && (
+                    <p className="font-medium">Support: +91 {gymInfo.billingInfo.helpContact}</p>
+                  )}
+                  {(gymInfo?.billingInfo?.gst || gymInfo?.gst) && (
+                    <p className="font-bold text-primary">GSTIN: {gymInfo?.billingInfo?.gst || gymInfo?.gst}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Middle Section: Meta & Client details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-gray-200 text-xs">
+                <div>
+                  <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Billed To (Client Details)</h4>
+                  <p className="font-bold text-gray-900 text-sm">{profile.personalInfo?.name}</p>
+                  <p className="text-gray-500 font-medium mt-0.5">Client ID: {profile.clientId}</p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
+                  <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
+                  <p className="text-gray-500 font-medium mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                  <p className="mt-1">{getStatusBadge(selectedPayment)}</p>
+                </div>
+              </div>
+
+              {/* Subscription Details Table */}
+              <div className="space-y-2">
+                <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Membership Details</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200">
+                        <th className="p-2.5">Plan Name / Description</th>
+                        <th className="p-2.5 text-center">Payment Method</th>
+                        <th className="p-2.5 text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-gray-100 text-gray-800">
+                        <td className="p-2.5 font-semibold">
+                          {selectedPayment.planName} Subscription
+                          {selectedPayment.startDate && (
+                            <span className="block text-[10px] text-gray-500 font-normal mt-0.5">
+                              Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB') : 'Expiry'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-2.5 text-center font-bold uppercase tracking-wider text-slate-700">
+                          {selectedPayment.paymentMethod === 'cash' ? 'Cash' : 'Online'}
+                        </td>
+                        <td className="p-2.5 text-right font-black text-gray-900">
+                          ₹{selectedPayment.paidNow || selectedPayment.paidAmount || 0}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Payment Summary */}
+              {(() => {
+                const paidNow = selectedPayment.paidNow || selectedPayment.paidAmount || 0;
+                const planAmt = selectedPayment.invoiceAmount || selectedPayment.amount || 0;
+                const showSummary = paidNow < planAmt;
+                if (!showSummary) return null;
+                return (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1.5 text-xs">
+                    <h4 className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Payment Summary</h4>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Plan Amount:</span>
+                      <span className="font-bold text-gray-900">₹{planAmt}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Paid Now:</span>
+                      <span className="font-bold text-blue-600">₹{paidNow}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 font-medium">Total Paid:</span>
+                      <span className="font-bold text-emerald-600">₹{selectedPayment.totalPaid || selectedPayment.paidAmount || 0}</span>
+                    </div>
+                    <div className="flex justify-between pt-1.5 border-t border-amber-300">
+                      <span className="text-gray-800 font-bold">Balance Due:</span>
+                      <span className="font-black text-rose-600">₹{selectedPayment.remainingBalance !== undefined ? selectedPayment.remainingBalance : getBalance(selectedPayment)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Footer: Greetings & Regards */}
+              <div className="pt-4 border-t border-gray-200 text-center space-y-2">
+                {gymInfo?.billingInfo?.greetingText && (
+                  <p className="text-[11px] text-gray-500 font-medium italic">"{gymInfo.billingInfo.greetingText}"</p>
+                )}
+                <div className="text-[10px] text-gray-400">
+                  <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
+                  <p className="mt-0.5 font-medium">Thank you for your business!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

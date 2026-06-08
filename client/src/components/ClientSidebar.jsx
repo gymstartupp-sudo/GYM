@@ -32,34 +32,35 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
       </div>
 
       <div className="flex-1 space-y-2">
-        <NavLink 
-          to="/client" 
-          end 
-          onClick={() => isMobile && onClose()} 
+        <NavLink
+          to="/client"
+          end
+          onClick={() => isMobile && onClose()}
           className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-400 hover:text-white'}`}
         >
           <Home size={20} /> Home
         </NavLink>
-        <NavLink 
-          to="/client/profile" 
-          onClick={() => isMobile && onClose()} 
+        <NavLink
+          to="/client/plans"
+          onClick={() => isMobile && onClose()}
           className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-400 hover:text-white'}`}
         >
-          <User size={20} /> Profile
+          <List size={20} /> Plans
         </NavLink>
-        <NavLink 
-          to="/client/payments" 
-          onClick={() => isMobile && onClose()} 
+        <NavLink
+          to="/client/payments"
+          onClick={() => isMobile && onClose()}
           className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-400 hover:text-white'}`}
         >
           <CreditCard size={20} /> Payments
         </NavLink>
-        <NavLink 
-          to="/client/plans" 
-          onClick={() => isMobile && onClose()} 
+
+        <NavLink
+          to="/client/profile"
+          onClick={() => isMobile && onClose()}
           className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-400 hover:text-white'}`}
         >
-          <List size={20} /> Plans
+          <User size={20} /> Profile
         </NavLink>
       </div>
 
