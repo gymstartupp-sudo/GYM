@@ -148,8 +148,8 @@ const runReminders = async () => {
   }
 };
 
-// Run every day at 03:00 AM
-cron.schedule('0 3 * * *', async () => {
+// Run every day at 04:15 PM
+cron.schedule('30 16 * * *', async () => {
   console.log('Running daily automated reminderJob...');
   await runReminders();
 });

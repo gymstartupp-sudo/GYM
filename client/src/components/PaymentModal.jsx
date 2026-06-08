@@ -43,6 +43,7 @@ const PaymentModal = ({
     // Track if we auto-detected a pending payment for the selected client
     const [detectedPendingPayment, setDetectedPendingPayment] = useState(null);
     const [latestExpiryDate, setLatestExpiryDate] = useState(null);
+    const wasOpen = useRef(false);
 
     const [formData, setFormData] = useState(() => {
         let defaultStartDate = toLocalYYYYMMDD(new Date());
@@ -85,9 +86,9 @@ const PaymentModal = ({
         }
     }, [isOpen]);
 
-    // Reset all state when modal opens/closes
+    // Reset all state when modal opens
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !wasOpen.current) {
             setDetectedPendingPayment(null);
             setIsSubmitting(false);
 
@@ -182,7 +183,10 @@ const PaymentModal = ({
                 }));
             }
         }
-    }, [clientData, planData, isOpen, initialData]);
+        
+        // Update wasOpen ref
+        wasOpen.current = isOpen;
+    }, [clientData, planData, isOpen, initialData, payments, plans]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
