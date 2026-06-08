@@ -49,8 +49,8 @@ const syncClientStatus = async (clientId) => {
     }
 
     // ── 2. Synchronize `client.membership` (singular) from `memberships[]` ──
-    const { currentPlan, nextPlan } = getClientPlans(client.memberships || [], today);
-    const bestPlan = currentPlan || nextPlan;
+    const { currentPlan, nextPlan, previousPlans } = getClientPlans(client.memberships || [], today);
+    const bestPlan = currentPlan || nextPlan || (previousPlans && previousPlans[0]);
 
     if (bestPlan) {
       // Compute daysLeft dynamically
@@ -77,6 +77,10 @@ const syncClientStatus = async (clientId) => {
         expiryReminderSent: client.membership?.expiryReminderSent || false,
         expiredReminderSent: client.membership?.expiredReminderSent || false
       };
+    }
+
+    if (client.membership && client.membership.status) {
+      client.membership.status = client.membership.status.toLowerCase();
     }
 
     await client.save();
