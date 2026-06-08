@@ -1,52 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Home, List, Eye, X, Menu } from 'lucide-react';
+import { Eye, X, Menu } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
-
-// Re-usable sidebar for client pages
-const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
-    const { logout, user } = useAuth();
-    const navigate = useNavigate();
-    return (
-        <div className={`${isMobile ? `fixed inset-y-0 left-0 z-50 w-64 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out` : 'w-64'} h-screen bg-gray-900 border-r border-gray-800 flex flex-col pt-6 px-4 shrink-0`}>
-            <div className="flex items-center justify-between gap-3 mb-10 px-2">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-accent flex justify-center items-center font-bold text-lg text-white shadow-lg shadow-accent/20">
-                        {user?.avatar || 'C'}
-                    </div>
-                    <div>
-                        <h2 className="font-bold text-white text-lg tracking-tight -mb-1 truncate max-w-[120px]">{user?.personalInfo?.name}</h2>
-                        <span className="text-xs text-gray-400 uppercase tracking-wider truncate max-w-[120px] block">{user?.gymName}</span>
-                    </div>
-                </div>
-                {isMobile && (
-                    <button onClick={onClose} className="text-gray-400 hover:text-white p-1">
-                        <X size={20} />
-                    </button>
-                )}
-            </div>
-            <div className="flex-1 space-y-2">
-                <NavLink to="/client" end onClick={() => isMobile && onClose()} className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}>
-                    <Home size={20} /> Profile
-                </NavLink>
-                <NavLink to="/client/plans" onClick={() => isMobile && onClose()} className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}>
-                    <List size={20} /> Plans
-                </NavLink>
-            </div>
-            <div className="pb-6 pt-4 border-t border-gray-800">
-                <button
-                    onClick={() => { logout(); navigate('/login'); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                >
-                    <LogOut size={20} /> Logout
-                </button>
-            </div>
-        </div>
-    );
-};
+import ClientSidebar from '../../components/ClientSidebar';
 
 // Plan Detail Modal
 const PlanDetailModal = ({ plan, onClose }) => {

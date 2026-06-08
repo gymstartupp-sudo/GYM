@@ -136,7 +136,7 @@ exports.getClientProfile = async (req, res, next) => {
     
     const payments = await Payment.find({ clientId: client._id.toString() }).lean();
     const enriched = calculateBalances(client, payments);
-    const gym = await Gym.findOne({ gymId: client.gymId }).select('billingInfo').lean();
+    const gym = await Gym.findOne({ gymId: client.gymId }).select('gymName tagline address location gymEmail gymContact gymType operatingDays operatingHours billingInfo').lean();
     res.status(200).json({ success: true, data: { ...enriched, gym } });
   } catch (err) {
     next(err);
@@ -174,7 +174,7 @@ exports.updateClientProfile = async (req, res, next) => {
     const Gym = require('../models/Gym');
     const payments = await Payment.find({ clientId }).lean();
     const enriched = calculateBalances(client, payments);
-    const gym = await Gym.findOne({ gymId: client.gymId }).select('billingInfo').lean();
+    const gym = await Gym.findOne({ gymId: client.gymId }).select('gymName tagline address location gymEmail gymContact gymType operatingDays operatingHours billingInfo').lean();
     res.status(200).json({ success: true, data: { ...enriched, gym } });
   } catch (err) {
     next(err);
