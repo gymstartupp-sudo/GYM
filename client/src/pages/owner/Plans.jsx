@@ -30,7 +30,7 @@ const PlanDetailModal = ({ plan, onClose }) => {
           </div>
           <div className="bg-gray-800/60 rounded-lg p-4">
             <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Description</p>
-            <p className="text-gray-200 text-sm leading-relaxed">
+            <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
               {plan.description?.trim() || 'No description provided for this plan.'}
             </p>
           </div>

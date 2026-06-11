@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { CircleDollarSign, Search, Filter, History, AlertCircle, Clock, ArrowRight, Eye, RefreshCw, Smartphone, X } from 'lucide-react';
+import { CircleDollarSign, Search, Filter, History, AlertCircle, Clock, ArrowRight, Eye, RefreshCw, Smartphone, X, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ClientDetail from './ClientDetail';
 import Button from '../../components/Button';
@@ -42,6 +42,18 @@ const Dues = () => {
             toast.error("Failed to load dues data");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to deactivate this client?')) {
+            try {
+                await api.put(`/client/${id}/deactivate`);
+                toast.success('Client deactivated');
+                fetchData();
+            } catch {
+                toast.error('Failed to deactivate');
+            }
         }
     };
 
@@ -415,6 +427,12 @@ const Dues = () => {
                                                         >
                                                             <RefreshCw size={14} /> Renew
                                                         </button>
+                                                        <button
+                                                            onClick={() => handleDelete(due.clientId)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-950/20 text-red-400 hover:bg-red-900/40 hover:text-red-300 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-red-900/30"
+                                                        >
+                                                            <Trash2 size={14} /> Deactivate
+                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center justify-end gap-2">
@@ -426,7 +444,7 @@ const Dues = () => {
                                                         </button>
                                                         <button
                                                             onClick={() => handlePayNow(due)}
-                                                            className="px-4 py-1.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-xs font-black transition-all border border-primary/20 uppercase tracking-widest"
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"
                                                         >
                                                             Pay Now
                                                         </button>

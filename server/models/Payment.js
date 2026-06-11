@@ -22,7 +22,8 @@ const paymentSchema = new mongoose.Schema({
   startDate: { type: Date },
   isPlanActivated: { type: Boolean, default: false },
   date: { type: Date, default: Date.now }, // DEPRECATED: use paymentDate
-  billSentViaWhatsApp: { type: Boolean, default: false }
+  billSentViaWhatsApp: { type: Boolean, default: false },
+  razorpay_payment_id: { type: String, default: null }
 }, { timestamps: true });
 
 paymentSchema.index({ clientId: 1 });
