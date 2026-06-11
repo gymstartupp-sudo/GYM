@@ -192,6 +192,45 @@ exports.addClient = async (req, res, next) => {
     if (!personalInfo?.email) return res.status(400).json({ success: false, message: 'Email is required' });
     if (!payment) return res.status(400).json({ success: false, message: 'Payment information is mandatory' });
 
+    // Validate DOB (Must be 14-100 years old)
+    if (personalInfo?.dob) {
+      const today = new Date();
+      const birthDate = new Date(personalInfo.dob);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 14) {
+        return res.status(400).json({ success: false, message: 'Client must be at least 14 years old' });
+      }
+      if (age > 100) {
+        return res.status(400).json({ success: false, message: 'Invalid Date of Birth (max 100 years old)' });
+      }
+    }
+
+    // Validate Start Date (30 days past, 90 days future)
+    if (membership?.startDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const minDate = new Date(today);
+      minDate.setDate(today.getDate() - 30);
+
+      const maxDate = new Date(today);
+      maxDate.setDate(today.getDate() + 90);
+
+      const startVal = new Date(membership.startDate);
+      startVal.setHours(0, 0, 0, 0);
+
+      if (startVal < minDate) {
+        return res.status(400).json({ success: false, message: 'Start date cannot be more than 30 days in the past' });
+      }
+      if (startVal > maxDate) {
+        return res.status(400).json({ success: false, message: 'Start date cannot be more than 90 days in the future' });
+      }
+    }
+
     const clientExists = await Client.findOne({ gymId: gymIdStr, 'personalInfo.email': personalInfo.email });
     if (clientExists) return res.status(400).json({ success: false, message: 'Client email exists in this gym.' });
 
@@ -218,6 +257,35 @@ exports.addClient = async (req, res, next) => {
     const planPriceVal = Number(planPrice) || 0;
     const paidAmountVal = Number(payment.paidAmount) || 0;
     const remainingBalanceVal = Math.max(0, planPriceVal - paidAmountVal);
+
+    if (remainingBalanceVal > 0) {
+      if (!payment.dueDate) {
+        return res.status(400).json({ success: false, message: 'Due Date is required for partial payments' });
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const startVal = new Date(membership?.startDate || Date.now());
+      startVal.setHours(0, 0, 0, 0);
+
+      const dueVal = new Date(payment.dueDate);
+      dueVal.setHours(0, 0, 0, 0);
+
+      const endVal = new Date(membershipWindow.endDate);
+      endVal.setHours(0, 0, 0, 0);
+
+      if (dueVal < today) {
+        return res.status(400).json({ success: false, message: 'Due Date cannot be in the past' });
+      }
+      if (dueVal < startVal) {
+        return res.status(400).json({ success: false, message: 'Due Date cannot be earlier than the membership Start Date' });
+      }
+      if (dueVal > endVal) {
+        return res.status(400).json({ success: false, message: `Due Date cannot exceed the membership Expiry Date (${endVal.toLocaleDateString('en-GB')})` });
+      }
+    }
+
     const resolvedDueDate = remainingBalanceVal === 0 ? null : (payment.dueDate ? new Date(payment.dueDate) : null);
 
     const client = await Client.create({
@@ -454,6 +522,49 @@ exports.approveClient = async (req, res, next) => {
     // Validate partial payments restriction if disabled
     if (gym?.billingInfo?.allowPartialPayments === false && remainingBalance > 0) {
       return res.status(400).json({ success: false, message: 'Partial payments are disabled. Payment must be made in full.' });
+    }
+
+    // Validate Start Date (30 days past, 90 days future)
+    const startCheck = new Date(startDateVal);
+    startCheck.setHours(0, 0, 0, 0);
+
+    const todayCheck = new Date();
+    todayCheck.setHours(0, 0, 0, 0);
+
+    const minDateCheck = new Date(todayCheck);
+    minDateCheck.setDate(todayCheck.getDate() - 30);
+
+    const maxDateCheck = new Date(todayCheck);
+    maxDateCheck.setDate(todayCheck.getDate() + 90);
+
+    if (startCheck < minDateCheck) {
+      return res.status(400).json({ success: false, message: 'Start date cannot be more than 30 days in the past' });
+    }
+    if (startCheck > maxDateCheck) {
+      return res.status(400).json({ success: false, message: 'Start date cannot be more than 90 days in the future' });
+    }
+
+    // Validate Due Date
+    if (remainingBalance > 0) {
+      if (!dueDateVal) {
+        return res.status(400).json({ success: false, message: 'Due Date is required for partial payments' });
+      }
+
+      const due = new Date(dueDateVal);
+      due.setHours(0, 0, 0, 0);
+
+      const end = new Date(membershipWindow.endDate);
+      end.setHours(0, 0, 0, 0);
+
+      if (due < todayCheck) {
+        return res.status(400).json({ success: false, message: 'Due Date cannot be in the past' });
+      }
+      if (due < startCheck) {
+        return res.status(400).json({ success: false, message: 'Due Date cannot be earlier than the membership Start Date' });
+      }
+      if (due > end) {
+        return res.status(400).json({ success: false, message: `Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')})` });
+      }
     }
 
     const resolvedStatus = paidAmount >= planPrice ? 'paid' : (paidAmount > 0 ? 'partial' : 'overdue');

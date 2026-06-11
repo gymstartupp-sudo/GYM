@@ -428,8 +428,33 @@ const PaymentModal = ({
         const realStatus = (paid >= outstandingBalance) ? 'paid' : 'partial';
 
         // Due date is only required for TRUE partial payments (balance remains after this payment)
-        if (realStatus === 'partial' && !formData.dueDate) {
-            return alert("Due Date is required for partial payments");
+        if (realStatus === 'partial') {
+            if (!formData.dueDate) {
+                return alert("Due Date is required for partial payments");
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const start = new Date(formData.startDate);
+            start.setHours(0, 0, 0, 0);
+
+            const due = new Date(formData.dueDate);
+            due.setHours(0, 0, 0, 0);
+
+            const duration = selectedPlan?.durationMonths || planData?.durationMonths || 1;
+            const end = calculateEndDate(formData.startDate, duration);
+            if (end) end.setHours(0, 0, 0, 0);
+
+            if (due < today) {
+                return alert("Due Date cannot be in the past.");
+            }
+            if (due < start) {
+                return alert("Due Date cannot be earlier than the membership Start Date.");
+            }
+            if (end && due > end) {
+                return alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')}).`);
+            }
         }
 
         setIsSubmitting(true);

@@ -12,23 +12,56 @@ const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
 const passwordError = 'Password must be at least 8 characters with 1 uppercase and 1 number';
 
+const getMinStartDate = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - 30);
+  return d;
+};
+
+const getMaxStartDate = () => {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  d.setDate(d.getDate() + 90);
+  return d;
+};
+
+const getMinDobDate = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 100);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 const getValidationSchema = (mode) => yup.object({
   gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').matches(/^[A-Z]{3}-\d{2}$/, 'Format: PREFIX-01') : yup.string().nullable(),
   gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
   name: yup.string().trim().required('Name is required').max(20, 'Max 20 chars'),
   gender: yup.string().required('Gender is required'),
   email: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
-  dob: yup.date().required('Date of birth is required').test('age', 'Must be at least 14 years old', function (value) {
-    if (!value) return false;
-    const age = new Date().getFullYear() - new Date(value).getFullYear();
-    return age >= 14;
-  }),
+  dob: yup.date()
+    .required('Date of birth is required')
+    .min(getMinDobDate(), 'Enter a valid date of birth (max 100 years old)')
+    .test('age', 'Must be at least 14 years old', function (value) {
+      if (!value) return false;
+      const today = new Date();
+      const birthDate = new Date(value);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= 14;
+    }),
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
   emergencyContact: yup.string().matches(phoneRegex, phoneError).required(phoneError).notOneOf([yup.ref('mobileNo')], 'Must be different from Mobile Number'),
   medicalCondition: yup.string().trim().nullable(),
   planId: yup.string().nullable(),
-  startDate: yup.date().required('Start date is required'),
+  startDate: yup.date()
+    .required('Start date is required')
+    .min(getMinStartDate(), 'Start date cannot be more than 30 days in the past')
+    .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),
   planType: yup.string().required('Membership plan is required'),
   password: ['self', 'owner'].includes(mode)
     ? yup.string().min(8, passwordError).max(20, 'Max 20 chars').matches(/^(?=.*[A-Z])(?=.*\d).+$/, passwordError).required(passwordError)
