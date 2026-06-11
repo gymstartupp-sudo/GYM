@@ -119,7 +119,7 @@ const ClientPayments = () => {
       const startDateObj = new Date(payment.startDate);
       const endDateStr = calculateEndDate(payment.startDate, duration);
       const endDateObj = new Date(endDateStr);
-      return `${startDateObj.toLocaleDateString('en-GB')} - ${endDateObj.toLocaleDateString('en-GB')}`;
+      return `${startDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')} - ${endDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')}`;
     } catch (e) {
       return null;
     }
@@ -220,7 +220,7 @@ const ClientPayments = () => {
                       <td className="p-5">
                         <p className="font-bold text-white text-sm">{pmt.paymentId || 'N/A'}</p>
                         <p className="text-[10px] text-gray-500 mt-0.5">
-                          {new Date(pmt.paymentDate || pmt.createdAt || pmt.date).toLocaleDateString('en-GB')}
+                          {new Date(pmt.paymentDate || pmt.createdAt || pmt.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
                         </p>
                       </td>
                       <td className="p-5">
@@ -247,7 +247,7 @@ const ClientPayments = () => {
                         {getStatusBadge(pmt)}
                         {pmt.status === 'partial' && !isPaymentCleared(pmt) && pmt.dueDate && (
                           <div className="mt-1 text-[10px] text-gray-500 font-medium">
-                            Due: {new Date(pmt.dueDate).toLocaleDateString('en-GB')}
+                            Due: {new Date(pmt.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')}
                           </div>
                         )}
                       </td>
@@ -343,7 +343,7 @@ const ClientPayments = () => {
                 <div className="text-left sm:text-right">
                   <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
                   <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
-                  <p className="text-gray-500 font-medium mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                  <p className="text-gray-500 font-medium mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                   <p className="mt-1">{getStatusBadge(selectedPayment)}</p>
                 </div>
               </div>
@@ -366,7 +366,7 @@ const ClientPayments = () => {
                           {selectedPayment.planName} Subscription
                           {selectedPayment.startDate && (
                             <span className="block text-[10px] text-gray-500 font-normal mt-0.5">
-                              Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB') : 'Expiry'}
+                              Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'Expiry'}
                             </span>
                           )}
                         </td>

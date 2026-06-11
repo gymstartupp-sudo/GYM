@@ -121,7 +121,7 @@ const ClientRequests = () => {
                                         </div>
                                         <div>
                                             <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Request Date</p>
-                                            <p className="text-white font-medium">{new Date(req.createdAt).toLocaleDateString()}</p>
+                                            <p className="text-white font-medium">{new Date(req.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                         </div>
                                         <div className="hidden md:block">
                                             <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Status</p>

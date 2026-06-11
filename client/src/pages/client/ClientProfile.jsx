@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { Menu, X } from 'lucide-react';
 import Button from '../../components/Button';
 import ClientSidebar from '../../components/ClientSidebar';
+import CustomDatePicker from '../../components/CustomDatePicker';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const phoneRegex = /^[6-9]\d{9}$/;
@@ -12,8 +13,8 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const errorInputClass = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.2)]';
 
 // ─── Component: Reusable Field ────────────────────
-const Field = ({ label, value, onChange, disabled = false, textarea = false, type = "text", error, maxLength }) => {
-  const Component = textarea ? 'textarea' : 'input';
+const Field = ({ label, value, onChange, disabled = false, textarea = false, type = "text", error, maxLength, ...rest }) => {
+  const Component = type === 'date' ? CustomDatePicker : (textarea ? 'textarea' : 'input');
   const baseClass = `input-field ${textarea ? 'h-24 resize-none' : ''}`;
   const statusClass = disabled ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed' : (error ? errorInputClass : '');
 
@@ -28,12 +29,13 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
         )}
       </div>
       <Component
-        type={textarea ? undefined : type}
+        type={(textarea || type === 'date') ? undefined : type}
         value={value || ''}
         onChange={onChange}
         disabled={disabled}
         maxLength={maxLength}
         className={`${baseClass} ${statusClass}`.trim()}
+        {...rest}
       />
       {error && !disabled && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{error}</p>}
     </label>
@@ -81,9 +83,37 @@ const ClientProfile = () => {
     fetchProfile();
   }, []);
 
+  const validateSingleField = (key, value) => {
+    let errMsg = '';
+    if (key === 'name') {
+      if (!value?.trim()) errMsg = 'Full name is required';
+      else if (value.length > 25) errMsg = 'Max 25 characters';
+    } else if (key === 'email') {
+      if (!value?.trim()) errMsg = 'Email address is required';
+      else if (!emailRegex.test(value)) errMsg = 'Enter a valid email address';
+    } else if (key === 'mobileNo') {
+      if (!value?.trim()) errMsg = 'Mobile number is required';
+      else if (!phoneRegex.test(value)) errMsg = 'Enter a valid Indian mobile number';
+    } else if (key === 'emergencyContact') {
+      if (value && !phoneRegex.test(value)) errMsg = 'Enter a valid Indian mobile number';
+    } else if (key === 'address') {
+      if (!value?.trim()) errMsg = 'Residential address is required';
+      else if (value.length > 100) errMsg = 'Max 100 characters';
+    } else if (key === 'medicalCondition') {
+      if (value && value.length > 100) errMsg = 'Max 100 characters';
+    }
+
+    setErrors(prev => {
+      const newErr = { ...prev };
+      if (errMsg) newErr[key] = errMsg;
+      else delete newErr[key];
+      return newErr;
+    });
+  };
+
   const setPersonalInfo = (key, value) => {
     setFormState((curr) => ({ ...curr, personalInfo: { ...curr.personalInfo, [key]: value } }));
-    if (errors[key]) setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
+    validateSingleField(key, value);
   };
 
   const validate = () => {
@@ -91,7 +121,7 @@ const ClientProfile = () => {
     const pi = formState.personalInfo || {};
 
     if (!pi.name?.trim()) newErrors.name = 'Full name is required';
-    else if (pi.name.length > 20) newErrors.name = 'Max 20 characters';
+    else if (pi.name.length > 25) newErrors.name = 'Max 25 characters';
 
     if (!pi.email?.trim()) newErrors.email = 'Email address is required';
     else if (!emailRegex.test(pi.email)) newErrors.email = 'Enter a valid email address';
@@ -220,7 +250,7 @@ const ClientProfile = () => {
               label="Full Name *"
               value={formState.personalInfo?.name}
               disabled={!editing}
-              maxLength={20}
+              maxLength={25}
               error={errors.name}
               onChange={e => setPersonalInfo('name', e.target.value)}
             />
@@ -254,6 +284,8 @@ const ClientProfile = () => {
               type="tel"
               disabled={!editing}
               error={errors.mobileNo}
+              maxLength={10}
+              onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
               onChange={e => setPersonalInfo('mobileNo', e.target.value)}
             />
 
@@ -262,6 +294,7 @@ const ClientProfile = () => {
               value={formState.personalInfo?.dob ? formState.personalInfo.dob.slice(0, 10) : ''}
               type="date"
               disabled={!editing}
+              error={errors.dob}
               onChange={e => setPersonalInfo('dob', e.target.value)}
             />
 
@@ -271,6 +304,8 @@ const ClientProfile = () => {
               type="tel"
               disabled={!editing}
               error={errors.emergencyContact}
+              maxLength={10}
+              onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
               onChange={e => setPersonalInfo('emergencyContact', e.target.value)}
             />
 

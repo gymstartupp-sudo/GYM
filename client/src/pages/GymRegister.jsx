@@ -75,7 +75,7 @@ const optionalUrl = yup.string().trim().test(
 
 const schema = yup.object({
   gymIdPrefix: yup.string().trim().required('Gym ID prefix is required').max(3, 'Max 3 chars').matches(/^[A-Z]{3}$/, 'Exactly 3 uppercase letters'),
-  gymName: yup.string().trim().required('Gym name is required').max(20, 'Max 20 chars'),
+  gymName: yup.string().trim().required('Gym name is required').max(25, 'Max 25 chars'),
   gymEmail: yup.string().trim().email('Please enter a valid email address').required('Gym email is required'),
   gymContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
@@ -95,7 +95,7 @@ const schema = yup.object({
   operatingCloseAmpm: yup.string().nullable(),
   password: yup.string().min(8, passwordError).max(20, 'Max 20 chars').matches(/^(?=.*[A-Z])(?=.*\d).+$/, passwordError).required(passwordError),
   confirmPassword: yup.string().max(20, 'Max 20 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password'),
-  name: yup.string().trim().required('Owner name is required').max(20, 'Max 20 chars'),
+  name: yup.string().trim().required('Owner name is required').max(25, 'Max 25 chars'),
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   mailId: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
   whatsappNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
@@ -465,7 +465,7 @@ const GymRegister = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Name <span className="text-red-500">*</span></p>
-                  <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="20" />
+                  <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="25" />
                   {showFieldError('gymName') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymName.message}</p>}
                 </div>
 
@@ -611,7 +611,7 @@ const GymRegister = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-slate-400 mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
-                    <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="20" />
+                    <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="25" />
                     {showFieldError('name') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
                   </div>
                   <div>

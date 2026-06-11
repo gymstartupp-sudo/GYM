@@ -24,6 +24,7 @@ import { useAuth } from '../../context/AuthContext';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import CustomDatePicker from '../../components/CustomDatePicker';
 
 const CATEGORIES = ['Rent', 'Salary', 'Utilities', 'Equipment', 'Maintenance', 'Other'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -63,6 +64,35 @@ const PaymentLedger = () => {
         billImage: null
     });
     const [billFile, setBillFile] = useState(null);
+    const [formErrors, setFormErrors] = useState({});
+
+    const validateField = (name, val) => {
+        let errMessage = '';
+        if (name === 'amount') {
+            const num = Number(val);
+            if (val !== '' && (num > 10000000 || num <= 0 || isNaN(num))) {
+                errMessage = 'Expense amount cannot exceed 1 Crore';
+            }
+        } else if (name === 'note') {
+            if (val.length > 100) {
+                errMessage = 'Notes cannot exceed 100 characters';
+            }
+        } else if (name === 'title') {
+            if (!val || !val.trim()) {
+                errMessage = 'Title / Name is required';
+            }
+        }
+        
+        setFormErrors(prev => {
+            const newErr = { ...prev };
+            if (errMessage) {
+                newErr[name] = errMessage;
+            } else {
+                delete newErr[name];
+            }
+            return newErr;
+        });
+    };
 
     const fetchData = async () => {
         try {
@@ -324,7 +354,7 @@ const PaymentLedger = () => {
         const expenseRows = monthlyExpenses.map(exp => [
             exp.title,
             exp.category,
-            new Date(exp.date).toLocaleDateString('en-GB'),
+            new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-'),
             exp.amount.toLocaleString(),
             exp.note || ''
         ]);
@@ -366,7 +396,7 @@ const PaymentLedger = () => {
         const expensesData = monthlyExpenses.map(exp => ({
             'Title / Description': exp.title,
             'Category': exp.category,
-            'Date': new Date(exp.date).toLocaleDateString('en-GB'),
+            'Date': new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-'),
             'Amount (INR)': exp.amount,
             'Additional Notes': exp.note || ''
         }));
@@ -409,6 +439,7 @@ const PaymentLedger = () => {
             });
             setBillFile(null);
         }
+        setFormErrors({});
         setShowModal(true);
     };
 
@@ -420,6 +451,9 @@ const PaymentLedger = () => {
         }
         if (!formData.amount || Number(formData.amount) <= 0) {
             return toast.error("Please enter a valid amount greater than 0");
+        }
+        if (Object.keys(formErrors).length > 0) {
+            return toast.error("Please fix validation errors first");
         }
 
         const data = new FormData();
@@ -778,7 +812,7 @@ const PaymentLedger = () => {
                                                 <td className="p-4 text-gray-300 text-sm">
                                                     <div className="flex items-center gap-2">
                                                         <Calendar size={14} className="text-gray-500" />
-                                                        {new Date(exp.date).toLocaleDateString('en-GB')}
+                                                        {new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
@@ -855,7 +889,7 @@ const PaymentLedger = () => {
                                 </div>
                                 <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
                                     <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Date</p>
-                                    <p className="text-white">{new Date(formData.date).toLocaleDateString('en-GB')}</p>
+                                    <p className="text-white">{new Date(formData.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                 </div>
                                 {formData.note && (
                                     <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
@@ -889,57 +923,72 @@ const PaymentLedger = () => {
                                         className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
                                         placeholder="e.g., Monthly Rent"
                                         value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setFormData({ ...formData, title: val });
+                                            validateField('title', val);
+                                        }}
                                     />
+                                    {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
                                 </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Amount (₹)</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
-                                            placeholder="0.00"
-                                            value={formData.amount}
-                                            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
-                                        <div className="relative">
-                                            <select
-                                                className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary appearance-none cursor-pointer"
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                            >
-                                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
-                                        </div>
-                                    </div>
-                                </div>
-
+                                      <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
+                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Amount (₹)</label>
                                     <input
-                                        type="date"
+                                        type="number"
                                         required
-                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary [color-scheme:dark]"
-                                        value={formData.date}
-                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                        max="10000000"
+                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
+                                        placeholder="0.00"
+                                        value={formData.amount}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setFormData({ ...formData, amount: val });
+                                            validateField('amount', val);
+                                        }}
                                     />
+                                    {formErrors.amount && <p className="text-red-500 text-xs mt-1">{formErrors.amount}</p>}
                                 </div>
-
                                 <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Notes (Optional)</label>
-                                    <textarea
-                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary h-24 resize-none"
-                                        placeholder="Add any additional details..."
-                                        value={formData.note}
-                                        onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                                    />
+                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
+                                    <div className="relative">
+                                        <select
+                                            className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary appearance-none cursor-pointer"
+                                            value={formData.category}
+                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                        >
+                                            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
+                                    </div>
                                 </div>
+                            </div>
+ 
+                            <div>
+                                <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
+                                <CustomDatePicker
+                                    required
+                                    className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary [color-scheme:dark]"
+                                    value={formData.date}
+                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                />
+                            </div>
+ 
+                            <div>
+                                <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Notes (Optional)</label>
+                                <textarea
+                                    className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary h-24 resize-none"
+                                    placeholder="Add any additional details..."
+                                    maxLength="100"
+                                    value={formData.note}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setFormData({ ...formData, note: val });
+                                        validateField('note', val);
+                                    }}
+                                />
+                                {formErrors.note && <p className="text-red-500 text-xs mt-1">{formErrors.note}</p>}
+                            </div>
 
                                 <div>
                                     <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Attach Bill (Optional)</label>

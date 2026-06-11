@@ -470,7 +470,7 @@ const InactiveClients = () => {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400 font-medium">Billing Period</span>
                     <span className="text-white font-bold">
-                      {activeDuesMembership.startDate ? `${new Date(activeDuesMembership.startDate).toLocaleDateString('en-GB')} - ${new Date(activeDuesMembership.endDate).toLocaleDateString('en-GB')}` : 'N/A'}
+                      {activeDuesMembership.startDate ? `${new Date(activeDuesMembership.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} - ${new Date(activeDuesMembership.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}` : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
@@ -487,7 +487,7 @@ const InactiveClients = () => {
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-400 font-medium">Due Date</span>
-                    <span className="text-white font-bold">{activeDuesMembership.dueDate ? new Date(activeDuesMembership.dueDate).toLocaleDateString('en-GB') : 'N/A'}</span>
+                    <span className="text-white font-bold">{activeDuesMembership.dueDate ? new Date(activeDuesMembership.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
                   </div>
                 </div>
 

@@ -12,6 +12,19 @@ exports.createPlan = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Price is required' });
     }
 
+    if (name && name.length > 25) {
+      return res.status(400).json({ success: false, message: 'Plan name cannot exceed 25 characters' });
+    }
+    if (durationMonths && Number(durationMonths) > 12) {
+      return res.status(400).json({ success: false, message: 'Plan duration cannot exceed 12 months' });
+    }
+    if (price && Number(price) >= 100000) {
+      return res.status(400).json({ success: false, message: 'Plan price must be under 1 Lakh' });
+    }
+    if (description && description.length > 150) {
+      return res.status(400).json({ success: false, message: 'Plan description cannot exceed 150 characters' });
+    }
+
     if (isCustom) {
       const existingPlan = await Plan.findOne({ name, gymId, isActive: true });
       if (existingPlan) {
@@ -72,6 +85,19 @@ exports.updatePlan = async (req, res, next) => {
   try {
     const { name, durationMonths, price, description } = req.body;
     const gymId = req.user.gymId;
+
+    if (name && name.length > 25) {
+      return res.status(400).json({ success: false, message: 'Plan name cannot exceed 25 characters' });
+    }
+    if (durationMonths && Number(durationMonths) > 12) {
+      return res.status(400).json({ success: false, message: 'Plan duration cannot exceed 12 months' });
+    }
+    if (price && Number(price) >= 100000) {
+      return res.status(400).json({ success: false, message: 'Plan price must be under 1 Lakh' });
+    }
+    if (description && description.length > 150) {
+      return res.status(400).json({ success: false, message: 'Plan description cannot exceed 150 characters' });
+    }
 
     let plan = await Plan.findById(req.params.id);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });

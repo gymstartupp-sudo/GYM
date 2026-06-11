@@ -31,6 +31,10 @@ exports.updateGymProfile = async (req, res, next) => {
 
     // ─── 1. Gym Data Checks ──────────────────────────────────────────────────
     if (gymData) {
+      if (gymData.gymName && gymData.gymName.length > 25) {
+        return res.status(400).json({ success: false, message: 'Gym name cannot exceed 25 characters', field: 'gymName' });
+      }
+
       // Duplicate Email Check
       if (gymData.gymEmail) {
         const emailExists = await Gym.findOne({ gymEmail: gymData.gymEmail, _id: { $ne: gymStrId } });
@@ -39,8 +43,28 @@ exports.updateGymProfile = async (req, res, next) => {
 
       // Duplicate Contact Check
       if (gymData.gymContact) {
+        if (!phoneRegex.test(gymData.gymContact)) {
+          return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'gymContact' });
+        }
         const contactExists = await Gym.findOne({ gymContact: gymData.gymContact, _id: { $ne: gymStrId } });
         if (contactExists) return res.status(400).json({ success: false, message: 'Phone number already exists', field: 'gymContact' });
+      }
+
+      if (gymData.reminderSettings) {
+        const { whatsappNumber, phoneNumber } = gymData.reminderSettings;
+        if (whatsappNumber && !phoneRegex.test(whatsappNumber)) {
+          return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'whatsapp' });
+        }
+        if (phoneNumber && !phoneRegex.test(phoneNumber)) {
+          return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'smsPhone' });
+        }
+      }
+
+      if (gymData.billingInfo) {
+        const { helpContact } = gymData.billingInfo;
+        if (helpContact && !phoneRegex.test(helpContact)) {
+          return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'billHelp' });
+        }
       }
 
       // Password Safeguard
@@ -53,9 +77,12 @@ exports.updateGymProfile = async (req, res, next) => {
 
     // ─── 2. Owner Data Checks ─────────────────────────────────────────────────
     if (ownerData) {
+      if (ownerData.name && ownerData.name.length > 25) {
+        return res.status(400).json({ success: false, message: 'Owner name cannot exceed 25 characters', field: 'ownerName' });
+      }
       // Duplicate Personal Mobile Check
       if (ownerData.mobileNo) {
-        if (!phoneRegex.test(ownerData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid Indian mobile number', field: 'ownerMobile' });
+        if (!phoneRegex.test(ownerData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'ownerMobile' });
         const mobileExists = await Owner.findOne({ mobileNo: ownerData.mobileNo, gymId: { $ne: gymStrId } });
         if (mobileExists) return res.status(400).json({ success: false, message: 'Phone number already exists', field: 'ownerMobile' });
       }
