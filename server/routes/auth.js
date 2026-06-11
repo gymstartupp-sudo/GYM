@@ -36,6 +36,40 @@ const clientRegisterValidation = [
   body('name', 'Name is required').notEmpty(),
   body('email', 'Please include a valid email').isEmail(),
   body('mobileNo', phoneMessage).matches(/^[0-9]{10}$/),
+  body('dob', 'Date of birth is required').notEmpty().isISO8601().toDate().custom((value) => {
+    const today = new Date();
+    const birthDate = new Date(value);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age < 14) {
+      throw new Error('Must be at least 14 years old');
+    }
+    if (age > 100) {
+      throw new Error('Date of birth is invalid (max 100 years old)');
+    }
+    return true;
+  }),
+  body('startDate', 'Start date is required').notEmpty().isISO8601().toDate().custom((value) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const minDate = new Date(today);
+    minDate.setDate(today.getDate() - 30);
+
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + 90);
+
+    if (value < minDate) {
+      throw new Error('Start date cannot be more than 30 days in the past');
+    }
+    if (value > maxDate) {
+      throw new Error('Start date cannot be more than 90 days in the future');
+    }
+    return true;
+  }),
   body('password', passwordMessage)
     .isLength({ min: 8 })
     .matches(/^(?=.*[A-Z])(?=.*\d).+$/),

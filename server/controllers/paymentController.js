@@ -85,16 +85,16 @@ exports.recordPayment = async (req, res, next) => {
 
     if (!planId) return res.status(400).json({ success: false, message: 'Plan is required for payment' });
 
+    const Plan = require('../models/Plan');
+    const planDetails = await Plan.findOne({ _id: planId, gymId: gymIdStr, isActive: true });
+    if (!planDetails) {
+      return res.status(400).json({ success: false, message: 'Selected plan not found or is inactive' });
+    }
+
     // Securely derive client parameters if call is initiated from client login
     if (req.userRole === 'client') {
-      const Plan = require('../models/Plan');
       clientId = req.user._id.toString();
       gymIdStr = req.user.gymId;
-
-      const planDetails = await Plan.findOne({ _id: planId, gymId: gymIdStr, isActive: true });
-      if (!planDetails) {
-        return res.status(400).json({ success: false, message: 'Selected plan not found' });
-      }
 
       planName = planDetails.name;
       amount = planDetails.price;
@@ -143,6 +143,61 @@ exports.recordPayment = async (req, res, next) => {
     // FIX: Reject $0 payments with no amount
     if (numAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero' });
+    }
+
+    // 1. Validate Start Date (30 days past, 90 days future)
+    if (startDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const minDate = new Date(today);
+      minDate.setDate(today.getDate() - 30);
+
+      const maxDate = new Date(today);
+      maxDate.setDate(today.getDate() + 90);
+
+      const startVal = new Date(startDate);
+      startVal.setHours(0, 0, 0, 0);
+
+      if (startVal < minDate) {
+        return res.status(400).json({ success: false, message: 'Start date cannot be more than 30 days in the past' });
+      }
+      if (startVal > maxDate) {
+        return res.status(400).json({ success: false, message: 'Start date cannot be more than 90 days in the future' });
+      }
+    }
+
+    // 2. Validate Due Date
+    const remainingBalance = Math.max(0, numAmount - safePaidAmount);
+    if (remainingBalance > 0) {
+      if (!dueDate) {
+        return res.status(400).json({ success: false, message: 'Due Date is required for partial payments' });
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const startVal = new Date(startDate || Date.now());
+      startVal.setHours(0, 0, 0, 0);
+
+      const dueVal = new Date(dueDate);
+      dueVal.setHours(0, 0, 0, 0);
+
+      // Expiry Date calculation
+      const { buildMembershipWindow } = require('../utils/membership');
+      const membershipWindow = buildMembershipWindow({ startDate: startVal, durationMonths: planDetails.durationMonths });
+      const endVal = new Date(membershipWindow.endDate);
+      endVal.setHours(0, 0, 0, 0);
+
+      if (dueVal < today) {
+        return res.status(400).json({ success: false, message: 'Due Date cannot be in the past' });
+      }
+      if (dueVal < startVal) {
+        return res.status(400).json({ success: false, message: 'Due Date cannot be earlier than the membership Start Date' });
+      }
+      if (dueVal > endVal) {
+        return res.status(400).json({ success: false, message: `Due Date cannot exceed the membership Expiry Date (${endVal.toLocaleDateString('en-GB')})` });
+      }
     }
 
     // FIX: Idempotency key check (replaces fragile 5-second window)

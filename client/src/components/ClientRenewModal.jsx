@@ -3,14 +3,7 @@ import { X, Receipt, AlertTriangle, Package, Calendar, ChevronDown, Check, Arrow
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import Button from './Button';
-import { formatDisplayDate } from '../utils/membership';
-
-const calculateEndDate = (startDateStr, months) => {
-  if (!startDateStr || !months) return new Date();
-  const d = new Date(startDateStr);
-  d.setMonth(d.getMonth() + Number(months));
-  return d;
-};
+import { formatDisplayDate, calculateEndDate } from '../utils/membership';
 
 const getLatestExpiryDate = (clientDoc) => {
   if (!clientDoc) return null;
@@ -218,9 +211,37 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
       return;
     }
 
-    if (paymentType === 'partial' && paid < maxLimit && !renewalForm.dueDate) {
-      alert("Due Date is required for partial payments");
-      return;
+    if (paymentType === 'partial' && paid < maxLimit) {
+      if (!renewalForm.dueDate) {
+        alert("Due Date is required for partial payments");
+        return;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const start = new Date(renewalForm.startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const due = new Date(renewalForm.dueDate);
+      due.setHours(0, 0, 0, 0);
+
+      const duration = selectedPlan.durationMonths || 1;
+      const end = calculateEndDate(renewalForm.startDate, duration);
+      if (end) end.setHours(0, 0, 0, 0);
+
+      if (due < today) {
+        alert("Due Date cannot be in the past.");
+        return;
+      }
+      if (due < start) {
+        alert("Due Date cannot be earlier than the membership Start Date.");
+        return;
+      }
+      if (end && due > end) {
+        alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')}).`);
+        return;
+      }
     }
 
     if (renewalForm.paymentMethod === 'upi' || renewalForm.paymentMethod === 'card') {
