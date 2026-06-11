@@ -4,6 +4,7 @@ import api from '../utils/api';
 import { toast } from 'react-toastify';
 import Button from './Button';
 import { formatDisplayDate, calculateEndDate } from '../utils/membership';
+import CustomDatePicker from './CustomDatePicker';
 
 const getLatestExpiryDate = (clientDoc) => {
   if (!clientDoc) return null;
@@ -239,7 +240,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
         return;
       }
       if (end && due > end) {
-        alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')}).`);
+        alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB').replace(/\//g, '-')}).`);
         return;
       }
     }
@@ -376,7 +377,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
         <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/50 shrink-0">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Receipt className="text-primary" />
-            Renew Membership
+            {detectedPendingPayment ? 'Update Payment' : 'Renew Membership'}
           </h2>
           <button onClick={() => { onClose(); setDetectedPendingPayment(null); }} className="text-gray-400 hover:text-white transition-colors" disabled={loadingPlans || isPaying}>
             <X size={24} />
@@ -503,8 +504,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Start Date</label>
-                    <input
-                      type="date"
+                    <CustomDatePicker
                       required
                       min={getLatestExpiryDate(profile) ? (() => {
                         const d = new Date(getLatestExpiryDate(profile));
@@ -639,8 +639,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                         <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
                           Due Date <span className="text-rose-500">*</span>
                         </label>
-                        <input
-                          type="date"
+                        <CustomDatePicker
                           required
                           disabled={isPaying}
                           className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in duration-200"

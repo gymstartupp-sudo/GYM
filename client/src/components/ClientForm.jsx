@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import Button from './Button';
 import { useAuth } from '../context/AuthContext';
 import PaymentModal from './PaymentModal';
+import CustomDatePicker from './CustomDatePicker';
 
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
@@ -36,11 +37,12 @@ const getMinDobDate = () => {
 const getValidationSchema = (mode) => yup.object({
   gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').matches(/^[A-Z]{3}-\d{2}$/, 'Format: PREFIX-01') : yup.string().nullable(),
   gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
-  name: yup.string().trim().required('Name is required').max(20, 'Max 20 chars'),
+  name: yup.string().trim().required('Name is required').max(25, 'Max 25 chars'),
   gender: yup.string().required('Gender is required'),
   email: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
   dob: yup.date()
     .required('Date of birth is required')
+    .max(new Date("9999-12-31"), 'Year cannot exceed 4 digits')
     .min(getMinDobDate(), 'Enter a valid date of birth (max 100 years old)')
     .test('age', 'Must be at least 14 years old', function (value) {
       if (!value) return false;
@@ -361,7 +363,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-gray-400 mb-1">Full Name <span className="text-red-500">*</span></p>
-        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="20" />
+        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="25" />
         {showFieldError('name') && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
       </div>
 
@@ -384,7 +386,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-gray-400 mb-1">Date of Birth <span className="text-red-500">*</span></p>
-        <input {...register('dob')} type="date" className={fieldClassName('dob', 'text-gray-300')} />
+        <CustomDatePicker 
+          {...register('dob')} 
+          className={fieldClassName('dob', 'text-gray-300')} 
+        />
         {showFieldError('dob') && <p className="text-red-500 text-xs mt-1">{errors.dob.message}</p>}
       </div>
 
@@ -459,7 +464,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-gray-400 mb-1">Membership Start Date <span className="text-red-500">*</span></p>
-        <input {...register('startDate')} type="date" className={fieldClassName('startDate', 'text-gray-300')} />
+        <CustomDatePicker 
+          {...register('startDate')} 
+          className={fieldClassName('startDate', 'text-gray-300')} 
+        />
         {showFieldError('startDate') && <p className="text-red-500 text-xs mt-1">{errors.startDate.message}</p>}
       </div>
 

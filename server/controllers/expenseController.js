@@ -21,6 +21,13 @@ exports.createExpense = async (req, res, next) => {
     req.body = req.body || {};
     req.body.gymId = req.user.gymId;
     
+    if (req.body.amount && Number(req.body.amount) > 10000000) {
+      return res.status(400).json({ success: false, message: 'Expense amount cannot exceed 1 crore (₹10,000,000)' });
+    }
+    if (req.body.note && req.body.note.length > 100) {
+      return res.status(400).json({ success: false, message: 'Notes cannot exceed 100 characters' });
+    }
+
     if (req.file) {
       req.body.billImage = `/uploads/bills/${req.file.filename}`;
     }
@@ -46,6 +53,13 @@ exports.updateExpense = async (req, res, next) => {
     // Make sure user owns expense
     if (expense.gymId !== req.user.gymId) {
       return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+
+    if (req.body.amount && Number(req.body.amount) > 10000000) {
+      return res.status(400).json({ success: false, message: 'Expense amount cannot exceed 1 crore (₹10,000,000)' });
+    }
+    if (req.body.note && req.body.note.length > 100) {
+      return res.status(400).json({ success: false, message: 'Notes cannot exceed 100 characters' });
     }
 
     if (req.file) {

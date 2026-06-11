@@ -346,7 +346,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                 <tr key={payment._id} className="hover:bg-gray-800/30 transition-all group">
                                                     <td className="p-5">
                                                         <p className="font-bold text-white text-sm">{payment.paymentId}</p>
-                                                        <p className="text-[10px] text-gray-500 mt-0.5">{new Date(payment.createdAt || payment.date || payment.paymentDate).toLocaleDateString('en-GB')}</p>
+                                                        <p className="text-[10px] text-gray-500 mt-0.5">{new Date(payment.createdAt || payment.date || payment.paymentDate).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                                     </td>
                                                     <td className="p-5">
                                                         <span className="text-gray-300 text-xs font-medium">{payment.planName}</span>
@@ -364,7 +364,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                         {getStatusBadge(payment)}
                                                         {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
                                                             <div className="mt-1 text-[10px] text-gray-500 font-medium">
-                                                                Due: {new Date(payment.dueDate).toLocaleDateString('en-GB')}
+                                                                Due: {new Date(payment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')}
                                                             </div>
                                                         )}
                                                     </td>
@@ -461,7 +461,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                 <div className="text-left sm:text-right">
                                     <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1.5">Invoice Info</h4>
                                     <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
-                                    <p className="text-gray-500 font-medium mt-1">Date: {new Date(selectedPayment.createdAt || selectedPayment.date || selectedPayment.paymentDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                                    <p className="text-gray-500 font-medium mt-1">Date: {new Date(selectedPayment.createdAt || selectedPayment.date || selectedPayment.paymentDate).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                     <p className="mt-1.5">{getStatusBadge(selectedPayment)}</p>
                                 </div>
                             </div>
@@ -484,7 +484,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                     {selectedPayment.planName} Subscription
                                                     {selectedPayment.startDate && (
                                                         <span className="block text-[10px] text-gray-500 font-normal mt-0.5">
-                                                            Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB') : 'Expiry'}
+                                                            Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'Expiry'}
                                                         </span>
                                                     )}
                                                 </td>

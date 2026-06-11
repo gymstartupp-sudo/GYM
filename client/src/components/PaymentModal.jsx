@@ -4,6 +4,7 @@ import { X, Receipt, Search, ChevronDown, Check, Package, AlertTriangle, Calenda
 import Button from './Button';
 import { formatDisplayDate, calculateEndDate } from '../utils/membership';
 import api from '../utils/api';
+import CustomDatePicker from './CustomDatePicker';
 
 const toLocalYYYYMMDD = (val) => {
     if (!val) return '';
@@ -49,7 +50,7 @@ const PaymentModal = ({
         let defaultStartDate = toLocalYYYYMMDD(new Date());
         if (initialData.startDate) {
             defaultStartDate = toLocalYYYYMMDD(initialData.startDate);
-        } else {
+        } else if (!lockClient) {
             const clientStart = clientData?.membership?.startDate || clientData?.startDate;
             if (clientStart) {
                 defaultStartDate = toLocalYYYYMMDD(clientStart);
@@ -119,7 +120,7 @@ const PaymentModal = ({
                 setSearchQuery(clientData.personalInfo?.name || clientData.name || '');
 
                 // Auto-detect: Check if this client has any active unpaid/partial payment using grouped-latest logic
-                if (payments.length > 0 && !initialData.id) {
+                if (payments.length > 0 && !initialData.id && !lockClient) {
                     const clientIdStr = String(clientData._id);
                     const clientPayments = payments.filter(p => String(p.clientId) === clientIdStr);
                     const sortedPayments = [...clientPayments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -169,7 +170,7 @@ const PaymentModal = ({
                     paidAmount: initialData.paidAmount !== undefined ? initialData.paidAmount : planData.price,
                     paymentMethod: initialData.paymentMethod || prev.paymentMethod || 'cash',
                     dueDate: initialData.dueDate || prev.dueDate,
-                    startDate: initialData.startDate || customStartDate || prev.startDate
+                    startDate: initialData.startDate || (lockClient ? toLocalYYYYMMDD(new Date()) : customStartDate) || prev.startDate
                 }));
                 if (initialData.paidAmount !== undefined && initialData.paidAmount < (initialData.amount || planData.price)) {
                     setPaymentType('partial');
@@ -179,7 +180,7 @@ const PaymentModal = ({
             } else if (clientData) {
                 setFormData(prev => ({
                     ...prev,
-                    startDate: customStartDate || prev.startDate
+                    startDate: initialData.startDate || (lockClient ? toLocalYYYYMMDD(new Date()) : customStartDate) || prev.startDate
                 }));
             }
         }
@@ -400,7 +401,7 @@ const PaymentModal = ({
             const endDateStr = calculateEndDate(start, duration);
             const endDateObj = new Date(endDateStr);
             
-            return `${startDateObj.toLocaleDateString('en-GB')} - ${endDateObj.toLocaleDateString('en-GB')}`;
+            return `${startDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')} - ${endDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')}`;
         } catch (e) {
             return null;
         }
@@ -453,7 +454,7 @@ const PaymentModal = ({
                 return alert("Due Date cannot be earlier than the membership Start Date.");
             }
             if (end && due > end) {
-                return alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')}).`);
+                return alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB').replace(/\//g, '-')}).`);
             }
         }
 
@@ -483,7 +484,7 @@ const PaymentModal = ({
                 <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/50 shrink-0">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                         <Receipt className="text-primary" />
-                        {lockClient ? 'Renew Membership' : isUpdateMode ? 'Update Payment' : 'Record Payment'}
+                        {isUpdateMode ? 'Update Payment' : (lockClient ? ((selectedClient?.membership?.requestApproved === false || selectedClient?.membership?.status === 'pending') ? 'Record Payment' : 'Renew Membership') : 'Record Payment')}
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors" disabled={isSubmitting}>
                         <X size={24} />
@@ -672,8 +673,7 @@ const PaymentModal = ({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
                                         <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Start Date</label>
-                                        <input
-                                            type="date"
+                                        <CustomDatePicker
                                             required
                                             min={latestExpiryDate ? (() => {
                                                 const d = new Date(latestExpiryDate);
@@ -807,8 +807,7 @@ const PaymentModal = ({
                                         <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
                                             Due Date <span className="text-rose-500">*</span>
                                         </label>
-                                        <input
-                                            type="date"
+                                        <CustomDatePicker
                                             required
                                             className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in slide-in-from-bottom-1"
                                             value={formData.dueDate}

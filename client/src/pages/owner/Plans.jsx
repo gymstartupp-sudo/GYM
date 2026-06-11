@@ -96,8 +96,46 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
     description: editingPlan?.description || ''
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
-  const handleChange = e => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const validateField = (name, val) => {
+    let errMessage = '';
+    if (name === 'name') {
+      if (val.trim().length > 25) {
+        errMessage = 'Plan name cannot exceed 25 characters';
+      }
+    } else if (name === 'durationMonths') {
+      const num = Number(val);
+      if (val !== '' && (num > 12 || num < 1 || isNaN(num))) {
+        errMessage = 'Plan duration cannot exceed 12 months';
+      }
+    } else if (name === 'price') {
+      const num = Number(val);
+      if (val !== '' && (num >= 100000 || num < 0 || isNaN(num))) {
+        errMessage = 'Plan price must be under 1 Lakh';
+      }
+    } else if (name === 'description') {
+      if (val.length > 150) {
+        errMessage = 'Plan description cannot exceed 150 characters';
+      }
+    }
+
+    setErrors(prev => {
+      const newErr = { ...prev };
+      if (errMessage) {
+        newErr[name] = errMessage;
+      } else {
+        delete newErr[name];
+      }
+      return newErr;
+    });
+  };
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    validateField(name, value);
+  };
 
   useEffect(() => {
     if (editingPlan && !editingPlan.isCustom) {
@@ -133,6 +171,26 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (Object.keys(errors).length > 0) {
+      toast.error("Please fix validation errors first");
+      return;
+    }
+    if (formData.name.trim().length > 25) {
+      toast.error("Plan name cannot exceed 25 characters");
+      return;
+    }
+    if (Number(formData.durationMonths) > 12) {
+      toast.error("Plan duration cannot exceed 12 months");
+      return;
+    }
+    if (Number(formData.price) >= 100000) {
+      toast.error("Plan price must be under 1 Lakh");
+      return;
+    }
+    if (formData.description && formData.description.length > 150) {
+      toast.error("Plan description cannot exceed 150 characters");
+      return;
+    }
     setSaving(true);
     try {
       const payload = { ...formData, isCustom };
@@ -207,7 +265,9 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
                 required 
                 className="input-field" 
                 placeholder="e.g. Special Offer" 
+                maxLength="25"
               />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
           )}
 
@@ -219,12 +279,14 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
                 value={formData.durationMonths} 
                 type="number" 
                 min="1" 
+                max="12"
                 onChange={handleChange} 
                 required 
                 readOnly={!isCustom}
                 className={`input-field ${!isCustom ? 'opacity-50 cursor-not-allowed bg-gray-800' : ''}`} 
                 placeholder="1" 
               />
+              {errors.durationMonths && <p className="text-red-500 text-xs mt-1">{errors.durationMonths}</p>}
             </div>
             <div>
               <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Price (₹) *</label>
@@ -233,11 +295,13 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
                 value={formData.price} 
                 type="number" 
                 min="0" 
+                max="99999"
                 onChange={handleChange} 
                 required 
                 className="input-field" 
                 placeholder="1500" 
               />
+              {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
             </div>
           </div>
 
@@ -249,7 +313,9 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
               onChange={handleChange}
               className="input-field h-24 resize-none"
               placeholder="Features included in this plan..."
+              maxLength="150"
             />
+            {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
           </div>
 
           <div className="flex gap-3 justify-end pt-2">

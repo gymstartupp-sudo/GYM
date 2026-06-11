@@ -259,7 +259,7 @@ const Dues = () => {
             }
             
             if (endDateObj) {
-                return `${startDateObj.toLocaleDateString('en-GB')} - ${endDateObj.toLocaleDateString('en-GB')}`;
+                return `${startDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')} - ${endDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')}`;
             }
             return null;
         } catch (e) {
@@ -400,11 +400,11 @@ const Dues = () => {
                                             <td className="p-4 text-gray-400 text-xs">
                                                 {activeTab === 'expired' ? (
                                                     <div className="flex flex-col gap-0.5">
-                                                        <span className="whitespace-nowrap">Start: {due.startDate ? new Date(due.startDate).toLocaleDateString('en-GB') : 'N/A'}</span>
-                                                        <span className="whitespace-nowrap">End: {due.endDate ? new Date(due.endDate).toLocaleDateString('en-GB') : 'N/A'}</span>
+                                                        <span className="whitespace-nowrap">Start: {due.startDate ? new Date(due.startDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
+                                                        <span className="whitespace-nowrap">End: {due.endDate ? new Date(due.endDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
                                                     </div>
                                                 ) : (
-                                                    due.dueDate ? new Date(due.dueDate).toLocaleDateString('en-GB') : 'N/A'
+                                                    due.dueDate ? new Date(due.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'
                                                 )}
                                             </td>
                                             {activeTab === 'expired' && (
@@ -474,7 +474,7 @@ const Dues = () => {
                         dueDate: selectedDue.dueDate ? new Date(selectedDue.dueDate).toISOString().split('T')[0] : '',
                         startDate: isRenewing ? new Date().toISOString().split('T')[0] : (selectedDue.startDate ? new Date(selectedDue.startDate).toISOString().split('T')[0] : ''),
                         paymentMethod: isUpdating ? (selectedDue.paymentMethod || 'cash') : 'cash',
-                        id: selectedDue.paymentId // Pass id to show "Update Payment" title
+                        id: isUpdating ? selectedDue.paymentId : undefined
                     }}
                     lockClient={isRenewing}
                     plans={plans}
