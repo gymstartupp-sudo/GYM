@@ -7,6 +7,7 @@ const planStatusStyles = {
   active: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
   upcoming: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
   expired: 'bg-gray-500/10 text-gray-400 border border-gray-700/50',
+  expiring_soon: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
 };
 
 const paymentStatusStyles = {

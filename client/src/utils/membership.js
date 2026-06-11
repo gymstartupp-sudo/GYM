@@ -58,6 +58,13 @@ export const getPlanStatus = (plan, today = new Date()) => {
 
   if (t < s) return 'upcoming';
   if (t > e) return 'expired';
+
+  const diffTime = e.getTime() - t.getTime();
+  const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (daysLeft <= 3 && daysLeft >= 0) {
+    return 'expiring_soon';
+  }
+
   return 'active';
 };
 
