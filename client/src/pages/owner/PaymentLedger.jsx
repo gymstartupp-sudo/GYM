@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { 
-    Plus, 
-    CircleDollarSign, 
-    TrendingUp, 
-    TrendingDown, 
-    CreditCard, 
+import {
+    Plus,
+    CircleDollarSign,
+    TrendingUp,
+    TrendingDown,
+    CreditCard,
     Calendar,
     X,
     ChevronDown,
@@ -15,11 +15,18 @@ import {
     FileText,
     Eye,
     Image as ImageIcon,
-    ExternalLink
+    ExternalLink,
+    Download,
+    RefreshCw,
+    BarChart3
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const CATEGORIES = ['Rent', 'Salary', 'Utilities', 'Equipment', 'Maintenance', 'Other'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const CATEGORY_COLORS = {
     Rent: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
@@ -34,7 +41,13 @@ const PaymentLedger = () => {
     const { user } = useAuth();
     const [payments, setPayments] = useState([]);
     const [expenses, setExpenses] = useState([]);
+    const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Period filtering state
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     // Modal state for Add Expense / View
     const [showModal, setShowModal] = useState(false);
@@ -54,12 +67,14 @@ const PaymentLedger = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [paymentsRes, expensesRes] = await Promise.all([
+            const [paymentsRes, expensesRes, clientsRes] = await Promise.all([
                 api.get('/payment'),
-                api.get('/expenses')
+                api.get('/expenses'),
+                api.get('/client')
             ]);
             setPayments(paymentsRes.data.data);
             setExpenses(expensesRes.data.data);
+            setClients(clientsRes.data.data || []);
         } catch (error) {
             toast.error("Failed to load ledger data");
         } finally {
@@ -71,48 +86,304 @@ const PaymentLedger = () => {
         fetchData();
     }, []);
 
-    // Filter current month data
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    // Dynamically calculate year range options from existing data
+    const yearOptions = React.useMemo(() => {
+        const years = new Set();
+        years.add(new Date().getFullYear());
+        payments.forEach(p => {
+            const d = new Date(p.paymentDate || p.createdAt);
+            if (!isNaN(d.getFullYear())) years.add(d.getFullYear());
+        });
+        expenses.forEach(e => {
+            const d = new Date(e.date);
+            if (!isNaN(d.getFullYear())) years.add(d.getFullYear());
+        });
+        return Array.from(years).sort((a, b) => b - a);
+    }, [payments, expenses]);
 
-    const monthlyPayments = payments.filter(p => {
-        const d = new Date(p.paymentDate || p.createdAt);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    });
+    // Filter payments and expenses by selected month and year
+    const monthlyPayments = React.useMemo(() => {
+        return payments.filter(p => {
+            const d = new Date(p.paymentDate || p.createdAt);
+            return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+        });
+    }, [payments, selectedMonth, selectedYear]);
 
-    const monthlyExpenses = expenses.filter(e => {
-        const d = new Date(e.date);
-        return !e.isReminder && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    });
+    const monthlyExpenses = React.useMemo(() => {
+        return expenses.filter(e => {
+            const d = new Date(e.date);
+            return !e.isReminder && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+        });
+    }, [expenses, selectedMonth, selectedYear]);
 
-    // Calculate Metrics
-    const totalRevenue = monthlyPayments.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
-    
-    // Calculate online and cash payments (any paymentMethod other than 'cash' is online)
-    const onlinePaymentsList = monthlyPayments.filter(p => p.paymentMethod && p.paymentMethod.toLowerCase() !== 'cash');
-    const cashPaymentsList = monthlyPayments.filter(p => !p.paymentMethod || p.paymentMethod.toLowerCase() === 'cash');
+    // Filtered expenses for Expenses table only
+    const filteredExpenses = React.useMemo(() => {
+        return monthlyExpenses.filter(e => selectedCategory === 'All' || e.category === selectedCategory);
+    }, [monthlyExpenses, selectedCategory]);
 
-    const onlinePaymentsTotal = onlinePaymentsList.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
-    const cashPaymentsTotal = cashPaymentsList.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+    // Calculate metrics for selected month/year
+    const totalRevenue = React.useMemo(() => {
+        return monthlyPayments.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+    }, [monthlyPayments]);
 
-    const onlinePercent = totalRevenue > 0 ? ((onlinePaymentsTotal / totalRevenue) * 100).toFixed(1) : 0;
-    const cashPercent = totalRevenue > 0 ? ((cashPaymentsTotal / totalRevenue) * 100).toFixed(1) : 0;
+    const onlinePaymentsList = React.useMemo(() => {
+        return monthlyPayments.filter(p => p.razorpay_payment_id);
+    }, [monthlyPayments]);
 
-    // Assuming a 2% gateway fee on online payments
+    const offlinePaymentsList = React.useMemo(() => {
+        return monthlyPayments.filter(p => !p.razorpay_payment_id);
+    }, [monthlyPayments]);
+
+    const onlinePaymentsTotal = React.useMemo(() => {
+        return onlinePaymentsList.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+    }, [onlinePaymentsList]);
+
+    const offlinePaymentsTotal = React.useMemo(() => {
+        return offlinePaymentsList.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+    }, [offlinePaymentsList]);
+
+    const onlinePercent = totalRevenue > 0 ? ((onlinePaymentsTotal / totalRevenue) * 100).toFixed(1) : '0.0';
+    const offlinePercent = totalRevenue > 0 ? ((offlinePaymentsTotal / totalRevenue) * 100).toFixed(1) : '0.0';
+
     const gatewayFee = onlinePaymentsTotal * 0.02;
     const netAmount = totalRevenue - gatewayFee;
 
-    const overallExpensesTotal = monthlyExpenses.reduce((acc, e) => acc + e.amount, 0);
+    const overallExpensesTotal = React.useMemo(() => {
+        return monthlyExpenses.reduce((acc, e) => acc + e.amount, 0);
+    }, [monthlyExpenses]);
+
     const profit = netAmount - overallExpensesTotal;
 
-    // Calculate overall pending payments (Not just current month)
-    const pendingPaymentsOverall = payments.reduce((acc, p) => {
-        if (p.status === 'pending' || p.status === 'partial') {
-            return acc + (p.amount - (p.paidAmount || 0));
+    // Calculate pending payments within the selected period dynamically based on client outstanding balances
+    const pendingPaymentsPeriod = React.useMemo(() => {
+        const selectedPeriodEnd = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999);
+        let sumPending = 0;
+
+        clients.forEach(client => {
+            if (!client.isActive) return;
+            if (client.memberships && Array.isArray(client.memberships)) {
+                client.memberships.forEach(m => {
+                    const startD = new Date(m.startDate);
+                    if (startD > selectedPeriodEnd) return; // Started in the future relative to the selected period
+
+                    // Find all payment records for this client, plan, and start date that happened on or before selectedPeriodEnd
+                    const relatedPayments = payments.filter(p =>
+                        p.clientId?.toString() === client._id.toString() &&
+                        p.planId?.toString() === m.planId?.toString() &&
+                        new Date(p.startDate).getTime() === startD.getTime() &&
+                        new Date(p.paymentDate || p.createdAt) <= selectedPeriodEnd
+                    );
+
+                    const totalPaidInPeriod = relatedPayments.reduce((sum, p) => sum + (p.paidNow || p.paidAmount || 0), 0);
+                    const finalPrice = m.finalPrice || (relatedPayments.length > 0 ? (relatedPayments[0].invoiceAmount || relatedPayments[0].amount) : 0);
+                    const balance = Math.max(0, finalPrice - totalPaidInPeriod);
+                    sumPending += balance;
+                });
+            }
+        });
+        return sumPending;
+    }, [payments, clients, selectedMonth, selectedYear]);
+
+    // Compute previous month metrics for MoM comparison
+    const previousMonthMetrics = React.useMemo(() => {
+        const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+        const prevYear = selectedMonth === 0 ? selectedYear - 1 : selectedYear;
+
+        const prevPayments = payments.filter(p => {
+            const d = new Date(p.paymentDate || p.createdAt);
+            return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+        });
+
+        const prevExpenses = expenses.filter(e => {
+            const d = new Date(e.date);
+            return !e.isReminder && d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+        });
+
+        const prevRev = prevPayments.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+        const prevOnlinePay = prevPayments.filter(p => p.razorpay_payment_id).reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+        const prevNet = prevRev - (prevOnlinePay * 0.02);
+        const prevExp = prevExpenses.reduce((acc, e) => acc + e.amount, 0);
+        const prevProf = prevNet - prevExp;
+
+        return {
+            revenue: prevRev,
+            expenses: prevExp,
+            profit: prevProf
+        };
+    }, [payments, expenses, selectedMonth, selectedYear]);
+
+    // Percentage change calculator helper
+    const getMoMChange = (current, previous) => {
+        if (previous === 0) {
+            if (current === 0) return { percent: '0.0', isPositive: true, isNeutral: true };
+            return { percent: '100.0', isPositive: current > 0, isNeutral: false };
         }
-        return acc;
-    }, 0);
+        const diff = current - previous;
+        const percent = ((diff / Math.abs(previous)) * 100).toFixed(1);
+        return {
+            percent: Math.abs(percent),
+            isPositive: diff >= 0,
+            isNeutral: diff === 0
+        };
+    };
+
+    const revenueChange = getMoMChange(totalRevenue, previousMonthMetrics.revenue);
+    const expensesChange = getMoMChange(overallExpensesTotal, previousMonthMetrics.expenses);
+    const profitChange = getMoMChange(profit, previousMonthMetrics.profit);
+
+    // Compute 6-Month Trend Data ending in selected month/year
+    const trendData = React.useMemo(() => {
+        const monthsData = [];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        for (let i = 5; i >= 0; i--) {
+            let m = selectedMonth - i;
+            let y = selectedYear;
+            if (m < 0) {
+                m += 12;
+                y -= 1;
+            }
+
+            const mPayments = payments.filter(p => {
+                const d = new Date(p.paymentDate || p.createdAt);
+                return d.getMonth() === m && d.getFullYear() === y;
+            });
+
+            const mExpenses = expenses.filter(e => {
+                const d = new Date(e.date);
+                return !e.isReminder && d.getMonth() === m && d.getFullYear() === y;
+            });
+
+            const rev = mPayments.reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+            const onlinePay = mPayments.filter(p => p.razorpay_payment_id).reduce((acc, p) => acc + (p.paidAmount || 0), 0);
+            const net = rev - (onlinePay * 0.02);
+            const exp = mExpenses.reduce((acc, e) => acc + e.amount, 0);
+            const prof = net - exp;
+
+            monthsData.push({
+                label: `${monthNames[m]} ${String(y).slice(-2)}`,
+                revenue: rev,
+                expenses: exp,
+                profit: prof
+            });
+        }
+        return monthsData;
+    }, [payments, expenses, selectedMonth, selectedYear]);
+
+    const maxTrendValue = React.useMemo(() => {
+        const values = trendData.flatMap(d => [d.revenue, d.expenses, Math.max(0, d.profit)]);
+        return Math.max(...values, 1000);
+    }, [trendData]);
+
+    // PDF Export function
+    const exportPDF = () => {
+        const doc = new jsPDF();
+        const periodStr = `${MONTHS[selectedMonth]} ${selectedYear}`;
+
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(30, 41, 59); // Slate-800
+        doc.text('GYM LEDGER & FINANCIAL REPORT', 14, 20);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 116, 139); // Slate-500
+        doc.text(`Period: ${periodStr}`, 14, 26);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 31);
+
+        // Summary Table
+        const summaryRows = [
+            ['Total Revenue', `INR ${totalRevenue.toLocaleString()}`],
+            ['Online Payments (Razorpay)', `INR ${onlinePaymentsTotal.toLocaleString()}`],
+            ['Offline Payments (Gym-Collected)', `INR ${offlinePaymentsTotal.toLocaleString()}`],
+            ['Online Gateway Fees (2% estimation)', `INR ${gatewayFee.toLocaleString()}`],
+            ['Net Amount (After Gateway Fees)', `INR ${netAmount.toLocaleString()}`],
+            ['Overall Expenses', `INR ${overallExpensesTotal.toLocaleString()}`],
+            ['Net Profit (Net Amount - Expenses)', `INR ${profit.toLocaleString()}`],
+            ['Pending Payments in Period', `INR ${pendingPaymentsPeriod.toLocaleString()}`]
+        ];
+
+        doc.setFontSize(14);
+        doc.setTextColor(15, 23, 42);
+        doc.text('1. Financial Summary', 14, 42);
+
+        autoTable(doc, {
+            startY: 46,
+            head: [['Financial Metric', 'Value']],
+            body: summaryRows,
+            theme: 'striped',
+            headStyles: { fillColor: [59, 130, 246] }, // Blue-500
+            styles: { fontSize: 10, cellPadding: 5 }
+        });
+
+        // Expenses Page
+        doc.addPage();
+        doc.setFontSize(14);
+        doc.text(`2. Expenses Details (${periodStr})`, 14, 20);
+
+        const expenseHeaders = [['Title / Name', 'Category', 'Date', 'Amount (INR)', 'Notes']];
+        const expenseRows = monthlyExpenses.map(exp => [
+            exp.title,
+            exp.category,
+            new Date(exp.date).toLocaleDateString('en-GB'),
+            exp.amount.toLocaleString(),
+            exp.note || ''
+        ]);
+
+        autoTable(doc, {
+            startY: 25,
+            head: expenseHeaders,
+            body: expenseRows,
+            theme: 'grid',
+            headStyles: { fillColor: [244, 63, 94] }, // Rose-500
+            styles: { fontSize: 9, cellPadding: 4 }
+        });
+
+        doc.save(`Financial_Report_${MONTHS[selectedMonth]}_${selectedYear}.pdf`);
+        toast.success('PDF report exported successfully!');
+    };
+
+    // Excel Export function
+    const exportExcel = () => {
+        const wb = XLSX.utils.book_new();
+        const periodStr = `${MONTHS[selectedMonth]} ${selectedYear}`;
+
+        // 1. Summary Sheet
+        const summaryData = [
+            { 'Financial Parameter': 'Report Period', 'Value / Amount': periodStr },
+            { 'Financial Parameter': 'Total Revenue (INR)', 'Value / Amount': totalRevenue },
+            { 'Financial Parameter': 'Online Payments (Razorpay)', 'Value / Amount': onlinePaymentsTotal },
+            { 'Financial Parameter': 'Offline Payments', 'Value / Amount': offlinePaymentsTotal },
+            { 'Financial Parameter': 'Gateway Fees (2%)', 'Value / Amount': gatewayFee },
+            { 'Financial Parameter': 'Net Amount', 'Value / Amount': netAmount },
+            { 'Financial Parameter': 'Overall Expenses', 'Value / Amount': overallExpensesTotal },
+            { 'Financial Parameter': 'Net Profit', 'Value / Amount': profit },
+            { 'Financial Parameter': 'Pending Payments in Period', 'Value / Amount': pendingPaymentsPeriod }
+        ];
+        const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, wsSummary, 'Financial Summary');
+
+        // 2. Expenses Sheet
+        const expensesData = monthlyExpenses.map(exp => ({
+            'Title / Description': exp.title,
+            'Category': exp.category,
+            'Date': new Date(exp.date).toLocaleDateString('en-GB'),
+            'Amount (INR)': exp.amount,
+            'Additional Notes': exp.note || ''
+        }));
+        const wsExpenses = XLSX.utils.json_to_sheet(expensesData);
+        XLSX.utils.book_append_sheet(wb, wsExpenses, 'Expenses Details');
+
+        XLSX.writeFile(wb, `Financial_Ledger_${MONTHS[selectedMonth]}_${selectedYear}.xlsx`);
+        toast.success('Excel ledger exported successfully!');
+    };
+
+    const handleResetPeriod = () => {
+        const today = new Date();
+        setSelectedMonth(today.getMonth());
+        setSelectedYear(today.getFullYear());
+        setSelectedCategory('All');
+        toast.info('Filters reset to current month');
+    };
 
     const handleOpenModal = (mode, expense = null) => {
         setModalMode(mode);
@@ -143,7 +414,7 @@ const PaymentLedger = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.title || !formData.title.trim()) {
             return toast.error("Please enter a valid title");
         }
@@ -191,10 +462,71 @@ const PaymentLedger = () => {
     return (
         <div className="flex flex-col h-full bg-dark">
             <div className="flex-1 overflow-y-auto p-8 pt-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                {/* Header and Toolbar */}
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-gray-800/50 pb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">Payment Ledger</h1>
-                        <p className="text-gray-400 mt-1">Dashboard style analytics and expense tracking.</p>
+                        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                            <TrendingUp className="text-primary h-8 w-8" />
+                            Financial Ledger & Analytics
+                        </h1>
+                        <p className="text-gray-400 mt-1">Analyze historical gym revenue, expenses, and profitability trends.</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Month Filter */}
+                        <div className="relative">
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                className="bg-gray-950 border border-gray-800 rounded-xl py-2 px-4 pr-10 text-white font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                            >
+                                {MONTHS.map((m, idx) => (
+                                    <option key={m} value={idx}>{m}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                        </div>
+
+                        {/* Year Filter */}
+                        <div className="relative">
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                className="bg-gray-950 border border-gray-800 rounded-xl py-2 px-4 pr-10 text-white font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                            >
+                                {yearOptions.map(yr => (
+                                    <option key={yr} value={yr}>{yr}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                        </div>
+
+                        {/* Reset button */}
+                        <button
+                            onClick={handleResetPeriod}
+                            className="flex items-center gap-1.5 bg-gray-900 border border-gray-800 text-gray-300 hover:text-white px-3 py-2 rounded-xl transition-all text-sm"
+                            title="Reset to Current Month"
+                        >
+                            <RefreshCw size={14} />
+                            Reset
+                        </button>
+
+                        <div className="h-6 w-px bg-gray-800 mx-1 hidden sm:block"></div>
+
+                        {/* Export Buttons */}
+                        <button
+                            onClick={exportPDF}
+                            className="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white px-3 py-2 rounded-xl transition-all text-sm font-semibold"
+                        >
+                            <Download size={14} />
+                            PDF
+                        </button>
+                        <button
+                            onClick={exportExcel}
+                            className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white px-3 py-2 rounded-xl transition-all text-sm font-semibold"
+                        >
+                            <Download size={14} />
+                            Excel
+                        </button>
                     </div>
                 </div>
 
@@ -248,7 +580,7 @@ const PaymentLedger = () => {
                     </>
                 ) : (
                     <>
-                        {/* TOP DASHBOARD CARDS (Current Month) */}
+                        {/* TOP DASHBOARD CARDS */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <div className="card bg-gray-900/50 border-gray-800 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800/50">
                                 <div className="flex items-center gap-4">
@@ -261,7 +593,7 @@ const PaymentLedger = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="card bg-gray-900/50 border-gray-800 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800/50">
                                 <div className="flex items-center gap-4">
                                     <div className="p-4 rounded-xl bg-primary/10 text-primary">
@@ -300,14 +632,54 @@ const PaymentLedger = () => {
                             </div>
                         </div>
 
+                        {/* Month-over-Month Comparison Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div className="card bg-gray-950/40 border border-gray-800/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Revenue MoM Change</span>
+
+
+
+                                </div>
+                                <div className="flex items-baseline justify-between">
+                                    <span className="text-lg font-bold text-white">₹{totalRevenue.toLocaleString()}</span>
+                                    <span className="text-[11px] text-gray-500">vs ₹{previousMonthMetrics.revenue.toLocaleString()} last month</span>
+                                </div>
+                            </div>
+
+                            <div className="card bg-gray-950/40 border border-gray-800/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Expenses MoM Change</span>
+
+                                </div>
+                                <div className="flex items-baseline justify-between">
+                                    <span className="text-lg font-bold text-white">₹{overallExpensesTotal.toLocaleString()}</span>
+                                    <span className="text-[11px] text-gray-500">vs ₹{previousMonthMetrics.expenses.toLocaleString()} last month</span>
+                                </div>
+                            </div>
+
+                            <div className="card bg-gray-950/40 border border-gray-800/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Profit MoM Change</span>
+
+                                </div>
+                                <div className="flex items-baseline justify-between">
+                                    <span className="text-lg font-bold text-white">₹{profit.toLocaleString()}</span>
+                                    <span className="text-[11px] text-gray-500">vs ₹{previousMonthMetrics.profit.toLocaleString()} last month</span>
+                                </div>
+                            </div>
+                        </div>
+
+
+
                         {/* SECTION 2 & 3: Payment Breakdown & Pending Payments */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                             <div className="lg:col-span-2 bg-gray-900/30 border border-gray-800 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
                                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                                     <CreditCard size={20} className="text-primary" />
-                                    Payment Breakdown (Current Month)
+                                    Payment Breakdown ({MONTHS[selectedMonth]} {selectedYear})
                                 </h3>
-                                
+
                                 <div className="space-y-6">
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
@@ -321,11 +693,11 @@ const PaymentLedger = () => {
 
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-semibold text-gray-300">Cash Payments</span>
-                                            <span className="text-sm font-bold text-white">₹{cashPaymentsTotal.toLocaleString()} ({cashPercent}%)</span>
+                                            <span className="text-sm font-semibold text-gray-300">Offline Payments</span>
+                                            <span className="text-sm font-bold text-white">₹{offlinePaymentsTotal.toLocaleString()} ({offlinePercent}%)</span>
                                         </div>
                                         <div className="w-full bg-gray-800 rounded-full h-3">
-                                            <div className="bg-emerald-500 h-3 rounded-full" style={{ width: `${cashPercent}%` }}></div>
+                                            <div className="bg-emerald-500 h-3 rounded-full" style={{ width: `${offlinePercent}%` }}></div>
                                         </div>
                                     </div>
                                 </div>
@@ -336,21 +708,41 @@ const PaymentLedger = () => {
                                     <TrendingDown size={32} />
                                 </div>
                                 <h3 className="text-lg font-bold text-white mb-2">Pending Payments</h3>
-                                <p className="text-sm text-gray-400 mb-4">Overall unpaid amount from clients</p>
-                                <h2 className="text-4xl font-black text-rose-500">₹{pendingPaymentsOverall.toLocaleString()}</h2>
+                                <p className="text-sm text-gray-400 mb-4">Unpaid balance in selected period</p>
+                                <h2 className="text-4xl font-black text-rose-500">₹{pendingPaymentsPeriod.toLocaleString()}</h2>
                             </div>
                         </div>
 
                         {/* EXPENSES LIST */}
                         <div className="bg-gray-900/30 border border-gray-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <div className="p-6 border-b border-gray-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
                                     <FileText size={20} className="text-primary" />
-                                    Expenses List
-                                </h3>
-                                <button 
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white">Expenses List</h3>
+                                        <p className="text-xs text-gray-500">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
+                                    </div>
+                                </div>
+
+                                {/* Category Filter Pills */}
+                                <div className="flex flex-wrap items-center gap-1 bg-gray-950 p-1 rounded-xl border border-gray-800 self-start lg:self-auto">
+                                    {['All', ...CATEGORIES].map(cat => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setSelectedCategory(cat)}
+                                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${selectedCategory === cat
+                                                ? 'bg-primary text-white shadow-md'
+                                                : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                                                }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <button
                                     onClick={() => handleOpenModal('add')}
-                                    className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm"
+                                    className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
                                 >
                                     <Plus size={16} /> Add Expense
                                 </button>
@@ -367,13 +759,13 @@ const PaymentLedger = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-800">
-                                        {monthlyExpenses.length === 0 ? (
+                                        {filteredExpenses.length === 0 ? (
                                             <tr>
                                                 <td colSpan="5" className="p-8 text-center text-gray-500">
-                                                    No expenses recorded this month.
+                                                    No expenses recorded matching the selected filters.
                                                 </td>
                                             </tr>
-                                        ) : monthlyExpenses.map(exp => (
+                                        ) : filteredExpenses.map(exp => (
                                             <tr key={exp._id} className="hover:bg-gray-800/30 transition-colors group">
                                                 <td className="p-4">
                                                     <span className="text-white font-semibold">{exp.title}</span>
@@ -394,21 +786,21 @@ const PaymentLedger = () => {
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button 
+                                                        <button
                                                             onClick={(e) => { e.stopPropagation(); handleOpenModal('view', exp); }}
                                                             className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all"
                                                             title="View Details"
                                                         >
                                                             <Eye size={16} />
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={(e) => { e.stopPropagation(); handleOpenModal('edit', exp); }}
                                                             className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all"
                                                             title="Edit"
                                                         >
                                                             <Edit2 size={16} />
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(exp._id); }}
                                                             className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg transition-all"
                                                             title="Delete"
@@ -431,18 +823,18 @@ const PaymentLedger = () => {
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="relative bg-dark border border-gray-700/50 rounded-xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-                        <button 
+                        <button
                             onClick={() => setShowModal(false)}
                             className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"
                         >
                             <X size={24} />
                         </button>
-                        
+
                         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                             {modalMode === 'view' ? <Eye className="text-emerald-400" /> : <CircleDollarSign className="text-primary" />}
                             {modalMode === 'add' ? 'Add Expense' : modalMode === 'edit' ? 'Edit Entry' : 'View Details'}
                         </h2>
-                        
+
                         {modalMode === 'view' ? (
                             <div className="space-y-4">
                                 <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
@@ -468,15 +860,15 @@ const PaymentLedger = () => {
                                 {formData.note && (
                                     <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
                                         <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-                                        <p className="text-gray-300 text-sm leading-relaxed">{formData.note}</p>
+                                        <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{formData.note}</p>
                                     </div>
                                 )}
                                 {currentExpense?.billImage && (
                                     <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
                                         <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Attached Bill</p>
-                                        <a 
-                                            href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${currentExpense.billImage}`} 
-                                            target="_blank" 
+                                        <a
+                                            href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${currentExpense.billImage}`}
+                                            target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 w-full p-3 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all group"
                                         >
@@ -491,35 +883,35 @@ const PaymentLedger = () => {
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 <div>
                                     <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Title / Name</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         required
                                         className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
                                         placeholder="e.g., Monthly Rent"
                                         value={formData.title}
-                                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     />
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Amount (₹)</label>
-                                        <input 
-                                            type="number" 
+                                        <input
+                                            type="number"
                                             required
                                             className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
                                             placeholder="0.00"
                                             value={formData.amount}
-                                            onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
                                         <div className="relative">
-                                            <select 
+                                            <select
                                                 className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary appearance-none cursor-pointer"
                                                 value={formData.category}
-                                                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                             >
                                                 {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                             </select>
@@ -527,39 +919,39 @@ const PaymentLedger = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div>
                                     <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
-                                    <input 
-                                        type="date" 
+                                    <input
+                                        type="date"
                                         required
                                         className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary [color-scheme:dark]"
                                         value={formData.date}
-                                        onChange={(e) => setFormData({...formData, date: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                     />
                                 </div>
-                                
+
                                 <div>
                                     <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Notes (Optional)</label>
-                                    <textarea 
+                                    <textarea
                                         className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary h-24 resize-none"
                                         placeholder="Add any additional details..."
                                         value={formData.note}
-                                        onChange={(e) => setFormData({...formData, note: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                                     />
                                 </div>
 
                                 <div>
                                     <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Attach Bill (Optional)</label>
                                     <div className="relative">
-                                        <input 
-                                            type="file" 
+                                        <input
+                                            type="file"
                                             accept="image/*"
                                             onChange={(e) => setBillFile(e.target.files[0])}
-                                            className="hidden" 
+                                            className="hidden"
                                             id="bill-upload"
                                         />
-                                        <label 
+                                        <label
                                             htmlFor="bill-upload"
                                             className="flex items-center justify-center gap-2 w-full bg-gray-900 border border-gray-800 border-dashed rounded-lg py-4 px-4 text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition-all"
                                         >
@@ -569,8 +961,8 @@ const PaymentLedger = () => {
                                             </span>
                                         </label>
                                         {billFile && (
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setBillFile(null)}
                                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-rose-500"
                                             >
@@ -579,8 +971,8 @@ const PaymentLedger = () => {
                                         )}
                                     </div>
                                 </div>
-                                
-                                <button 
+
+                                <button
                                     type="submit"
                                     className="w-full text-white font-bold py-3 rounded-lg shadow-lg transition-all mt-4 bg-primary hover:bg-blue-600 shadow-primary/30"
                                 >

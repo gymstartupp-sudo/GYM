@@ -77,6 +77,18 @@ const Expired = () => {
         setViewClientId(client._id);
     };
 
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to deactivate this client?')) {
+            try {
+                await api.put(`/client/${id}/deactivate`);
+                toast.success('Client deactivated');
+                fetchData();
+            } catch {
+                toast.error('Failed to deactivate');
+            }
+        }
+    };
+
     return (
         <div className="flex bg-dark h-screen overflow-hidden">
             <div className="flex-1 overflow-y-auto p-8 pt-10">
@@ -115,6 +127,7 @@ const Expired = () => {
                                     client={client}
                                     onView={handleView}
                                     onRenew={handleRenew}
+                                    onDelete={(selected) => handleDelete(selected._id)}
                                     showRenew={true}
                                     hideStatus={true}
                                 />

@@ -80,7 +80,7 @@ exports.recordPayment = async (req, res, next) => {
   const { acquireLock, releaseLock } = require('../utils/lock');
 
   try {
-    let { clientId, planId, planName, amount, paidAmount = 0, paymentMethod = 'cash', dueDate, startDate, idempotencyKey } = req.body;
+    let { clientId, planId, planName, amount, paidAmount = 0, paymentMethod = 'cash', dueDate, startDate, idempotencyKey, razorpay_payment_id } = req.body;
     let gymIdStr = req.user.gymId;
 
     if (!planId) return res.status(400).json({ success: false, message: 'Plan is required for payment' });
@@ -265,7 +265,8 @@ exports.recordPayment = async (req, res, next) => {
       startDate: activatedPlan.startDate,
       isPlanActivated: true,
       date: new Date(),
-      billSentViaWhatsApp: false
+      billSentViaWhatsApp: false,
+      razorpay_payment_id: razorpay_payment_id || null
     });
 
     client.paymentHistory.push(payment._id);
@@ -356,7 +357,7 @@ exports.updatePayment = async (req, res, next) => {
 
   try {
     const { id } = req.params;
-    const { additionalAmount, paymentMethod } = req.body;
+    const { additionalAmount, paymentMethod, razorpay_payment_id } = req.body;
     const gymIdStr = req.user.gymId;
 
     const payment = await Payment.findOne({ _id: id, gymId: gymIdStr });
@@ -442,7 +443,8 @@ exports.updatePayment = async (req, res, next) => {
       startDate: payment.startDate,
       dueDate: currentBalance === 0 ? null : payment.dueDate,
       isPlanActivated: false,
-      date: new Date()
+      date: new Date(),
+      razorpay_payment_id: razorpay_payment_id || null
     });
 
     // 4. Sync back to client document
