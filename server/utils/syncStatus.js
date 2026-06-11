@@ -60,7 +60,7 @@ const syncClientStatus = async (clientId) => {
 
       // Compute status dynamically
       let status = getPlanStatus(bestPlan, today);
-      if (status === 'active' && daysLeft <= 3 && daysLeft > 0) {
+      if (status === 'active' && daysLeft <= 3 && daysLeft >= 0) {
         status = 'expiring_soon';
       }
 

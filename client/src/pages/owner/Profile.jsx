@@ -9,10 +9,43 @@ const errorInputClass    = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px
 const phoneRegex         = /^[6-9]\d{9}$/;
 const emailRegex         = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
+const MINUTES = ['00', '15', '30', '45'];
+
+const parseTime = (timeStr) => {
+  if (!timeStr) return { hour: '6', minute: '00', ampm: 'AM' };
+  const str = timeStr.trim().toUpperCase();
+  const matchColon = str.match(/^(\d+):(\d+)\s*(AM|PM)$/);
+  if (matchColon) {
+    return {
+      hour: String(parseInt(matchColon[1], 10)),
+      minute: matchColon[2],
+      ampm: matchColon[3]
+    };
+  }
+  const matchNoColon = str.match(/^(\d+)\s*(AM|PM)$/);
+  if (matchNoColon) {
+    return {
+      hour: String(parseInt(matchNoColon[1], 10)),
+      minute: '00',
+      ampm: matchNoColon[2]
+    };
+  }
+  return { hour: '6', minute: '00', ampm: 'AM' };
+};
+
+const buildTimeStr = (hour, minute, ampm) => {
+  if (!hour) return '';
+  return `${hour}:${minute || '00'} ${ampm || 'AM'}`;
+};
+
 // ─── Helper: Build form state from API data ──────────────────────────────────
 const buildFormState = (data) => {
   const socialLinks = data?.gym?.socialMediaLinks || [];
   const getSocialLink = (platform) => socialLinks.find((item) => item.platform === platform)?.url || '';
+
+  const openTimeParsed = parseTime(data.gym?.operatingHours?.open);
+  const closeTimeParsed = parseTime(data.gym?.operatingHours?.close);
 
   return {
     gym: {
@@ -24,6 +57,12 @@ const buildFormState = (data) => {
       operatingDaysText: (data.gym?.operatingDays || []).join(', '),
       operatingOpen: data.gym?.operatingHours?.open || '',
       operatingClose: data.gym?.operatingHours?.close || '',
+      operatingOpenHour: openTimeParsed.hour,
+      operatingOpenMinute: openTimeParsed.minute,
+      operatingOpenAmpm: openTimeParsed.ampm,
+      operatingCloseHour: closeTimeParsed.hour,
+      operatingCloseMinute: closeTimeParsed.minute,
+      operatingCloseAmpm: closeTimeParsed.ampm,
       instagramUrl: getSocialLink('instagram'),
       facebookUrl: getSocialLink('facebook'),
       websiteUrl: getSocialLink('website')
@@ -79,6 +118,49 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
       />
       {error && !disabled && <p className="text-red-500 text-[11px] mt-1 italic">{error}</p>}
     </label>
+  );
+};
+
+// ─── Component: Reusable TimeField ───────────────────────────────────────────
+const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinuteChange, onAmpmChange }) => {
+  return (
+    <div className="space-y-1 block group">
+      <span className="text-xs uppercase tracking-wider text-gray-500 font-medium block">
+        {label}
+      </span>
+      <div className={`flex items-center gap-1 bg-gray-900 border rounded-lg p-1.5 transition-colors ${
+        disabled 
+          ? 'bg-gray-800/60 border-gray-800 text-gray-500 cursor-not-allowed' 
+          : 'border-gray-800 hover:border-gray-750 focus-within:border-primary/50'
+      }`}>
+        <select
+          value={hour || '6'}
+          disabled={disabled}
+          onChange={onHourChange}
+          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-gray-500 disabled:cursor-not-allowed"
+        >
+          {HOURS.map(h => <option key={h} className="bg-slate-950 text-slate-200" value={h}>{h}</option>)}
+        </select>
+        <span className="text-slate-500 font-bold select-none">:</span>
+        <select
+          value={minute || '00'}
+          disabled={disabled}
+          onChange={onMinuteChange}
+          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-gray-500 disabled:cursor-not-allowed"
+        >
+          {MINUTES.map(m => <option key={m} className="bg-slate-950 text-slate-200" value={m}>{m}</option>)}
+        </select>
+        <select
+          value={ampm || 'AM'}
+          disabled={disabled}
+          onChange={onAmpmChange}
+          className={`bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer w-14 text-center py-1 px-1 bg-slate-800 rounded select-none border border-slate-700/50 disabled:bg-gray-850 disabled:border-transparent disabled:text-gray-500 disabled:cursor-not-allowed`}
+        >
+          <option className="bg-slate-950 text-slate-200" value="AM">AM</option>
+          <option className="bg-slate-950 text-slate-200" value="PM">PM</option>
+        </select>
+      </div>
+    </div>
   );
 };
 
@@ -182,6 +264,17 @@ const Profile = () => {
     try {
       const payload = {};
       if (section === 'gym') {
+        const openStr = buildTimeStr(
+          formState.gym.operatingOpenHour,
+          formState.gym.operatingOpenMinute,
+          formState.gym.operatingOpenAmpm
+        );
+        const closeStr = buildTimeStr(
+          formState.gym.operatingCloseHour,
+          formState.gym.operatingCloseMinute,
+          formState.gym.operatingCloseAmpm
+        );
+
         payload.gymData = {
           gymName: formState.gym.gymName,
           gst: formState.gym.gst,
@@ -197,7 +290,7 @@ const Profile = () => {
             { platform: 'website', url: formState.gym.websiteUrl }
           ].filter(i => i.url),
           operatingDays: (formState.gym.operatingDaysText || '').split(',').map(i => i.trim()).filter(Boolean),
-          operatingHours: { open: formState.gym.operatingOpen, close: formState.gym.operatingClose }
+          operatingHours: { open: openStr, close: closeStr }
         };
       }
       if (section === 'owner') {
@@ -277,8 +370,26 @@ const Profile = () => {
             <Field label="Facebook URL" value={formState.gym.facebookUrl} disabled={editingSection !== 'gym'} onChange={e => setSectionValue('gym', 'facebookUrl', e.target.value)} />
             <Field label="Website URL" value={formState.gym.websiteUrl} disabled={editingSection !== 'gym'} onChange={e => setSectionValue('gym', 'websiteUrl', e.target.value)} />
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Open Time" value={formState.gym.operatingOpen} disabled={editingSection !== 'gym'} onChange={e => setSectionValue('gym', 'operatingOpen', e.target.value)} />
-              <Field label="Close Time" value={formState.gym.operatingClose} disabled={editingSection !== 'gym'} onChange={e => setSectionValue('gym', 'operatingClose', e.target.value)} />
+              <TimeField
+                label="Open Time"
+                hour={formState.gym.operatingOpenHour}
+                minute={formState.gym.operatingOpenMinute}
+                ampm={formState.gym.operatingOpenAmpm}
+                disabled={editingSection !== 'gym'}
+                onHourChange={e => setSectionValue('gym', 'operatingOpenHour', e.target.value)}
+                onMinuteChange={e => setSectionValue('gym', 'operatingOpenMinute', e.target.value)}
+                onAmpmChange={e => setSectionValue('gym', 'operatingOpenAmpm', e.target.value)}
+              />
+              <TimeField
+                label="Close Time"
+                hour={formState.gym.operatingCloseHour}
+                minute={formState.gym.operatingCloseMinute}
+                ampm={formState.gym.operatingCloseAmpm}
+                disabled={editingSection !== 'gym'}
+                onHourChange={e => setSectionValue('gym', 'operatingCloseHour', e.target.value)}
+                onMinuteChange={e => setSectionValue('gym', 'operatingCloseMinute', e.target.value)}
+                onAmpmChange={e => setSectionValue('gym', 'operatingCloseAmpm', e.target.value)}
+              />
             </div>
             <div className="md:col-span-2">
               <Field label="Establishment Address *" value={formState.gym.address} textarea disabled={editingSection !== 'gym'} maxLength={100} error={errors.address} onChange={e => setSectionValue('gym', 'address', e.target.value)} />
