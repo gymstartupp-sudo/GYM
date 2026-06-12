@@ -77,6 +77,7 @@ app.use('/api/payment', require('./routes/payment'));
 app.use('/api/overdue', require('./routes/overdue'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/expenses', require('./routes/expense'));
+app.use('/api/feedback', require('./routes/feedback'));
 
 // Error Handler Middleware
 app.use(errorHandler);

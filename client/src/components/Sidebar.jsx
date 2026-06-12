@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, ClipboardList, AlertCircle, User, LogOut, UserMinus, Clock, UserPlus } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, ClipboardList, AlertCircle, User, LogOut, UserMinus, Clock, UserPlus, MessageSquare } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const Sidebar = () => {
@@ -22,6 +22,7 @@ const Sidebar = () => {
     { name: 'Expired', path: '/owner/expired', icon: <Clock size={20} /> },
     { name: 'Payment Ledger', path: '/owner/payment-ledger', icon: <CreditCard size={20} /> },
     { name: 'Requests', path: '/owner/requests', icon: <UserPlus size={20} /> },
+    { name: 'Feedback', path: '/owner/feedback', icon: <MessageSquare size={20} /> },
     { name: 'Profile', path: '/owner/profile', icon: <User size={20} /> },
   ];
 

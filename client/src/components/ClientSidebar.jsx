@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Home, User, CreditCard, List, X } from 'lucide-react';
+import { LogOut, Home, User, CreditCard, List, X, MessageSquare, Settings } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
@@ -61,6 +61,20 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
           className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-400 hover:text-white'}`}
         >
           <User size={20} /> Profile
+        </NavLink>
+        <NavLink
+          to="/client/feedback"
+          onClick={() => isMobile && onClose()}
+          className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-400 hover:text-white'}`}
+        >
+          <MessageSquare size={20} /> Feedback
+        </NavLink>
+        <NavLink
+          to="/client/settings"
+          onClick={() => isMobile && onClose()}
+          className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-gray-400 hover:text-white'}`}
+        >
+          <Settings size={20} /> Settings
         </NavLink>
       </div>
 

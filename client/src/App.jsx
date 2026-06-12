@@ -26,12 +26,16 @@ const OwnerProfile = lazy(() => import('./pages/owner/Profile'));
 const OwnerRequests = lazy(() => import('./pages/owner/ClientRequests'));
 const ClientDetail = lazy(() => import('./pages/owner/ClientDetail'));
 const PaymentLedger = lazy(() => import('./pages/owner/PaymentLedger'));
+const FeedbackList = lazy(() => import('./pages/owner/FeedbackList'));
+const Settings = lazy(() => import('./pages/owner/Settings'));
 
 // Client - Lazy loaded for code splitting
 const ClientHome = lazy(() => import('./pages/client/ClientHome'));
 const ClientProfile = lazy(() => import('./pages/client/ClientProfile'));
 const ClientPayments = lazy(() => import('./pages/client/ClientPayments'));
 const ClientPlans = lazy(() => import('./pages/client/ClientPlans'));
+const ClientFeedback = lazy(() => import('./pages/client/ClientFeedback'));
+const ClientSettings = lazy(() => import('./pages/client/ClientSettings'));
 
 // Admin - Lazy loaded for code splitting
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -82,6 +86,8 @@ const App = () => {
                 <Route path="payment-ledger" element={<PaymentLedger />} />
                 <Route path="profile" element={<OwnerProfile />} />
                 <Route path="requests" element={<OwnerRequests />} />
+                <Route path="feedback" element={<FeedbackList />} />
+                <Route path="settings" element={<Settings />} />
                 <Route path="clients/:id" element={<ClientDetail />} />
               </Route>
               
@@ -90,6 +96,8 @@ const App = () => {
               <Route path="/client/profile" element={<ProtectedRoute allowedRoles={['client']}><ClientProfile /></ProtectedRoute>} />
               <Route path="/client/payments" element={<ProtectedRoute allowedRoles={['client']}><ClientPayments /></ProtectedRoute>} />
               <Route path="/client/plans" element={<ProtectedRoute allowedRoles={['client']}><ClientPlans /></ProtectedRoute>} />
+              <Route path="/client/feedback" element={<ProtectedRoute allowedRoles={['client']}><ClientFeedback /></ProtectedRoute>} />
+              <Route path="/client/settings" element={<ProtectedRoute allowedRoles={['client']}><ClientSettings /></ProtectedRoute>} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminDashboard /></ProtectedRoute>} />

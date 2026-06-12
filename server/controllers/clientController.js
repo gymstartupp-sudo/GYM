@@ -635,3 +635,30 @@ exports.approveClient = async (req, res, next) => {
     releaseLock(lockKey);
   }
 };
+
+// @desc    Change Client Password
+// @route   PUT /api/client/change-password
+// @access  Private (Client)
+exports.changeClientPassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const client = await Client.findById(req.user._id);
+
+    if (!client) {
+      return res.status(404).json({ success: false, message: 'Client not found' });
+    }
+
+    const isMatch = await client.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Incorrect current password' });
+    }
+
+    client.password = newPassword;
+    await client.save();
+
+    res.status(200).json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, Tag, Receipt, CircleDollarSign, AlertCircle, User, UserPlus, UserMinus, Clock, CreditCard, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Tag, Receipt, CircleDollarSign, AlertCircle, User, UserPlus, UserMinus, Clock, CreditCard, Menu, X, MessageSquare, Settings } from 'lucide-react';
 
 export default function OwnerLayout() {
   const { user, logout } = useAuth();
@@ -36,7 +36,9 @@ export default function OwnerLayout() {
     { to: '/owner/dues',      label: 'Dues',       icon: CircleDollarSign },
     { to: '/owner/payment-ledger', label: 'Payment Ledger', icon: CircleDollarSign },
     { to: '/owner/requests',  label: 'Requests',   icon: UserPlus },
+    { to: '/owner/feedback',  label: 'Feedback',   icon: MessageSquare },
     { to: '/owner/profile',   label: 'Profile',    icon: User },
+    { to: '/owner/settings',  label: 'Settings',   icon: Settings },
   ];
 
   return (

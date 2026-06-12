@@ -314,3 +314,30 @@ exports.getGymPublicProfile = async (req, res, next) => {
        res.status(200).json({ success: true, data: { gymName: gym.gymName } });
    } catch (err) { next(err); }
 };
+
+// @desc    Change Gym Owner Password
+// @route   PUT /api/gym/change-password
+// @access  Private (Owner)
+exports.changeGymPassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const gym = await Gym.findById(req.user._id);
+
+    if (!gym) {
+      return res.status(404).json({ success: false, message: 'Gym not found' });
+    }
+
+    const isMatch = await gym.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Incorrect current password' });
+    }
+
+    gym.password = newPassword;
+    await gym.save();
+
+    res.status(200).json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+

@@ -5,6 +5,7 @@ const clientController = require('../controllers/clientController');
 
 router.get('/profile', protect, authorize('client'), clientController.getClientProfile);
 router.put('/profile', protect, authorize('client'), clientController.updateClientProfile);
+router.put('/change-password', protect, authorize('client'), clientController.changeClientPassword);
 
 router.route('/')
   .get(protect, authorize('owner', 'superadmin'), clientController.getClients)
