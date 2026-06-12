@@ -1,5 +1,89 @@
 import React, { useState, useEffect } from 'react';
 
+// Robust helper to format any date-like value to DD-MM-YYYY string
+const formatDateToDDMMYYYY = (val) => {
+  if (!val) return '';
+  
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return '';
+    const d = String(val.getDate()).padStart(2, '0');
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const y = val.getFullYear();
+    const yearStr = String(y).slice(0, 4);
+    return `${d}-${m}-${yearStr}`;
+  }
+  
+  const str = String(val).trim();
+  
+  // If it starts with YYYY-MM-DD (e.g. ISO string or simple date)
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    const parts = str.slice(0, 10).split('-');
+    const yearStr = parts[0].slice(0, 4);
+    return `${parts[2]}-${parts[1]}-${yearStr}`;
+  }
+  
+  // If it is DD-MM-YYYY
+  if (/^\d{2}-\d{2}-\d{4}/.test(str)) {
+    const parts = str.slice(0, 10).split('-');
+    const yearStr = parts[2].slice(0, 4);
+    return `${parts[0]}-${parts[1]}-${yearStr}`;
+  }
+  
+  // Try parsing with native Date parser
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const d = String(parsed.getDate()).padStart(2, '0');
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const y = parsed.getFullYear();
+    const yearStr = String(y).slice(0, 4);
+    return `${d}-${m}-${yearStr}`;
+  }
+  
+  return str;
+};
+
+// Convert value to YYYY-MM-DD format for native date input picker
+const formatDateToYYYYMMDD = (val) => {
+  if (!val) return '';
+  
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return '';
+    const d = String(val.getDate()).padStart(2, '0');
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const y = val.getFullYear();
+    const yearStr = String(y).slice(0, 4);
+    return `${yearStr}-${m}-${d}`;
+  }
+  
+  const str = String(val).trim();
+  
+  // If it matches DD-MM-YYYY
+  if (/^\d{2}-\d{2}-\d{4}/.test(str)) {
+    const parts = str.slice(0, 10).split('-');
+    const yearStr = parts[2].slice(0, 4);
+    return `${yearStr}-${parts[1]}-${parts[0]}`;
+  }
+  
+  // If it matches YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    const parts = str.slice(0, 10).split('-');
+    const yearStr = parts[0].slice(0, 4);
+    return `${yearStr}-${parts[1]}-${parts[2]}`;
+  }
+  
+  // Try parsing with native Date parser
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const d = String(parsed.getDate()).padStart(2, '0');
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const y = parsed.getFullYear();
+    const yearStr = String(y).slice(0, 4);
+    return `${yearStr}-${m}-${d}`;
+  }
+  
+  return '';
+};
+
 const CustomDatePicker = React.forwardRef(({
   value,
   onChange,
@@ -14,17 +98,7 @@ const CustomDatePicker = React.forwardRef(({
 
   // Synchronize internal text value with external value prop
   useEffect(() => {
-    if (value) {
-      // If value is YYYY-MM-DD
-      if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-        const parts = value.slice(0, 10).split('-');
-        setTextValue(`${parts[2]}-${parts[1]}-${parts[0]}`);
-      } else {
-        setTextValue(value);
-      }
-    } else {
-      setTextValue('');
-    }
+    setTextValue(formatDateToDDMMYYYY(value));
   }, [value]);
 
   const handleTextChange = (e) => {
@@ -39,45 +113,64 @@ const CustomDatePicker = React.forwardRef(({
       formatted += '-' + clean.slice(2, 4);
     }
     if (clean.length > 4) {
-      formatted += '-' + clean.slice(4, 8);
+      formatted += '-' + clean.slice(4, 8); // Enforce max 4 digits for year
     }
     
     setTextValue(formatted);
     
-    // We send YYYY-MM-DD format to onChange if it's a complete DD-MM-YYYY string,
-    // so that standard controllers/APIs get a valid ISO date, or we send the raw/partial string.
-    if (formatted.length === 10) {
-      const parts = formatted.split('-');
-      onChange(`${parts[2]}-${parts[1]}-${parts[0]}`);
-    } else {
-      onChange(formatted);
+    if (onChange) {
+      // If it's a complete DD-MM-YYYY, pass standard ISO string YYYY-MM-DD
+      if (formatted.length === 10) {
+        const parts = formatted.split('-');
+        const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        onChange({
+          target: {
+            name: rest.name || '',
+            value: isoDate
+          }
+        });
+      } else {
+        onChange({
+          target: {
+            name: rest.name || '',
+            value: formatted
+          }
+        });
+      }
     }
   };
 
   const handleDateChange = (e) => {
-    const dateVal = e.target.value; // YYYY-MM-DD
+    const dateVal = e.target.value; // YYYY-MM-DD from calendar
     if (dateVal) {
       const parts = dateVal.split('-');
-      const formatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      // Restrict year to max 4 digits
+      const year = parts[0].slice(0, 4);
+      const month = parts[1];
+      const day = parts[2];
+      
+      const formatted = `${day}-${month}-${year}`;
       setTextValue(formatted);
-      onChange(dateVal);
+      
+      if (onChange) {
+        onChange({
+          target: {
+            name: rest.name || '',
+            value: `${year}-${month}-${day}`
+          }
+        });
+      }
     } else {
       setTextValue('');
-      onChange('');
+      if (onChange) {
+        onChange({
+          target: {
+            name: rest.name || '',
+            value: ''
+          }
+        });
+      }
     }
-  };
-
-  // Convert the current DD-MM-YYYY value to YYYY-MM-DD for the native picker
-  const getNativeDateValue = () => {
-    if (/^\d{2}-\d{2}-\d{4}$/.test(textValue)) {
-      const parts = textValue.split('-');
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    // If it's already YYYY-MM-DD
-    if (/^\d{4}-\d{2}-\d{2}$/.test(textValue)) {
-      return textValue;
-    }
-    return '';
   };
 
   return (
@@ -99,7 +192,7 @@ const CustomDatePicker = React.forwardRef(({
         <input
           type="date"
           disabled={disabled}
-          value={getNativeDateValue()}
+          value={formatDateToYYYYMMDD(textValue)}
           onChange={handleDateChange}
           max="9999-12-31"
           className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"

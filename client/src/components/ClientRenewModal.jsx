@@ -202,6 +202,11 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
       return;
     }
 
+    if (!renewalForm.startDate || isNaN(new Date(renewalForm.startDate).getTime())) {
+      alert("Please enter a valid Start Date");
+      return;
+    }
+
     const maxLimit = detectedPendingPayment ? (
       (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
     ) : selectedPlan.price;
@@ -213,8 +218,8 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
     }
 
     if (paymentType === 'partial' && paid < maxLimit) {
-      if (!renewalForm.dueDate) {
-        alert("Due Date is required for partial payments");
+      if (!renewalForm.dueDate || isNaN(new Date(renewalForm.dueDate).getTime())) {
+        alert("Due Date is required and must be a valid date for partial payments");
         return;
       }
 
@@ -430,7 +435,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                   {!detectedPendingPayment && (
                     <button
                       type="button"
-                      onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); }}
+                      onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); setShowPlanDropdown(true); }}
                       className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700"
                     >
                       Change
@@ -453,7 +458,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
 
                   {showPlanDropdown && (
-                    <div className="absolute z-[10000] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                    <div className="mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-inner overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                       {availablePlans.length > 0 ? (
                         availablePlans.map(p => (
                           <button
