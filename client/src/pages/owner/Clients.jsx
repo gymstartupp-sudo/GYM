@@ -139,7 +139,9 @@ const Clients = () => {
       if (filterStatus !== 'All') params.append('status', filterStatus);
       if (filterPlan !== 'All') params.append('planName', filterPlan);
       const res = await api.get(`/client?${params.toString()}`);
-      setClients(res.data.data || []);
+      const fetched = res.data.data || [];
+      // Filter out pending clients from the main clients list
+      setClients(fetched.filter(c => c.membership?.status !== 'pending' && c.membership?.status !== 'Pending'));
     } catch {
       toast.error('Failed to fetch clients');
     } finally {

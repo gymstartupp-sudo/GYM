@@ -106,13 +106,21 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
       }
     } else if (name === 'durationMonths') {
       const num = Number(val);
-      if (val !== '' && (num > 12 || num < 1 || isNaN(num))) {
-        errMessage = 'Plan duration cannot exceed 12 months';
+      if (val !== '') {
+        if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+          errMessage = 'Duration must be a whole number between 1 and 12';
+        } else if (num > 12) {
+          errMessage = 'Duration cannot exceed 12 months';
+        }
       }
     } else if (name === 'price') {
       const num = Number(val);
-      if (val !== '' && (num >= 100000 || num < 0 || isNaN(num))) {
-        errMessage = 'Plan price must be under 1 Lakh';
+      if (val !== '') {
+        if (isNaN(num) || num < 0) {
+          errMessage = 'Enter a valid price';
+        } else if (num >= 100000) {
+          errMessage = 'Plan price must be under ₹1,00,000';
+        }
       }
     } else if (name === 'description') {
       if (val.length > 150) {
@@ -277,14 +285,21 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
               <input 
                 name="durationMonths" 
                 value={formData.durationMonths} 
-                type="number" 
-                min="1" 
-                max="12"
-                onChange={handleChange} 
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                onChange={(e) => {
+                  // Strip non-digits
+                  const raw = e.target.value.replace(/\D/g, '');
+                  // Enforce max 2 digits
+                  const clamped = raw.slice(0, 2);
+                  setFormData(prev => ({ ...prev, durationMonths: clamped }));
+                  validateField('durationMonths', clamped);
+                }}
                 required 
                 readOnly={!isCustom}
                 className={`input-field ${!isCustom ? 'opacity-50 cursor-not-allowed bg-gray-800' : ''}`} 
-                placeholder="1" 
+                placeholder="1-12" 
               />
               {errors.durationMonths && <p className="text-red-500 text-xs mt-1">{errors.durationMonths}</p>}
             </div>
@@ -293,13 +308,20 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
               <input 
                 name="price" 
                 value={formData.price} 
-                type="number" 
-                min="0" 
-                max="99999"
-                onChange={handleChange} 
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                onChange={(e) => {
+                  // Strip non-digits
+                  const raw = e.target.value.replace(/\D/g, '');
+                  // Enforce max 5 digits
+                  const clamped = raw.slice(0, 5);
+                  setFormData(prev => ({ ...prev, price: clamped }));
+                  validateField('price', clamped);
+                }}
                 required 
                 className="input-field" 
-                placeholder="1500" 
+                placeholder="e.g. 1500" 
               />
               {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
             </div>

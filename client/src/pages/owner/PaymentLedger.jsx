@@ -69,9 +69,10 @@ const PaymentLedger = () => {
     const validateField = (name, val) => {
         let errMessage = '';
         if (name === 'amount') {
+            const digits = val.replace(/\D/g, '');
             const num = Number(val);
-            if (val !== '' && (num > 10000000 || num <= 0 || isNaN(num))) {
-                errMessage = 'Expense amount cannot exceed 1 Crore';
+            if (val !== '' && (num <= 0 || isNaN(num))) {
+                errMessage = 'Enter a valid amount greater than 0';
             }
         } else if (name === 'note') {
             if (val.length > 100) {
@@ -80,9 +81,11 @@ const PaymentLedger = () => {
         } else if (name === 'title') {
             if (!val || !val.trim()) {
                 errMessage = 'Title / Name is required';
+            } else if (val.trim().length > 25) {
+                errMessage = 'Title cannot exceed 25 characters';
             }
         }
-        
+
         setFormErrors(prev => {
             const newErr = { ...prev };
             if (errMessage) {
@@ -451,6 +454,9 @@ const PaymentLedger = () => {
         }
         if (!formData.amount || Number(formData.amount) <= 0) {
             return toast.error("Please enter a valid amount greater than 0");
+        }
+        if (!formData.date || isNaN(new Date(formData.date).getTime())) {
+            return toast.error("Please enter a valid Date");
         }
         if (Object.keys(formErrors).length > 0) {
             return toast.error("Please fix validation errors first");
@@ -920,75 +926,80 @@ const PaymentLedger = () => {
                                     <input
                                         type="text"
                                         required
+                                        maxLength={25}
                                         className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
                                         placeholder="e.g., Monthly Rent"
                                         value={formData.title}
                                         onChange={(e) => {
-                                            const val = e.target.value;
+                                            const val = e.target.value.slice(0, 25);
                                             setFormData({ ...formData, title: val });
                                             validateField('title', val);
                                         }}
                                     />
+
                                     {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
                                 </div>
-                                      <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Amount (₹)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        max="10000000"
-                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
-                                        placeholder="0.00"
-                                        value={formData.amount}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setFormData({ ...formData, amount: val });
-                                            validateField('amount', val);
-                                        }}
-                                    />
-                                    {formErrors.amount && <p className="text-red-500 text-xs mt-1">{formErrors.amount}</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
-                                    <div className="relative">
-                                        <select
-                                            className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary appearance-none cursor-pointer"
-                                            value={formData.category}
-                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        >
-                                            {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                        </select>
-                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Amount (₹)</label>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            required
+                                            className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
+                                            placeholder="e.g. 5000"
+                                            value={formData.amount}
+                                            onChange={(e) => {
+                                                // Allow only digits, max 6
+                                                const raw = e.target.value.replace(/\D/g, '');
+                                                const clamped = raw.slice(0, 6);
+                                                setFormData({ ...formData, amount: clamped });
+                                                validateField('amount', clamped);
+                                            }}
+                                        />
+                                        {formErrors.amount && <p className="text-red-500 text-xs mt-1">{formErrors.amount}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
+                                        <div className="relative">
+                                            <select
+                                                className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary appearance-none cursor-pointer"
+                                                value={formData.category}
+                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                            >
+                                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                            </select>
+                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
- 
-                            <div>
-                                <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
-                                <CustomDatePicker
-                                    required
-                                    className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary [color-scheme:dark]"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                />
-                            </div>
- 
-                            <div>
-                                <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Notes (Optional)</label>
-                                <textarea
-                                    className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary h-24 resize-none"
-                                    placeholder="Add any additional details..."
-                                    maxLength="100"
-                                    value={formData.note}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        setFormData({ ...formData, note: val });
-                                        validateField('note', val);
-                                    }}
-                                />
-                                {formErrors.note && <p className="text-red-500 text-xs mt-1">{formErrors.note}</p>}
-                            </div>
+
+                                <div>
+                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
+                                    <CustomDatePicker
+                                        required
+                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary [color-scheme:dark]"
+                                        value={formData.date}
+                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Notes (Optional)</label>
+                                    <textarea
+                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary h-24 resize-none"
+                                        placeholder="Add any additional details..."
+                                        maxLength="100"
+                                        value={formData.note}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setFormData({ ...formData, note: val });
+                                            validateField('note', val);
+                                        }}
+                                    />
+                                    {formErrors.note && <p className="text-red-500 text-xs mt-1">{formErrors.note}</p>}
+                                </div>
 
                                 <div>
                                     <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Attach Bill (Optional)</label>

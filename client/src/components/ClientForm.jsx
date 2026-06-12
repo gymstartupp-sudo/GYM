@@ -41,11 +41,12 @@ const getValidationSchema = (mode) => yup.object({
   gender: yup.string().required('Gender is required'),
   email: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
   dob: yup.date()
+    .typeError('Enter a valid date of birth (DD-MM-YYYY)')
     .required('Date of birth is required')
     .max(new Date("9999-12-31"), 'Year cannot exceed 4 digits')
     .min(getMinDobDate(), 'Enter a valid date of birth (max 100 years old)')
     .test('age', 'Must be at least 14 years old', function (value) {
-      if (!value) return false;
+      if (!value || isNaN(new Date(value).getTime())) return false;
       const today = new Date();
       const birthDate = new Date(value);
       let age = today.getFullYear() - birthDate.getFullYear();
@@ -61,6 +62,7 @@ const getValidationSchema = (mode) => yup.object({
   medicalCondition: yup.string().trim().nullable(),
   planId: yup.string().nullable(),
   startDate: yup.date()
+    .typeError('Enter a valid start date (DD-MM-YYYY)')
     .required('Start date is required')
     .min(getMinStartDate(), 'Start date cannot be more than 30 days in the past')
     .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),

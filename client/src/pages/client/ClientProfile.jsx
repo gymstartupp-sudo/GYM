@@ -101,6 +101,25 @@ const ClientProfile = () => {
       else if (value.length > 100) errMsg = 'Max 100 characters';
     } else if (key === 'medicalCondition') {
       if (value && value.length > 100) errMsg = 'Max 100 characters';
+    } else if (key === 'dob') {
+      if (!value) {
+        errMsg = 'Date of birth is required';
+      } else {
+        const parsed = new Date(value);
+        if (isNaN(parsed.getTime())) {
+          errMsg = 'Enter a valid date of birth (DD-MM-YYYY)';
+        } else {
+          const today = new Date();
+          let age = today.getFullYear() - parsed.getFullYear();
+          const m = today.getMonth() - parsed.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < parsed.getDate())) {
+            age--;
+          }
+          if (age < 14) {
+            errMsg = 'Must be at least 14 years old';
+          }
+        }
+      }
     }
 
     setErrors(prev => {
@@ -135,6 +154,25 @@ const ClientProfile = () => {
     else if (pi.address.length > 100) newErrors.address = 'Max 100 characters';
 
     if (pi.medicalCondition && pi.medicalCondition.length > 100) newErrors.medicalCondition = 'Max 100 characters';
+
+    if (!pi.dob) {
+      newErrors.dob = 'Date of birth is required';
+    } else {
+      const parsed = new Date(pi.dob);
+      if (isNaN(parsed.getTime())) {
+        newErrors.dob = 'Enter a valid date of birth (DD-MM-YYYY)';
+      } else {
+        const today = new Date();
+        let age = today.getFullYear() - parsed.getFullYear();
+        const m = today.getMonth() - parsed.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < parsed.getDate())) {
+          age--;
+        }
+        if (age < 14) {
+          newErrors.dob = 'Must be at least 14 years old';
+        }
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

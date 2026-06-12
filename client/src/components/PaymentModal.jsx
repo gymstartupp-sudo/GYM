@@ -419,6 +419,10 @@ const PaymentModal = ({
         const paid = Number(formData.paidAmount) || 0;
 
         // Validations
+        if (!formData.startDate || isNaN(new Date(formData.startDate).getTime())) {
+            return alert("Please enter a valid Start Date");
+        }
+
         if (paid > outstandingBalance) {
             const errorMsg = `You cannot pay more than the outstanding balance of ₹${outstandingBalance}`;
             alert(errorMsg);
@@ -430,8 +434,8 @@ const PaymentModal = ({
 
         // Due date is only required for TRUE partial payments (balance remains after this payment)
         if (realStatus === 'partial') {
-            if (!formData.dueDate) {
-                return alert("Due Date is required for partial payments");
+            if (!formData.dueDate || isNaN(new Date(formData.dueDate).getTime())) {
+                return alert("Due Date is required and must be a valid date for partial payments");
             }
 
             const today = new Date();
