@@ -240,28 +240,54 @@ const ClientFeedback = () => {
 
             <form onSubmit={handleSendFeedback} className="space-y-5">
               <div>
-                <label className="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Subject (Optional)</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-400 font-semibold">Subject (Optional)</label>
+                  <span className={`text-xs font-medium ${subject.length >= 30 ? 'text-red-400' : 'text-gray-500'}`}>
+                    {subject.length}/30
+                  </span>
+                </div>
                 <input
                   type="text"
                   value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 30) setSubject(e.target.value);
+                  }}
+                  maxLength={30}
                   placeholder="E.g., Equipment maintenance, Class timings"
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-primary transition-colors text-sm"
+                  className={`w-full bg-gray-950 border rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none transition-colors text-sm ${
+                    subject.length >= 30 ? 'border-red-500/60 focus:border-red-500' : 'border-gray-800 focus:border-primary'
+                  }`}
                   disabled={isSubmitting}
                 />
+                {subject.length >= 30 && (
+                  <p className="text-xs text-red-400 mt-1">Maximum 30 characters allowed for subject.</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">Message *</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs uppercase tracking-wider text-gray-400 font-semibold">Message *</label>
+                  <span className={`text-xs font-medium ${message.length >= 300 ? 'text-red-400' : message.length >= 270 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                    {message.length}/300
+                  </span>
+                </div>
                 <textarea
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 300) setMessage(e.target.value);
+                  }}
+                  maxLength={300}
                   placeholder="Describe your suggestion or issue in detail..."
                   rows={5}
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-primary transition-colors text-sm resize-none"
+                  className={`w-full bg-gray-950 border rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none transition-colors text-sm resize-none ${
+                    message.length >= 300 ? 'border-red-500/60 focus:border-red-500' : 'border-gray-800 focus:border-primary'
+                  }`}
                   required
                   disabled={isSubmitting}
                 />
+                {message.length >= 300 && (
+                  <p className="text-xs text-red-400 mt-1">Maximum 300 characters allowed for description.</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
