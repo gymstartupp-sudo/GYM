@@ -80,13 +80,13 @@ const ClientRequests = () => {
     };
 
     return (
-        <div className="flex bg-dark h-screen overflow-hidden">
+        <div className="flex bg-surface-primary h-screen overflow-hidden">
             <div className="flex-1 overflow-y-auto p-8 pt-10">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                         <UserPlus className="text-primary" size={32} /> Client Requests
                     </h1>
-                    <p className="text-gray-400 mt-1">Review and approve new membership registrations.</p>
+                    <p className="text-text-secondary mt-1">Review and approve new membership registrations.</p>
                 </div>
 
                 {loading ? (
@@ -94,7 +94,7 @@ const ClientRequests = () => {
                         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : requests.length === 0 ? (
-                    <div className="card bg-gray-900 border-gray-800 text-center py-16 text-gray-400">
+                    <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
                         <Clock size={48} className="mx-auto mb-4 opacity-20" />
                         <p className="text-lg font-medium">No pending requests</p>
                         <p className="text-sm mt-1 text-gray-600">New registration requests will appear here.</p>
@@ -102,29 +102,29 @@ const ClientRequests = () => {
                 ) : (
                     <div className="grid grid-cols-1 gap-4">
                         {requests.map((req) => (
-                            <div key={req._id} className="card bg-gray-900 border-gray-800 hover:border-gray-700 transition-all">
+                            <div key={req._id} className="card bg-surface-secondary border-border hover:border-border transition-all">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">
                                             {req.personalInfo.name.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-bold text-white">{req.personalInfo.name}</h3>
-                                            <p className="text-gray-400 text-sm">{req.personalInfo.mobileNo} • {req.personalInfo.email}</p>
+                                            <h3 className="text-lg font-bold text-text-primary">{req.personalInfo.name}</h3>
+                                            <p className="text-text-secondary text-sm">{req.personalInfo.mobileNo} • {req.personalInfo.email}</p>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 md:flex items-center gap-8 text-sm">
                                         <div>
-                                            <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Requested Plan</p>
-                                            <p className="text-white font-medium">{req.membership.planName || 'N/A'}</p>
+                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Requested Plan</p>
+                                            <p className="text-text-primary font-medium">{req.membership.planName || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Request Date</p>
-                                            <p className="text-white font-medium">{new Date(req.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Request Date</p>
+                                            <p className="text-text-primary font-medium">{new Date(req.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                         </div>
                                         <div className="hidden md:block">
-                                            <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">Status</p>
+                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Status</p>
                                             <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase">
                                                 {req.membership.status}
                                             </span>

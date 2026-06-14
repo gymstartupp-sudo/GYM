@@ -31,7 +31,7 @@ const RegistrationSuccess = () => {
           </div>
         </div>
 
-        <h2 className="text-3xl font-extrabold text-white tracking-tight mb-2">Gym Created Successfully!</h2>
+        <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">Gym Created Successfully!</h2>
         <p className="text-sm text-slate-400 max-w-sm mx-auto mb-8">Your enterprise workspace is ready. Save your credentials below to get started.</p>
 
         {/* Credentials Display Badge */}
@@ -79,7 +79,7 @@ const RegistrationSuccess = () => {
         {/* Primary Action Button */}
         <Button 
           onClick={() => navigate('/owner/dashboard')} 
-          className="w-full text-sm font-extrabold py-3.5 rounded-xl uppercase tracking-wider shadow-lg bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.99] transition-all"
+          className="w-full text-sm font-extrabold py-3.5 rounded-xl uppercase tracking-wider shadow-lg bg-blue-600 hover:bg-blue-500 text-text-primary shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.99] transition-all"
         >
           <div className="flex items-center justify-center gap-2">
             <span>Go to Dashboard</span>

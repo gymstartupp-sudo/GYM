@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import Button from './Button';
+import PasswordInput from './PasswordInput';
 import { useAuth } from '../context/AuthContext';
 import PaymentModal from './PaymentModal';
 import CustomDatePicker from './CustomDatePicker';
@@ -317,12 +318,12 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       return (
         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-gray-400 mb-1">Gym ID</p>
-            <input value={user?.gymId || ''} readOnly className="input-field bg-gray-800/70 text-gray-400 cursor-not-allowed" />
+            <p className="text-xs text-text-secondary mb-1">Gym ID</p>
+            <input value={user?.gymId || ''} readOnly className="input-field bg-surface-divider/70 text-text-secondary cursor-not-allowed" />
           </div>
           <div>
-            <p className="text-xs text-gray-400 mb-1">Gym Name</p>
-            <input value={user?.gymName || ''} readOnly className="input-field bg-gray-800/70 text-gray-400 cursor-not-allowed" />
+            <p className="text-xs text-text-secondary mb-1">Gym Name</p>
+            <input value={user?.gymName || ''} readOnly className="input-field bg-surface-divider/70 text-text-secondary cursor-not-allowed" />
           </div>
         </div>
       );
@@ -331,7 +332,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     return (
       <>
         <div>
-          <p className="text-xs text-gray-400 mb-1">Gym ID <span className="text-red-500">*</span></p>
+          <p className="text-xs text-text-secondary mb-1">Gym ID <span className="text-red-500">*</span></p>
           <input
             {...register('gymId')}
             placeholder="Enter Gym ID (e.g. NEX-01)"
@@ -343,11 +344,11 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           {showFieldError('gymId') && <p className="text-red-500 text-xs mt-1">{errors.gymId.message}</p>}
         </div>
         <div>
-          <p className="text-xs text-gray-400 mb-1">Gym Name</p>
+          <p className="text-xs text-text-secondary mb-1">Gym Name</p>
           <input
             {...register('gymName')}
             readOnly
-            className={`input-field ${watchGymName ? 'bg-gray-800/70 text-gray-400 border-emerald-500/30' : 'bg-gray-800/70 text-gray-500'}`}
+            className={`input-field ${watchGymName ? 'bg-surface-divider/70 text-text-secondary border-emerald-500/30' : 'bg-surface-divider/70 text-text-muted'}`}
           />
           {showFieldError('gymName') && <p className="text-red-500 text-xs mt-1">{errors.gymName.message}</p>}
         </div>
@@ -358,20 +359,20 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const renderPersonalInfo = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in">
       <div className="md:col-span-2">
-        <h3 className="text-xl text-white my-2 border-b border-gray-700 pb-2">Personal Info</h3>
+        <h3 className="text-xl text-text-primary my-2 border-b border-border pb-2">Personal Info</h3>
       </div>
 
       {renderGymContext()}
 
       <div>
-        <p className="text-xs text-gray-400 mb-1">Full Name <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Full Name <span className="text-red-500">*</span></p>
         <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="25" />
         {showFieldError('name') && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
       </div>
 
       <div>
-        <p className="text-xs text-gray-400 mb-1">Gender <span className="text-red-500">*</span></p>
-        <select {...register('gender')} className={fieldClassName('gender', 'text-gray-300 bg-gray-900')}>
+        <p className="text-xs text-text-secondary mb-1">Gender <span className="text-red-500">*</span></p>
+        <select {...register('gender')} className={fieldClassName('gender', 'text-text-secondary bg-surface-secondary')}>
           <option value="">Select Gender</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
@@ -381,53 +382,53 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       </div>
 
       <div>
-        <p className="text-xs text-gray-400 mb-1">Email <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Email <span className="text-red-500">*</span></p>
         <input {...register('email')} type="email" placeholder="Email Address" className={fieldClassName('email')} />
         {showFieldError('email') && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
       </div>
 
       <div>
-        <p className="text-xs text-gray-400 mb-1">Date of Birth <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Date of Birth <span className="text-red-500">*</span></p>
         <CustomDatePicker 
           {...register('dob')} 
-          className={fieldClassName('dob', 'text-gray-300')} 
+          className={fieldClassName('dob', 'text-text-secondary')} 
         />
         {showFieldError('dob') && <p className="text-red-500 text-xs mt-1">{errors.dob.message}</p>}
       </div>
 
       <div>
-        <p className="text-xs text-gray-400 mb-1">Mobile Number <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Mobile Number <span className="text-red-500">*</span></p>
         <input {...register('mobileNo')} type="tel" placeholder="10-digit mobile number" className={fieldClassName('mobileNo')} onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10) }} maxLength="10" />
         {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1">{errors.mobileNo.message}</p>}
       </div>
 
       <div>
-        <p className="text-xs text-gray-400 mb-1">Emergency Contact <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Emergency Contact <span className="text-red-500">*</span></p>
         <input {...register('emergencyContact')} type="tel" placeholder="10-digit emergency contact" className={fieldClassName('emergencyContact')} onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10) }} maxLength="10" />
         {showFieldError('emergencyContact') && <p className="text-red-500 text-xs mt-1">{errors.emergencyContact.message}</p>}
       </div>
 
       <div className="md:col-span-2">
-        <p className="text-xs text-gray-400 mb-1">Address <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Address <span className="text-red-500">*</span></p>
         <textarea {...register('address')} placeholder="Residential address" className={fieldClassName('address', 'h-20 resize-none')} maxLength="100" />
         {showFieldError('address') && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
       </div>
 
       <div className="md:col-span-2">
-        <p className="text-xs text-gray-400 mb-1">Medical Condition (Optional)</p>
+        <p className="text-xs text-text-secondary mb-1">Medical Condition (Optional)</p>
         <textarea {...register('medicalCondition')} placeholder="Any medical condition or injury history" className="input-field h-20 resize-none" maxLength="100" />
       </div>
 
       {isOwner && (
         <>
           <div>
-            <p className="text-xs text-gray-400 mb-1">Password <span className="text-red-500">*</span></p>
-            <input {...register('password')} type="password" placeholder="Create password" className={fieldClassName('password')} maxLength="20" />
+            <p className="text-xs text-text-secondary mb-1">Password <span className="text-red-500">*</span></p>
+            <PasswordInput {...register('password')} placeholder="Create password" className={fieldClassName('password')} maxLength="20" />
             {showFieldError('password') && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
           <div>
-            <p className="text-xs text-gray-400 mb-1">Confirm Password <span className="text-red-500">*</span></p>
-            <input {...register('confirmPassword')} type="password" placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="20" />
+            <p className="text-xs text-text-secondary mb-1">Confirm Password <span className="text-red-500">*</span></p>
+            <PasswordInput {...register('confirmPassword')} placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="20" />
             {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
           </div>
         </>
@@ -438,14 +439,14 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const renderMembershipInfo = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in">
       <div className="md:col-span-2">
-        <h3 className="text-xl text-white mb-2 border-b border-gray-700 pb-2">Membership Plan</h3>
+        <h3 className="text-xl text-text-primary mb-2 border-b border-border pb-2">Membership Plan</h3>
       </div>
 
       <div className="md:col-span-2">
-        <p className="text-xs text-gray-400 mb-1">Membership Plan <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Membership Plan <span className="text-red-500">*</span></p>
         <select
           {...register('planType')}
-          className={fieldClassName('planType', 'text-gray-300 bg-gray-900')}
+          className={fieldClassName('planType', 'text-text-secondary bg-surface-secondary')}
           onChange={(e) => {
             const val = e.target.value;
             setValue('planType', val);
@@ -465,27 +466,27 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       </div>
 
       <div>
-        <p className="text-xs text-gray-400 mb-1">Membership Start Date <span className="text-red-500">*</span></p>
+        <p className="text-xs text-text-secondary mb-1">Membership Start Date <span className="text-red-500">*</span></p>
         <CustomDatePicker 
           {...register('startDate')} 
-          className={fieldClassName('startDate', 'text-gray-300')} 
+          className={fieldClassName('startDate', 'text-text-secondary')} 
         />
         {showFieldError('startDate') && <p className="text-red-500 text-xs mt-1">{errors.startDate.message}</p>}
       </div>
 
       {!isOwner && (
         <>
-          <div className="md:col-span-2 border-t border-gray-700 pt-4 mt-2">
-            <h3 className="text-lg text-white mb-3">Security</h3>
+          <div className="md:col-span-2 border-t border-border pt-4 mt-2">
+            <h3 className="text-lg text-text-primary mb-3">Security</h3>
           </div>
           <div>
-            <p className="text-xs text-gray-400 mb-1">Password <span className="text-red-500">*</span></p>
-            <input {...register('password')} type="password" placeholder="Create password" className={fieldClassName('password')} maxLength="20" />
+            <p className="text-xs text-text-secondary mb-1">Password <span className="text-red-500">*</span></p>
+            <PasswordInput {...register('password')} placeholder="Create password" className={fieldClassName('password')} maxLength="20" />
             {showFieldError('password') && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
           <div>
-            <p className="text-xs text-gray-400 mb-1">Confirm Password <span className="text-red-500">*</span></p>
-            <input {...register('confirmPassword')} type="password" placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="20" />
+            <p className="text-xs text-text-secondary mb-1">Confirm Password <span className="text-red-500">*</span></p>
+            <PasswordInput {...register('confirmPassword')} placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="20" />
             {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
           </div>
         </>
@@ -501,7 +502,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         {(!isOwner && step === 1) || isOwner ? renderPersonalInfo() : null}
         {(!isOwner && step === 2) || isOwner ? renderMembershipInfo() : null}
 
-        <div className="flex justify-between pt-6 border-t border-gray-700 mt-6 !mt-8">
+        <div className="flex justify-between pt-6 border-t border-border mt-6 !mt-8">
           {!isOwner && step === 2 ? (
             <Button type="button" variant="secondary" onClick={() => setStep(1)}>Back</Button>
           ) : showCancel ? (

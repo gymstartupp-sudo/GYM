@@ -484,13 +484,13 @@ const PaymentModal = ({
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
-            <div className="bg-gray-900 border border-gray-700/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
-                <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/50 shrink-0">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <div className="bg-surface-secondary border border-border/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+                <div className="p-6 border-b border-border flex justify-between items-center bg-surface-divider/80 shrink-0">
+                    <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
                         <Receipt className="text-primary" />
                         {isUpdateMode ? 'Update Payment' : (lockClient ? ((selectedClient?.membership?.requestApproved === false || selectedClient?.membership?.status === 'pending') ? 'Record Payment' : 'Renew Membership') : 'Record Payment')}
                     </h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors" disabled={isSubmitting}>
+                    <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors" disabled={isSubmitting}>
                         <X size={24} />
                     </button>
                 </div>
@@ -502,8 +502,8 @@ const PaymentModal = ({
                             <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
                             <div>
                                 <p className="text-amber-400 text-sm font-bold">Pending Balance Detected</p>
-                                <p className="text-gray-400 text-xs mt-1">
-                                    This client has an outstanding balance of <span className="text-white font-bold">₹{detectedPendingPayment.remainingBalance !== undefined ? detectedPendingPayment.remainingBalance : ((detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidAmount || 0))}</span> for <span className="text-white font-medium">{detectedPendingPayment.planName}</span>. Pay the remaining amount below.
+                                <p className="text-text-secondary text-xs mt-1">
+                                    This client has an outstanding balance of <span className="text-text-primary font-bold">₹{detectedPendingPayment.remainingBalance !== undefined ? detectedPendingPayment.remainingBalance : ((detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidAmount || 0))}</span> for <span className="text-text-primary font-medium">{detectedPendingPayment.planName}</span>. Pay the remaining amount below.
                                 </p>
                             </div>
                         </div>
@@ -512,20 +512,20 @@ const PaymentModal = ({
                     {/* Client Selection (Searchable) */}
                     <div className="space-y-4">
                         <div className="relative" ref={dropdownRef}>
-                            <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">
+                            <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">
                                 {lockClient ? 'Selected Client' : 'Search Client'}
                             </label>
                             {selectedClient ? (
-                                <div className={`flex items-center gap-3 p-3 bg-gray-800/50 border rounded-xl transition-all ${lockClient ? 'border-primary/30 bg-primary/5' : 'border-gray-700'}`}>
+                                <div className={`flex items-center gap-3 p-3 bg-surface-hover/50 border rounded-xl transition-all ${lockClient ? 'border-primary/30 bg-primary/5' : 'border-border'}`}>
                                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
                                         {(selectedClient.personalInfo?.name || selectedClient.name || 'C').charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-white font-bold text-sm">{selectedClient.personalInfo?.name || selectedClient.name}</p>
+                                        <p className="text-text-primary font-bold text-sm">{selectedClient.personalInfo?.name || selectedClient.name}</p>
                                         <p className="text-[10px] text-primary font-black uppercase tracking-tighter">{selectedClient.clientId}</p>
                                     </div>
                                     {!lockClient && !clientData && (
-                                        <button type="button" onClick={() => { setSelectedClient(null); setSearchQuery(''); }} className="p-1 text-gray-500 hover:text-white transition-colors">
+                                        <button type="button" onClick={() => { setSelectedClient(null); setSearchQuery(''); }} className="p-1 text-text-muted hover:text-text-primary transition-colors">
                                             <X size={14} />
                                         </button>
                                     )}
@@ -533,10 +533,10 @@ const PaymentModal = ({
                             ) : (
                                 <>
                                     <div className="relative group">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" size={18} />
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                                         <input
                                             type="text"
-                                            className="w-full bg-dark border border-gray-700 rounded-xl pl-11 pr-4 py-3.5 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium"
+                                            className="w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium"
                                             placeholder="Type Client Name or ID (e.g. NEX-C-01)"
                                             value={searchQuery}
                                             onChange={(e) => {
@@ -545,33 +545,33 @@ const PaymentModal = ({
                                             }}
                                             onFocus={() => setShowClientDropdown(true)}
                                         />
-                                        <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-transform duration-300 ${showClientDropdown ? 'rotate-180' : ''}`} size={18} />
+                                        <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-text-muted transition-transform duration-300 ${showClientDropdown ? 'rotate-180' : ''}`} size={18} />
                                     </div>
 
                                     {showClientDropdown && (
-                                        <div className="absolute z-[10000] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-200">
+                                        <div className="absolute z-[10000] left-0 right-0 mt-2 bg-surface-divider border border-border rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-200">
                                             {filteredClients.length > 0 ? (
                                                 filteredClients.map(c => (
                                                     <button
                                                         key={c._id}
                                                         type="button"
-                                                        className="w-full flex items-center justify-between p-3.5 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-0 group"
+                                                        className="w-full flex items-center justify-between p-3.5 hover:bg-surface-hover/50 transition-colors text-left border-b border-border/50 last:border-0 group"
                                                         onClick={() => handleClientSelect(c)}
                                                     >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
+                                                            <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center text-text-secondary group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
                                                                 {(c.personalInfo?.name || c.name || 'C').charAt(0).toUpperCase()}
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{c.personalInfo?.name || c.name}</p>
-                                                                <p className="text-[10px] font-black text-gray-500 group-hover:text-primary transition-colors uppercase tracking-tighter">{c.clientId}</p>
+                                                                <p className="text-sm font-bold text-text-primary group-hover:text-text-primary transition-colors">{c.personalInfo?.name || c.name}</p>
+                                                                <p className="text-[10px] font-black text-text-muted group-hover:text-primary transition-colors uppercase tracking-tighter">{c.clientId}</p>
                                                             </div>
                                                         </div>
                                                         {selectedClient?._id === c._id && <Check size={16} className="text-primary" />}
                                                     </button>
                                                 ))
                                             ) : (
-                                                <div className="p-8 text-center text-gray-500 text-sm italic">No matching clients found</div>
+                                                <div className="p-8 text-center text-text-muted text-sm italic">No matching clients found</div>
                                             )}
                                         </div>
                                     )}
@@ -581,33 +581,33 @@ const PaymentModal = ({
 
                         {/* Plan Selection (Searchable) */}
                         <div className="relative" ref={planDropdownRef}>
-                            <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
+                            <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
                             {(planData || detectedPendingPayment) ? (
-                                <div className={`flex flex-col gap-2.5 p-3.5 bg-gray-800/50 border rounded-xl ${detectedPendingPayment ? 'border-amber-500/30' : 'border-gray-700'}`}>
+                                <div className={`flex flex-col gap-2.5 p-3.5 bg-surface-hover/50 border rounded-xl ${detectedPendingPayment ? 'border-amber-500/30' : 'border-border'}`}>
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                                             <Package size={18} />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-white font-bold text-sm">{selectedPlan?.name || planData?.name}</p>
+                                            <p className="text-text-primary font-bold text-sm">{selectedPlan?.name || planData?.name}</p>
                                             <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan?.price || planData?.price}</p>
                                         </div>
                                     </div>
                                     {billingPeriodText && (
-                                        <div className="pt-2 border-t border-gray-800/50 flex items-center justify-between text-xs text-gray-400">
+                                        <div className="pt-2 border-t border-border/50 flex items-center justify-between text-xs text-text-secondary">
                                             <span>Billing Period:</span>
-                                            <span className="text-white font-bold">{billingPeriodText}</span>
+                                            <span className="text-text-primary font-bold">{billingPeriodText}</span>
                                         </div>
                                     )}
                                 </div>
                             ) : (
                                 <>
                                     <div className="relative group">
-                                        <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" size={18} />
+                                        <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                                         <input
                                             type="text"
                                             disabled={!selectedClient}
-                                            className="w-full bg-dark border border-gray-700 rounded-xl pl-11 pr-4 py-3.5 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                             placeholder="Type Plan Name (e.g. Monthly, Yearly)"
                                             value={planSearchQuery}
                                             onChange={(e) => {
@@ -616,39 +616,39 @@ const PaymentModal = ({
                                             }}
                                             onFocus={() => setShowPlanDropdown(true)}
                                         />
-                                        <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-transform duration-300 ${showPlanDropdown ? 'rotate-180' : ''}`} size={18} />
+                                        <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-text-muted transition-transform duration-300 ${showPlanDropdown ? 'rotate-180' : ''}`} size={18} />
                                     </div>
 
                                     {selectedPlan && billingPeriodText && (
-                                        <div className="mt-2.5 p-3 bg-gray-800/30 border border-gray-800/50 rounded-xl flex items-center justify-between text-xs text-gray-400 animate-in fade-in duration-300">
+                                        <div className="mt-2.5 p-3 bg-surface-divider/80 border border-border/50 rounded-xl flex items-center justify-between text-xs text-text-secondary animate-in fade-in duration-300">
                                             <span>Billing Period:</span>
-                                            <span className="text-white font-bold">{billingPeriodText}</span>
+                                            <span className="text-text-primary font-bold">{billingPeriodText}</span>
                                         </div>
                                     )}
 
                                     {showPlanDropdown && (
-                                        <div className="absolute z-[10000] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-200">
+                                        <div className="absolute z-[10000] left-0 right-0 mt-2 bg-surface-divider border border-border rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar animate-in slide-in-from-top-2 duration-200">
                                             {filteredPlans.length > 0 ? (
                                                 filteredPlans.map(p => (
                                                     <button
                                                         key={p._id}
                                                         type="button"
-                                                        className="w-full flex items-center justify-between p-3.5 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-0 group"
+                                                        className="w-full flex items-center justify-between p-3.5 hover:bg-surface-hover/50 transition-colors text-left border-b border-border/50 last:border-0 group"
                                                         onClick={() => handlePlanSelect(p)}
                                                     >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
+                                                            <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center text-text-secondary group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
                                                                 <Package size={16} />
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{p.name}</p>
+                                                                <p className="text-sm font-bold text-text-primary group-hover:text-text-primary transition-colors">{p.name}</p>
                                                             </div>
                                                         </div>
                                                         {selectedPlan?._id === p._id && <Check size={16} className="text-primary" />}
                                                     </button>
                                                 ))
                                             ) : (
-                                                <div className="p-8 text-center text-gray-500 text-sm italic">No matching plans found</div>
+                                                <div className="p-8 text-center text-text-muted text-sm italic">No matching plans found</div>
                                             )}
                                         </div>
                                     )}
@@ -668,7 +668,7 @@ const PaymentModal = ({
                                     <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                                         <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={14} />
                                         <p className="text-[10px] text-amber-200 font-medium leading-relaxed">
-                                            Client has an active/upcoming plan expiring on <span className="text-white font-bold">{formatDisplayDate(latestExpiryDate)}</span>. 
+                                            Client has an active/upcoming plan expiring on <span className="text-text-primary font-bold">{formatDisplayDate(latestExpiryDate)}</span>. 
                                             The new membership will start automatically after this.
                                         </p>
                                     </div>
@@ -676,7 +676,7 @@ const PaymentModal = ({
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Start Date</label>
+                                        <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Start Date</label>
                                         <CustomDatePicker
                                             required
                                             min={latestExpiryDate ? (() => {
@@ -684,22 +684,22 @@ const PaymentModal = ({
                                                 d.setDate(d.getDate() + 1);
                                                 return toLocalYYYYMMDD(d);
                                             })() : undefined}
-                                            className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all"
+                                            className="w-full bg-surface-primary border border-border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all"
                                             value={formData.startDate}
                                             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Calculated Expiry</label>
-                                        <div className="w-full bg-gray-800/30 border border-gray-800 rounded-xl p-3 text-emerald-400 font-bold flex items-center justify-between">
+                                        <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Calculated Expiry</label>
+                                        <div className="w-full bg-surface-divider/80 border border-border rounded-xl p-3 text-emerald-400 font-bold flex items-center justify-between">
                                             <span>{formatDisplayDate(calculateEndDate(formData.startDate, selectedPlan.durationMonths))}</span>
                                             <ArrowRight size={14} className="opacity-30" />
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <p className="text-[9px] text-gray-500 italic ml-1">
+                                <p className="text-[9px] text-text-muted italic ml-1">
                                     Status: {new Date(formData.startDate).setHours(0,0,0,0) === new Date().setHours(0,0,0,0) ? 
                                         <span className="text-emerald-500 font-bold uppercase tracking-widest">Active Today</span> : 
                                         <span className="text-blue-500 font-bold uppercase tracking-widest">Upcoming (Scheduled)</span>
@@ -711,21 +711,21 @@ const PaymentModal = ({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Total Amount</label>
+                            <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Total Amount</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
                                 <input
                                     type="number"
                                     readOnly
-                                    className="w-full bg-gray-800/30 border border-gray-800 rounded-xl pl-8 pr-4 py-3 text-white font-bold outline-none cursor-not-allowed"
+                                    className="w-full bg-surface-divider/80 border border-border rounded-xl pl-8 pr-4 py-3 text-text-primary font-bold outline-none cursor-not-allowed"
                                     value={originalPlanPrice}
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
+                            <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
                             <select
-                                className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all appearance-none"
+                                className="w-full bg-surface-primary border border-border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all appearance-none"
                                 value={formData.paymentMethod}
                                 onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                                 disabled={isSubmitting}
@@ -738,22 +738,22 @@ const PaymentModal = ({
                     </div>
 
                     {/* Payment Completion Type */}
-                    <div className="bg-gray-800/20 p-4 rounded-xl border border-gray-800 space-y-4">
+                    <div className="bg-surface-divider/50 p-4 rounded-xl border border-border space-y-4">
                         {allowPartialPayments && (
                             <div>
-                                <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
+                                <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
                                         onClick={() => handlePaymentTypeChange('full')}
-                                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-text-primary shadow-lg shadow-emerald-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
                                     >
                                         Fully Paid
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => handlePaymentTypeChange('partial')}
-                                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-text-primary shadow-lg shadow-amber-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
                                     >
                                         Partially Paid
                                     </button>
@@ -763,13 +763,13 @@ const PaymentModal = ({
 
                         <div className={`${allowPartialPayments ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'block'}`}>
                             <div>
-                                <label className="block text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
+                                <label className="block text-[10px] text-text-secondary uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
                                 <input
                                     type="number"
                                     required
                                     min="0"
                                     max={outstandingBalance}
-                                    className={`w-full bg-dark border rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-gray-800' : 'border-gray-700'}`}
+                                    className={`w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-border' : 'border-border'}`}
                                     value={formData.paidAmount}
                                     onChange={(e) => {
                                         const val = e.target.value;
@@ -780,7 +780,7 @@ const PaymentModal = ({
                                     disabled={isSubmitting || paymentType === 'full'}
                                     placeholder="Enter amount"
                                 />
-                                <p className="text-[10px] text-gray-500 mt-1.5 ml-1 font-bold uppercase tracking-tight">
+                                <p className="text-[10px] text-text-muted mt-1.5 ml-1 font-bold uppercase tracking-tight">
                                     {isUpdateMode ? (
                                         <>
                                             Already Paid: <span className="text-emerald-500">₹{totalPaidSoFar}</span> | Bal: <span className="text-primary">₹{outstandingBalance}</span>
@@ -813,7 +813,7 @@ const PaymentModal = ({
                                         </label>
                                         <CustomDatePicker
                                             required
-                                            className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in slide-in-from-bottom-1"
+                                            className="w-full bg-surface-primary border border-amber-500/50 rounded-xl p-3 text-text-primary font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in slide-in-from-bottom-1"
                                             value={formData.dueDate}
                                             onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                                             disabled={isSubmitting}
@@ -823,7 +823,7 @@ const PaymentModal = ({
                                 {paymentType === 'partial' && isEffectivelyFullPayment && (
                                     <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
                                         <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
-                                        <p className="text-[9px] text-gray-400 mt-1">Amount covers full remaining balance</p>
+                                        <p className="text-[9px] text-text-secondary mt-1">Amount covers full remaining balance</p>
                                     </div>
                                 )}
                             </div>

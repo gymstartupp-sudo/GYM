@@ -14,7 +14,7 @@ const Hero = () => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
           <Link 
             to="/login" 
-            className="px-8 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition w-full sm:w-auto text-center shadow-sm"
+            className="px-8 py-3 bg-surface-secondary text-text-primary font-medium rounded-xl hover:bg-surface-divider transition w-full sm:w-auto text-center shadow-sm"
           >
             Login
           </Link>

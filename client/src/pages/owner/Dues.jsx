@@ -277,19 +277,19 @@ const Dues = () => {
     };
 
     return (
-        <div className="flex bg-dark h-screen overflow-hidden">
+        <div className="flex bg-surface-primary h-screen overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                             Due & Expired Clients
                         </h1>
-                        <p className="text-gray-400 mt-1 text-sm md:text-base">Manage and collect pending payments or renew expired memberships.</p>
+                        <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and collect pending payments or renew expired memberships.</p>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex flex-wrap gap-1 mb-6 bg-gray-800/50 p-1 rounded-xl w-full sm:w-fit">
+                <div className="flex flex-wrap gap-1 mb-6 bg-surface-hover/50 p-1 rounded-xl w-full sm:w-fit">
                     {[
                         { id: 'pending', label: 'Pending', icon: Clock },
                         { id: 'overdue', label: 'Overdue', icon: AlertCircle },
@@ -299,8 +299,8 @@ const Dues = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
-                                ? 'bg-primary text-white shadow-lg'
-                                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                ? 'bg-primary text-text-primary shadow-lg'
+                                : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/50'
                                 }`}
                         >
                             <tab.icon size={16} />
@@ -311,21 +311,21 @@ const Dues = () => {
 
                 {/* Search Bar */}
                 <div className="mb-6 relative group max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                     <input
                         type="text"
                         placeholder="Search by client name or ID..."
-                        className="w-full bg-gray-900 border border-gray-800 rounded-xl pl-11 pr-4 py-3 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium"
+                        className="w-full bg-surface-secondary border border-border rounded-xl pl-11 pr-4 py-3 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="bg-card rounded-xl border border-gray-800 overflow-hidden shadow-lg">
+                <div className="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse whitespace-nowrap min-w-[850px]">
                             <thead>
-                                <tr className="bg-gray-800/50 border-b border-gray-700 text-gray-400 text-xs tracking-wider uppercase">
+                                <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
                                     <th className="p-4 font-bold">Client Info</th>
                                     {activeTab === 'expired' && <th className="p-4 font-bold">Mobile</th>}
                                     <th className="p-4 font-bold">{activeTab === 'expired' ? 'Last Plan' : 'Plan'}</th>
@@ -341,44 +341,44 @@ const Dues = () => {
                                     <th className="p-4 font-bold text-right">Action</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-border">
                                 {loading ? (
                                     [...Array(4)].map((_, i) => (
-                                        <tr key={i} className="border-b border-gray-800">
-                                            <td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-gray-800 rounded-xl animate-pulse"></div><div><div className="h-4 w-24 bg-gray-800 rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-gray-800 rounded animate-pulse"></div></div></div></td>
-                                            <td className="p-4"><div className="h-4 w-20 bg-gray-800 rounded animate-pulse"></div></td>
-                                            {activeTab !== 'expired' && <><td className="p-4"><div className="h-4 w-14 bg-gray-800 rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-gray-800 rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-gray-800 rounded animate-pulse ml-auto"></div></td></>}
-                                            <td className="p-4"><div className="h-4 w-20 bg-gray-800 rounded animate-pulse"></div></td>
-                                            <td className="p-4 text-right"><div className="h-7 w-16 bg-gray-800 rounded-lg animate-pulse ml-auto"></div></td>
+                                        <tr key={i} className="border-b border-border">
+                                            <td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse"></div><div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div></div></td>
+                                            <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
+                                            {activeTab !== 'expired' && <><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td></>}
+                                            <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
+                                            <td className="p-4 text-right"><div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div></td>
                                         </tr>
                                     ))
                                 ) : filteredDues.length === 0 ? (
-                                    <tr><td colSpan="8" className="text-center p-10 text-gray-500">No {activeTab} dues found.</td></tr>
+                                    <tr><td colSpan="8" className="text-center p-10 text-text-muted">No {activeTab} dues found.</td></tr>
                                 ) : (
                                     filteredDues.map((due, idx) => (
-                                        <tr key={`${due.clientId}-${idx}`} className="border-b border-gray-800 hover:bg-white/[0.02] transition-colors group">
+                                        <tr key={`${due.clientId}-${idx}`} className="border-b border-border hover:bg-white/[0.02] transition-colors group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-text-primary transition-all duration-300">
                                                         {due.clientName?.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="text-white font-bold truncate group-hover:text-primary transition-colors">{due.clientName}</span>
-                                                        <span className="text-gray-500 text-[10px] font-mono tracking-tighter uppercase">{due.clientIdDisplay || 'N/A'}</span>
+                                                        <span className="text-text-primary font-bold truncate group-hover:text-primary transition-colors">{due.clientName}</span>
+                                                        <span className="text-text-muted text-[10px] font-mono tracking-tighter uppercase">{due.clientIdDisplay || 'N/A'}</span>
                                                     </div>
                                                 </div>
                                             </td>
                                             {activeTab === 'expired' && (
-                                                <td className="p-4 text-gray-300 text-sm font-medium">
+                                                <td className="p-4 text-text-secondary text-sm font-medium">
                                                     {due.mobile}
                                                 </td>
                                             )}
-                                            <td className="p-4 text-gray-300 text-sm font-medium">
+                                            <td className="p-4 text-text-secondary text-sm font-medium">
                                                 <span className="block">{due.planName}</span>
                                                 {due.startDate && (() => {
                                                     const period = getBillingPeriod(due);
                                                     return period ? (
-                                                        <span className="text-[10px] text-gray-500 mt-0.5 block font-medium">
+                                                        <span className="text-[10px] text-text-muted mt-0.5 block font-medium">
                                                             {period}
                                                         </span>
                                                     ) : null;
@@ -386,7 +386,7 @@ const Dues = () => {
                                             </td>
                                             {activeTab !== 'expired' && (
                                                 <>
-                                                    <td className="p-4 text-right text-gray-300 font-bold text-sm">
+                                                    <td className="p-4 text-right text-text-secondary font-bold text-sm">
                                                         ₹{due.finalPrice}
                                                     </td>
                                                     <td className="p-4 text-right text-emerald-400 font-bold text-sm">
@@ -397,7 +397,7 @@ const Dues = () => {
                                                     </td>
                                                 </>
                                             )}
-                                            <td className="p-4 text-gray-400 text-xs">
+                                            <td className="p-4 text-text-secondary text-xs">
                                                 {activeTab === 'expired' ? (
                                                     <div className="flex flex-col gap-0.5">
                                                         <span className="whitespace-nowrap">Start: {due.startDate ? new Date(due.startDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
@@ -409,7 +409,7 @@ const Dues = () => {
                                             </td>
                                             {activeTab === 'expired' && (
                                                 <td className="p-4 text-center">
-                                                    <span className="text-white font-black text-sm">-{due.daysAgo}</span>
+                                                    <span className="text-text-primary font-black text-sm">-{due.daysAgo}</span>
                                                 </td>
                                             )}
                                             <td className="p-4 text-right">
@@ -417,13 +417,13 @@ const Dues = () => {
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={() => setViewClientId(due.clientId)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-gray-700"
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-divider text-text-secondary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-border"
                                                         >
                                                             <Eye size={14} /> View
                                                         </button>
                                                         <button
                                                             onClick={() => handleRenew(due)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"
                                                         >
                                                             <RefreshCw size={14} /> Renew
                                                         </button>
@@ -438,13 +438,13 @@ const Dues = () => {
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={() => setViewClientId(due.clientId)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-gray-400 hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-gray-700"
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-divider text-text-secondary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-border"
                                                         >
                                                             <Eye size={14} /> View
                                                         </button>
                                                         <button
                                                             onClick={() => handlePayNow(due)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"
                                                         >
                                                             Pay Now
                                                         </button>
@@ -485,10 +485,10 @@ const Dues = () => {
             {/* View Client Modal */}
             {viewClientId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative bg-gray-900 border border-gray-700/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="p-4 border-b border-gray-800 flex justify-between items-center shrink-0">
-                            <h2 className="text-lg font-bold text-white">Client Details</h2>
-                            <button onClick={() => setViewClientId(null)} className="text-gray-400 hover:text-white transition-colors">
+                    <div className="relative bg-surface-secondary border border-border/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-border flex justify-between items-center shrink-0">
+                            <h2 className="text-lg font-bold text-text-primary">Client Details</h2>
+                            <button onClick={() => setViewClientId(null)} className="text-text-secondary hover:text-text-primary transition-colors">
                                 <X size={24} />
                             </button>
                         </div>

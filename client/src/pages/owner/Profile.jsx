@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import Button from '../../components/Button';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const disabledInputClass = 'input-field bg-gray-800/60 text-gray-500 cursor-not-allowed';
+const disabledInputClass = 'input-field bg-surface-hover/60 text-text-muted cursor-not-allowed';
 const errorInputClass    = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.2)]';
 const phoneRegex         = /^[6-9]\d{9}$/;
 const emailRegex         = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,9 +73,9 @@ const buildFormState = (data) => {
 
 // ─── Component: Profile Section wrapper ──────────────────────────────────────
 const ProfileSection = ({ title, children }) => (
-  <div className="card space-y-5 bg-gray-900 border-gray-800 rounded-2xl p-6 md:p-8 shadow-xl">
-    <div className="border-b border-gray-800 pb-4">
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
+  <div className="card space-y-5 bg-surface-secondary border-border rounded-2xl p-6 md:p-8 shadow-xl">
+    <div className="border-b border-border pb-4">
+      <h2 className="text-xl font-semibold text-text-primary">{title}</h2>
     </div>
     {children}
   </div>
@@ -85,12 +85,12 @@ const ProfileSection = ({ title, children }) => (
 const Field = ({ label, value, onChange, disabled = false, textarea = false, type = "text", error, maxLength, onInput }) => {
   const Component = textarea ? 'textarea' : 'input';
   const baseClass = `input-field ${textarea ? 'h-24 resize-none' : ''}`;
-  const statusClass = disabled ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed' : (error ? errorInputClass : '');
+  const statusClass = disabled ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : (error ? errorInputClass : '');
 
   return (
     <label className="space-y-1 block group">
       <div className="flex justify-between items-center">
-        <span className="text-xs uppercase tracking-wider text-gray-500 group-focus-within:text-primary transition-colors font-medium">{label}</span>
+        <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">{label}</span>
         {maxLength && !disabled && (
           <span className={`text-[10px] ${(value?.length || 0) >= maxLength ? 'text-orange-400' : 'text-gray-600'}`}>
             {value?.length || 0}/{maxLength}
@@ -115,19 +115,19 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
 const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinuteChange, onAmpmChange }) => {
   return (
     <div className="space-y-1 block group">
-      <span className="text-xs uppercase tracking-wider text-gray-500 font-medium block">
+      <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">
         {label}
       </span>
-      <div className={`flex items-center gap-1 bg-gray-900 border rounded-lg p-1.5 transition-colors ${
+      <div className={`flex items-center gap-1 bg-surface-secondary border rounded-lg p-1.5 transition-colors ${
         disabled 
-          ? 'bg-gray-800/60 border-gray-800 text-gray-500 cursor-not-allowed' 
-          : 'border-gray-800 hover:border-gray-750 focus-within:border-primary/50'
+          ? 'bg-surface-hover/60 border-border text-text-muted cursor-not-allowed' 
+          : 'border-border hover:border-gray-750 focus-within:border-primary/50'
       }`}>
         <select
           value={hour || '6'}
           disabled={disabled}
           onChange={onHourChange}
-          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-gray-500 disabled:cursor-not-allowed"
+          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-text-muted disabled:cursor-not-allowed"
         >
           {HOURS.map(h => <option key={h} className="bg-slate-950 text-slate-200" value={h}>{h}</option>)}
         </select>
@@ -136,7 +136,7 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
           value={minute || '00'}
           disabled={disabled}
           onChange={onMinuteChange}
-          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-gray-500 disabled:cursor-not-allowed"
+          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-text-muted disabled:cursor-not-allowed"
         >
           {MINUTES.map(m => <option key={m} className="bg-slate-950 text-slate-200" value={m}>{m}</option>)}
         </select>
@@ -144,7 +144,7 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
           value={ampm || 'AM'}
           disabled={disabled}
           onChange={onAmpmChange}
-          className={`bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer w-14 text-center py-1 px-1 bg-slate-800 rounded select-none border border-slate-700/50 disabled:bg-gray-850 disabled:border-transparent disabled:text-gray-500 disabled:cursor-not-allowed`}
+          className={`bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer w-14 text-center py-1 px-1 bg-slate-800 rounded select-none border border-slate-700/50 disabled:bg-gray-850 disabled:border-transparent disabled:text-text-muted disabled:cursor-not-allowed`}
         >
           <option className="bg-slate-950 text-slate-200" value="AM">AM</option>
           <option className="bg-slate-950 text-slate-200" value="PM">PM</option>
@@ -395,7 +395,7 @@ const Profile = () => {
 
   if (loading || !formState) {
     return (
-      <div className="flex bg-dark h-screen overflow-hidden">
+      <div className="flex bg-surface-primary h-screen overflow-hidden">
         <div className="flex-1 flex justify-center items-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -404,12 +404,12 @@ const Profile = () => {
   }
 
   return (
-    <div className="flex bg-dark h-screen overflow-hidden">
+    <div className="flex bg-surface-primary h-screen overflow-hidden">
       <div className="flex-1 overflow-y-auto p-8 pt-10 space-y-8 scrollbar-hide">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-extrabold text-white tracking-tight">Gym Settings</h1>
-            <p className="text-gray-400 mt-2 text-lg">Manage your gym establishment, ownership, and platform configuration.</p>
+            <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">Gym Settings</h1>
+            <p className="text-text-secondary mt-2 text-lg">Manage your gym establishment, ownership, and platform configuration.</p>
           </div>
           <div className="flex gap-2 shrink-0">
             {isEditing ? (
@@ -438,7 +438,7 @@ const Profile = () => {
             
             {/* Operating Days */}
             <div className="md:col-span-2">
-              <span className="text-xs uppercase tracking-wider text-gray-500 font-medium block mb-2">Operating Days</span>
+              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block mb-2">Operating Days</span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
                   const isChecked = (formState.gym.operatingDays || []).includes(day);
@@ -446,7 +446,7 @@ const Profile = () => {
                     <label
                       key={day}
                       className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 border select-none transition-all duration-200 ${
-                        !isEditing ? 'opacity-85 cursor-not-allowed bg-gray-900/40 border-gray-800/80 text-gray-500' : 'cursor-pointer bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60'
+                        !isEditing ? 'opacity-85 cursor-not-allowed bg-surface-divider/80 border-border/80 text-text-muted' : 'cursor-pointer bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60'
                       } ${
                         isChecked && isEditing ? 'bg-primary/10 border-primary/40 text-primary font-medium' : ''
                       } ${

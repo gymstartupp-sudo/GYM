@@ -9,28 +9,28 @@ const PlanDetailModal = ({ plan, onClose }) => {
   if (!plan) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-start p-6 border-b border-gray-800">
+      <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-start p-6 border-b border-border">
           <div>
-            <h2 className="text-2xl font-bold text-white">{plan.name}</h2>
+            <h2 className="text-2xl font-bold text-text-primary">{plan.name}</h2>
             <p className="text-primary text-sm mt-1">{plan.durationMonths} month{plan.durationMonths !== 1 ? 's' : ''} plan</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors mt-1 ml-4">
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors mt-1 ml-4">
             <X size={22} />
           </button>
         </div>
         <div className="p-6 space-y-4">
-          <div className="flex justify-between items-center bg-gray-800/60 rounded-lg p-4">
-            <span className="text-gray-400 text-sm uppercase tracking-wider">Price</span>
+          <div className="flex justify-between items-center bg-surface-hover/60 rounded-lg p-4">
+            <span className="text-text-secondary text-sm uppercase tracking-wider">Price</span>
             <span className="text-primary text-2xl font-black">₹{plan.price?.toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex justify-between items-center bg-gray-800/60 rounded-lg p-4">
-            <span className="text-gray-400 text-sm uppercase tracking-wider">Duration</span>
-            <span className="text-white font-semibold">{plan.durationMonths} Month{plan.durationMonths !== 1 ? 's' : ''}</span>
+          <div className="flex justify-between items-center bg-surface-hover/60 rounded-lg p-4">
+            <span className="text-text-secondary text-sm uppercase tracking-wider">Duration</span>
+            <span className="text-text-primary font-semibold">{plan.durationMonths} Month{plan.durationMonths !== 1 ? 's' : ''}</span>
           </div>
-          <div className="bg-gray-800/60 rounded-lg p-4">
-            <p className="text-gray-400 text-sm uppercase tracking-wider mb-2">Description</p>
-            <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">
+          <div className="bg-surface-hover/60 rounded-lg p-4">
+            <p className="text-text-secondary text-sm uppercase tracking-wider mb-2">Description</p>
+            <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap">
               {plan.description?.trim() || 'No description provided for this plan.'}
             </p>
           </div>
@@ -51,14 +51,14 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => (
       <button
         onClick={() => onEdit(plan)}
         title="Edit plan"
-        className="text-blue-400 hover:text-blue-300 bg-gray-800 hover:bg-gray-700 p-1.5 rounded-lg transition-colors"
+        className="text-blue-400 hover:text-blue-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
       >
         <Edit2 size={14} />
       </button>
       <button
         onClick={() => onDelete(plan._id)}
         title="Delete plan"
-        className="text-red-400 hover:text-red-300 bg-gray-800 hover:bg-gray-700 p-1.5 rounded-lg transition-colors"
+        className="text-red-400 hover:text-red-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
       >
         <Trash2 size={14} />
       </button>
@@ -69,16 +69,16 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => (
       {plan.durationMonths}M Plan
     </span>
 
-    <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
+    <h3 className="text-xl font-bold text-text-primary mb-1">{plan.name}</h3>
     <p className="text-primary text-3xl font-black mb-6">
       ₹{plan.price?.toLocaleString('en-IN')}
-      <span className="text-sm text-gray-400 font-normal"> / {plan.durationMonths} mo</span>
+      <span className="text-sm text-text-secondary font-normal"> / {plan.durationMonths} mo</span>
     </p>
 
     {/* View Details button — description hidden by default */}
     <button
       onClick={() => onViewDetails(plan)}
-      className="mt-auto w-full flex items-center justify-center gap-2 py-2.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm font-medium border border-gray-700 hover:border-gray-600"
+      className="mt-auto w-full flex items-center justify-center gap-2 py-2.5 bg-surface-divider hover:bg-surface-hover text-text-primary rounded-lg transition-colors text-sm font-medium border border-border hover:border-gray-600"
     >
       <Eye size={15} /> View Details
     </button>
@@ -219,28 +219,28 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-gray-900 border border-gray-700 w-full max-w-md rounded-xl shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center p-6 border-b border-gray-800">
-          <h2 className="text-xl font-bold text-white">{editingPlan ? 'Edit Plan' : 'Create New Plan'}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors"><X size={20} /></button>
+      <div className="bg-surface-secondary border border-border w-full max-w-md rounded-xl shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="flex justify-between items-center p-6 border-b border-border">
+          <h2 className="text-xl font-bold text-text-primary">{editingPlan ? 'Edit Plan' : 'Create New Plan'}</h2>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors"><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
           {/* Plan Category */}
           <div>
-            <label className="text-xs text-gray-400 mb-2 block uppercase tracking-wider">Plan Category *</label>
+            <label className="text-xs text-text-secondary mb-2 block uppercase tracking-wider">Plan Category *</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => handleCategoryChange('Standard')}
-                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${!isCustom ? 'bg-primary border-primary text-black' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'}`}
+                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${!isCustom ? 'bg-primary border-primary text-black' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-600'}`}
               >
                 Standard
               </button>
               <button
                 type="button"
                 onClick={() => handleCategoryChange('Custom')}
-                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${isCustom ? 'bg-primary border-primary text-black' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'}`}
+                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${isCustom ? 'bg-primary border-primary text-black' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-600'}`}
               >
                 Custom
               </button>
@@ -249,7 +249,7 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
 
           {!isCustom ? (
             <div>
-              <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Select Standard Plan *</label>
+              <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Select Standard Plan *</label>
               <select 
                 value={standardType} 
                 onChange={handleStandardSelect} 
@@ -265,7 +265,7 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
             </div>
           ) : (
             <div>
-              <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Plan Name *</label>
+              <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Plan Name *</label>
               <input 
                 name="name" 
                 value={formData.name} 
@@ -281,7 +281,7 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Duration (Months) *</label>
+              <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Duration (Months) *</label>
               <input 
                 name="durationMonths" 
                 value={formData.durationMonths} 
@@ -298,13 +298,13 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
                 }}
                 required 
                 readOnly={!isCustom}
-                className={`input-field ${!isCustom ? 'opacity-50 cursor-not-allowed bg-gray-800' : ''}`} 
+                className={`input-field ${!isCustom ? 'opacity-50 cursor-not-allowed bg-surface-divider' : ''}`} 
                 placeholder="1-12" 
               />
               {errors.durationMonths && <p className="text-red-500 text-xs mt-1">{errors.durationMonths}</p>}
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Price (₹) *</label>
+              <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Price (₹) *</label>
               <input 
                 name="price" 
                 value={formData.price} 
@@ -328,7 +328,7 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="text-xs text-gray-400 mb-1 block uppercase tracking-wider">Description (Optional)</label>
+            <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Description (Optional)</label>
             <textarea
               name="description"
               value={formData.description}
@@ -388,13 +388,13 @@ const Plans = () => {
   };
 
   return (
-    <div className="flex bg-dark h-screen overflow-hidden">
+    <div className="flex bg-surface-primary h-screen overflow-hidden">
       <></>
       <div className="flex-1 overflow-y-auto p-8 pt-10">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Gym Plans</h1>
-            <p className="text-gray-400 mt-1">Manage your membership packages.</p>
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Gym Plans</h1>
+            <p className="text-text-secondary mt-1">Manage your membership packages.</p>
           </div>
           <Button onClick={handleCreateNew} className="gap-2">
             <Plus size={18} /> Create Plan
@@ -406,7 +406,7 @@ const Plans = () => {
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : plans.length === 0 ? (
-          <div className="card bg-gray-900 border-gray-800 text-center py-16 text-gray-400">
+          <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
             <p className="font-medium">No plans yet</p>
             <p className="text-sm mt-1 text-gray-600">Click "Create Plan" to add your first membership plan.</p>
           </div>

@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
-import { Menu, X, Eye, EyeOff, Settings } from 'lucide-react';
+import { Eye, EyeOff, Settings, LogOut } from 'lucide-react';
 import Button from '../../components/Button';
-import ClientSidebar from '../../components/ClientSidebar';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ThemeToggle';
+import LogoutModal from '../../components/LogoutModal';
+import { useNavigate } from 'react-router-dom';
 
 const ClientSettings = () => {
-  const { user } = useAuth();
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { logout } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
 
   // Form states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -22,18 +25,13 @@ const ClientSettings = () => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setIsSidebarOpen(false);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Logout modal state
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -79,71 +77,57 @@ const ClientSettings = () => {
   };
 
   return (
-    <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-      {/* MOBILE HEADER BAR */}
-      {isMobile && (
-        <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent flex justify-center items-center font-bold text-sm text-white shadow-md">
-              {user?.avatar || 'C'}
-            </div>
-            <div>
-              <span className="text-white font-bold text-base tracking-tight truncate max-w-[120px] inline-block">{user?.personalInfo?.name}</span>
-              <span className="text-xs text-gray-500 block -mt-1 uppercase tracking-wider truncate max-w-[120px]">{user?.gymName}</span>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
-          >
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </header>
-      )}
-
-      {/* MOBILE DRAWER BACKDROP */}
-      {isMobile && isSidebarOpen && (
-        <div
-          onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
-        />
-      )}
-
-      <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8 scrollbar-hide">
+    <>
         {/* Page Header */}
         <div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
             <Settings className="text-primary" /> Settings
           </h1>
-          <p className="text-gray-400 mt-2 text-base md:text-lg">Manage your account preferences and login security.</p>
+          <p className="text-text-secondary mt-2 text-base md:text-lg">Manage your account preferences and login security.</p>
         </div>
 
 
+        {/* Appearance */}
+        <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8">
+          <div className="border-b border-border pb-4">
+            <h2 className="section-heading text-xl">Appearance</h2>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-surface-divider/50 border border-border rounded-xl">
+            <div className="space-y-1 pr-4">
+              <span className="text-sm font-semibold text-text-primary block">Theme</span>
+              <span className="text-xs text-text-secondary">Switch between light and dark mode.</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setTheme('light')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${theme === 'light' ? 'bg-primary text-[var(--btn-primary-text)]' : 'border border-border text-text-secondary hover:bg-surface-hover'}`}>Light</button>
+              <button type="button" onClick={() => setTheme('dark')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${theme === 'dark' ? 'bg-primary text-[var(--btn-primary-text)]' : 'border border-border text-text-secondary hover:bg-surface-hover'}`}>Dark</button>
+              <ThemeToggle className="w-10 h-10" />
+            </div>
+          </div>
+        </div>
+
         {/* 1. Security & Password Section */}
-        <div className="card space-y-5 bg-gray-900 border border-gray-800 rounded-2xl p-6 md:p-8 shadow-xl">
-          <div className="border-b border-gray-800 pb-4">
-            <h2 className="text-xl font-semibold text-white">Security & Password</h2>
+        <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8 shadow-xl">
+          <div className="border-b border-border pb-4">
+            <h2 className="text-xl font-semibold text-text-primary">Security & Password</h2>
           </div>
           <form onSubmit={handlePasswordChange} className="space-y-6 max-w-xl">
             {/* Current Password */}
             <div className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-gray-500 group-focus-within:text-primary transition-colors font-medium block">Current Password</span>
+              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">Current Password</span>
               <div className="relative">
                 <input
                   type={showCurrent ? 'text' : 'password'}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
-                  className="input-field w-full pr-10"
+                  className="input-field password-toggle-field w-full"
                   disabled={isUpdating}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrent(!showCurrent)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
                 >
                   {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -152,47 +136,47 @@ const ClientSettings = () => {
 
             {/* New Password */}
             <div className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-gray-500 group-focus-within:text-primary transition-colors font-medium block">New Password</span>
+              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">New Password</span>
               <div className="relative">
                 <input
                   type={showNew ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
-                  className="input-field w-full pr-10"
+                  className="input-field password-toggle-field w-full"
                   disabled={isUpdating}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
                 >
                   {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              <p className="text-[10px] text-gray-500 mt-1">
+              <p className="text-[10px] text-text-muted mt-1">
                 Password must be at least 6 characters, and contain uppercase, lowercase, and a number.
               </p>
             </div>
 
             {/* Confirm Password */}
             <div className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-gray-500 group-focus-within:text-primary transition-colors font-medium block">Confirm New Password</span>
+              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">Confirm New Password</span>
               <div className="relative">
                 <input
                   type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
-                  className="input-field w-full pr-10"
+                  className="input-field password-toggle-field w-full"
                   disabled={isUpdating}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
                 >
                   {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -206,8 +190,50 @@ const ClientSettings = () => {
             </div>
           </form>
         </div>
-      </div>
-    </div>
+
+        {/* Account Actions */}
+        <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8 shadow-xl">
+          <div className="border-b border-border pb-4">
+            <h2 className="text-xl font-semibold text-text-primary">Account Actions</h2>
+            <p className="text-sm text-text-muted mt-1">Manage your session and account access.</p>
+          </div>
+          <div className="flex items-center justify-between p-4 bg-surface-divider/50 border border-border/60 rounded-xl">
+            <div className="space-y-1 pr-4">
+              <span className="text-sm font-bold text-text-primary block">Sign Out</span>
+              <span className="text-xs text-text-secondary">Securely logout from your account and end the current session.</span>
+            </div>
+            <button
+              id="client-settings-logout-btn"
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border"
+              style={{
+                color: '#ef4444',
+                borderColor: 'rgba(239,68,68,0.3)',
+                background: 'rgba(239,68,68,0.06)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
+                e.currentTarget.style.borderColor = 'rgba(239,68,68,0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
+                e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+              }}
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </div>
+        </div>
+
+        {/* Logout Confirmation Modal */}
+        <LogoutModal
+          isOpen={showLogoutModal}
+          onCancel={() => setShowLogoutModal(false)}
+          onConfirm={handleLogout}
+        />
+    </>
   );
 };
 

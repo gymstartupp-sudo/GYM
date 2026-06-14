@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
-import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
-import { Menu, X } from 'lucide-react';
 import Button from '../../components/Button';
-import ClientSidebar from '../../components/ClientSidebar';
 import CustomDatePicker from '../../components/CustomDatePicker';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -16,12 +13,12 @@ const errorInputClass = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rg
 const Field = ({ label, value, onChange, disabled = false, textarea = false, type = "text", error, maxLength, ...rest }) => {
   const Component = type === 'date' ? CustomDatePicker : (textarea ? 'textarea' : 'input');
   const baseClass = `input-field ${textarea ? 'h-24 resize-none' : ''}`;
-  const statusClass = disabled ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed' : (error ? errorInputClass : '');
+  const statusClass = disabled ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : (error ? errorInputClass : '');
 
   return (
     <label className="space-y-1 block group">
       <div className="flex justify-between items-center">
-        <span className="text-xs uppercase tracking-wider text-gray-500 group-focus-within:text-primary transition-colors font-medium">{label}</span>
+        <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">{label}</span>
         {maxLength && !disabled && (
           <span className={`text-[10px] ${(value?.length || 0) >= maxLength ? 'text-orange-400' : 'text-gray-600'}`}>
             {value?.length || 0}/{maxLength}
@@ -43,29 +40,12 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
 };
 
 const ClientProfile = () => {
-  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [formState, setFormState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setIsSidebarOpen(false);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const fetchProfile = async () => {
     try {
@@ -213,58 +193,18 @@ const ClientProfile = () => {
 
   if (loading || !formState) {
     return (
-      <div className={`flex bg-dark h-screen overflow-hidden text-white ${isMobile ? 'flex-col' : 'flex-row'}`}>
-        {isMobile && (
-          <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
-            <span className="text-white font-bold text-base tracking-tight">GymPro</span>
-          </header>
-        )}
-        <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-        <div className="flex-1 flex justify-center items-center">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-      {/* MOBILE HEADER BAR */}
-      {isMobile && (
-        <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent flex justify-center items-center font-bold text-sm text-white shadow-md">
-              {user?.avatar || 'C'}
-            </div>
-            <div>
-              <span className="text-white font-bold text-base tracking-tight truncate max-w-[120px] inline-block">{user?.personalInfo?.name}</span>
-              <span className="text-xs text-gray-500 block -mt-1 uppercase tracking-wider truncate max-w-[120px]">{user?.gymName}</span>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
-          >
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </header>
-      )}
-
-      {/* MOBILE DRAWER BACKDROP */}
-      {isMobile && isSidebarOpen && (
-        <div
-          onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
-        />
-      )}
-
-      <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8 scrollbar-hide">
+    <>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Client Profile</h1>
-            <p className="text-gray-400 mt-2 text-base md:text-lg">Manage your personal identity details.</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight">Client Profile</h1>
+            <p className="text-text-secondary mt-2 text-base md:text-lg">Manage your personal identity details.</p>
           </div>
           <div className="flex gap-2">
             {editing ? (
@@ -278,8 +218,8 @@ const ClientProfile = () => {
           </div>
         </div>
 
-        <div className="card space-y-6 bg-gray-900 border-gray-800 rounded-2xl p-6 md:p-8 shadow-xl">
-          <h2 className="text-xl font-semibold text-white border-b border-gray-800 pb-4">Personal Info</h2>
+        <div className="card space-y-6 bg-surface-secondary border-border rounded-2xl p-6 md:p-8 shadow-xl">
+          <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4">Personal Info</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Client ID" value={formState.clientId} disabled />
             <Field label="Home Gym ID" value={formState.gymId} disabled />
@@ -294,12 +234,12 @@ const ClientProfile = () => {
             />
 
             <label className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-gray-500 group-focus-within:text-primary transition-colors font-medium">Gender *</span>
+              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">Gender *</span>
               <select
                 value={formState.personalInfo?.gender || ''}
                 onChange={e => setPersonalInfo('gender', e.target.value)}
                 disabled={!editing}
-                className={`input-field bg-gray-900 border border-gray-700 text-white rounded-xl ${!editing ? 'bg-gray-800/60 text-gray-500 cursor-not-allowed' : ''}`}
+                className={`input-field bg-surface-secondary border border-border text-text-primary rounded-xl ${!editing ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : ''}`}
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -372,8 +312,7 @@ const ClientProfile = () => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </>
   );
 };
 

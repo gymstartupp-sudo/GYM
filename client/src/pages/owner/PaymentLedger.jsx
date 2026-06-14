@@ -500,16 +500,16 @@ const PaymentLedger = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-dark">
+        <div className="flex flex-col h-full bg-surface-primary">
             <div className="flex-1 overflow-y-auto p-8 pt-10">
                 {/* Header and Toolbar */}
-                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-gray-800/50 pb-6">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-border/50 pb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                             <TrendingUp className="text-primary h-8 w-8" />
                             Financial Ledger & Analytics
                         </h1>
-                        <p className="text-gray-400 mt-1">Analyze historical gym revenue, expenses, and profitability trends.</p>
+                        <p className="text-text-secondary mt-1">Analyze historical gym revenue, expenses, and profitability trends.</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Month Filter */}
@@ -517,13 +517,13 @@ const PaymentLedger = () => {
                             <select
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                className="bg-gray-950 border border-gray-800 rounded-xl py-2 px-4 pr-10 text-white font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                                className="bg-gray-950 border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
                             >
                                 {MONTHS.map((m, idx) => (
                                     <option key={m} value={idx}>{m}</option>
                                 ))}
                             </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
                         </div>
 
                         {/* Year Filter */}
@@ -531,38 +531,38 @@ const PaymentLedger = () => {
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                className="bg-gray-950 border border-gray-800 rounded-xl py-2 px-4 pr-10 text-white font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                                className="bg-gray-950 border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
                             >
                                 {yearOptions.map(yr => (
                                     <option key={yr} value={yr}>{yr}</option>
                                 ))}
                             </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
                         </div>
 
                         {/* Reset button */}
                         <button
                             onClick={handleResetPeriod}
-                            className="flex items-center gap-1.5 bg-gray-900 border border-gray-800 text-gray-300 hover:text-white px-3 py-2 rounded-xl transition-all text-sm"
+                            className="flex items-center gap-1.5 bg-surface-secondary border border-border text-text-secondary hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm"
                             title="Reset to Current Month"
                         >
                             <RefreshCw size={14} />
                             Reset
                         </button>
 
-                        <div className="h-6 w-px bg-gray-800 mx-1 hidden sm:block"></div>
+                        <div className="h-6 w-px bg-surface-divider mx-1 hidden sm:block"></div>
 
                         {/* Export Buttons */}
                         <button
                             onClick={exportPDF}
-                            className="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white px-3 py-2 rounded-xl transition-all text-sm font-semibold"
+                            className="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm font-semibold"
                         >
                             <Download size={14} />
                             PDF
                         </button>
                         <button
                             onClick={exportExcel}
-                            className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-white px-3 py-2 rounded-xl transition-all text-sm font-semibold"
+                            className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm font-semibold"
                         >
                             <Download size={14} />
                             Excel
@@ -575,12 +575,12 @@ const PaymentLedger = () => {
                         {/* Skeleton for dashboard cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             {[...Array(4)].map((_, i) => (
-                                <div key={i} className="card bg-gray-900/50 border-gray-800 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800/50">
+                                <div key={i} className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-gray-800 rounded-xl animate-pulse"></div>
+                                        <div className="w-14 h-14 bg-surface-divider rounded-xl animate-pulse"></div>
                                         <div>
-                                            <div className="h-3 w-20 bg-gray-800 rounded animate-pulse mb-2"></div>
-                                            <div className="h-7 w-24 bg-gray-800 rounded animate-pulse"></div>
+                                            <div className="h-3 w-20 bg-surface-divider rounded animate-pulse mb-2"></div>
+                                            <div className="h-7 w-24 bg-surface-divider rounded animate-pulse"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -588,32 +588,32 @@ const PaymentLedger = () => {
                         </div>
                         {/* Skeleton for breakdown */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                            <div className="lg:col-span-2 bg-gray-900/30 border border-gray-800 rounded-2xl p-6">
-                                <div className="h-5 w-48 bg-gray-800 rounded animate-pulse mb-6"></div>
+                            <div className="lg:col-span-2 bg-surface-secondary/30 border border-border rounded-2xl p-6">
+                                <div className="h-5 w-48 bg-surface-divider rounded animate-pulse mb-6"></div>
                                 <div className="space-y-6">
-                                    <div><div className="h-4 w-full bg-gray-800 rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-gray-800 rounded-full animate-pulse"></div></div>
-                                    <div><div className="h-4 w-full bg-gray-800 rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-gray-800 rounded-full animate-pulse"></div></div>
+                                    <div><div className="h-4 w-full bg-surface-divider rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-surface-divider rounded-full animate-pulse"></div></div>
+                                    <div><div className="h-4 w-full bg-surface-divider rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-surface-divider rounded-full animate-pulse"></div></div>
                                 </div>
                             </div>
-                            <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-6 flex flex-col items-center justify-center">
-                                <div className="w-16 h-16 bg-gray-800 rounded-full animate-pulse mb-4"></div>
-                                <div className="h-5 w-32 bg-gray-800 rounded animate-pulse mb-2"></div>
-                                <div className="h-10 w-28 bg-gray-800 rounded animate-pulse"></div>
+                            <div className="bg-surface-secondary/30 border border-border rounded-2xl p-6 flex flex-col items-center justify-center">
+                                <div className="w-16 h-16 bg-surface-divider rounded-full animate-pulse mb-4"></div>
+                                <div className="h-5 w-32 bg-surface-divider rounded animate-pulse mb-2"></div>
+                                <div className="h-10 w-28 bg-surface-divider rounded animate-pulse"></div>
                             </div>
                         </div>
                         {/* Skeleton for expenses table */}
-                        <div className="bg-gray-900/30 border border-gray-800 rounded-2xl overflow-hidden">
-                            <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                                <div className="h-5 w-32 bg-gray-800 rounded animate-pulse"></div>
-                                <div className="h-9 w-28 bg-gray-800 rounded-lg animate-pulse"></div>
+                        <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden">
+                            <div className="p-6 border-b border-border flex justify-between items-center">
+                                <div className="h-5 w-32 bg-surface-divider rounded animate-pulse"></div>
+                                <div className="h-9 w-28 bg-surface-divider rounded-lg animate-pulse"></div>
                             </div>
                             {[...Array(3)].map((_, i) => (
-                                <div key={i} className="flex items-center gap-4 p-4 border-b border-gray-800/50">
-                                    <div className="h-4 w-28 bg-gray-800 rounded animate-pulse"></div>
-                                    <div className="h-5 w-16 bg-gray-800 rounded-full animate-pulse"></div>
-                                    <div className="h-4 w-20 bg-gray-800 rounded animate-pulse"></div>
-                                    <div className="h-4 w-16 bg-gray-800 rounded animate-pulse"></div>
-                                    <div className="flex gap-2 ml-auto"><div className="h-7 w-7 bg-gray-800 rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-gray-800 rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-gray-800 rounded-lg animate-pulse"></div></div>
+                                <div key={i} className="flex items-center gap-4 p-4 border-b border-border/50">
+                                    <div className="h-4 w-28 bg-surface-divider rounded animate-pulse"></div>
+                                    <div className="h-5 w-16 bg-surface-divider rounded-full animate-pulse"></div>
+                                    <div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div>
+                                    <div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div>
+                                    <div className="flex gap-2 ml-auto"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div>
                                 </div>
                             ))}
                         </div>
@@ -622,51 +622,51 @@ const PaymentLedger = () => {
                     <>
                         {/* TOP DASHBOARD CARDS */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            <div className="card bg-gray-900/50 border-gray-800 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800/50">
+                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
                                 <div className="flex items-center gap-4">
                                     <div className="p-4 rounded-xl bg-blue-500/10 text-blue-400">
                                         <CircleDollarSign size={28} />
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Total Revenue</p>
-                                        <h3 className="text-2xl font-black text-white">₹{totalRevenue.toLocaleString()}</h3>
+                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Total Revenue</p>
+                                        <h3 className="text-2xl font-black text-text-primary">₹{totalRevenue.toLocaleString()}</h3>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="card bg-gray-900/50 border-gray-800 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800/50">
+                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
                                 <div className="flex items-center gap-4">
                                     <div className="p-4 rounded-xl bg-primary/10 text-primary">
                                         <TrendingUp size={28} />
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Net Amount</p>
-                                        <h3 className="text-2xl font-black text-white">₹{netAmount.toLocaleString()}</h3>
-                                        <p className="text-xs text-gray-500">After ₹{gatewayFee.toLocaleString()} Gateway Fee</p>
+                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Net Amount</p>
+                                        <h3 className="text-2xl font-black text-text-primary">₹{netAmount.toLocaleString()}</h3>
+                                        <p className="text-xs text-text-muted">After ₹{gatewayFee.toLocaleString()} Gateway Fee</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="card bg-gray-900/50 border-gray-800 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800/50">
+                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
                                 <div className="flex items-center gap-4">
                                     <div className="p-4 rounded-xl bg-rose-500/10 text-rose-400">
                                         <TrendingDown size={28} />
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Overall Expenses</p>
-                                        <h3 className="text-2xl font-black text-white">₹{overallExpensesTotal.toLocaleString()}</h3>
+                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Overall Expenses</p>
+                                        <h3 className="text-2xl font-black text-text-primary">₹{overallExpensesTotal.toLocaleString()}</h3>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="card bg-gray-900/50 border-gray-800 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-800/50">
+                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
                                 <div className="flex items-center gap-4">
                                     <div className="p-4 rounded-xl bg-emerald-500/10 text-emerald-400">
                                         <CreditCard size={28} />
                                     </div>
                                     <div>
-                                        <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Profit</p>
-                                        <h3 className="text-2xl font-black text-white">₹{profit.toLocaleString()}</h3>
+                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Profit</p>
+                                        <h3 className="text-2xl font-black text-text-primary">₹{profit.toLocaleString()}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -674,38 +674,38 @@ const PaymentLedger = () => {
 
                         {/* Month-over-Month Comparison Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div className="card bg-gray-950/40 border border-gray-800/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="card bg-gray-950/40 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Revenue MoM Change</span>
+                                    <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Revenue MoM Change</span>
 
 
 
                                 </div>
                                 <div className="flex items-baseline justify-between">
-                                    <span className="text-lg font-bold text-white">₹{totalRevenue.toLocaleString()}</span>
-                                    <span className="text-[11px] text-gray-500">vs ₹{previousMonthMetrics.revenue.toLocaleString()} last month</span>
+                                    <span className="text-lg font-bold text-text-primary">₹{totalRevenue.toLocaleString()}</span>
+                                    <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.revenue.toLocaleString()} last month</span>
                                 </div>
                             </div>
 
-                            <div className="card bg-gray-950/40 border border-gray-800/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="card bg-gray-950/40 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Expenses MoM Change</span>
+                                    <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Expenses MoM Change</span>
 
                                 </div>
                                 <div className="flex items-baseline justify-between">
-                                    <span className="text-lg font-bold text-white">₹{overallExpensesTotal.toLocaleString()}</span>
-                                    <span className="text-[11px] text-gray-500">vs ₹{previousMonthMetrics.expenses.toLocaleString()} last month</span>
+                                    <span className="text-lg font-bold text-text-primary">₹{overallExpensesTotal.toLocaleString()}</span>
+                                    <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.expenses.toLocaleString()} last month</span>
                                 </div>
                             </div>
 
-                            <div className="card bg-gray-950/40 border border-gray-800/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="card bg-gray-950/40 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Profit MoM Change</span>
+                                    <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Profit MoM Change</span>
 
                                 </div>
                                 <div className="flex items-baseline justify-between">
-                                    <span className="text-lg font-bold text-white">₹{profit.toLocaleString()}</span>
-                                    <span className="text-[11px] text-gray-500">vs ₹{previousMonthMetrics.profit.toLocaleString()} last month</span>
+                                    <span className="text-lg font-bold text-text-primary">₹{profit.toLocaleString()}</span>
+                                    <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.profit.toLocaleString()} last month</span>
                                 </div>
                             </div>
                         </div>
@@ -714,8 +714,8 @@ const PaymentLedger = () => {
 
                         {/* SECTION 2 & 3: Payment Breakdown & Pending Payments */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                            <div className="lg:col-span-2 bg-gray-900/30 border border-gray-800 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-                                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <div className="lg:col-span-2 bg-surface-secondary/30 border border-border rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+                                <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2">
                                     <CreditCard size={20} className="text-primary" />
                                     Payment Breakdown ({MONTHS[selectedMonth]} {selectedYear})
                                 </h3>
@@ -723,56 +723,56 @@ const PaymentLedger = () => {
                                 <div className="space-y-6">
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-semibold text-gray-300">Online Payments</span>
-                                            <span className="text-sm font-bold text-white">₹{onlinePaymentsTotal.toLocaleString()} ({onlinePercent}%)</span>
+                                            <span className="text-sm font-semibold text-text-secondary">Online Payments</span>
+                                            <span className="text-sm font-bold text-text-primary">₹{onlinePaymentsTotal.toLocaleString()} ({onlinePercent}%)</span>
                                         </div>
-                                        <div className="w-full bg-gray-800 rounded-full h-3">
+                                        <div className="w-full bg-surface-divider rounded-full h-3">
                                             <div className="bg-primary h-3 rounded-full" style={{ width: `${onlinePercent}%` }}></div>
                                         </div>
                                     </div>
 
                                     <div>
                                         <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-semibold text-gray-300">Offline Payments</span>
-                                            <span className="text-sm font-bold text-white">₹{offlinePaymentsTotal.toLocaleString()} ({offlinePercent}%)</span>
+                                            <span className="text-sm font-semibold text-text-secondary">Offline Payments</span>
+                                            <span className="text-sm font-bold text-text-primary">₹{offlinePaymentsTotal.toLocaleString()} ({offlinePercent}%)</span>
                                         </div>
-                                        <div className="w-full bg-gray-800 rounded-full h-3">
+                                        <div className="w-full bg-surface-divider rounded-full h-3">
                                             <div className="bg-emerald-500 h-3 rounded-full" style={{ width: `${offlinePercent}%` }}></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-900/30 border border-gray-800 rounded-2xl p-6 shadow-2xl backdrop-blur-sm flex flex-col justify-center items-center text-center">
+                            <div className="bg-surface-secondary/30 border border-border rounded-2xl p-6 shadow-2xl backdrop-blur-sm flex flex-col justify-center items-center text-center">
                                 <div className="p-4 rounded-full bg-rose-500/10 text-rose-400 mb-4">
                                     <TrendingDown size={32} />
                                 </div>
-                                <h3 className="text-lg font-bold text-white mb-2">Pending Payments</h3>
-                                <p className="text-sm text-gray-400 mb-4">Unpaid balance in selected period</p>
+                                <h3 className="text-lg font-bold text-text-primary mb-2">Pending Payments</h3>
+                                <p className="text-sm text-text-secondary mb-4">Unpaid balance in selected period</p>
                                 <h2 className="text-4xl font-black text-rose-500">₹{pendingPaymentsPeriod.toLocaleString()}</h2>
                             </div>
                         </div>
 
                         {/* EXPENSES LIST */}
-                        <div className="bg-gray-900/30 border border-gray-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                            <div className="p-6 border-b border-gray-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                            <div className="p-6 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
                                     <FileText size={20} className="text-primary" />
                                     <div>
-                                        <h3 className="text-lg font-bold text-white">Expenses List</h3>
-                                        <p className="text-xs text-gray-500">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
+                                        <h3 className="text-lg font-bold text-text-primary">Expenses List</h3>
+                                        <p className="text-xs text-text-muted">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
                                     </div>
                                 </div>
 
                                 {/* Category Filter Pills */}
-                                <div className="flex flex-wrap items-center gap-1 bg-gray-950 p-1 rounded-xl border border-gray-800 self-start lg:self-auto">
+                                <div className="flex flex-wrap items-center gap-1 bg-gray-950 p-1 rounded-xl border border-border self-start lg:self-auto">
                                     {['All', ...CATEGORIES].map(cat => (
                                         <button
                                             key={cat}
                                             onClick={() => setSelectedCategory(cat)}
                                             className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${selectedCategory === cat
-                                                ? 'bg-primary text-white shadow-md'
-                                                : 'text-gray-400 hover:text-white hover:bg-gray-900'
+                                                ? 'bg-primary text-text-primary shadow-md'
+                                                : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary'
                                                 }`}
                                         >
                                             {cat}
@@ -782,15 +782,15 @@ const PaymentLedger = () => {
 
                                 <button
                                     onClick={() => handleOpenModal('add')}
-                                    className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
+                                    className="flex items-center gap-2 bg-primary hover:brightness-95 text-text-primary px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
                                 >
                                     <Plus size={16} /> Add Expense
                                 </button>
                             </div>
                             <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
                                 <table className="w-full text-left">
-                                    <thead className="sticky top-0 bg-gray-900 z-10 border-b border-gray-800">
-                                        <tr className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                    <thead className="sticky top-0 bg-surface-secondary z-10 border-b border-border">
+                                        <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                                             <th className="p-4">Title / Name</th>
                                             <th className="p-4">Category</th>
                                             <th className="p-4">Date</th>
@@ -798,51 +798,51 @@ const PaymentLedger = () => {
                                             <th className="p-4 text-right">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-800">
+                                    <tbody className="divide-y divide-border">
                                         {filteredExpenses.length === 0 ? (
                                             <tr>
-                                                <td colSpan="5" className="p-8 text-center text-gray-500">
+                                                <td colSpan="5" className="p-8 text-center text-text-muted">
                                                     No expenses recorded matching the selected filters.
                                                 </td>
                                             </tr>
                                         ) : filteredExpenses.map(exp => (
-                                            <tr key={exp._id} className="hover:bg-gray-800/30 transition-colors group">
+                                            <tr key={exp._id} className="hover:bg-surface-divider/80 transition-colors group">
                                                 <td className="p-4">
-                                                    <span className="text-white font-semibold">{exp.title}</span>
+                                                    <span className="text-text-primary font-semibold">{exp.title}</span>
                                                 </td>
                                                 <td className="p-4">
                                                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${CATEGORY_COLORS[exp.category] || CATEGORY_COLORS.Other}`}>
                                                         {exp.category}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-gray-300 text-sm">
+                                                <td className="p-4 text-text-secondary text-sm">
                                                     <div className="flex items-center gap-2">
-                                                        <Calendar size={14} className="text-gray-500" />
+                                                        <Calendar size={14} className="text-text-muted" />
                                                         {new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="text-white font-black">₹{exp.amount.toLocaleString()}</span>
+                                                    <span className="text-text-primary font-black">₹{exp.amount.toLocaleString()}</span>
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleOpenModal('view', exp); }}
-                                                            className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-all"
+                                                            className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
                                                             title="View Details"
                                                         >
                                                             <Eye size={16} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleOpenModal('edit', exp); }}
-                                                            className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all"
+                                                            className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-text-primary rounded-lg transition-all"
                                                             title="Edit"
                                                         >
                                                             <Edit2 size={16} />
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(exp._id); }}
-                                                            className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg transition-all"
+                                                            className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-text-primary rounded-lg transition-all"
                                                             title="Delete"
                                                         >
                                                             <Trash2 size={16} />
@@ -862,55 +862,55 @@ const PaymentLedger = () => {
             {/* Add / Edit / View Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative bg-dark border border-gray-700/50 rounded-xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+                    <div className="relative bg-surface-primary border border-border/50 rounded-xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setShowModal(false)}
-                            className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"
+                            className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors"
                         >
                             <X size={24} />
                         </button>
 
-                        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-text-primary mb-6 flex items-center gap-2">
                             {modalMode === 'view' ? <Eye className="text-emerald-400" /> : <CircleDollarSign className="text-primary" />}
                             {modalMode === 'add' ? 'Add Expense' : modalMode === 'edit' ? 'Edit Entry' : 'View Details'}
                         </h2>
 
                         {modalMode === 'view' ? (
                             <div className="space-y-4">
-                                <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Title</p>
-                                    <p className="text-white font-medium">{formData.title}</p>
+                                <div className="bg-surface-divider/80 p-4 rounded-lg border border-border">
+                                    <p className="text-xs text-text-secondary uppercase tracking-wider mb-1">Title</p>
+                                    <p className="text-text-primary font-medium">{formData.title}</p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Amount</p>
-                                        <p className="text-white font-black text-xl">₹{Number(formData.amount).toLocaleString()}</p>
+                                    <div className="bg-surface-divider/80 p-4 rounded-lg border border-border">
+                                        <p className="text-xs text-text-secondary uppercase tracking-wider mb-1">Amount</p>
+                                        <p className="text-text-primary font-black text-xl">₹{Number(formData.amount).toLocaleString()}</p>
                                     </div>
-                                    <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Category</p>
+                                    <div className="bg-surface-divider/80 p-4 rounded-lg border border-border">
+                                        <p className="text-xs text-text-secondary uppercase tracking-wider mb-1">Category</p>
                                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-block mt-1 ${CATEGORY_COLORS[formData.category] || CATEGORY_COLORS.Other}`}>
                                             {formData.category}
                                         </span>
                                     </div>
                                 </div>
-                                <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Date</p>
-                                    <p className="text-white">{new Date(formData.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                                <div className="bg-surface-divider/80 p-4 rounded-lg border border-border">
+                                    <p className="text-xs text-text-secondary uppercase tracking-wider mb-1">Date</p>
+                                    <p className="text-text-primary">{new Date(formData.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                 </div>
                                 {formData.note && (
-                                    <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-                                        <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{formData.note}</p>
+                                    <div className="bg-surface-divider/80 p-4 rounded-lg border border-border">
+                                        <p className="text-xs text-text-secondary uppercase tracking-wider mb-1">Notes</p>
+                                        <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-wrap">{formData.note}</p>
                                     </div>
                                 )}
                                 {currentExpense?.billImage && (
-                                    <div className="bg-gray-900/50 p-4 rounded-lg border border-gray-800">
-                                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Attached Bill</p>
+                                    <div className="bg-surface-divider/80 p-4 rounded-lg border border-border">
+                                        <p className="text-xs text-text-secondary uppercase tracking-wider mb-2">Attached Bill</p>
                                         <a
                                             href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${currentExpense.billImage}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-2 w-full p-3 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all group"
+                                            className="flex items-center gap-2 w-full p-3 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20 hover:bg-emerald-500 hover:text-text-primary transition-all group"
                                         >
                                             <ImageIcon size={18} />
                                             <span className="text-sm font-bold">View Bill Document</span>
@@ -922,12 +922,12 @@ const PaymentLedger = () => {
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Title / Name</label>
+                                    <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Title / Name</label>
                                     <input
                                         type="text"
                                         required
                                         maxLength={25}
-                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
+                                        className="w-full bg-surface-secondary border border-border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary"
                                         placeholder="e.g., Monthly Rent"
                                         value={formData.title}
                                         onChange={(e) => {
@@ -941,13 +941,13 @@ const PaymentLedger = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Amount (₹)</label>
+                                        <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Amount (₹)</label>
                                         <input
                                             type="text"
                                             inputMode="numeric"
                                             pattern="[0-9]*"
                                             required
-                                            className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary"
+                                            className="w-full bg-surface-secondary border border-border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary"
                                             placeholder="e.g. 5000"
                                             value={formData.amount}
                                             onChange={(e) => {
@@ -961,34 +961,34 @@ const PaymentLedger = () => {
                                         {formErrors.amount && <p className="text-red-500 text-xs mt-1">{formErrors.amount}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
+                                        <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
                                         <div className="relative">
                                             <select
-                                                className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary appearance-none cursor-pointer"
+                                                className="w-full bg-surface-secondary border border-border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary appearance-none cursor-pointer"
                                                 value={formData.category}
                                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                             >
                                                 {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                             </select>
-                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
+                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={16} />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
+                                    <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
                                     <CustomDatePicker
                                         required
-                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary [color-scheme:dark]"
+                                        className="w-full bg-surface-secondary border border-border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary [color-scheme:dark]"
                                         value={formData.date}
                                         onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Notes (Optional)</label>
+                                    <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Notes (Optional)</label>
                                     <textarea
-                                        className="w-full bg-gray-900 border border-gray-800 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-primary h-24 resize-none"
+                                        className="w-full bg-surface-secondary border border-border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary h-24 resize-none"
                                         placeholder="Add any additional details..."
                                         maxLength="100"
                                         value={formData.note}
@@ -1002,7 +1002,7 @@ const PaymentLedger = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Attach Bill (Optional)</label>
+                                    <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Attach Bill (Optional)</label>
                                     <div className="relative">
                                         <input
                                             type="file"
@@ -1013,7 +1013,7 @@ const PaymentLedger = () => {
                                         />
                                         <label
                                             htmlFor="bill-upload"
-                                            className="flex items-center justify-center gap-2 w-full bg-gray-900 border border-gray-800 border-dashed rounded-lg py-4 px-4 text-gray-400 cursor-pointer hover:border-primary hover:text-primary transition-all"
+                                            className="flex items-center justify-center gap-2 w-full bg-surface-secondary border border-border border-dashed rounded-lg py-4 px-4 text-text-secondary cursor-pointer hover:border-primary hover:text-primary transition-all"
                                         >
                                             <ImageIcon size={20} />
                                             <span className="text-sm font-medium">
@@ -1024,7 +1024,7 @@ const PaymentLedger = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setBillFile(null)}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-rose-500"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-rose-500"
                                             >
                                                 <X size={16} />
                                             </button>
@@ -1034,7 +1034,7 @@ const PaymentLedger = () => {
 
                                 <button
                                     type="submit"
-                                    className="w-full text-white font-bold py-3 rounded-lg shadow-lg transition-all mt-4 bg-primary hover:bg-blue-600 shadow-primary/30"
+                                    className="w-full text-text-primary font-bold py-3 rounded-lg shadow-lg transition-all mt-4 bg-primary hover:brightness-95 shadow-primary/30"
                                 >
                                     {modalMode === 'add' ? 'Create Expense' : 'Save Changes'}
                                 </button>

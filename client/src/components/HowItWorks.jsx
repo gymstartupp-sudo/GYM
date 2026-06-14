@@ -32,7 +32,7 @@ const HowItWorks = () => {
           {steps.map((step, idx) => (
             <React.Fragment key={idx}>
               <div className="flex flex-col items-center text-center max-w-xs relative z-10 w-full md:w-1/3">
-                <div className="w-16 h-16 bg-gray-900 text-white rounded-xl flex items-center justify-center mb-6 shadow-md border border-gray-800">
+                <div className="w-16 h-16 bg-surface-secondary text-text-primary rounded-xl flex items-center justify-center mb-6 shadow-md border border-border">
                   <step.icon size={32} />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
@@ -40,7 +40,7 @@ const HowItWorks = () => {
               </div>
               
               {idx < steps.length - 1 && (
-                <div className="hidden md:block text-gray-300 flex-shrink-0">
+                <div className="hidden md:block text-text-secondary flex-shrink-0">
                   <ArrowRight size={32} />
                 </div>
               )}

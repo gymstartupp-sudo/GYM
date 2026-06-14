@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
+import { useTheme } from './context/ThemeContext';
 
 // Pages - Lazy loaded for code splitting
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -30,6 +31,7 @@ const FeedbackList = lazy(() => import('./pages/owner/FeedbackList'));
 const Settings = lazy(() => import('./pages/owner/Settings'));
 
 // Client - Lazy loaded for code splitting
+const ClientLayout = lazy(() => import('./layouts/ClientLayout'));
 const ClientHome = lazy(() => import('./pages/client/ClientHome'));
 const ClientProfile = lazy(() => import('./pages/client/ClientProfile'));
 const ClientPayments = lazy(() => import('./pages/client/ClientPayments'));
@@ -47,7 +49,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, role, loading } = useAuth();
   
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-dark">
+    <div className="flex h-screen items-center justify-center bg-surface-primary">
       <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
@@ -57,16 +59,17 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-const App = () => {
+const AppContent = () => {
+  const { theme } = useTheme();
+
   return (
-    <AuthProvider>
-      <Router>
-        <div className="bg-dark min-h-screen text-slate-200">
-          <Suspense fallback={
-            <div className="flex h-screen items-center justify-center bg-dark">
-              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          }>
+    <>
+      <div className="bg-surface-primary min-h-screen text-text-primary">
+        <Suspense fallback={
+          <div className="flex h-screen items-center justify-center bg-surface-primary">
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }>
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -92,12 +95,14 @@ const App = () => {
               </Route>
               
               {/* Client Routes */}
-              <Route path="/client" element={<ProtectedRoute allowedRoles={['client']}><ClientHome /></ProtectedRoute>} />
-              <Route path="/client/profile" element={<ProtectedRoute allowedRoles={['client']}><ClientProfile /></ProtectedRoute>} />
-              <Route path="/client/payments" element={<ProtectedRoute allowedRoles={['client']}><ClientPayments /></ProtectedRoute>} />
-              <Route path="/client/plans" element={<ProtectedRoute allowedRoles={['client']}><ClientPlans /></ProtectedRoute>} />
-              <Route path="/client/feedback" element={<ProtectedRoute allowedRoles={['client']}><ClientFeedback /></ProtectedRoute>} />
-              <Route path="/client/settings" element={<ProtectedRoute allowedRoles={['client']}><ClientSettings /></ProtectedRoute>} />
+              <Route path="/client" element={<ProtectedRoute allowedRoles={['client']}><ClientLayout /></ProtectedRoute>}>
+                <Route index element={<ClientHome />} />
+                <Route path="profile" element={<ClientProfile />} />
+                <Route path="payments" element={<ClientPayments />} />
+                <Route path="plans" element={<ClientPlans />} />
+                <Route path="feedback" element={<ClientFeedback />} />
+                <Route path="settings" element={<ClientSettings />} />
+              </Route>
               
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminDashboard /></ProtectedRoute>} />
@@ -105,9 +110,18 @@ const App = () => {
               <Route path="/admin/gyms/:gymId/clients" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminClients /></ProtectedRoute>} />
 
             </Routes>
-          </Suspense>
-        </div>
-        <ToastContainer theme="dark" />
+        </Suspense>
+      </div>
+      <ToastContainer theme={theme === 'dark' ? 'dark' : 'light'} />
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
       </Router>
     </AuthProvider>
   );

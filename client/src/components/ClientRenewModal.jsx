@@ -377,14 +377,14 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="bg-gray-900 border border-gray-700/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+      <div className="bg-surface-secondary border border-border/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/50 shrink-0">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <div className="p-6 border-b border-border flex justify-between items-center bg-surface-divider/80 shrink-0">
+          <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
             <Receipt className="text-primary" />
             {detectedPendingPayment ? 'Update Payment' : 'Renew Membership'}
           </h2>
-          <button onClick={() => { onClose(); setDetectedPendingPayment(null); }} className="text-gray-400 hover:text-white transition-colors" disabled={loadingPlans || isPaying}>
+          <button onClick={() => { onClose(); setDetectedPendingPayment(null); }} className="text-text-secondary hover:text-text-primary transition-colors" disabled={loadingPlans || isPaying}>
             <X size={24} />
           </button>
         </div>
@@ -396,8 +396,8 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
               <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18} />
               <div>
                 <p className="text-amber-400 text-sm font-bold">Pending Balance Detected</p>
-                <p className="text-gray-400 text-xs mt-1">
-                  You have an outstanding balance of <span className="text-white font-bold">₹{detectedPendingPayment.remainingBalance !== undefined ? detectedPendingPayment.remainingBalance : ((detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0))}</span> for <span className="text-white font-medium">{detectedPendingPayment.planName}</span>. Pay the remaining amount below.
+                <p className="text-text-secondary text-xs mt-1">
+                  You have an outstanding balance of <span className="text-text-primary font-bold">₹{detectedPendingPayment.remainingBalance !== undefined ? detectedPendingPayment.remainingBalance : ((detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0))}</span> for <span className="text-text-primary font-medium">{detectedPendingPayment.planName}</span>. Pay the remaining amount below.
                 </p>
               </div>
             </div>
@@ -406,13 +406,13 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
           {/* Client Display */}
           <div className="space-y-4">
             <div className="relative">
-              <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Client Profile</label>
+              <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Client Profile</label>
               <div className="flex items-center gap-3 p-3 bg-primary/5 border border-primary/30 rounded-xl">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
                   {profile.personalInfo?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1">
-                  <p className="text-white font-bold text-sm">{profile.personalInfo?.name}</p>
+                  <p className="text-text-primary font-bold text-sm">{profile.personalInfo?.name}</p>
                   <p className="text-[10px] text-primary font-black uppercase tracking-tighter">{profile.clientId}</p>
                 </div>
               </div>
@@ -420,15 +420,15 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
             {/* Plan Selection Dropdown */}
             <div className="relative">
-              <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
+              <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
               {selectedPlan ? (
-                <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-surface-hover/50 border border-border rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                       <Package size={18} />
                     </div>
                     <div>
-                      <p className="text-white font-bold text-sm">{selectedPlan.name}</p>
+                      <p className="text-text-primary font-bold text-sm">{selectedPlan.name}</p>
                       <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan.price?.toLocaleString('en-IN')}</p>
                     </div>
                   </div>
@@ -436,7 +436,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                     <button
                       type="button"
                       onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); setShowPlanDropdown(true); }}
-                      className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700"
+                      className="text-xs text-text-secondary hover:text-text-primary bg-surface-divider px-2.5 py-1 rounded-md border border-border"
                     >
                       Change
                     </button>
@@ -444,43 +444,43 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                 </div>
               ) : (
                 <div className="relative">
-                  <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                  <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                   <input
                     type="text"
                     required
                     readOnly
                     disabled={!!detectedPendingPayment}
-                    className={`w-full bg-dark border border-gray-700 rounded-xl pl-11 pr-4 py-3.5 text-white focus:border-primary outline-none ${detectedPendingPayment ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-primary focus:border-primary outline-none ${detectedPendingPayment ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     placeholder="Click to select a membership plan"
                     value={planSearchQuery}
                     onClick={() => !detectedPendingPayment && setShowPlanDropdown(true)}
                   />
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
 
                   {showPlanDropdown && (
-                    <div className="mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-inner overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                    <div className="mt-2 bg-surface-divider border border-border rounded-xl shadow-inner overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                       {availablePlans.length > 0 ? (
                         availablePlans.map(p => (
                           <button
                             key={p._id}
                             type="button"
-                            className="w-full flex items-center justify-between p-3.5 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-0 group"
+                            className="w-full flex items-center justify-between p-3.5 hover:bg-surface-hover/50 transition-colors text-left border-b border-border/50 last:border-0 group"
                             onClick={() => handlePlanSelect(p)}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
+                              <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center text-text-secondary group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
                                 <Package size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-gray-200 group-hover:text-white">{p.name}</p>
-                                <p className="text-[10px] text-gray-500 font-bold">₹{p.price?.toLocaleString('en-IN')} for {p.durationMonths} Mo</p>
+                                <p className="text-sm font-bold text-text-primary group-hover:text-text-primary">{p.name}</p>
+                                <p className="text-[10px] text-text-muted font-bold">₹{p.price?.toLocaleString('en-IN')} for {p.durationMonths} Mo</p>
                               </div>
                             </div>
                             {selectedPlan?._id === p._id && <Check size={16} className="text-primary" />}
                           </button>
                         ))
                       ) : (
-                        <div className="p-8 text-center text-gray-500 text-sm italic">No plans available</div>
+                        <div className="p-8 text-center text-text-muted text-sm italic">No plans available</div>
                       )}
                     </div>
                   )}
@@ -500,7 +500,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                   <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                     <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={14} />
                     <p className="text-[10px] text-amber-200 font-medium leading-relaxed">
-                      Your active/upcoming plan expires on <span className="text-white font-bold">{formatDisplayDate(getLatestExpiryDate(profile))}</span>.
+                      Your active/upcoming plan expires on <span className="text-text-primary font-bold">{formatDisplayDate(getLatestExpiryDate(profile))}</span>.
                       The renewed membership will start automatically after this to prevent overlap.
                     </p>
                   </div>
@@ -508,7 +508,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Start Date</label>
+                    <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Start Date</label>
                     <CustomDatePicker
                       required
                       min={getLatestExpiryDate(profile) ? (() => {
@@ -516,15 +516,15 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                         d.setDate(d.getDate() + 1);
                         return d.toISOString().split('T')[0];
                       })() : new Date().toISOString().split('T')[0]}
-                      className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all"
+                      className="w-full bg-surface-primary border border-border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all"
                       value={renewalForm.startDate}
                       onChange={(e) => setRenewalForm({ ...renewalForm, startDate: e.target.value })}
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Calculated Expiry</label>
-                    <div className="w-full bg-gray-800/30 border border-gray-800 rounded-xl p-3 text-emerald-400 font-bold flex items-center justify-between">
+                    <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Calculated Expiry</label>
+                    <div className="w-full bg-surface-divider/80 border border-border rounded-xl p-3 text-emerald-400 font-bold flex items-center justify-between">
                       <span>{formatDisplayDate(calculateEndDate(renewalForm.startDate, selectedPlan.durationMonths))}</span>
                       <ArrowRight size={14} className="opacity-30" />
                     </div>
@@ -539,21 +539,21 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
               {/* Financial Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in duration-200">
                 <div>
-                  <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Total Amount</label>
+                  <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Total Amount</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
                     <input
                       type="number"
                       readOnly
-                      className="w-full bg-gray-800/30 border border-gray-800 rounded-xl pl-8 pr-4 py-3 text-white font-bold outline-none cursor-not-allowed"
+                      className="w-full bg-surface-divider/80 border border-border rounded-xl pl-8 pr-4 py-3 text-text-primary font-bold outline-none cursor-not-allowed"
                       value={detectedPendingPayment ? (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) : selectedPlan.price}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
+                  <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
                   <select
-                    className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all"
+                    className="w-full bg-surface-primary border border-border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all"
                     value={renewalForm.paymentMethod}
                     onChange={(e) => setRenewalForm({ ...renewalForm, paymentMethod: e.target.value })}
                   >
@@ -565,22 +565,22 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
               </div>
 
               {/* Payment Type Toggles */}
-              <div className="bg-gray-800/20 p-4 rounded-xl border border-gray-800 space-y-4 animate-in fade-in duration-200">
+              <div className="bg-surface-divider/50 p-4 rounded-xl border border-border space-y-4 animate-in fade-in duration-200">
                 {allowPartialPayments && (
                   <div>
-                    <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
+                    <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => handlePaymentTypeChange('full')}
-                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-text-primary shadow-lg shadow-emerald-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
                       >
                         Fully Paid
                       </button>
                       <button
                         type="button"
                         onClick={() => handlePaymentTypeChange('partial')}
-                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-text-primary shadow-lg shadow-amber-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
                       >
                         Partially Paid
                       </button>
@@ -590,7 +590,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
                 <div className={`${allowPartialPayments ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2' : 'block col-span-2'}`}>
                   <div>
-                    <label className="block text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
+                    <label className="block text-[10px] text-text-secondary uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
                     <input
                       type="number"
                       required
@@ -598,7 +598,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                       max={detectedPendingPayment ? (
                         (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
                       ) : selectedPlan.price}
-                      className={`w-full bg-dark border rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-gray-800' : 'border-gray-700'}`}
+                      className={`w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-border' : 'border-border'}`}
                       value={renewalForm.paidAmount}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -612,7 +612,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                       disabled={paymentType === 'full' || isPaying}
                       placeholder="Enter paid amount"
                     />
-                    <p className="text-[10px] text-gray-500 mt-1.5 ml-1 font-bold uppercase tracking-tight">
+                    <p className="text-[10px] text-text-muted mt-1.5 ml-1 font-bold uppercase tracking-tight">
                       {detectedPendingPayment ? (
                         <>
                           Already Paid: <span className="text-emerald-500">₹{detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0}</span> | Bal: <span className="text-primary">₹{(detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)}</span>
@@ -647,7 +647,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                         <CustomDatePicker
                           required
                           disabled={isPaying}
-                          className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in duration-200"
+                          className="w-full bg-surface-primary border border-amber-500/50 rounded-xl p-3 text-text-primary font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in duration-200"
                           value={renewalForm.dueDate}
                           onChange={(e) => setRenewalForm({ ...renewalForm, dueDate: e.target.value })}
                         />
@@ -659,7 +659,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
             </>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-800">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
             <Button
               type="button"
               variant="secondary"

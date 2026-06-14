@@ -1,36 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { useAuth } from '../../hooks/useAuth';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Building2, Users, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { toast } from 'react-toastify';
-
-export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
-    const { logout } = useAuth();
-    const navigate = useNavigate();
-    return (
-      <div className={`${isMobile ? `fixed inset-y-0 left-0 z-50 w-64 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out` : 'w-64'} h-screen bg-gray-900 border-r border-gray-800 flex flex-col pt-6 px-4 shrink-0`}>
-        <div className="flex items-center justify-between gap-3 mb-10 px-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-600 flex justify-center items-center font-bold text-lg text-white shadow-lg shadow-purple-600/30">SA</div>
-            <div><h2 className="font-bold text-white text-lg tracking-tight -mb-1">Super Admin</h2></div>
-          </div>
-          {isMobile && (
-            <button onClick={onClose} className="text-gray-400 hover:text-white p-1">
-              <X size={20} />
-            </button>
-          )}
-        </div>
-        <div className="flex-1 space-y-2">
-            <NavLink to="/admin" end onClick={() => isMobile && onClose()} className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}><LayoutDashboard size={20}/> Dashboard</NavLink>
-            <NavLink to="/admin/gyms" onClick={() => isMobile && onClose()} className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg transition-all group ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-white'}`}><Building2 size={20}/> All Gyms</NavLink>
-        </div>
-        <div className="pb-6 pt-4 border-t border-gray-800">
-           <button onClick={() => {logout(); navigate('/login');}} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-red-500/10 hover:text-alert transition-all group"><LogOut size={20}/> Logout</button>
-        </div>
-      </div>
-    );
-};
+import { AdminSidebar } from '../../components/AdminSidebar';
+import ThemeToggle from '../../components/ThemeToggle';
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -83,19 +57,20 @@ const AdminDashboard = () => {
     }, []);
 
     return (
-        <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
+        <div className={`flex bg-surface-primary h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
             {/* MOBILE HEADER BAR */}
             {isMobile && (
-                <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
-                    <div className="flex items-center gap-3">
-                        <span className="text-purple-500 font-bold text-base tracking-tight">Super Admin</span>
-                    </div>
-                    <button
+                <header className="h-16 bg-surface-secondary border-b border-border flex items-center justify-between px-6 z-40 shrink-0">
+                    <span className="text-primary font-bold text-base tracking-tight">Super Admin</span>
+                    <div className="flex items-center gap-2">
+                      <ThemeToggle className="w-9 h-9" />
+                      <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="p-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
-                    >
+                        className="p-2 border border-border rounded-lg text-text-primary hover:bg-surface-hover transition-colors duration-200"
+                      >
                         {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button>
+                      </button>
+                    </div>
                 </header>
             )}
 
@@ -110,52 +85,52 @@ const AdminDashboard = () => {
             <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
             
             <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-8 tracking-tight">Platform Overview</h1>
+                <h1 className="page-heading text-2xl md:text-[36px] mb-8">Platform Overview</h1>
 
-                {loading ? <div className="text-gray-500">Loading data...</div> : (
+                {loading ? <div className="text-text-muted">Loading data...</div> : (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                        <div className="card border-primary/20 bg-primary/5">
-                            <p className="text-gray-400 mb-1 text-sm md:text-base">Total Gyms Onboarded</p>
-                            <h3 className="text-3xl md:text-4xl font-bold text-white">{stats?.totalGyms || 0}</h3>
+                        <div className="kpi-card">
+                            <p className="kpi-card-label">Total Gyms Onboarded</p>
+                            <h3 className="kpi-card-value">{stats?.totalGyms || 0}</h3>
                         </div>
-                        <div className="card border-purple-500/20 bg-purple-500/5">
-                            <p className="text-gray-400 mb-1 text-sm md:text-base">Total Active Clients</p>
-                            <h3 className="text-3xl md:text-4xl font-bold text-white">{stats?.totalClients || 0}</h3>
+                        <div className="kpi-card">
+                            <p className="kpi-card-label">Total Active Clients</p>
+                            <h3 className="kpi-card-value">{stats?.totalClients || 0}</h3>
                         </div>
-                        <div className="card border-emerald-500/20 bg-emerald-500/5">
-                            <p className="text-gray-400 mb-1 text-sm md:text-base">Platform Revenue/Payments</p>
-                            <h3 className="text-3xl md:text-4xl font-bold text-white">{stats?.totalPayments || 0} Trx</h3>
+                        <div className="kpi-card">
+                            <p className="kpi-card-label">Platform Revenue/Payments</p>
+                            <h3 className="kpi-card-value">{stats?.totalPayments || 0} Trx</h3>
                         </div>
                     </div>
                 )}
 
                 {/* System Diagnostics / Overdue Manual Trigger */}
                 <div className="mt-12 max-w-xl">
-                    <div className="card border-gray-800 bg-gray-900/50 p-6 rounded-2xl border">
-                        <h2 className="text-lg font-bold text-white mb-2">System Diagnostics</h2>
-                        <p className="text-gray-400 text-xs mb-5">Manually run status updater overdue calculations. This runs identical backend business rules as the daily automated schedule.</p>
+                    <div className="card border-border bg-surface-divider/80 p-6 rounded-2xl border">
+                        <h2 className="text-lg font-bold text-text-primary mb-2">System Diagnostics</h2>
+                        <p className="text-text-secondary text-xs mb-5">Manually run status updater overdue calculations. This runs identical backend business rules as the daily automated schedule.</p>
                         
                         <button
                             type="button"
                             onClick={handleRunOverdueCheck}
                             disabled={runningCheck}
-                            className="px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-all shadow-md shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-5 py-2.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-md shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {runningCheck ? 'Running Overdue Check...' : 'Run Overdue Check'}
                         </button>
 
                         {checkResults && (
-                            <div className="mt-5 p-4 bg-gray-800/30 border border-gray-800 rounded-xl space-y-2 text-xs font-mono text-gray-300 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="mt-5 p-4 bg-surface-divider/80 border border-border rounded-xl space-y-2 text-xs font-mono text-text-secondary animate-in fade-in slide-in-from-top-2 duration-300">
                                 <p className="text-emerald-400 font-bold mb-1">Execution Statistics:</p>
                                 <div className="grid grid-cols-2 gap-y-1 text-[11px]">
                                     <span>Clients Checked:</span>
-                                    <span className="text-white font-bold">{checkResults.clientsChecked}</span>
+                                    <span className="text-text-primary font-bold">{checkResults.clientsChecked}</span>
                                     <span>Clients Marked Overdue:</span>
-                                    <span className="text-white font-bold">{checkResults.clientsMarkedOverdue}</span>
+                                    <span className="text-text-primary font-bold">{checkResults.clientsMarkedOverdue}</span>
                                     <span>Clients Skipped:</span>
-                                    <span className="text-white font-bold">{checkResults.clientsSkipped}</span>
+                                    <span className="text-text-primary font-bold">{checkResults.clientsSkipped}</span>
                                     <span>Execution Time:</span>
-                                    <span className="text-white font-bold">{checkResults.executionTime}</span>
+                                    <span className="text-text-primary font-bold">{checkResults.executionTime}</span>
                                 </div>
                             </div>
                         )}

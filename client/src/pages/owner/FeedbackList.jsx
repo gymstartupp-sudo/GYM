@@ -84,7 +84,7 @@ const FeedbackList = () => {
         );
       default:
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/10 text-gray-400 border border-gray-500/20">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/10 text-text-secondary border border-gray-500/20">
             {status}
           </span>
         );
@@ -95,10 +95,10 @@ const FeedbackList = () => {
     <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
           <MessageSquare className="text-primary" /> Client Feedback
         </h1>
-        <p className="text-gray-400 mt-2 text-base md:text-lg">Monitor, read, and manage feedback submitted by your gym members.</p>
+        <p className="text-text-secondary mt-2 text-base md:text-lg">Monitor, read, and manage feedback submitted by your gym members.</p>
       </div>
 
       {loading ? (
@@ -106,31 +106,31 @@ const FeedbackList = () => {
           <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
         </div>
       ) : feedbacks.length === 0 ? (
-        <div className="card bg-gray-900 border border-gray-800 rounded-2xl p-12 text-center shadow-xl flex flex-col items-center justify-center">
-          <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center text-gray-500 mb-4">
+        <div className="card bg-surface-secondary border border-border rounded-2xl p-12 text-center shadow-xl flex flex-col items-center justify-center">
+          <div className="w-16 h-16 bg-surface-hover/50 rounded-2xl flex items-center justify-center text-text-muted mb-4">
             <MessageSquare size={32} />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-1">No feedback available</h3>
-          <p className="text-gray-400 text-sm max-w-sm">
+          <h3 className="text-lg font-semibold text-text-primary mb-1">No feedback available</h3>
+          <p className="text-text-secondary text-sm max-w-sm">
             Feedback submitted by your clients will show up here.
           </p>
         </div>
       ) : (
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto max-h-[calc(100vh-220px)] overflow-y-auto relative">
             <table className="min-w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-gray-950/80 border-b border-gray-800 z-10 backdrop-blur-md">
+              <thead className="sticky top-0 bg-gray-950/80 border-b border-border z-10 backdrop-blur-md">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Client Info</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Subject</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">Action</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Client Info</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Subject</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/50">
+              <tbody className="divide-y divide-border/50">
                 {feedbacks.map((item) => (
-                  <tr key={item._id} className="hover:bg-gray-800/30 transition-colors">
+                  <tr key={item._id} className="hover:bg-surface-divider/80 transition-colors">
                     {/* Client Info */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
@@ -138,20 +138,20 @@ const FeedbackList = () => {
                           {item.clientAvatar || item.clientName?.charAt(0).toUpperCase() || 'C'}
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-bold text-white text-sm truncate max-w-[150px]">{item.clientName}</h4>
-                          <span className="text-xs text-gray-500 font-mono tracking-tight block uppercase">{item.clientId}</span>
+                          <h4 className="font-bold text-text-primary text-sm truncate max-w-[150px]">{item.clientName}</h4>
+                          <span className="text-xs text-text-muted font-mono tracking-tight block uppercase">{item.clientId}</span>
                         </div>
                       </div>
                     </td>
 
                     {/* Date */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                       {formatDate(item.createdAt)}
                     </td>
 
                     {/* Subject */}
-                    <td className="px-6 py-4 text-sm text-white font-medium truncate max-w-xs md:max-w-md">
-                      {item.subject || <span className="text-gray-500 italic">No Subject</span>}
+                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md">
+                      {item.subject || <span className="text-text-muted italic">No Subject</span>}
                     </td>
 
                     {/* Status */}
@@ -163,7 +163,7 @@ const FeedbackList = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
                         onClick={() => handleOpenModal(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-750 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-gray-750 transition-colors cursor-pointer"
                       >
                         <Eye size={16} />
                       </button>
@@ -181,19 +181,19 @@ const FeedbackList = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
           
-          <div className="relative w-full max-w-lg bg-gray-900 border border-gray-700 rounded-2xl overflow-hidden shadow-2xl p-6 text-white animate-in fade-in zoom-in duration-200">
+          <div className="relative w-full max-w-lg bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-2xl p-6 text-text-primary animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
-            <div className="flex items-center justify-between mb-6 border-b border-gray-800 pb-4">
+            <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-accent/15 text-accent flex justify-center items-center font-bold text-lg border border-accent/25 shadow-inner">
                   {selectedFeedback.clientAvatar || selectedFeedback.clientName?.charAt(0).toUpperCase() || 'C'}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-white text-base leading-tight truncate max-w-[200px]">{selectedFeedback.clientName}</h3>
-                  <span className="text-xs text-gray-500 font-mono tracking-wider block uppercase">{selectedFeedback.clientId}</span>
+                  <h3 className="font-bold text-text-primary text-base leading-tight truncate max-w-[200px]">{selectedFeedback.clientName}</h3>
+                  <span className="text-xs text-text-muted font-mono tracking-wider block uppercase">{selectedFeedback.clientId}</span>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white p-1">
+              <button onClick={() => setIsModalOpen(false)} className="text-text-secondary hover:text-text-primary p-1">
                 <X size={20} />
               </button>
             </div>
@@ -202,43 +202,43 @@ const FeedbackList = () => {
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="block text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">Date</span>
-                  <div className="text-sm font-semibold text-white">{formatDate(selectedFeedback.createdAt)}</div>
+                  <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Date</span>
+                  <div className="text-sm font-semibold text-text-primary">{formatDate(selectedFeedback.createdAt)}</div>
                 </div>
 
                 <div>
-                  <span className="block text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">Status</span>
+                  <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Status</span>
                   <div className="mt-1">{getStatusBadge(selectedFeedback.status)}</div>
                 </div>
               </div>
 
               <div>
-                <span className="block text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">Subject</span>
-                <div className="text-base font-bold text-white">
-                  {selectedFeedback.subject || <span className="text-gray-500 italic">No Subject</span>}
+                <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Subject</span>
+                <div className="text-base font-bold text-text-primary">
+                  {selectedFeedback.subject || <span className="text-text-muted italic">No Subject</span>}
                 </div>
               </div>
 
               <div>
-                <span className="block text-xs uppercase tracking-wider text-gray-500 font-medium mb-1">Message</span>
-                <div className="bg-gray-950 border border-gray-850 rounded-xl p-4 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Message</span>
+                <div className="bg-gray-950 border border-gray-850 rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
                   {selectedFeedback.message}
                 </div>
               </div>
 
               {/* Modal Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-800">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 {selectedFeedback.status === 'Unread' && (
                   <>
                     <button
                       onClick={() => handleStatusChange(selectedFeedback._id, 'Read')}
-                      className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
+                      className="px-4 py-2 rounded-lg text-sm font-semibold text-text-primary bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
                     >
                       Mark as Read
                     </button>
                     <button
                       onClick={() => handleStatusChange(selectedFeedback._id, 'Resolved')}
-                      className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-lg text-sm font-semibold text-text-primary bg-green-600 hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-1.5"
                     >
                       <CheckCircle size={15} /> Resolve
                     </button>
@@ -247,7 +247,7 @@ const FeedbackList = () => {
                 {selectedFeedback.status === 'Read' && (
                   <button
                     onClick={() => handleStatusChange(selectedFeedback._id, 'Resolved')}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2 rounded-lg text-sm font-semibold text-text-primary bg-green-600 hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-1.5"
                   >
                     <CheckCircle size={15} /> Resolve
                   </button>

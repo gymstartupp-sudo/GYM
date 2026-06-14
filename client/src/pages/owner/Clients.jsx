@@ -11,11 +11,11 @@ import { getPlanStatus } from '../../utils/membership';
 // ─── Status options config ───────────────────────────────────────────────────
 const STATUS_OPTIONS = [
   { value: 'All', label: 'All Status' },
-  { value: 'Upcoming', label: 'Upcoming', dot: 'bg-blue-500' },
-  { value: 'Active', label: 'Active', dot: 'bg-emerald-500' },
+  { value: 'Upcoming', label: 'Upcoming', dot: 'bg-primary' },
+  { value: 'Active', label: 'Active', dot: 'bg-success' },
   { value: 'Expiring Soon', label: 'Expiring Soon', dot: 'bg-warning' },
-  { value: 'Dues', label: 'Dues', dot: 'bg-red-500' },
-  { value: 'Expired', label: 'Expired', dot: 'bg-gray-500' },
+  { value: 'Dues', label: 'Dues', dot: 'bg-danger' },
+  { value: 'Expired', label: 'Expired', dot: 'bg-text-muted' },
 ];
 
 // ─── Custom Dropdown (replaces native <select> for Dark-theme compatibility) ──
@@ -42,7 +42,7 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...' })
         className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-all cursor-pointer
           ${isFiltered
             ? 'bg-primary/10 border-primary/50 text-primary'
-            : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white'
+            : 'bg-surface-divider border-border text-text-secondary hover:border-gray-500 hover:text-text-primary'
           }`}
       >
         <span className="flex items-center gap-2 truncate">
@@ -57,7 +57,7 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...' })
 
       {/* Dropdown list */}
       {open && (
-        <div className="absolute top-full mt-1 left-0 w-full z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute top-full mt-1 left-0 w-full z-50 bg-surface-secondary border border-border rounded-lg shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
           {options.map(opt => (
             <button
               key={opt.value}
@@ -66,7 +66,7 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...' })
               className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left transition-colors
                 ${opt.value === value
                   ? 'bg-primary/15 text-primary'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  : 'text-text-secondary hover:bg-surface-divider hover:text-text-primary'
                 }`}
             >
               <span className="flex items-center gap-2">
@@ -86,7 +86,7 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...' })
 const FilterBadge = ({ label, onClear }) => (
   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/20 text-primary border border-primary/40">
     {label}
-    <button onClick={onClear} className="hover:text-white transition-colors leading-none">
+    <button onClick={onClear} className="hover:text-text-primary transition-colors leading-none">
       <X size={11} />
     </button>
   </span>
@@ -218,15 +218,15 @@ const Clients = () => {
   const clearAll = () => { setFilterStatus('All'); setFilterPlan('All'); };
 
   return (
-    <div className="flex bg-dark h-screen overflow-hidden">
+    <div className="flex bg-surface-primary h-screen overflow-hidden">
       <></>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
 
         {/* ── Page Header ── */}
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Clients</h1>
-            <p className="text-gray-400 mt-1 text-sm md:text-base">Manage and monitor all your gym members.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients</h1>
+            <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and monitor all your gym members.</p>
           </div>
           <Button onClick={() => setShowAddModal(true)} className="gap-2 w-full sm:w-auto justify-center">
             <Plus size={18} /> Add Client
@@ -236,12 +236,12 @@ const Clients = () => {
         {/* ── Add Client Modal ── */}
         {showAddModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200">
-              <button type="button" onClick={() => closeAddModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors z-10">
+            <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200">
+              <button type="button" onClick={() => closeAddModal(false)} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
                 <X size={24} />
               </button>
               <div className="p-8">
-                <h2 className="text-2xl font-bold text-white mb-6 border-b border-gray-800 pb-4">Enroll New Client</h2>
+                <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Enroll New Client</h2>
                 <ClientForm
                   key={formInstanceKey}
                   mode="owner"
@@ -260,12 +260,12 @@ const Clients = () => {
         )}
 
         {/* ── Search + Filter Bar ── */}
-        <div className="card mb-3 flex flex-col gap-3 bg-gray-900 border-gray-800 relative z-20 overflow-visible">
+        <div className="card mb-3 flex flex-col gap-3 bg-surface-secondary border-border relative z-20 overflow-visible">
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
 
             {/* Search */}
             <div className="relative flex-1 min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={17} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={17} />
               <input
                 type="text"
                 placeholder="Search by name, ID or phone..."
@@ -277,7 +277,7 @@ const Clients = () => {
 
             {/* Filters */}
             <div className="flex items-center gap-2 flex-wrap shrink-0">
-              <Filter size={15} className="text-gray-500" />
+              <Filter size={15} className="text-text-muted" />
 
               {/* Status */}
               <CustomDropdown
@@ -299,7 +299,7 @@ const Clients = () => {
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearAll}
-                  className="text-xs text-gray-400 hover:text-white transition-colors underline underline-offset-2 whitespace-nowrap"
+                  className="text-xs text-text-secondary hover:text-text-primary transition-colors underline underline-offset-2 whitespace-nowrap"
                 >
                   Clear filters
                 </button>
@@ -309,8 +309,8 @@ const Clients = () => {
 
           {/* ── Active filter badges ── */}
           {activeFilterCount > 0 && (
-            <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-gray-800/60">
-              <span className="text-xs text-gray-500">Filtering by:</span>
+            <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border/60">
+              <span className="text-xs text-text-muted">Filtering by:</span>
               {hasStatusFilter && (
                 <FilterBadge
                   label={`Status: ${STATUS_OPTIONS.find(o => o.value === filterStatus)?.label}`}
@@ -328,41 +328,41 @@ const Clients = () => {
         </div>
 
         {/* Result count */}
-        <p className="text-xs text-gray-500 mb-4 px-1">
+        <p className="text-xs text-text-muted mb-4 px-1">
           {loading ? 'Loading...' : `${filteredClients.length} client${filteredClients.length !== 1 ? 's' : ''} found`}
         </p>
 
         {/* ── Client list ── */}
         {loading ? (
-          <div className="card p-0 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-lg">
-            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-gray-900/80 border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
+            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider">
               <div>Client Info</div><div>Mobile No</div><div>Plan</div><div>Duration</div><div>Days Left</div><div>Status</div><div className="text-right">Actions</div>
             </div>
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-gray-800/50">
-                <div className="w-10 h-10 bg-gray-800 rounded-xl animate-pulse shrink-0"></div>
+              <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-border/50">
+                <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
                 <div className="flex-1 grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 items-center">
-                  <div><div className="h-4 w-24 bg-gray-800 rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-gray-800 rounded animate-pulse"></div></div>
-                  <div className="h-4 w-20 bg-gray-800 rounded animate-pulse"></div>
-                  <div className="h-4 w-16 bg-gray-800 rounded animate-pulse"></div>
-                  <div className="h-4 w-28 bg-gray-800 rounded animate-pulse"></div>
-                  <div className="h-4 w-10 bg-gray-800 rounded animate-pulse"></div>
-                  <div className="h-5 w-14 bg-gray-800 rounded-full animate-pulse"></div>
-                  <div className="h-7 w-16 bg-gray-800 rounded-lg animate-pulse ml-auto"></div>
+                  <div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div>
+                  <div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div>
+                  <div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div>
+                  <div className="h-4 w-28 bg-surface-divider rounded animate-pulse"></div>
+                  <div className="h-4 w-10 bg-surface-divider rounded animate-pulse"></div>
+                  <div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse"></div>
+                  <div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
                 </div>
               </div>
             ))}
           </div>
         ) : filteredClients.length === 0 ? (
-          <div className="card bg-gray-900 border-gray-800 text-center py-16 text-gray-400">
+          <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
             <Filter size={36} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">No clients found</p>
             <p className="text-sm mt-1 text-gray-600">Try adjusting your filters or search.</p>
           </div>
         ) : (
-          <div className="card p-0 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-lg">
+          <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
             {/* Table header */}
-            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-gray-900/80 border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
               <div>Client Info</div>
               <div>Mobile No</div>
               <div>Plan</div>
@@ -399,8 +399,8 @@ const Clients = () => {
 
           return (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-              <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
-                <button onClick={() => setDuesClient(null)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+              <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+                <button onClick={() => setDuesClient(null)} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary transition-colors">
                   <X size={20} />
                 </button>
                 
@@ -408,40 +408,40 @@ const Clients = () => {
                   <div className="w-20 h-20 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center font-black text-3xl mb-4 border-2 border-red-500/20 shadow-inner">
                     {duesClient.avatar || duesClient.personalInfo?.name.charAt(0).toUpperCase()}
                   </div>
-                  <h3 className="text-2xl font-black text-white text-center leading-tight mb-1">{duesClient.personalInfo?.name}</h3>
-                  <p className="text-gray-500 font-mono text-sm uppercase tracking-tighter mb-3">{duesClient.clientId || 'ABC-XX'}</p>
+                  <h3 className="text-2xl font-black text-text-primary text-center leading-tight mb-1">{duesClient.personalInfo?.name}</h3>
+                  <p className="text-text-muted font-mono text-sm uppercase tracking-tighter mb-3">{duesClient.clientId || 'ABC-XX'}</p>
                   <div className="flex flex-col items-center gap-1 opacity-80">
-                    <p className="text-gray-400 text-sm font-medium">{duesClient.personalInfo?.mobileNo}</p>
-                    <p className="text-gray-500 text-xs truncate max-w-[200px]">{duesClient.personalInfo?.email}</p>
+                    <p className="text-text-secondary text-sm font-medium">{duesClient.personalInfo?.mobileNo}</p>
+                    <p className="text-text-muted text-xs truncate max-w-[200px]">{duesClient.personalInfo?.email}</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 mb-8 bg-gray-800/20 p-4 rounded-xl border border-gray-800/50">
+                <div className="space-y-4 mb-8 bg-surface-divider/50 p-4 rounded-xl border border-border/50">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 font-medium">Plan Name</span>
-                    <span className="text-white font-bold">{activeDuesMembership.planName || 'No Plan'}</span>
+                    <span className="text-text-secondary font-medium">Plan Name</span>
+                    <span className="text-text-primary font-bold">{activeDuesMembership.planName || 'No Plan'}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 font-medium">Billing Period</span>
-                    <span className="text-white font-bold">
+                    <span className="text-text-secondary font-medium">Billing Period</span>
+                    <span className="text-text-primary font-bold">
                       {activeDuesMembership.startDate ? `${new Date(activeDuesMembership.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} - ${new Date(activeDuesMembership.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}` : 'N/A'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 font-medium">Total Amount</span>
-                    <span className="text-white font-bold">₹{finalPrice}</span>
+                    <span className="text-text-secondary font-medium">Total Amount</span>
+                    <span className="text-text-primary font-bold">₹{finalPrice}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 font-medium">Paid Amount</span>
+                    <span className="text-text-secondary font-medium">Paid Amount</span>
                     <span className="text-emerald-400 font-bold">₹{totalPaid}</span>
                   </div>
-                  <div className="flex justify-between items-center text-sm pt-3 border-t border-gray-800">
-                    <span className="text-gray-400 font-medium">Balance Dues</span>
+                  <div className="flex justify-between items-center text-sm pt-3 border-t border-border">
+                    <span className="text-text-secondary font-medium">Balance Dues</span>
                     <span className="text-red-400 font-black text-lg">₹{balance}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400 font-medium">Due Date</span>
-                    <span className="text-white font-bold">{activeDuesMembership.dueDate ? new Date(activeDuesMembership.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
+                    <span className="text-text-secondary font-medium">Due Date</span>
+                    <span className="text-text-primary font-bold">{activeDuesMembership.dueDate ? new Date(activeDuesMembership.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
                   </div>
                 </div>
 
