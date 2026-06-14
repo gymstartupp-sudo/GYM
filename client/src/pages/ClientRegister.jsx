@@ -18,12 +18,12 @@ const ClientRegister = () => {
                  <div className="flex justify-center mb-6">
                      <CheckCircle size={80} className="text-emerald-500" />
                  </div>
-                 <h2 className="text-3xl font-bold text-white mb-2">Account Created!</h2>
-                 <p className="text-gray-300 font-medium mb-6">Your Gym: <span className="text-white font-bold">{successData.gymName}</span></p>
+                 <h2 className="text-3xl font-bold text-text-primary mb-2">Account Created!</h2>
+                 <p className="text-text-secondary font-medium mb-6">Your Gym: <span className="text-text-primary font-bold">{successData.gymName}</span></p>
 
                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mt-6 text-left mb-8">
                      <p className="text-yellow-400 font-medium text-sm">Your membership request has been sent to the gym owner for approval.</p>
-                     <p className="text-gray-400 text-sm mt-1">Your Client ID will be generated after approval. You can log in once the owner activates your request.</p>
+                     <p className="text-text-secondary text-sm mt-1">Your Client ID will be generated after approval. You can log in once the owner activates your request.</p>
                  </div>
                  
                  <Link to="/login" className="block w-full">
@@ -36,12 +36,12 @@ const ClientRegister = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark to-slate-900 py-12 px-4">
-          <div className="card w-full max-w-3xl relative z-10 backdrop-blur-xl bg-card/80 border-gray-700/50">
-            <h2 className="text-3xl font-bold text-center text-white mb-8">Client Registration</h2>
+          <div className="card w-full max-w-3xl relative z-10 backdrop-blur-xl bg-card/80 border-border/50">
+            <h2 className="text-3xl font-bold text-center text-text-primary mb-8">Client Registration</h2>
             
             <ClientForm mode="self" onSuccess={handleSuccess} />
 
-            <div className="mt-6 text-center text-gray-400 text-sm">
+            <div className="mt-6 text-center text-text-secondary text-sm">
                Already a member? <Link to="/login" className="text-primary hover:underline ml-1">Login here</Link>
             </div>
           </div>

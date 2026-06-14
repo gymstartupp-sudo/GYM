@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
-import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
-import { Menu, X, FileText, CheckCircle2 } from 'lucide-react';
+import { FileText, CheckCircle2, X } from 'lucide-react';
 import Button from '../../components/Button';
-import ClientSidebar from '../../components/ClientSidebar';
 import ClientRenewModal from '../../components/ClientRenewModal';
 import { calculateEndDate } from '../../utils/membership';
 
@@ -32,27 +30,11 @@ const getPendingPayment = (clientDoc) => {
 };
 
 const ClientPayments = () => {
-  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showRenewModal, setShowRenewModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setIsSidebarOpen(false);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   const fetchProfile = async () => {
     try {
@@ -127,16 +109,8 @@ const ClientPayments = () => {
 
   if (loading || !profile) {
     return (
-      <div className={`flex bg-dark h-screen overflow-hidden text-white ${isMobile ? 'flex-col' : 'flex-row'}`}>
-        {isMobile && (
-          <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
-            <span className="text-white font-bold text-base tracking-tight">GymPro</span>
-          </header>
-        )}
-        <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-        <div className="flex-1 flex justify-center items-center">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -145,43 +119,11 @@ const ClientPayments = () => {
   const gymInfo = profile.gym;
 
   return (
-    <div className={`flex bg-dark h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-      {/* MOBILE HEADER BAR */}
-      {isMobile && (
-        <header className="h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent flex justify-center items-center font-bold text-sm text-white shadow-md">
-              {user?.avatar || 'C'}
-            </div>
-            <div>
-              <span className="text-white font-bold text-base tracking-tight truncate max-w-[120px] inline-block">{user?.personalInfo?.name}</span>
-              <span className="text-xs text-gray-500 block -mt-1 uppercase tracking-wider truncate max-w-[120px]">{user?.gymName}</span>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 transition-colors"
-          >
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </header>
-      )}
-
-      {/* MOBILE DRAWER BACKDROP */}
-      {isMobile && isSidebarOpen && (
-        <div
-          onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
-        />
-      )}
-
-      <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8 scrollbar-hide">
+    <>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">Payment Ledger</h1>
-            <p className="text-gray-400 mt-2 text-base md:text-lg">View your past gym payments and clear outstanding balances.</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight">Payment Ledger</h1>
+            <p className="text-text-secondary mt-2 text-base md:text-lg">View your past gym payments and clear outstanding balances.</p>
           </div>
           <div>
             <Button type="button" onClick={() => setShowRenewModal(true)} className="shadow-lg shadow-primary/20">
@@ -191,11 +133,11 @@ const ClientPayments = () => {
         </div>
 
         {/* Payment History Ledger */}
-        <div className="bg-gray-900/40 rounded-2xl border border-gray-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+        <div className="bg-surface-divider/80 rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
               <thead>
-                <tr className="bg-gray-800/30 border-b border-gray-800 text-gray-400 text-[11px] font-black tracking-widest uppercase">
+                <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
                   <th className="p-5">Receipt Info</th>
                   <th className="p-5">Plan</th>
                   <th className="p-5">Mode</th>
@@ -207,28 +149,28 @@ const ClientPayments = () => {
                   <th className="p-5 text-center">Bill</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/50">
+              <tbody className="divide-y divide-border/50">
                 {!profile.paymentHistory || profile.paymentHistory.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="text-center py-20 text-gray-500">
+                    <td colSpan="9" className="text-center py-20 text-text-muted">
                       No payment records found.
                     </td>
                   </tr>
                 ) : (
                   profile.paymentHistory.map((pmt) => (
-                    <tr key={pmt._id || pmt.paymentId} className="hover:bg-gray-800/30 transition-all group">
+                    <tr key={pmt._id || pmt.paymentId} className="hover:bg-surface-divider/80 transition-all group">
                       <td className="p-5">
-                        <p className="font-bold text-white text-sm">{pmt.paymentId || 'N/A'}</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5">
+                        <p className="font-bold text-text-primary text-sm">{pmt.paymentId || 'N/A'}</p>
+                        <p className="text-[10px] text-text-muted mt-0.5">
                           {new Date(pmt.paymentDate || pmt.createdAt || pmt.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
                         </p>
                       </td>
                       <td className="p-5">
-                        <span className="text-gray-300 text-xs font-medium block">{pmt.planName || 'Custom'}</span>
+                        <span className="text-text-secondary text-xs font-medium block">{pmt.planName || 'Custom'}</span>
                         {pmt.startDate && (() => {
                           const period = getBillingPeriod(pmt);
                           return period ? (
-                            <span className="text-[10px] text-gray-500 mt-0.5 block font-medium">
+                            <span className="text-[10px] text-text-muted mt-0.5 block font-medium">
                               {period}
                             </span>
                           ) : null;
@@ -239,14 +181,14 @@ const ClientPayments = () => {
                           {pmt.paymentMethod || pmt.mode || 'cash'}
                         </span>
                       </td>
-                      <td className="p-5 text-right text-gray-200 font-bold text-sm">₹{pmt.invoiceAmount || pmt.amount || 0}</td>
+                      <td className="p-5 text-right text-text-primary font-bold text-sm">₹{pmt.invoiceAmount || pmt.amount || 0}</td>
                       <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{pmt.paidNow || pmt.paidAmount || 0}</td>
                       <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{pmt.totalPaid || pmt.paidAmount || 0}</td>
                       <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{pmt.remainingBalance !== undefined ? pmt.remainingBalance : (pmt.amount - (pmt.paidAmount || 0))}</td>
                       <td className="p-5 text-center">
                         {getStatusBadge(pmt)}
                         {pmt.status === 'partial' && !isPaymentCleared(pmt) && pmt.dueDate && (
-                          <div className="mt-1 text-[10px] text-gray-500 font-medium">
+                          <div className="mt-1 text-[10px] text-text-muted font-medium">
                             Due: {new Date(pmt.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')}
                           </div>
                         )}
@@ -254,7 +196,7 @@ const ClientPayments = () => {
                       <td className="p-5 text-center">
                         <button 
                           onClick={() => { setSelectedPayment(pmt); setShowReceiptModal(true); }}
-                          className="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-all"
+                          className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
                           title="View Bill"
                         >
                           <FileText size={18} />
@@ -267,7 +209,6 @@ const ClientPayments = () => {
             </table>
           </div>
         </div>
-      </div>
 
       <ClientRenewModal 
         isOpen={showRenewModal} 
@@ -282,17 +223,17 @@ const ClientPayments = () => {
           <div className="bg-white text-gray-900 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print-invoice-container my-8 relative">
             {/* Actions Header (Hidden in print) */}
             <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Invoice Preview</span>
+              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Invoice Preview</span>
               <div className="flex gap-2">
                 <button 
                   onClick={() => window.print()} 
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-all shadow-sm"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
                 >
                   Print Invoice
                 </button>
                 <button 
                   onClick={() => setShowReceiptModal(false)} 
-                  className="p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
+                  className="p-1.5 text-text-secondary hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
                 >
                   <X size={18} />
                 </button>
@@ -317,7 +258,7 @@ const ClientPayments = () => {
                   )}
                   <div>
                     <h2 className="text-lg font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                    <p className="text-[9px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
                   </div>
                 </div>
                 
@@ -336,25 +277,25 @@ const ClientPayments = () => {
               {/* Middle Section: Meta & Client details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-gray-200 text-xs">
                 <div>
-                  <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Billed To (Client Details)</h4>
+                  <h4 className="font-black text-text-secondary uppercase tracking-widest mb-1 text-[9px]">Billed To (Client Details)</h4>
                   <p className="font-bold text-gray-900 text-sm">{profile.personalInfo?.name}</p>
-                  <p className="text-gray-500 font-medium mt-0.5">Client ID: {profile.clientId}</p>
+                  <p className="text-text-muted font-medium mt-0.5">Client ID: {profile.clientId}</p>
                 </div>
                 <div className="text-left sm:text-right">
-                  <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
+                  <h4 className="font-black text-text-secondary uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
                   <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
-                  <p className="text-gray-500 font-medium mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                  <p className="text-text-muted font-medium mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                   <p className="mt-1">{getStatusBadge(selectedPayment)}</p>
                 </div>
               </div>
 
               {/* Subscription Details Table */}
               <div className="space-y-2">
-                <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Membership Details</h4>
+                <h4 className="text-[9px] font-black text-text-secondary uppercase tracking-widest">Membership Details</h4>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200">
+                      <tr className="bg-gray-50 text-text-muted font-bold uppercase tracking-wider border-b border-gray-200">
                         <th className="p-2.5">Plan Name / Description</th>
                         <th className="p-2.5 text-center">Payment Method</th>
                         <th className="p-2.5 text-right">Amount</th>
@@ -365,7 +306,7 @@ const ClientPayments = () => {
                         <td className="p-2.5 font-semibold">
                           {selectedPayment.planName} Subscription
                           {selectedPayment.startDate && (
-                            <span className="block text-[10px] text-gray-500 font-normal mt-0.5">
+                            <span className="block text-[10px] text-text-muted font-normal mt-0.5">
                               Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'Expiry'}
                             </span>
                           )}
@@ -414,9 +355,9 @@ const ClientPayments = () => {
               {/* Footer: Greetings & Regards */}
               <div className="pt-4 border-t border-gray-200 text-center space-y-2">
                 {gymInfo?.billingInfo?.greetingText && (
-                  <p className="text-[11px] text-gray-500 font-medium italic">"{gymInfo.billingInfo.greetingText}"</p>
+                  <p className="text-[11px] text-text-muted font-medium italic">"{gymInfo.billingInfo.greetingText}"</p>
                 )}
-                <div className="text-[10px] text-gray-400">
+                <div className="text-[10px] text-text-secondary">
                   <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
                   <p className="mt-0.5 font-medium">Thank you for your business!</p>
                 </div>
@@ -425,7 +366,7 @@ const ClientPayments = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

@@ -216,23 +216,23 @@ const Transactions = () => {
     };
 
     return (
-        <div className="flex bg-dark h-screen overflow-hidden">
+        <div className="flex bg-surface-primary h-screen overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Clients Payment</h1>
-                        <p className="text-gray-400 mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
+                        <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients Payment</h1>
+                        <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
                     </div>
                     <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
                         <Plus size={18} /> Record Payment
                     </Button>
                 </div>
 
-                <div className="bg-gray-900/40 rounded-2xl border border-gray-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+                <div className="bg-surface-divider/80 rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
                             <thead>
-                                <tr className="bg-gray-800/30 border-b border-gray-800 text-gray-400 text-[11px] font-black tracking-widest uppercase">
+                                <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
                                     <th className="p-5">Receipt Info</th>
                                     <th className="p-5">Client Info</th>
                                     <th className="p-5">Plan</th>
@@ -246,41 +246,41 @@ const Transactions = () => {
                                     <th className="p-5 text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800/50">
+                            <tbody className="divide-y divide-border/50">
                                 {loading ? (
                                     [...Array(4)].map((_, i) => (
-                                        <tr key={i} className="border-b border-gray-800/50">
-                                            <td className="p-5"><div className="h-4 w-16 bg-gray-800 rounded animate-pulse mb-1"></div><div className="h-3 w-20 bg-gray-800 rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-24 bg-gray-800 rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-gray-800 rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-16 bg-gray-800 rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-12 bg-gray-800 rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-gray-800 rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-gray-800 rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-gray-800 rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-5 w-14 bg-gray-800 rounded-full animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-7 w-7 bg-gray-800 rounded-lg animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="flex gap-2 justify-center"><div className="h-7 w-7 bg-gray-800 rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-gray-800 rounded-lg animate-pulse"></div></div></td>
+                                        <tr key={i} className="border-b border-border/50">
+                                            <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-20 bg-surface-divider rounded animate-pulse"></div></td>
+                                            <td className="p-5"><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></td>
+                                            <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div></td>
+                                            <td className="p-5"><div className="h-4 w-12 bg-surface-divider rounded animate-pulse"></div></td>
+                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
+                                            <td className="p-5"><div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="flex gap-2 justify-center"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div></td>
                                         </tr>
                                     ))
                                 ) : payments.length === 0 ? (
-                                    <tr><td colSpan="10" className="text-center py-20 text-gray-500">No payment records found.</td></tr>
+                                    <tr><td colSpan="10" className="text-center py-20 text-text-muted">No payment records found.</td></tr>
                                 ) : (
                                     payments.map(payment => (
-                                        <tr key={payment._id} className="hover:bg-gray-800/30 transition-all group">
+                                        <tr key={payment._id} className="hover:bg-surface-divider/80 transition-all group">
                                             <td className="p-5">
-                                                <p className="font-bold text-white text-sm">{payment.paymentId}</p>
-                                                <p className="text-[10px] text-gray-500 mt-0.5">{new Date(payment.createdAt || payment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                                                <p className="font-bold text-text-primary text-sm">{payment.paymentId}</p>
+                                                <p className="text-[10px] text-text-muted mt-0.5">{new Date(payment.createdAt || payment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                             </td>
                                             <td className="p-5">
-                                                <p className="font-bold text-gray-200 text-sm">{payment.clientName}</p>
+                                                <p className="font-bold text-text-primary text-sm">{payment.clientName}</p>
                                                 <p className="text-[10px] font-black text-primary uppercase tracking-tighter">{getClientDisplayId(payment.clientId)}</p>
                                             </td>
                                             <td className="p-5">
-                                                <span className="text-gray-300 text-xs font-medium block">{payment.planName}</span>
+                                                <span className="text-text-secondary text-xs font-medium block">{payment.planName}</span>
                                                 {payment.startDate && (() => {
                                                     const period = getBillingPeriod(payment);
                                                     return period ? (
-                                                        <span className="text-[10px] text-gray-500 mt-0.5 block font-medium">
+                                                        <span className="text-[10px] text-text-muted mt-0.5 block font-medium">
                                                             {period}
                                                         </span>
                                                     ) : null;
@@ -291,14 +291,14 @@ const Transactions = () => {
                                                     {payment.paymentMethod || payment.mode || 'cash'}
                                                 </span>
                                             </td>
-                                            <td className="p-5 text-right text-gray-200 font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
+                                            <td className="p-5 text-right text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
                                             <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
                                             <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
                                             <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
                                             <td className="p-5 text-center">
                                                 {getStatusBadge(payment)}
                                                 {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
-                                                    <div className="mt-1 text-[10px] text-gray-500 font-medium">
+                                                    <div className="mt-1 text-[10px] text-text-muted font-medium">
                                                         Due: {new Date(payment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')}
                                                     </div>
                                                 )}
@@ -306,7 +306,7 @@ const Transactions = () => {
                                             <td className="p-5 text-center">
                                                 <button 
                                                     onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-all"
+                                                    className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
                                                     title="View Bill"
                                                 >
                                                     <FileText size={18} />
@@ -319,7 +319,7 @@ const Transactions = () => {
                                                             const client = clients.find(c => c._id === payment.clientId);
                                                             if (client) { setSelectedClient(client); setShowClientDetailModal(true); }
                                                         }}
-                                                        className="p-2 rounded-lg text-gray-400 hover:text-emerald-400 hover:bg-emerald-400/10 transition-all"
+                                                        className="p-2 rounded-lg text-text-secondary hover:text-success hover:bg-emerald-400/10 transition-all"
                                                         title="View Client"
                                                     >
                                                         <Eye size={18} />
@@ -370,17 +370,17 @@ const Transactions = () => {
                     <div className="bg-white text-gray-900 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print-invoice-container my-8 relative">
                         {/* Actions Header (Hidden in print) */}
                         <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Invoice Preview</span>
+                            <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Invoice Preview</span>
                             <div className="flex gap-2">
                                 <button 
                                     onClick={() => window.print()} 
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-all shadow-sm"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
                                 >
                                     Print Invoice
                                 </button>
                                 <button 
                                     onClick={() => setShowReceiptModal(false)} 
-                                    className="p-1.5 text-gray-400 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
+                                    className="p-1.5 text-text-secondary hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
                                 >
                                     <X size={18} />
                                 </button>
@@ -405,7 +405,7 @@ const Transactions = () => {
                                     )}
                                     <div>
                                         <h2 className="text-lg font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
-                                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                                        <p className="text-[9px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
                                     </div>
                                 </div>
                                 
@@ -424,25 +424,25 @@ const Transactions = () => {
                             {/* Middle Section: Meta & Client details */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-gray-200 text-xs">
                                 <div>
-                                    <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Billed To (Client Details)</h4>
+                                    <h4 className="font-black text-text-secondary uppercase tracking-widest mb-1 text-[9px]">Billed To (Client Details)</h4>
                                     <p className="font-bold text-gray-900 text-sm">{selectedPayment.clientName}</p>
-                                    <p className="text-gray-500 font-medium mt-0.5">Client ID: {getClientDisplayId(selectedPayment.clientId)}</p>
+                                    <p className="text-text-muted font-medium mt-0.5">Client ID: {getClientDisplayId(selectedPayment.clientId)}</p>
                                 </div>
                                 <div className="text-left sm:text-right">
-                                    <h4 className="font-black text-gray-400 uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
+                                    <h4 className="font-black text-text-secondary uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
                                     <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
-                                    <p className="text-gray-500 font-medium mt-0.5">Date: {new Date(selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                                    <p className="text-text-muted font-medium mt-0.5">Date: {new Date(selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                     <p className="mt-1">{getStatusBadge(selectedPayment)}</p>
                                 </div>
                             </div>
 
                             {/* Subscription Details Table */}
                             <div className="space-y-2">
-                                <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Membership Details</h4>
+                                <h4 className="text-[9px] font-black text-text-secondary uppercase tracking-widest">Membership Details</h4>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200">
+                                            <tr className="bg-gray-50 text-text-muted font-bold uppercase tracking-wider border-b border-gray-200">
                                                 <th className="p-2.5">Plan Name / Description</th>
                                                 <th className="p-2.5 text-center">Payment Method</th>
                                                 <th className="p-2.5 text-right">Amount</th>
@@ -453,7 +453,7 @@ const Transactions = () => {
                                                 <td className="p-2.5 font-semibold">
                                                     {selectedPayment.planName} Subscription
                                                     {selectedPayment.startDate && (
-                                                        <span className="block text-[10px] text-gray-500 font-normal mt-0.5">
+                                                        <span className="block text-[10px] text-text-muted font-normal mt-0.5">
                                                             Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'Expiry'}
                                                         </span>
                                                     )}
@@ -504,9 +504,9 @@ const Transactions = () => {
                             {/* Footer: Greetings & Regards */}
                             <div className="pt-4 border-t border-gray-200 text-center space-y-2">
                                 {gymInfo?.billingInfo?.greetingText && (
-                                    <p className="text-[11px] text-gray-500 font-medium italic">"{gymInfo.billingInfo.greetingText}"</p>
+                                    <p className="text-[11px] text-text-muted font-medium italic">"{gymInfo.billingInfo.greetingText}"</p>
                                 )}
-                                <div className="text-[10px] text-gray-400">
+                                <div className="text-[10px] text-text-secondary">
                                     <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
                                     <p className="mt-0.5 font-medium">Thank you for your business!</p>
                                 </div>
@@ -519,10 +519,10 @@ const Transactions = () => {
             {/* Client Detail Modal */}
             {showClientDetailModal && selectedClient && (
                 <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-dark w-full max-w-4xl h-screen shadow-2xl animate-in slide-in-from-right duration-500 relative flex flex-col">
+                    <div className="bg-surface-primary w-full max-w-4xl h-screen shadow-2xl animate-in slide-in-from-right duration-500 relative flex flex-col">
                         <button 
                             onClick={() => setShowClientDetailModal(false)} 
-                            className="absolute top-6 right-6 p-2.5 bg-gray-800/80 hover:bg-gray-700 text-gray-400 hover:text-white rounded-full z-[60] transition-all border border-gray-700/50"
+                            className="absolute top-6 right-6 p-2.5 bg-surface-divider/80 hover:bg-surface-hover text-text-secondary hover:text-text-primary rounded-full z-[60] transition-all border border-border/50"
                         >
                             <X size={20} />
                         </button>

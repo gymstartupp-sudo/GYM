@@ -354,7 +354,7 @@ const CustomDatePicker = React.forwardRef(({
         {...rest}
       />
       <div className="absolute right-0 top-0 h-full w-11 flex items-center justify-center cursor-pointer select-none">
-        <span className="text-gray-400 hover:text-white text-base">📅</span>
+        <span className="text-text-secondary hover:text-text-primary text-base">📅</span>
         <input
           type="date"
           ref={dateInputRef}

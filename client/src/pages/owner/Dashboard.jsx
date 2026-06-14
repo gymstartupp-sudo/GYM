@@ -9,67 +9,51 @@ import PaymentModal from '../../components/PaymentModal';
 import ClientCard from '../../components/ClientCard';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../../utils/membership';
 
-const planStatusStyles = {
-  Active: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  Upcoming: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  Expired: 'bg-gray-500/10 text-gray-400 border border-gray-700/50',
-};
-
-const paymentStatusStyles = {
-  paid: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  partial: 'bg-red-500/10 text-red-400 border border-red-500/20',
-  overdue: 'bg-red-500/10 text-red-400 border border-red-500/20',
-};
-
-const StatCard = ({ title, value, icon, color }) => (
-  <div className={`card relative overflow-hidden group`}>
-     <div className={`absolute -right-4 -top-4 w-32 h-32 rounded-full opacity-[0.03] group-hover:opacity-10 group-hover:scale-150 transition-all duration-700 ease-out ${color}`}></div>
-     
-     <div className="flex justify-between items-start relative z-10">
-        <div>
-           <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1 opacity-80 group-hover:opacity-100 transition-opacity">{title}</p>
-           <h3 className="text-3xl font-black text-white group-hover:text-primary transition-colors duration-300">{value}</h3>
-        </div>
-        <div className={`p-3 rounded-xl ${color} bg-opacity-10 backdrop-blur-md border border-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300`}>
-           {icon}
-        </div>
-     </div>
-     
-     <div className={`absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-500 ease-in-out ${color}`}></div>
+const StatCard = ({ title, value, icon, accentClass = 'text-primary' }) => (
+  <div className="kpi-card">
+    <div className="flex justify-between items-start">
+      <div>
+        <p className="kpi-card-label">{title}</p>
+        <h3 className="kpi-card-value mt-1">{value}</h3>
+      </div>
+      <div className={`p-2.5 rounded-lg bg-surface-divider ${accentClass}`}>
+        {icon}
+      </div>
+    </div>
   </div>
 );
 
 const ClientDashboardTable = ({ clients, onView }) => (
-    <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[500px]">
+    <div className="table-container border-0 rounded-none">
+        <table className="data-table min-w-[500px]">
             <thead>
-                <tr className="bg-gray-800/40 text-gray-500 uppercase text-[10px] font-bold tracking-widest border-b border-gray-800">
-                    <th className="px-6 py-4">Client Info</th>
-                    <th className="px-6 py-4">Contact Info</th>
-                    <th className="px-6 py-4 text-right">Action</th>
+                <tr>
+                    <th>Client Info</th>
+                    <th>Contact Info</th>
+                    <th className="text-right">Action</th>
                 </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800/50">
+            <tbody>
                 {clients.map(client => (
-                    <tr key={client._id} className="hover:bg-white/[0.02] transition-colors group">
-                        <td className="px-6 py-4">
+                    <tr key={client._id} className="group">
+                        <td>
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-base border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-base border border-primary/20 shrink-0 group-hover:bg-primary group-hover:text-[var(--btn-primary-text)] transition-all duration-200">
                                     {client.personalInfo?.name?.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex flex-col min-w-0">
-                                    <span className="text-white font-bold truncate group-hover:text-primary transition-colors">{client.personalInfo?.name}</span>
-                                    <span className="text-gray-500 text-[10px] font-mono tracking-tighter uppercase">{client.clientId || 'N/A'}</span>
+                                    <span className="text-text-primary font-semibold truncate group-hover:text-primary transition-colors">{client.personalInfo?.name}</span>
+                                    <span className="text-text-muted text-[10px] font-mono tracking-tighter uppercase">{client.clientId || 'N/A'}</span>
                                 </div>
                             </div>
                         </td>
-                        <td className="px-6 py-4">
-                            <span className="text-gray-300 text-sm font-medium">{client.personalInfo?.mobileNo || '-'}</span>
+                        <td>
+                            <span className="text-text-secondary text-sm font-medium">{client.personalInfo?.mobileNo || '-'}</span>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                            <button 
+                        <td className="text-right">
+                            <button
                                 onClick={() => onView(client)}
-                                className="p-2 bg-gray-800 text-gray-400 hover:text-white hover:bg-primary rounded-lg transition-all shadow-lg border border-gray-700/50"
+                                className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
                                 title="View Details"
                             >
                                 <Eye size={16} />
@@ -169,27 +153,27 @@ const Dashboard = () => {
        <div className="card relative overflow-hidden">
            <div className="flex justify-between items-start">
                <div>
-                   <div className="h-3 w-24 bg-gray-800 rounded animate-pulse mb-3"></div>
-                   <div className="h-8 w-16 bg-gray-800 rounded animate-pulse"></div>
+                   <div className="h-3 w-24 bg-surface-divider rounded animate-pulse mb-3"></div>
+                   <div className="h-8 w-16 bg-surface-divider rounded animate-pulse"></div>
                </div>
-               <div className="w-12 h-12 bg-gray-800 rounded-xl animate-pulse"></div>
+               <div className="w-12 h-12 bg-surface-divider rounded-xl animate-pulse"></div>
            </div>
        </div>
    );
 
    return (
-        <div className="flex flex-col h-full bg-dark">
+        <div className="flex flex-col h-full bg-surface-primary">
             <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
-                       <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Dashboard Overview</h1>
-                       <p className="text-gray-400 mt-1 text-sm md:text-base">Here is what's happening in your Gym today.</p>
+                       <h1 className="page-heading text-2xl md:text-[36px]">Dashboard Overview</h1>
+                       <p className="text-text-secondary mt-1 text-sm md:text-base">Here is what's happening in your Gym today.</p>
                     </div>
                     <div className="flex gap-3 w-full sm:w-auto">
-                       <button onClick={() => setShowAddModal(true)} className="flex-1 sm:flex-none text-center bg-primary hover:bg-blue-600 text-white px-4 md:px-5 py-2.5 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm md:text-base">
+                       <button onClick={() => setShowAddModal(true)} className="btn-primary flex-1 sm:flex-none text-sm md:text-base">
                          + Add Client
                        </button>
-                       <button onClick={() => setShowPaymentModal(true)} className="flex-1 sm:flex-none text-center bg-accent hover:bg-emerald-600 text-white px-4 md:px-5 py-2.5 rounded-lg shadow-lg shadow-accent/30 font-medium transition-all text-sm md:text-base">
+                       <button onClick={() => setShowPaymentModal(true)} className="btn-success flex-1 sm:flex-none text-sm md:text-base">
                          Record Payment
                        </button>
                     </div>
@@ -203,41 +187,41 @@ const Dashboard = () => {
                         </>
                     ) : (
                         <>
-                            <StatCard title="Total Clients" value={stats?.stats?.totalClients || 0} icon={<Users size={24} className="text-primary" />} color="bg-primary text-primary" />
-                            <StatCard title="Active Clients" value={stats?.stats?.activeClients || 0} icon={<UserCheck size={24} className="text-emerald-400" />} color="bg-emerald-500 text-emerald-500" />
-                            <StatCard 
-                                title="Retention Rate" 
-                                value={`${stats?.stats?.totalClients > 0 ? ((stats?.stats?.activeClients / stats?.stats?.totalClients) * 100).toFixed(1) : 0}%`} 
-                                icon={<Activity size={24} className="text-blue-400" />} 
-                                color="bg-blue-500 text-blue-500" 
+                            <StatCard title="Total Clients" value={stats?.stats?.totalClients || 0} icon={<Users size={22} />} accentClass="text-primary" />
+                            <StatCard title="Active Clients" value={stats?.stats?.activeClients || 0} icon={<UserCheck size={22} />} accentClass="text-success" />
+                            <StatCard
+                                title="Retention Rate"
+                                value={`${stats?.stats?.totalClients > 0 ? ((stats?.stats?.activeClients / stats?.stats?.totalClients) * 100).toFixed(1) : 0}%`}
+                                icon={<Activity size={22} />}
+                                accentClass="text-primary"
                             />
                             <div onClick={() => navigate('/owner/requests')} className="cursor-pointer">
-                                <StatCard title="Pending Requests" value={stats?.pendingList?.length || 0} icon={<UserPlus size={24} className="text-yellow-500" />} color="bg-yellow-500 text-yellow-500" />
+                                <StatCard title="Pending Requests" value={stats?.pendingList?.length || 0} icon={<UserPlus size={22} />} accentClass="text-warning" />
                             </div>
-                            <StatCard title="Expiring Soon" value={stats?.stats?.expiringSoon || 0} icon={<AlertCircle size={24} className="text-warning" />} color="bg-warning text-warning" />
-                            <StatCard title="Expired" value={stats?.stats?.expiredClients || 0} icon={<AlertTriangle size={24} className="text-alert" />} color="bg-alert text-alert" />
+                            <StatCard title="Expiring Soon" value={stats?.stats?.expiringSoon || 0} icon={<AlertCircle size={22} />} accentClass="text-warning" />
+                            <StatCard title="Expired" value={stats?.stats?.expiredClients || 0} icon={<AlertTriangle size={22} />} accentClass="text-danger" />
                         </>
                     )}
                 </div>
 
                {/* Client List Section */}
-               <div className="card p-0 mb-10 bg-gray-900/40 border-gray-800 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
-                  <div className="flex justify-between items-center p-6 border-b border-gray-800/60 bg-gray-800/20">
-                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
+               <div className="card p-0 mb-10 bg-surface-divider/80 border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+                  <div className="flex justify-between items-center p-6 border-b border-border/60 bg-surface-divider/50">
+                     <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
                         <List size={20} className="text-primary" /> Client List
                      </h3>
                   </div>
                   
                   <div className="overflow-hidden">
                     {dashboardTableClients.length === 0 ? (
-                        <div className="py-12 text-center text-gray-500 italic">No clients found</div>
+                        <div className="py-12 text-center text-text-muted italic">No clients found</div>
                     ) : (
                         <ClientDashboardTable clients={dashboardTableClients} onView={setViewClient} />
                     )}
                   </div>
 
                   {stats?.stats?.totalClients > 4 && (
-                      <div className="p-4 bg-gray-800/10 border-t border-gray-800/50">
+                      <div className="p-4 bg-surface-divider/10 border-t border-border/50">
                           <button 
                             onClick={fetchAllClients} 
                             className="w-full py-3 text-primary text-sm font-bold hover:bg-primary/5 rounded-xl border border-primary/20 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
@@ -250,18 +234,18 @@ const Dashboard = () => {
 
                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                   {/* Expiring Soon */}
-                  <div className="card p-0 bg-gray-900/30 border-gray-800 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                     <div className="flex justify-between items-center p-6 border-b border-gray-800">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-warning"></div> Expiring Soon</h3>
+                  <div className="card p-0 bg-surface-secondary/30 border-border rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                     <div className="flex justify-between items-center p-6 border-b border-border">
+                        <h3 className="text-lg font-bold text-text-primary flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-warning"></div> Expiring Soon</h3>
                      </div>
                      {stats?.expiringSoonList?.length === 0 ? (
-                         <div className="py-8 text-center text-gray-500 bg-gray-800/20 dashed">No clients expiring soon</div>
+                         <div className="py-8 text-center text-text-muted bg-surface-divider/50 dashed">No clients expiring soon</div>
                      ) : (
                          <div>
                              <ClientDashboardTable clients={stats?.expiringSoonList?.slice(0, 3) || []} onView={setViewClient} />
 
                              {stats?.stats?.expiringSoon > 3 && (
-                               <div className="p-4 border-t border-gray-800">
+                               <div className="p-4 border-t border-border">
                                    <button 
                                      onClick={() => navigate('/owner/clients?status=Expiring Soon')}
                                      className="w-full py-2 text-primary text-sm font-medium hover:bg-primary/10 rounded-lg border border-primary/20 transition-all"
@@ -275,18 +259,18 @@ const Dashboard = () => {
                   </div>
 
                   {/* Expired List */}
-                  <div className="card p-0 bg-gray-900/30 border-gray-800 rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                     <div className="flex justify-between items-center p-6 border-b border-gray-800">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-alert"></div> Expired</h3>
+                  <div className="card p-0 bg-surface-secondary/30 border-border rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                     <div className="flex justify-between items-center p-6 border-b border-border">
+                        <h3 className="text-lg font-bold text-text-primary flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-alert"></div> Expired</h3>
                      </div>
                      {stats?.expiredList?.length === 0 ? (
-                         <div className="py-8 text-center text-gray-500 bg-gray-800/20 dashed">No expired clients</div>
+                         <div className="py-8 text-center text-text-muted bg-surface-divider/50 dashed">No expired clients</div>
                      ) : (
                          <div>
                              <ClientDashboardTable clients={stats?.expiredList?.slice(0, 3) || []} onView={setViewClient} />
 
                              {stats?.stats?.expiredClients > 3 && (
-                               <div className="p-4 border-t border-gray-800">
+                               <div className="p-4 border-t border-border">
                                    <button 
                                      onClick={() => navigate('/owner/expired')}
                                      className="w-full py-2 text-alert text-sm font-medium hover:bg-alert/10 rounded-lg border border-alert/20 transition-all"
@@ -304,11 +288,11 @@ const Dashboard = () => {
            {/* Add Client Modal */}
            {showAddModal && (
                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                   <div className="relative bg-dark border border-gray-700/50 rounded-xl p-6 w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-                       <button type="button" onClick={() => closeAddModal(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors z-10">
+                   <div className="relative bg-surface-primary border border-border/50 rounded-xl p-6 w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+                       <button type="button" onClick={() => closeAddModal(false)} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
                            <X size={24} />
                        </button>
-                       <h2 className="text-2xl font-bold text-white mb-6">Add New Client</h2>
+                       <h2 className="text-2xl font-bold text-text-primary mb-6">Add New Client</h2>
                        <ClientForm 
                            key={formInstanceKey}
                            mode="owner" 
@@ -328,14 +312,14 @@ const Dashboard = () => {
             {/* View Client Modal */}
             {viewClient && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative bg-gray-900 border border-gray-700/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="p-4 border-b border-gray-800 flex justify-between items-center shrink-0">
-                            <h2 className="text-lg font-bold text-white">Client Details</h2>
-                            <button onClick={() => setViewClient(null)} className="text-gray-400 hover:text-white transition-colors">
+                    <div className="relative bg-surface-secondary border border-border/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-border flex justify-between items-center shrink-0">
+                            <h2 className="text-lg font-bold text-text-primary">Client Details</h2>
+                            <button onClick={() => setViewClient(null)} className="text-text-secondary hover:text-text-primary transition-colors">
                                 <X size={24} />
                             </button>
                         </div>
-                        <div className="overflow-y-auto custom-scrollbar flex-1 bg-gray-900">
+                        <div className="overflow-y-auto custom-scrollbar flex-1 bg-surface-secondary">
                             <ClientDetail clientId={viewClient._id} onClose={() => setViewClient(null)} />
                         </div>
                     </div>
@@ -345,23 +329,23 @@ const Dashboard = () => {
              {/* View All Clients Modal */}
              {showAllClientsModal && (
                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                     <div className="relative bg-gray-900 border border-gray-700/50 rounded-2xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-hidden flex flex-col">
-                         <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-800/20">
+                     <div className="relative bg-surface-secondary border border-border/50 rounded-2xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] overflow-hidden flex flex-col">
+                         <div className="p-6 border-b border-border flex justify-between items-center bg-surface-divider/50">
                              <div>
-                                 <h2 className="text-xl font-bold text-white">All Gym Members</h2>
-                                 <p className="text-gray-500 text-xs mt-1">Sorted by Client ID ascending</p>
+                                 <h2 className="text-xl font-bold text-text-primary">All Gym Members</h2>
+                                 <p className="text-text-muted text-xs mt-1">Sorted by Client ID ascending</p>
                              </div>
-                             <button onClick={() => { setShowAllClientsModal(false); setAllClientsSearchTerm(''); }} className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+                             <button onClick={() => { setShowAllClientsModal(false); setAllClientsSearchTerm(''); }} className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors">
                                  <X size={24} />
                              </button>
                          </div>
 
-                         <div className="p-4 border-b border-gray-800 bg-gray-900/50">
+                         <div className="p-4 border-b border-border bg-surface-divider/80">
                              <div className="relative w-full">
                                  <input 
                                      type="text" 
                                      placeholder="Search by ID or Name..." 
-                                     className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2.5 px-4 text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                                     className="w-full bg-surface-divider border border-border rounded-lg py-2.5 px-4 text-text-primary text-sm focus:outline-none focus:border-primary transition-colors"
                                      value={allClientsSearchTerm}
                                      onChange={(e) => setAllClientsSearchTerm(e.target.value)}
                                  />
@@ -372,10 +356,10 @@ const Dashboard = () => {
                              {loadingAllClients ? (
                                  <div className="flex flex-col items-center justify-center py-20 gap-4">
                                      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                     <p className="text-gray-500 font-medium">Loading your members...</p>
+                                     <p className="text-text-muted font-medium">Loading your members...</p>
                                  </div>
                              ) : allClients.length === 0 ? (
-                                 <div className="py-20 text-center text-gray-500 italic">No clients found</div>
+                                 <div className="py-20 text-center text-text-muted italic">No clients found</div>
                              ) : (
                                  <ClientDashboardTable 
                                      clients={allClients.filter(c => 
@@ -391,7 +375,7 @@ const Dashboard = () => {
                              )}
                          </div>
                          
-                         <div className="p-4 border-t border-gray-800 bg-gray-900 text-center">
+                         <div className="p-4 border-t border-border bg-surface-secondary text-center">
                              <p className="text-gray-600 text-[10px] uppercase font-bold tracking-[0.2em]">End of List • {allClients.length} Total Members</p>
                          </div>
                      </div>

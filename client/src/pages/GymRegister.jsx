@@ -3,6 +3,7 @@ import api from '../utils/api';
 import { toast } from 'react-toastify';
 import { useNavigate, Link } from 'react-router-dom';
 import Button from '../components/Button';
+import PasswordInput from '../components/PasswordInput';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -363,7 +364,7 @@ const GymRegister = () => {
         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
 
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-white tracking-tight mb-2">Gym Registration</h2>
+          <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">Gym Registration</h2>
           <p className="text-sm text-slate-400">Set up your premium SaaS gym workspace in three fast steps.</p>
         </div>
 
@@ -390,9 +391,9 @@ const GymRegister = () => {
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 relative z-10
                       ${isCompleted
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                        ? 'bg-emerald-500 border-emerald-500 text-text-primary shadow-[0_0_12px_rgba(16,185,129,0.3)]'
                         : isActive
-                          ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)] scale-110'
+                          ? 'bg-blue-600 border-blue-500 text-text-primary shadow-[0_0_12px_rgba(59,130,246,0.4)] scale-110'
                           : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700/60'
                       }`}
                   >
@@ -404,7 +405,7 @@ const GymRegister = () => {
                   </div>
                   <span
                     className={`mt-2 text-[11px] font-semibold tracking-wide transition-colors duration-300 text-center
-                      ${isActive ? 'text-white font-bold' : isCompleted ? 'text-emerald-400' : 'text-slate-400'}`}
+                      ${isActive ? 'text-text-primary font-bold' : isCompleted ? 'text-emerald-400' : 'text-slate-400'}`}
                   >
                     {s.label}
                   </span>
@@ -420,7 +421,7 @@ const GymRegister = () => {
           {step === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="md:col-span-2 mb-2">
-                <h3 className="text-lg font-bold text-white mb-1">Gym Information</h3>
+                <h3 className="text-lg font-bold text-text-primary mb-1">Gym Information</h3>
                 <p className="text-xs text-slate-400">Tell us about your gym business.</p>
               </div>
 
@@ -553,7 +554,7 @@ const GymRegister = () => {
                 <button
                   type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-slate-400 hover:text-white hover:bg-slate-900/40 transition-all select-none"
+                  className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-slate-400 hover:text-text-primary hover:bg-slate-900/40 transition-all select-none"
                 >
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-blue-400" />
@@ -597,7 +598,7 @@ const GymRegister = () => {
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <div>
-                <h3 className="text-lg font-bold text-white mb-1">Owner & Communication</h3>
+                <h3 className="text-lg font-bold text-text-primary mb-1">Owner & Communication</h3>
                 <p className="text-xs text-slate-400">Manage owner credentials and automated reminder settings.</p>
               </div>
 
@@ -636,7 +637,7 @@ const GymRegister = () => {
                       <Lock className="w-3 h-3 text-slate-500" />
                       <span>Password <span className="text-red-500">*</span></span>
                     </p>
-                    <input {...register('password')} type="password" placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="20" />
+                    <PasswordInput {...register('password')} placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="20" />
                     {showFieldError('password') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
                   </div>
                   <div>
@@ -644,7 +645,7 @@ const GymRegister = () => {
                       <Lock className="w-3 h-3 text-slate-500" />
                       <span>Confirm Password <span className="text-red-500">*</span></span>
                     </p>
-                    <input {...register('confirmPassword')} type="password" placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="20" />
+                    <PasswordInput {...register('confirmPassword')} placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="20" />
                     {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.confirmPassword.message}</p>}
                   </div>
                 </div>
@@ -780,7 +781,7 @@ const GymRegister = () => {
           {step === 3 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="md:col-span-2 mb-2">
-                <h3 className="text-lg font-bold text-white mb-1">Billing & Branding</h3>
+                <h3 className="text-lg font-bold text-text-primary mb-1">Billing & Branding</h3>
                 <p className="text-xs text-slate-400">Configure client invoice settings and customize branding details.</p>
               </div>
 

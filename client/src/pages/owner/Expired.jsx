@@ -90,13 +90,13 @@ const Expired = () => {
     };
 
     return (
-        <div className="flex bg-dark h-screen overflow-hidden">
+        <div className="flex bg-surface-primary h-screen overflow-hidden">
             <div className="flex-1 overflow-y-auto p-8 pt-10">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                        <History className="text-gray-400" size={32} /> Expired Memberships
+                    <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
+                        <History className="text-text-secondary" size={32} /> Expired Memberships
                     </h1>
-                    <p className="text-gray-400 mt-1">Clients whose plans have ended. Renew their memberships to restore access.</p>
+                    <p className="text-text-secondary mt-1">Clients whose plans have ended. Renew their memberships to restore access.</p>
                 </div>
 
                 {loading ? (
@@ -104,13 +104,13 @@ const Expired = () => {
                         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 ) : clients.length === 0 ? (
-                    <div className="card bg-gray-900 border-gray-800 text-center py-16 text-gray-400">
+                    <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
                         No expired memberships found.
                     </div>
                 ) : (
-                    <div className="card p-0 bg-gray-900 border border-gray-800 rounded-xl overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* List Header */}
-                        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-gray-800/50 border-b border-gray-800 text-xs font-semibold text-gray-400 uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+                        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-hover/50 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
                             <div>Client Info</div>
                             <div>Mobile</div>
                             <div>Last Plan</div>
@@ -140,10 +140,10 @@ const Expired = () => {
             {/* View Client Modal */}
             {viewClientId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative bg-gray-900 border border-gray-700/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="p-4 border-b border-gray-800 flex justify-between items-center shrink-0">
-                            <h2 className="text-lg font-bold text-white">Client Details</h2>
-                            <button onClick={() => setViewClientId(null)} className="text-gray-400 hover:text-white transition-colors">
+                    <div className="relative bg-surface-secondary border border-border/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-border flex justify-between items-center shrink-0">
+                            <h2 className="text-lg font-bold text-text-primary">Client Details</h2>
+                            <button onClick={() => setViewClientId(null)} className="text-text-secondary hover:text-text-primary transition-colors">
                                 <X size={24} />
                             </button>
                         </div>
