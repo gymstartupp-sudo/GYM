@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { ChevronLeft, Phone, Mail, User, CreditCard, Calendar, CheckCircle2, AlertCircle, Clock, X, FileText } from 'lucide-react';
+import { ChevronLeft, Phone, Mail, User, CreditCard, Calendar, CheckCircle2, AlertCircle, Clock, X, FileText, Trash2 } from 'lucide-react';
 import Button from '../../components/Button';
 import { formatDisplayDate, calculateDaysLeft, getPlanStatus, getPaymentStatus, getClientPlans } from '../../utils/membership';
 import ClientProfileHeader from '../../components/ClientProfileHeader';
@@ -91,6 +91,22 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
         return `${backendUrl}${gymInfo.billingInfo.logo}`;
     };
 
+    const handleDeactivate = async () => {
+        if (window.confirm('Are you sure you want to deactivate this client?')) {
+            try {
+                await api.put(`/client/${id}/deactivate`);
+                toast.success('Client deactivated');
+                if (onClose) {
+                    onClose();
+                } else {
+                    navigate('/owner/clients');
+                }
+            } catch {
+                toast.error('Failed to deactivate');
+            }
+        }
+    };
+
     if (loading) {
         return (
             <div className={propClientId ? "flex justify-center items-center h-64" : "flex justify-center items-center h-[60vh]"}>
@@ -121,19 +137,32 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
                 {/* Tabs */}
                 {!simplified && (
-                    <div className="flex gap-1 p-1 bg-surface-hover/50 rounded-xl w-fit mb-6 border border-border/50">
-                        <button
-                            onClick={() => setActiveTab('personal')}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'personal' ? 'bg-primary text-text-primary shadow-lg' : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'}`}
-                        >
-                            <User size={18} /> Personal Info
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('payment')}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'payment' ? 'bg-primary text-text-primary shadow-lg' : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'}`}
-                        >
-                            <CreditCard size={18} /> Payment History
-                        </button>
+                    <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
+                        <div className="flex gap-1 p-1 bg-surface-hover/50 rounded-xl w-fit border border-border/50">
+                            <button
+                                onClick={() => setActiveTab('personal')}
+                                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'personal' ? 'bg-primary text-text-primary shadow-lg' : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'}`}
+                            >
+                                <User size={18} /> Personal Info
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('payment')}
+                                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'payment' ? 'bg-primary text-text-primary shadow-lg' : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover'}`}
+                            >
+                                <CreditCard size={18} /> Payment History
+                            </button>
+                        </div>
+
+                        {client.isActive && (
+                            <Button
+                                type="button"
+                                variant="danger"
+                                onClick={handleDeactivate}
+                                className="!px-4 !py-2.5 text-xs flex items-center gap-1.5"
+                            >
+                                <Trash2 size={14} /> Deactivate Client
+                            </Button>
+                        )}
                     </div>
                 )}
 
@@ -314,6 +343,50 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                             </>
                                         );
                                     })()}
+
+                                    {/* WhatsApp Automation Alerts */}
+                                    <div className="mt-6 pt-6 border-t border-border">
+                                        <p className="text-text-muted uppercase text-[10px] font-bold tracking-[0.15em] mb-4">WhatsApp Automation Alerts</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {/* Expiring Soon Alert */}
+                                            <div className="p-3 bg-surface-divider/50 rounded-xl border border-border/50 flex flex-col gap-1.5">
+                                                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">3-Day Expiring Soon Alert</span>
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        {client.expiryReminderStatus === 'sent' ? (
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Sent</span>
+                                                        ) : client.expiryReminderStatus === 'failed' ? (
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">Failed</span>
+                                                        ) : (
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gray-500/10 text-text-secondary border border-border">Pending</span>
+                                                        )}
+                                                    </div>
+                                                    {client.expiryReminderStatus === 'failed' && client.expiryReminderError && (
+                                                        <p className="text-[10px] text-rose-500 font-medium italic mt-1 leading-tight">{client.expiryReminderError}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Expired Alert */}
+                                            <div className="p-3 bg-surface-divider/50 rounded-xl border border-border/50 flex flex-col gap-1.5">
+                                                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Expired Alert (days left = -1)</span>
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        {client.expiredReminderStatus === 'sent' ? (
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Sent</span>
+                                                        ) : client.expiredReminderStatus === 'failed' ? (
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">Failed</span>
+                                                        ) : (
+                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gray-500/10 text-text-secondary border border-border">Pending</span>
+                                                        )}
+                                                    </div>
+                                                    {client.expiredReminderStatus === 'failed' && client.expiredReminderError && (
+                                                        <p className="text-[10px] text-rose-500 font-medium italic mt-1 leading-tight">{client.expiredReminderError}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -55,11 +55,19 @@ const runReminders = async () => {
       if (daysLeft > 3) {
         updatedClient.membership.expiryReminderSent = false;
         updatedClient.expiryReminderSent = false;
+        updatedClient.membership.expiryReminderStatus = 'none';
+        updatedClient.expiryReminderStatus = 'none';
+        updatedClient.membership.expiryReminderError = null;
+        updatedClient.expiryReminderError = null;
       }
       // If active again, reset expiredReminderSent (daysLeft >= 0)
       if (daysLeft >= 0) {
         updatedClient.membership.expiredReminderSent = false;
         updatedClient.expiredReminderSent = false;
+        updatedClient.membership.expiredReminderStatus = 'none';
+        updatedClient.expiredReminderStatus = 'none';
+        updatedClient.membership.expiredReminderError = null;
+        updatedClient.expiredReminderError = null;
       }
 
       await updatedClient.save();
@@ -78,6 +86,11 @@ const runReminders = async () => {
         if (!cleanMobile) {
           twilioStatus = 'Failed';
           failureReason = 'Invalid/Dummy WhatsApp number';
+          updatedClient.membership.expiryReminderStatus = 'failed';
+          updatedClient.expiryReminderStatus = 'failed';
+          updatedClient.membership.expiryReminderError = failureReason;
+          updatedClient.expiryReminderError = failureReason;
+          await updatedClient.save();
         } else {
           // Check duplicate flag
           const isSent = updatedClient.membership.expiryReminderSent || updatedClient.expiryReminderSent;
@@ -93,10 +106,19 @@ const runReminders = async () => {
               twilioStatus = 'Success';
               updatedClient.membership.expiryReminderSent = true;
               updatedClient.expiryReminderSent = true;
+              updatedClient.membership.expiryReminderStatus = 'sent';
+              updatedClient.expiryReminderStatus = 'sent';
+              updatedClient.membership.expiryReminderError = null;
+              updatedClient.expiryReminderError = null;
               await updatedClient.save();
             } else {
               twilioStatus = 'Failed';
               failureReason = result ? result.error : 'Twilio send error';
+              updatedClient.membership.expiryReminderStatus = 'failed';
+              updatedClient.expiryReminderStatus = 'failed';
+              updatedClient.membership.expiryReminderError = failureReason;
+              updatedClient.expiryReminderError = failureReason;
+              await updatedClient.save();
             }
           }
         }
@@ -105,6 +127,11 @@ const runReminders = async () => {
         if (!cleanMobile) {
           twilioStatus = 'Failed';
           failureReason = 'Invalid/Dummy WhatsApp number';
+          updatedClient.membership.expiredReminderStatus = 'failed';
+          updatedClient.expiredReminderStatus = 'failed';
+          updatedClient.membership.expiredReminderError = failureReason;
+          updatedClient.expiredReminderError = failureReason;
+          await updatedClient.save();
         } else {
           // Check duplicate flag
           const isSent = updatedClient.membership.expiredReminderSent || updatedClient.expiredReminderSent;
@@ -121,10 +148,19 @@ const runReminders = async () => {
               twilioStatus = 'Success';
               updatedClient.membership.expiredReminderSent = true;
               updatedClient.expiredReminderSent = true;
+              updatedClient.membership.expiredReminderStatus = 'sent';
+              updatedClient.expiredReminderStatus = 'sent';
+              updatedClient.membership.expiredReminderError = null;
+              updatedClient.expiredReminderError = null;
               await updatedClient.save();
             } else {
               twilioStatus = 'Failed';
               failureReason = result ? result.error : 'Twilio send error';
+              updatedClient.membership.expiredReminderStatus = 'failed';
+              updatedClient.expiredReminderStatus = 'failed';
+              updatedClient.membership.expiredReminderError = failureReason;
+              updatedClient.expiredReminderError = failureReason;
+              await updatedClient.save();
             }
           }
         }

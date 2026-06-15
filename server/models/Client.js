@@ -19,6 +19,10 @@ const clientSchema = new mongoose.Schema({
   whatsappNumber: { type: String },
   expiryReminderSent: { type: Boolean, default: false },
   expiredReminderSent: { type: Boolean, default: false },
+  expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+  expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+  expiryReminderError: { type: String, default: null },
+  expiredReminderError: { type: String, default: null },
   password: { type: String, required: true },
   memberships: [{
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan' },
@@ -47,7 +51,11 @@ const clientSchema = new mongoose.Schema({
     status: { type: String, enum: ['active', 'expired', 'expiring_soon', 'upcoming', 'pending'] },
     requestApproved: { type: Boolean, default: false },
     expiryReminderSent: { type: Boolean, default: false },
-    expiredReminderSent: { type: Boolean, default: false }
+    expiredReminderSent: { type: Boolean, default: false },
+    expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+    expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+    expiryReminderError: { type: String, default: null },
+    expiredReminderError: { type: String, default: null }
   },
   paymentHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
   avatar: { type: String },

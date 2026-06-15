@@ -542,7 +542,7 @@ const Transactions = () => {
                             <X size={20} />
                         </button>
                         <div className="flex-1 overflow-y-auto">
-                            <ClientDetail clientId={selectedClient._id} onClose={() => setShowClientDetailModal(false)} />
+                            <ClientDetail clientId={selectedClient._id} onClose={() => { setShowClientDetailModal(false); fetchData(); }} />
                         </div>
                     </div>
                 </div>

@@ -318,7 +318,7 @@ const Dashboard = () => {
                             </button>
                         </div>
                         <div className="overflow-y-auto custom-scrollbar flex-1 bg-surface-secondary">
-                            <ClientDetail clientId={viewClient._id} onClose={() => setViewClient(null)} />
+                            <ClientDetail clientId={viewClient._id} onClose={() => { setViewClient(null); fetchStats(); }} />
                         </div>
                     </div>
                 </div>
