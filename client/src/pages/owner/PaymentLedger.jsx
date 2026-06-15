@@ -829,7 +829,7 @@ const PaymentLedger = () => {
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); handleOpenModal('view', exp); }}
                                                             className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
-                                                            title="View Details"
+                                                            title="View"
                                                         >
                                                             <Eye size={16} />
                                                         </button>

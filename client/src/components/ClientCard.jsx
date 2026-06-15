@@ -20,15 +20,15 @@ const ClientCard = ({ client, onView, onDelete, onRenew, onReactivate, onDuesCli
   const daysLeft = dynamicDaysLeft !== null ? dynamicDaysLeft : '-';
 
   return (
-    <div className="grid-table-row bg-surface-card">
+    <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group">
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-4 md:gap-2 items-center text-sm">
 
         <div className="flex gap-3 items-center min-w-0">
-          <div className="w-10 h-10 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-text-primary transition-all duration-300">
             {avatarText}
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-text-primary truncate">{name}</h3>
+            <h3 className="font-semibold text-text-primary truncate group-hover:text-primary transition-colors">{name}</h3>
             <p className="text-xs text-text-muted truncate">{client?.clientId || 'Pending ID'}</p>
           </div>
         </div>

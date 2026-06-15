@@ -30,7 +30,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
     const isPaymentCleared = (payment) => {
         if (!payment || payment.status !== 'partial') return false;
-        return client?.paymentHistory?.some(p => 
+        return client?.paymentHistory?.some(p =>
             p.planId === payment.planId &&
             new Date(p.startDate).getTime() === new Date(payment.startDate).getTime() &&
             p.status === 'paid'
@@ -40,7 +40,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     const getStatusBadge = (payment) => {
         const status = typeof payment === 'object' ? payment.status : payment;
         if (!status || status === 'paid') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">PAID</span>;
-        
+
         if (status === 'partial' && typeof payment === 'object') {
             if (isPaymentCleared(payment)) {
                 return (
@@ -51,7 +51,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                 );
             }
         }
-        
+
         if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">PARTIALLY</span>;
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase">OVERDUE</span>;
     };
@@ -174,148 +174,148 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
                             {/* Membership Details */}
                             <div className="card bg-surface-secondary border-border">
-                                    <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2 border-b border-border pb-4">
-                                        <Calendar size={20} className="text-accent" /> Membership Lifecycle
-                                    </h3>
-                                    <div className="space-y-8">
-                                        {(() => {
-                                            const memberships = client.memberships || (client.membership?.startDate ? [client.membership] : []);
-                                            const { currentPlan, nextPlan, previousPlans, gaps } = getClientPlans(memberships);
-                                            
-                                            const getPaymentBadgeStyle = (status) => {
-                                                switch(status) {
-                                                    case 'PAID': return 'bg-green-500 text-text-primary';
-                                                    case 'PENDING': return 'bg-yellow-500 text-black';
-                                                    case 'OVERDUE': return 'bg-red-500 text-text-primary';
-                                                    default: return 'bg-gray-500 text-text-primary';
-                                                }
-                                            };
+                                <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2 border-b border-border pb-4">
+                                    <Calendar size={20} className="text-accent" /> Membership Lifecycle
+                                </h3>
+                                <div className="space-y-8">
+                                    {(() => {
+                                        const memberships = client.memberships || (client.membership?.startDate ? [client.membership] : []);
+                                        const { currentPlan, nextPlan, previousPlans, gaps } = getClientPlans(memberships);
 
-                                            return (
-                                                <>
-                                                    {/* CURRENT PLAN */}
-                                                    <div>
-                                                        <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Current Plan</p>
-                                                        {currentPlan ? (
-                                                            <div className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                                                                <div className="flex justify-between items-start mb-2">
-                                                                    <div>
-                                                                        <p className="text-xl font-bold text-emerald-400">{currentPlan.planName}</p>
-                                                                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase">Active</span>
-                                                                    </div>
-                                                                    <div className="text-right">
-                                                                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${getPaymentBadgeStyle(currentPlan.paymentStatus)}`}>
-                                                                            {currentPlan.paymentStatus}
-                                                                        </span>
-                                                                    </div>
+                                        const getPaymentBadgeStyle = (status) => {
+                                            switch (status) {
+                                                case 'PAID': return 'bg-green-500 text-text-primary';
+                                                case 'PENDING': return 'bg-yellow-500 text-black';
+                                                case 'OVERDUE': return 'bg-red-500 text-text-primary';
+                                                default: return 'bg-gray-500 text-text-primary';
+                                            }
+                                        };
+
+                                        return (
+                                            <>
+                                                {/* CURRENT PLAN */}
+                                                <div>
+                                                    <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Current Plan</p>
+                                                    {currentPlan ? (
+                                                        <div className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <div>
+                                                                    <p className="text-xl font-bold text-emerald-400">{currentPlan.planName}</p>
+                                                                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase">Active</span>
                                                                 </div>
-
-                                                                <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-                                                                    <div>
-                                                                        <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Starts</p>
-                                                                        <p className="text-text-primary font-medium">{formatDisplayDate(currentPlan.startDate)}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Expires</p>
-                                                                        <p className="text-text-primary font-medium">{formatDisplayDate(currentPlan.endDate)}</p>
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Payment Info */}
-                                                                <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-4">
-                                                                    <div>
-                                                                        <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Paid / Balance</p>
-                                                                        <p className="text-text-primary font-medium">₹{currentPlan.totalPaid || 0} / <span className="text-accent">₹{currentPlan.balance || 0}</span></p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Due Date</p>
-                                                                        <p className="text-text-primary font-medium">{currentPlan.dueDate ? formatDisplayDate(currentPlan.dueDate) : 'No Due Date'}</p>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="mt-4 pt-4 border-t border-emerald-500/10 flex justify-between items-center">
-                                                                    <span className="text-text-secondary text-xs">Days Remaining:</span>
-                                                                    <span className="text-emerald-400 font-bold">{calculateDaysLeft(currentPlan.startDate, currentPlan.endDate)} Days</span>
+                                                                <div className="text-right">
+                                                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${getPaymentBadgeStyle(currentPlan.paymentStatus)}`}>
+                                                                        {currentPlan.paymentStatus}
+                                                                    </span>
                                                                 </div>
                                                             </div>
-                                                        ) : (
-                                                            <div className="p-6 bg-surface-divider/50 rounded-xl border border-border/50 flex flex-col items-center justify-center text-center">
-                                                                <AlertCircle size={32} className="text-gray-600 mb-2 opacity-20" />
-                                                                <p className="text-text-secondary font-bold">No Active Plan</p>
-                                                                <p className="text-gray-600 text-[10px] uppercase tracking-widest mt-1">Renewal Required</p>
+
+                                                            <div className="grid grid-cols-2 gap-4 text-sm mt-4">
+                                                                <div>
+                                                                    <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Starts</p>
+                                                                    <p className="text-text-primary font-medium">{formatDisplayDate(currentPlan.startDate)}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Expires</p>
+                                                                    <p className="text-text-primary font-medium">{formatDisplayDate(currentPlan.endDate)}</p>
+                                                                </div>
                                                             </div>
-                                                        )}
+
+                                                            {/* Payment Info */}
+                                                            <div className="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Paid / Balance</p>
+                                                                    <p className="text-text-primary font-medium">₹{currentPlan.totalPaid || 0} / <span className="text-accent">₹{currentPlan.balance || 0}</span></p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Due Date</p>
+                                                                    <p className="text-text-primary font-medium">{currentPlan.dueDate ? formatDisplayDate(currentPlan.dueDate) : 'No Due Date'}</p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="mt-4 pt-4 border-t border-emerald-500/10 flex justify-between items-center">
+                                                                <span className="text-text-secondary text-xs">Days Remaining:</span>
+                                                                <span className="text-emerald-400 font-bold">{calculateDaysLeft(currentPlan.startDate, currentPlan.endDate)} Days</span>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-6 bg-surface-divider/50 rounded-xl border border-border/50 flex flex-col items-center justify-center text-center">
+                                                            <AlertCircle size={32} className="text-gray-600 mb-2 opacity-20" />
+                                                            <p className="text-text-secondary font-bold">No Active Plan</p>
+                                                            <p className="text-gray-600 text-[10px] uppercase tracking-widest mt-1">Renewal Required</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* GAP WARNINGS */}
+                                                {gaps.map((gap, i) => (
+                                                    <div key={i} className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3">
+                                                        <AlertCircle size={18} className="text-red-400" />
+                                                        <p className="text-xs text-red-400 font-medium">
+                                                            No active plan between {formatDisplayDate(gap.from)} and {formatDisplayDate(gap.to)}
+                                                        </p>
                                                     </div>
+                                                ))}
 
-                                                    {/* GAP WARNINGS */}
-                                                    {gaps.map((gap, i) => (
-                                                        <div key={i} className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3">
-                                                            <AlertCircle size={18} className="text-red-400" />
-                                                            <p className="text-xs text-red-400 font-medium">
-                                                                No active plan between {formatDisplayDate(gap.from)} and {formatDisplayDate(gap.to)}
-                                                            </p>
-                                                        </div>
-                                                    ))}
-
-                                                    {/* NEXT PLAN */}
-                                                    {nextPlan && (
-                                                        <div>
-                                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Next Plan</p>
-                                                            <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/10">
-                                                                <div className="flex justify-between items-start mb-2">
-                                                                    <div>
-                                                                        <p className="text-lg font-bold text-blue-400">{nextPlan.planName}</p>
-                                                                        <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase">Upcoming</span>
-                                                                    </div>
-                                                                    <div className="text-right">
-                                                                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${getPaymentBadgeStyle(nextPlan.paymentStatus)}`}>
-                                                                            {nextPlan.paymentStatus}
-                                                                        </span>
-                                                                    </div>
+                                                {/* NEXT PLAN */}
+                                                {nextPlan && (
+                                                    <div>
+                                                        <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Next Plan</p>
+                                                        <div className="p-4 bg-blue-500/5 rounded-xl border border-blue-500/10">
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <div>
+                                                                    <p className="text-lg font-bold text-blue-400">{nextPlan.planName}</p>
+                                                                    <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase">Upcoming</span>
                                                                 </div>
-                                                                <p className="text-xs text-blue-400/60 font-medium mb-4">Starts automatically on {formatDisplayDate(nextPlan.startDate)}</p>
-                                                                
-                                                                <div className="pt-4 border-t border-border grid grid-cols-2 gap-4">
-                                                                    <div>
-                                                                        <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Paid / Balance</p>
-                                                                        <p className="text-text-primary font-medium">₹{nextPlan.totalPaid || 0} / <span className="text-accent">₹{nextPlan.balance || 0}</span></p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Due Date</p>
-                                                                        <p className="text-text-primary font-medium">{nextPlan.dueDate ? formatDisplayDate(nextPlan.dueDate) : 'No Due Date'}</p>
-                                                                    </div>
+                                                                <div className="text-right">
+                                                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${getPaymentBadgeStyle(nextPlan.paymentStatus)}`}>
+                                                                        {nextPlan.paymentStatus}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-xs text-blue-400/60 font-medium mb-4">Starts automatically on {formatDisplayDate(nextPlan.startDate)}</p>
+
+                                                            <div className="pt-4 border-t border-border grid grid-cols-2 gap-4">
+                                                                <div>
+                                                                    <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Paid / Balance</p>
+                                                                    <p className="text-text-primary font-medium">₹{nextPlan.totalPaid || 0} / <span className="text-accent">₹{nextPlan.balance || 0}</span></p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-text-muted text-[10px] uppercase font-bold tracking-widest">Due Date</p>
+                                                                    <p className="text-text-primary font-medium">{nextPlan.dueDate ? formatDisplayDate(nextPlan.dueDate) : 'No Due Date'}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    )}
+                                                    </div>
+                                                )}
 
-                                                    {/* PREVIOUS PLANS */}
-                                                    {previousPlans.length > 0 && (
-                                                        <div>
-                                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Previous Plans</p>
-                                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                                                                {previousPlans.map((plan, i) => (
-                                                                    <div key={i} className="flex justify-between items-center p-3 bg-surface-divider/80 rounded-lg border border-border/50">
-                                                                        <div>
-                                                                            <div className="flex items-center gap-2">
-                                                                                <p className="text-text-primary text-sm font-semibold">{plan.planName}</p>
-                                                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${getPaymentBadgeStyle(plan.paymentStatus)}`}>
-                                                                                    {plan.paymentStatus}
-                                                                                </span>
-                                                                            </div>
-                                                                            <p className="text-[10px] text-text-muted">{formatDisplayDate(plan.startDate)} - {formatDisplayDate(plan.endDate)}</p>
+                                                {/* PREVIOUS PLANS */}
+                                                {previousPlans.length > 0 && (
+                                                    <div>
+                                                        <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Previous Plans</p>
+                                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                                                            {previousPlans.map((plan, i) => (
+                                                                <div key={i} className="flex justify-between items-center p-3 bg-surface-divider/80 rounded-lg border border-border/50">
+                                                                    <div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="text-text-primary text-sm font-semibold">{plan.planName}</p>
+                                                                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${getPaymentBadgeStyle(plan.paymentStatus)}`}>
+                                                                                {plan.paymentStatus}
+                                                                            </span>
                                                                         </div>
-                                                                        <span className="text-[10px] text-gray-600 font-bold uppercase">Expired</span>
+                                                                        <p className="text-[10px] text-text-muted">{formatDisplayDate(plan.startDate)} - {formatDisplayDate(plan.endDate)}</p>
                                                                     </div>
-                                                                ))}
-                                                            </div>
+                                                                    <span className="text-[10px] text-gray-600 font-bold uppercase">Expired</span>
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                    )}
-                                                </>
-                                            );
-                                        })()}
-                                    </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
+                            </div>
                         </div>
                     ) : (
                         <div className="card bg-surface-divider/80 border-border p-0 overflow-hidden shadow-2xl backdrop-blur-sm">
@@ -369,7 +369,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                         )}
                                                     </td>
                                                     <td className="p-5 text-center">
-                                                        <button 
+                                                        <button
                                                             onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
                                                             className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
                                                             title="View Bill"
@@ -402,14 +402,14 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                         <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
                             <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Invoice Preview</span>
                             <div className="flex gap-2">
-                                <button 
-                                    onClick={() => window.print()} 
+                                <button
+                                    onClick={() => window.print()}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
                                 >
                                     Print Invoice
                                 </button>
-                                <button 
-                                    onClick={() => setShowReceiptModal(false)} 
+                                <button
+                                    onClick={() => setShowReceiptModal(false)}
                                     className="p-1.5 text-text-secondary hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
                                 >
                                     <X size={18} />
@@ -423,10 +423,10 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-gray-200">
                                 <div className="flex items-center gap-3">
                                     {getLogoUrl() ? (
-                                        <img 
-                                            src={getLogoUrl()} 
-                                            alt={gymInfo?.gymName || "Gym Logo"} 
-                                            className="w-16 h-16 object-contain rounded-lg border border-gray-100" 
+                                        <img
+                                            src={getLogoUrl()}
+                                            alt={gymInfo?.gymName || "Gym Logo"}
+                                            className="w-16 h-16 object-contain rounded-lg border border-gray-100"
                                         />
                                     ) : (
                                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center font-black text-primary text-xl">
@@ -438,7 +438,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                         <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="text-left sm:text-right text-xs text-gray-600 space-y-1">
                                     <p className="font-bold text-gray-900">Address:</p>
                                     <p className="max-w-[220px] leading-relaxed whitespace-pre-line">{gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || "Address details"}</p>
@@ -513,7 +513,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                         <span>Cumulative Paid</span>
                                         <span className="text-emerald-600">₹{selectedPayment.totalPaid || selectedPayment.paidAmount || 0}</span>
                                     </div>
-                                    
+
                                     {/* Partial Payment Balance Display */}
                                     {selectedPayment.status !== 'paid' && (getBalance(selectedPayment) > 0) && (
                                         <div className="flex justify-between text-xs font-black text-rose-600 pt-1.5 border-t border-dashed border-gray-300">

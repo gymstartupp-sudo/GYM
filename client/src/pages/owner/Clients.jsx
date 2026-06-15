@@ -177,12 +177,12 @@ const Clients = () => {
   const filteredClients = useMemo(() => {
     // 1. Filter
     const term = searchTerm.toLowerCase();
-    const list = term 
+    const list = term
       ? clients.filter(c =>
-          c.personalInfo?.name?.toLowerCase().includes(term) ||
-          (c.clientId || '').toLowerCase().includes(term) ||
-          c.personalInfo?.mobileNo?.includes(term)
-        )
+        c.personalInfo?.name?.toLowerCase().includes(term) ||
+        (c.clientId || '').toLowerCase().includes(term) ||
+        c.personalInfo?.mobileNo?.includes(term)
+      )
       : [...clients];
 
     // 2. Sort by remaining days left ascending
@@ -403,7 +403,7 @@ const Clients = () => {
                 <button onClick={() => setDuesClient(null)} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary transition-colors">
                   <X size={20} />
                 </button>
-                
+
                 <div className="flex flex-col items-center mb-6 pt-2">
                   <div className="w-20 h-20 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center font-black text-3xl mb-4 border-2 border-red-500/20 shadow-inner">
                     {duesClient.avatar || duesClient.personalInfo?.name.charAt(0).toUpperCase()}
