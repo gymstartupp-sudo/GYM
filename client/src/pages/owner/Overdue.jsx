@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 // Sidebar removed
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { AlertOctagon } from 'lucide-react';
 import ClientCard from '../../components/ClientCard';
+import Pagination from '../../components/Pagination';
 
 const Overdue = () => {
     const navigate = useNavigate();
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [currentPage, setCurrentPage] = useState(1);
 
     const fetchOverdueClients = async () => {
         try {
@@ -23,6 +26,10 @@ const Overdue = () => {
 
     useEffect(() => { fetchOverdueClients(); }, []);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [clients.length]);
+
     const handleRenew = (client) => {
         navigate('/owner/clients-payment', { state: { showPaymentModal: true, client } });
     };
@@ -31,10 +38,13 @@ const Overdue = () => {
         navigate(`/owner/clients/${client._id}`);
     };
 
+    const paginatedClients = useMemo(() => {
+        const startIndex = (currentPage - 1) * 10;
+        return clients.slice(startIndex, startIndex + 10);
+    }, [clients, currentPage]);
+
     return (
-        <div className="flex bg-surface-primary h-screen overflow-hidden">
-            <></>
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
+        <div className="p-8 pt-10">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                         <AlertOctagon className="text-alert" size={32} /> Payment Overdue
@@ -62,7 +72,7 @@ const Overdue = () => {
                         </div>
 
                         <div className="flex flex-col">
-                            {clients.map((client) => (
+                            {paginatedClients.map((client) => (
                                 <ClientCard
                                     key={client._id}
                                     client={client}
@@ -72,9 +82,13 @@ const Overdue = () => {
                                 />
                             ))}
                         </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={Math.ceil(clients.length / 10)}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
                 )}
-            </div>
         </div>
     );
 };

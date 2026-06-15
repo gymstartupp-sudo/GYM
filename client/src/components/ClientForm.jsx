@@ -10,6 +10,26 @@ import { useAuth } from '../context/AuthContext';
 import PaymentModal from './PaymentModal';
 import CustomDatePicker from './CustomDatePicker';
 
+const ensureYYYYMMDD = (val) => {
+  if (!val) return '';
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return '';
+    const d = String(val.getDate()).padStart(2, '0');
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const y = val.getFullYear();
+    return `${y}-${m}-${d}`;
+  }
+  const str = String(val).trim();
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    const parts = str.split('-');
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return str.slice(0, 10);
+  }
+  return str;
+};
+
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
 const passwordError = 'Password must be at least 8 characters with 1 uppercase and 1 number';
@@ -35,6 +55,23 @@ const getMinDobDate = () => {
   return d;
 };
 
+const parseDateString = (value, originalValue) => {
+  if (typeof originalValue === 'string' && originalValue.trim() !== '') {
+    const parts = originalValue.split('-');
+    if (parts.length === 3) {
+      if (parts[0].length === 2 && parts[2].length === 4) {
+        const d = new Date(parts[2], parts[1] - 1, parts[0]);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      if (parts[0].length === 4 && parts[2].length === 2) {
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        return isNaN(d.getTime()) ? null : d;
+      }
+    }
+  }
+  return value;
+};
+
 const getValidationSchema = (mode) => yup.object({
   gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').matches(/^[A-Z]{3}-\d{2}$/, 'Format: PREFIX-01') : yup.string().nullable(),
   gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
@@ -42,6 +79,7 @@ const getValidationSchema = (mode) => yup.object({
   gender: yup.string().required('Gender is required'),
   email: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
   dob: yup.date()
+    .transform(parseDateString)
     .typeError('Enter a valid date of birth (DD-MM-YYYY)')
     .required('Date of birth is required')
     .max(new Date("9999-12-31"), 'Year cannot exceed 4 digits')
@@ -63,6 +101,7 @@ const getValidationSchema = (mode) => yup.object({
   medicalCondition: yup.string().trim().nullable(),
   planId: yup.string().nullable(),
   startDate: yup.date()
+    .transform(parseDateString)
     .typeError('Enter a valid start date (DD-MM-YYYY)')
     .required('Start date is required')
     .min(getMinStartDate(), 'Start date cannot be more than 30 days in the past')
@@ -192,7 +231,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         const payload = {
           personalInfo: {
             name: data.name,
-            dob: data.dob,
+            dob: ensureYYYYMMDD(data.dob),
             gender: data.gender,
             address: data.address,
             email: data.email,
@@ -203,7 +242,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           password: data.password,
           membership: {
             planId: data.planId,
-            startDate: data.startDate,
+            startDate: ensureYYYYMMDD(data.startDate),
             planType: data.planType
           }
         };
@@ -216,7 +255,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           name: data.name,
           gender: data.gender,
           email: data.email,
-          dob: data.dob,
+          dob: ensureYYYYMMDD(data.dob),
           mobileNo: data.mobileNo,
           address: data.address,
           emergencyContact: data.emergencyContact,
@@ -224,7 +263,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           password: data.password,
           confirmPassword: data.confirmPassword,
           planId: data.planId,
-          startDate: data.startDate,
+          startDate: ensureYYYYMMDD(data.startDate),
           planType: data.planType
         };
 
@@ -290,7 +329,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       const payload = {
         personalInfo: {
           name: data.name,
-          dob: data.dob,
+          dob: ensureYYYYMMDD(data.dob),
           gender: data.gender,
           address: data.address,
           email: data.email,
@@ -301,7 +340,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         password: data.password,
         membership: {
           planId: data.planId,
-          startDate: data.startDate,
+          startDate: ensureYYYYMMDD(data.startDate),
           planType: data.planType
         }
       };

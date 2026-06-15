@@ -132,21 +132,21 @@ const ClientFeedback = () => {
         <div className="bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto max-h-[calc(100vh-220px)] overflow-y-auto relative">
             <table className="min-w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-gray-955 border-b border-border z-10">
-                <tr className="bg-gray-950/80 backdrop-blur-md">
+              <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
+                <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Subject</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
+              <tbody className="divide-y divide-border bg-surface-card">
                 {feedbacks.map((item) => (
-                  <tr key={item._id} className="hover:bg-surface-divider/80 transition-colors">
+                  <tr key={item._id} className="bg-surface-card hover:bg-white/[0.02] transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                       {formatDate(item.createdAt)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md">
+                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md transition-colors">
                       {item.subject || <span className="text-text-muted italic">No Subject</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -155,7 +155,7 @@ const ClientFeedback = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                       <button
                         onClick={() => handleOpenViewModal(item)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-gray-750 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-surface-hover transition-colors"
                       >
                           <Eye size={14} /> View
                       </button>
@@ -201,7 +201,7 @@ const ClientFeedback = () => {
                   }}
                   maxLength={30}
                   placeholder="E.g., Equipment maintenance, Class timings"
-                  className={`w-full bg-gray-950 border rounded-xl px-4 py-3 text-text-primary placeholder-gray-600 focus:outline-none transition-colors text-sm ${subject.length >= 30 ? 'border-red-500/60 focus:border-red-500' : 'border-border focus:border-primary'
+                  className={`w-full bg-surface-card border border-border rounded-xl px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none transition-colors text-sm ${subject.length >= 30 ? 'border-red-500/60 focus:border-red-500' : 'focus:border-primary'
                     }`}
                   disabled={isSubmitting}
                 />
@@ -225,7 +225,7 @@ const ClientFeedback = () => {
                   maxLength={300}
                   placeholder="Describe your suggestion or issue in detail..."
                   rows={5}
-                  className={`w-full bg-gray-950 border rounded-xl px-4 py-3 text-text-primary placeholder-gray-600 focus:outline-none transition-colors text-sm resize-none ${message.length >= 300 ? 'border-red-500/60 focus:border-red-500' : 'border-border focus:border-primary'
+                  className={`w-full bg-surface-card border border-border rounded-xl px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none transition-colors text-sm resize-none ${message.length >= 300 ? 'border-red-500/60 focus:border-red-500' : 'focus:border-primary'
                     }`}
                   required
                   disabled={isSubmitting}
@@ -279,7 +279,7 @@ const ClientFeedback = () => {
 
               <div>
                 <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Message</span>
-                <div className="bg-gray-950 border border-border/80 rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                <div className="bg-surface-divider/50 border border-border rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
                   {selectedFeedback.message}
                 </div>
               </div>

@@ -37,7 +37,7 @@ const LogoutModal = ({ isOpen, onCancel, onConfirm }) => {
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'var(--overlay)', backdropFilter: 'blur(6px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onCancel?.(); }}
       role="dialog"
       aria-modal="true"
@@ -46,15 +46,15 @@ const LogoutModal = ({ isOpen, onCancel, onConfirm }) => {
       <div
         className="relative w-full max-w-md rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-200"
         style={{
-          background: '#181818',
-          borderColor: '#333333',
+          background: 'var(--bg-elevated)',
+          borderColor: 'var(--border-color)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close (X) button */}
         <button
           onClick={onCancel}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all duration-200"
           aria-label="Close"
         >
           <X size={18} />
@@ -74,18 +74,18 @@ const LogoutModal = ({ isOpen, onCancel, onConfirm }) => {
           <h2
             id="logout-modal-title"
             className="text-xl font-bold mb-3"
-            style={{ color: '#FFFFFF' }}
+            style={{ color: 'var(--text-primary)' }}
           >
             Logout Confirmation
           </h2>
 
           {/* Message */}
-          <p className="text-sm leading-relaxed mb-8" style={{ color: '#BDBDBD' }}>
+          <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--text-secondary)' }}>
             Are you sure you want to logout from your account?
           </p>
 
           {/* Divider */}
-          <div className="w-full border-t mb-6" style={{ borderColor: '#2A2A2A' }} />
+          <div className="w-full border-t mb-6" style={{ borderColor: 'var(--border-color)' }} />
 
           {/* Buttons */}
           <div className="flex gap-3 w-full">
@@ -96,16 +96,16 @@ const LogoutModal = ({ isOpen, onCancel, onConfirm }) => {
               className="flex-1 py-2.5 px-5 rounded-xl text-sm font-semibold transition-all duration-200"
               style={{
                 background: 'transparent',
-                border: '1px solid #333333',
-                color: '#BDBDBD',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#252525';
-                e.currentTarget.style.color = '#FFFFFF';
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.color = 'var(--text-primary)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = '#BDBDBD';
+                e.currentTarget.style.color = 'var(--text-secondary)';
               }}
             >
               Cancel

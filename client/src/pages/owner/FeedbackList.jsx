@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 import { CheckCircle, Eye, MessageSquare, X } from 'lucide-react';
 import Button from '../../components/Button';
+import Pagination from '../../components/Pagination';
 
 const formatDate = (dateString) => {
   const d = new Date(dateString);
@@ -15,6 +16,8 @@ const FeedbackList = () => {
   const { user } = useAuth();
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +39,15 @@ const FeedbackList = () => {
   useEffect(() => {
     fetchFeedbacks();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [feedbacks.length]);
+
+  const paginatedFeedbacks = useMemo(() => {
+    const startIndex = (currentPage - 1) * 10;
+    return feedbacks.slice(startIndex, startIndex + 10);
+  }, [feedbacks, currentPage]);
 
   const handleStatusChange = async (id, newStatus) => {
     try {
@@ -92,7 +104,7 @@ const FeedbackList = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8">
+    <div className="p-4 md:p-8 md:pt-10 space-y-8">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
@@ -119,7 +131,7 @@ const FeedbackList = () => {
         <div className="bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto max-h-[calc(100vh-220px)] overflow-y-auto relative">
             <table className="min-w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-gray-950/80 border-b border-border z-10 backdrop-blur-md">
+              <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
                 <tr>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Client Info</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
@@ -128,17 +140,17 @@ const FeedbackList = () => {
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/50">
-                {feedbacks.map((item) => (
-                  <tr key={item._id} className="hover:bg-surface-divider/80 transition-colors">
+              <tbody className="divide-y divide-border bg-surface-card">
+                {paginatedFeedbacks.map((item) => (
+                  <tr key={item._id} className="bg-surface-card hover:bg-white/[0.02] transition-colors group">
                     {/* Client Info */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex justify-center items-center font-bold text-base border border-accent/25">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-text-primary transition-all duration-300">
                           {item.clientAvatar || item.clientName?.charAt(0).toUpperCase() || 'C'}
                         </div>
                         <div className="min-w-0">
-                          <h4 className="font-bold text-text-primary text-sm truncate max-w-[150px]">{item.clientName}</h4>
+                          <h4 className="font-semibold text-text-primary text-sm truncate max-w-[150px] group-hover:text-primary transition-colors">{item.clientName}</h4>
                           <span className="text-xs text-text-muted font-mono tracking-tight block uppercase">{item.clientId}</span>
                         </div>
                       </div>
@@ -163,7 +175,7 @@ const FeedbackList = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
                         onClick={() => handleOpenModal(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-gray-750 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-surface-hover transition-colors cursor-pointer"
                       >
                         <Eye size={16} />
                       </button>
@@ -173,6 +185,11 @@ const FeedbackList = () => {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(feedbacks.length / 10)}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 
@@ -221,7 +238,7 @@ const FeedbackList = () => {
 
               <div>
                 <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Message</span>
-                <div className="bg-gray-950 border border-gray-850 rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                <div className="bg-surface-divider/50 border border-border rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
                   {selectedFeedback.message}
                 </div>
               </div>

@@ -90,8 +90,7 @@ const Expired = () => {
     };
 
     return (
-        <div className="flex bg-surface-primary h-screen overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
+        <div className="p-8 pt-10">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                         <History className="text-text-secondary" size={32} /> Expired Memberships
@@ -135,7 +134,6 @@ const Expired = () => {
                         </div>
                     </div>
                 )}
-            </div>
 
             {/* View Client Modal */}
             {viewClientId && (

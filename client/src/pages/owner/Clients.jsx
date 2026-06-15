@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import ClientForm from '../../components/ClientForm';
 import ClientCard from '../../components/ClientCard';
 import { getPlanStatus } from '../../utils/membership';
+import Pagination from '../../components/Pagination';
 
 // ─── Status options config ───────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -101,6 +102,9 @@ const Clients = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [duesClient, setDuesClient] = useState(null);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Get status from URL if present
   const queryParams = new URLSearchParams(location.search);
@@ -114,6 +118,11 @@ const Clients = () => {
     const s = new URLSearchParams(location.search).get('status');
     if (s) setFilterStatus(s);
   }, [location.search]);
+
+  // Reset page when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterPlan]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [formInstanceKey, setFormInstanceKey] = useState(0);
   const [isFormDirty, setIsFormDirty] = useState(false);
@@ -211,6 +220,11 @@ const Clients = () => {
     return list.sort((a, b) => getDaysLeft(a) - getDaysLeft(b));
   }, [clients, searchTerm]);
 
+  const paginatedClients = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredClients.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredClients, currentPage]);
+
   const hasStatusFilter = filterStatus !== 'All';
   const hasPlanFilter = filterPlan !== 'All';
   const activeFilterCount = (hasStatusFilter ? 1 : 0) + (hasPlanFilter ? 1 : 0);
@@ -218,9 +232,7 @@ const Clients = () => {
   const clearAll = () => { setFilterStatus('All'); setFilterPlan('All'); };
 
   return (
-    <div className="flex bg-surface-primary h-screen overflow-hidden">
-      <></>
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+    <div className="p-4 md:p-8 md:pt-10">
 
         {/* ── Page Header ── */}
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
@@ -372,7 +384,7 @@ const Clients = () => {
               <div className="text-right">Actions</div>
             </div>
             <div className="flex flex-col">
-              {filteredClients.map(client => (
+              {paginatedClients.map(client => (
                 <ClientCard
                   key={client._id}
                   client={client}
@@ -382,6 +394,11 @@ const Clients = () => {
                 />
               ))}
             </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredClients.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
 
@@ -454,7 +471,6 @@ const Clients = () => {
         })()}
 
       </div>
-    </div>
   );
 };
 

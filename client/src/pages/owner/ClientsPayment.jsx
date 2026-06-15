@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import { getPlanStatus, calculateEndDate } from '../../utils/membership';
 import PaymentModal from '../../components/PaymentModal';
 import ClientDetail from './ClientDetail';
+import Pagination from '../../components/Pagination';
 
 const Transactions = () => {
     const location = useLocation();
@@ -18,6 +19,8 @@ const Transactions = () => {
     const [loading, setLoading] = useState(true);
     const [gymInfo, setGymInfo] = useState(null);
     const [preselectedClient, setPreselectedClient] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Modal states
     const [showModal, setShowModal] = useState(false);
@@ -75,6 +78,10 @@ const Transactions = () => {
         fetchData();
         document.title = "Clients Payment | GymPro";
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [payments.length]);
 
     useEffect(() => {
         if (location.state?.showPaymentModal && location.state?.client && clients.length > 0) {
@@ -162,6 +169,11 @@ const Transactions = () => {
         return Math.max(0, total - paid);
     };
 
+    const paginatedPayments = useMemo(() => {
+        const startIndex = (currentPage - 1) * 10;
+        return payments.slice(startIndex, startIndex + 10);
+    }, [payments, currentPage]);
+
     const isPaymentCleared = (payment) => {
         if (!payment || payment.status !== 'partial') return false;
         return payments.some(p =>
@@ -216,8 +228,7 @@ const Transactions = () => {
     };
 
     return (
-        <div className="flex bg-surface-primary h-screen overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+        <div className="p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients Payment</h1>
@@ -265,7 +276,7 @@ const Transactions = () => {
                                 ) : payments.length === 0 ? (
                                     <tr><td colSpan="10" className="text-center py-20 text-text-muted">No payment records found.</td></tr>
                                 ) : (
-                                    payments.map(payment => (
+                                    paginatedPayments.map(payment => (
                                         <tr key={payment._id} className="hover:bg-surface-divider/80 transition-all group">
                                             <td className="p-5">
                                                 <p className="font-bold text-text-primary text-sm">{payment.paymentId}</p>
@@ -324,7 +335,7 @@ const Transactions = () => {
                                                     >
                                                         <Eye size={18} />
                                                     </button>
-
+ 
                                                 </div>
                                             </td>
                                         </tr>
@@ -333,8 +344,12 @@ const Transactions = () => {
                             </tbody>
                         </table>
                     </div>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={Math.ceil(payments.length / 10)}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
-            </div>
 
             {/* Modals */}
             <PaymentModal

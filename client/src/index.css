@@ -6,26 +6,58 @@
 
 @layer base {
   :root {
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F8F9FA;
-    --bg-card: #FFFFFF;
-    --bg-elevated: #FFFFFF;
-    --bg-divider: #F3F4F6;
-    --color-accent: #FFD54F;
-    --color-success: #10B981;
-    --color-danger: #EF4444;
-    --color-warning: #F59E0B;
-    --text-primary: #111111;
-    --text-secondary: #4B5563;
-    --text-muted: #6B7280;
-    --border-color: rgba(0, 0, 0, 0.08);
-    --bg-hover: #F5F5F5;
-    --sidebar-active-bg: rgba(255, 213, 79, 0.12);
-    --sidebar-active-text: #111111;
-    --sidebar-active-indicator: #FFD54F;
-    --focus-ring: #111111;
-    --btn-primary-text: #111111;
-    --overlay: rgba(0, 0, 0, 0.5);
+    /* Semantic Color Tokens (based on reference image) */
+    --color-primary: #ECC400;
+    --color-primary-hover: #DCA300;
+    --color-secondary: #0A7C3F;
+    --color-accent: #56F299;
+    --color-background: #F4F4F3;
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #FFFFFF;
+    --color-text-primary: #1B1B18;
+    --color-text-secondary: #5A5A53;
+    --color-text-muted: #8E8E88;
+    --color-border: #E2E2DC;
+    --color-success-val: #0A7C3F;
+    --color-warning-val: #DCA300;
+    --color-error-val: #B91C1C;
+    --color-info-val: #0284C7;
+
+    /* System Theme Variable Mappings */
+    --bg-primary: var(--color-background);
+    --bg-secondary: var(--color-surface);
+    --bg-card: var(--color-surface);
+    --bg-elevated: var(--color-surface-elevated);
+    --bg-divider: #EFEFEE;
+    --color-accent: var(--color-primary);
+    --color-success: var(--color-success-val);
+    --color-danger: var(--color-error-val);
+    --color-warning: var(--color-warning-val);
+    --text-primary: var(--color-text-primary);
+    --text-secondary: var(--color-text-secondary);
+    --text-muted: var(--color-text-muted);
+    --border-color: var(--color-border);
+    --bg-hover: #F5F5F3;
+    --sidebar-active-bg: var(--color-primary);
+    --sidebar-active-text: var(--color-text-primary);
+    --sidebar-active-indicator: var(--color-primary);
+    --focus-ring: var(--color-primary);
+    --btn-primary-text: var(--color-text-primary);
+    --overlay: rgba(27, 27, 24, 0.4);
+
+    /* Badge Variables */
+    --badge-success-bg: rgba(10, 124, 63, 0.12);
+    --badge-success-text: #0A7C3F;
+    --badge-warning-bg: rgba(236, 196, 0, 0.15);
+    --badge-warning-text: #DCA300;
+    --badge-danger-bg: rgba(185, 28, 28, 0.12);
+    --badge-danger-text: #B91C1C;
+    --badge-info-bg: rgba(2, 132, 199, 0.12);
+    --badge-info-text: #0284C7;
+
+    /* Header Specifics */
+    --header-bg: var(--color-surface);
+    --header-border: var(--color-border);
   }
 
   .dark {
@@ -49,6 +81,20 @@
     --focus-ring: #FFD54F;
     --btn-primary-text: #111111;
     --overlay: rgba(0, 0, 0, 0.6);
+
+    /* Badge Variables */
+    --badge-success-bg: rgba(16, 185, 129, 0.15);
+    --badge-success-text: #10B981;
+    --badge-warning-bg: rgba(245, 158, 11, 0.15);
+    --badge-warning-text: #F59E0B;
+    --badge-danger-bg: rgba(239, 68, 68, 0.15);
+    --badge-danger-text: #EF4444;
+    --badge-info-bg: rgba(255, 213, 79, 0.15);
+    --badge-info-text: #FFD54F;
+
+    /* Header Specifics */
+    --header-bg: #111111;
+    --header-border: #333333;
   }
 
   html {
@@ -137,26 +183,26 @@
 
   .badge-active {
     @apply badge;
-    background: rgba(16, 185, 129, 0.15);
-    color: #10B981;
+    background: var(--badge-success-bg);
+    color: var(--badge-success-text);
   }
 
   .badge-warning {
     @apply badge;
-    background: rgba(245, 158, 11, 0.15);
-    color: #F59E0B;
+    background: var(--badge-warning-bg);
+    color: var(--badge-warning-text);
   }
 
   .badge-danger {
     @apply badge;
-    background: rgba(239, 68, 68, 0.15);
-    color: #EF4444;
+    background: var(--badge-danger-bg);
+    color: var(--badge-danger-text);
   }
 
   .badge-info {
     @apply badge;
-    background: rgba(255, 213, 79, 0.15);
-    color: var(--color-accent);
+    background: var(--badge-info-bg);
+    color: var(--badge-info-text);
   }
 
   /* Tables */

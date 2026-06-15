@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import Button from '../../components/Button';
 import { ArrowLeft, Menu, X } from 'lucide-react';
+import Pagination from '../../components/Pagination';
 
 const AdminClients = () => {
     const { gymId } = useParams();
@@ -12,6 +13,8 @@ const AdminClients = () => {
     const [gymInfo, setGymInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+
+    const [currentPage, setCurrentPage] = useState(1);
 
     const [isMobile, setIsMobile] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -45,6 +48,15 @@ const AdminClients = () => {
         };
         fetchData();
     }, [gymId]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [clients.length]);
+
+    const paginatedClients = useMemo(() => {
+        const startIndex = (currentPage - 1) * 10;
+        return clients.slice(startIndex, startIndex + 10);
+    }, [clients, currentPage]);
 
     return (
         <div className={`flex bg-surface-primary h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
@@ -97,7 +109,7 @@ const AdminClients = () => {
                                 <tr><td colSpan="4" className="text-center p-10 text-text-muted">Loading...</td></tr>
                             ) : clients.length === 0 ? (
                                 <tr><td colSpan="4" className="text-center p-10 text-text-muted">No clients found for this gym.</td></tr>
-                            ) : clients.map(client => (
+                            ) : paginatedClients.map(client => (
                                 <tr key={client._id} className="hover:bg-surface-divider/50">
                                     <td className="p-4 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
@@ -119,6 +131,11 @@ const AdminClients = () => {
                             ))}
                         </tbody>
                     </table>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={Math.ceil(clients.length / 10)}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
             </div>
         </div>

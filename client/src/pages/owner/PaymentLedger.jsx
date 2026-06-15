@@ -500,8 +500,7 @@ const PaymentLedger = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-surface-primary">
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
+        <div className="p-8 pt-10">
                 {/* Header and Toolbar */}
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-border/50 pb-6">
                     <div>
@@ -517,7 +516,7 @@ const PaymentLedger = () => {
                             <select
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                className="bg-gray-950 border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                                className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
                             >
                                 {MONTHS.map((m, idx) => (
                                     <option key={m} value={idx}>{m}</option>
@@ -531,7 +530,7 @@ const PaymentLedger = () => {
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                className="bg-gray-950 border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                                className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
                             >
                                 {yearOptions.map(yr => (
                                     <option key={yr} value={yr}>{yr}</option>
@@ -674,7 +673,7 @@ const PaymentLedger = () => {
 
                         {/* Month-over-Month Comparison Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div className="card bg-gray-950/40 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Revenue MoM Change</span>
 
@@ -687,7 +686,7 @@ const PaymentLedger = () => {
                                 </div>
                             </div>
 
-                            <div className="card bg-gray-950/40 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Expenses MoM Change</span>
 
@@ -698,7 +697,7 @@ const PaymentLedger = () => {
                                 </div>
                             </div>
 
-                            <div className="card bg-gray-950/40 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Profit MoM Change</span>
 
@@ -762,10 +761,8 @@ const PaymentLedger = () => {
                                         <h3 className="text-lg font-bold text-text-primary">Expenses List</h3>
                                         <p className="text-xs text-text-muted">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
                                     </div>
-                                </div>
-
-                                {/* Category Filter Pills */}
-                                <div className="flex flex-wrap items-center gap-1 bg-gray-950 p-1 rounded-xl border border-border self-start lg:self-auto">
+                                              {/* Category Filter Pills */}
+                                <div className="flex flex-wrap items-center gap-1 bg-surface-divider p-1 rounded-xl border border-border self-start lg:self-auto">
                                     {['All', ...CATEGORIES].map(cat => (
                                         <button
                                             key={cat}
@@ -778,7 +775,7 @@ const PaymentLedger = () => {
                                             {cat}
                                         </button>
                                     ))}
-                                </div>
+                                </div>                      </div>
 
                                 <button
                                     onClick={() => handleOpenModal('add')}
@@ -857,7 +854,6 @@ const PaymentLedger = () => {
                         </div>
                     </>
                 )}
-            </div>
 
             {/* Add / Edit / View Modal */}
             {showModal && (

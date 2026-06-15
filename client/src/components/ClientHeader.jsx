@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Bell, LogOut } from 'lucide-react';
+import { Bell, LogOut, Sunrise, Sun, Sunset, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from './ThemeToggle';
 import LogoutModal from './LogoutModal';
 
-const HEADER_BG = '#111111';
-const HEADER_BORDER = '#333333';
+const HEADER_BG = 'var(--header-bg)';
+const HEADER_BORDER = 'var(--header-border)';
 
 /**
  * ClientHeader — Global top navigation bar for client dashboard pages.
@@ -30,17 +30,40 @@ const ClientHeader = ({ clientName = 'Member', isMobile = false }) => {
     navigate('/login');
   };
 
+  const getGreetingData = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return { text: 'Good morning', icon: <Sunrise size={16} className="text-amber-500 animate-bounce" style={{ animationDuration: '3s' }} /> };
+    }
+    if (hour >= 12 && hour < 17) {
+      return { text: 'Good afternoon', icon: <Sun size={16} className="text-amber-500 animate-spin" style={{ animationDuration: '10s' }} /> };
+    }
+    if (hour >= 17 && hour < 22) {
+      return { text: 'Good evening', icon: <Sunset size={16} className="text-orange-400" /> };
+    }
+    return { text: 'Good night', icon: <Moon size={16} className="text-indigo-400" /> };
+  };
+
+  const greetingData = getGreetingData();
+
   if (isMobile) return null; // Mobile already has its own header in each client page
 
   return (
     <>
     <header
-      className="h-[64px] flex items-center justify-end px-6 shrink-0 z-30"
+      className="h-[64px] flex items-center justify-between px-6 shrink-0 z-30"
       style={{
         background: HEADER_BG,
         borderBottom: `1px solid ${HEADER_BORDER}`,
       }}
     >
+      <div className="flex items-center gap-2 text-sm font-medium text-text-secondary select-none animate-in fade-in slide-in-from-left-2 duration-300">
+        {greetingData.icon}
+        <span>
+          {greetingData.text}, <span className="font-bold text-text-primary">{clientName}</span>
+        </span>
+      </div>
+
       <div className="flex items-center gap-2">
         <ThemeToggle className="w-9 h-9" size={16} />
 
@@ -48,17 +71,17 @@ const ClientHeader = ({ clientName = 'Member', isMobile = false }) => {
         <button
           id="client-notification-btn"
           className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
-          style={{ color: '#8A8A8A', border: '1px solid transparent' }}
+          style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}
           title="Notifications"
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#1F1F1F';
-            e.currentTarget.style.borderColor = '#333333';
-            e.currentTarget.style.color = '#FFFFFF';
+            e.currentTarget.style.background = 'var(--bg-hover)';
+            e.currentTarget.style.borderColor = 'var(--border-color)';
+            e.currentTarget.style.color = 'var(--text-primary)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
             e.currentTarget.style.borderColor = 'transparent';
-            e.currentTarget.style.color = '#8A8A8A';
+            e.currentTarget.style.color = 'var(--text-muted)';
           }}
         >
           <Bell size={18} />
@@ -73,7 +96,7 @@ const ClientHeader = ({ clientName = 'Member', isMobile = false }) => {
         </button>
 
         {/* Divider */}
-        <div className="w-px h-6 mx-1" style={{ background: '#2A2A2A' }} />
+        <div className="w-px h-6 mx-1" style={{ background: 'var(--border-color)' }} />
 
         {/* Profile Avatar */}
         <button
@@ -103,7 +126,7 @@ const ClientHeader = ({ clientName = 'Member', isMobile = false }) => {
           id="client-logout-btn"
           onClick={() => setShowLogoutModal(true)}
           className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
-          style={{ color: '#8A8A8A', border: '1px solid transparent' }}
+          style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}
           title="Logout"
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
@@ -113,7 +136,7 @@ const ClientHeader = ({ clientName = 'Member', isMobile = false }) => {
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent';
             e.currentTarget.style.borderColor = 'transparent';
-            e.currentTarget.style.color = '#8A8A8A';
+            e.currentTarget.style.color = 'var(--text-muted)';
           }}
         >
           <LogOut size={17} />

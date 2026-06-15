@@ -395,17 +395,14 @@ const Profile = () => {
 
   if (loading || !formState) {
     return (
-      <div className="flex bg-surface-primary h-screen overflow-hidden">
-        <div className="flex-1 flex justify-center items-center">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="flex justify-center items-center h-[60vh]">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex bg-surface-primary h-screen overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-8 pt-10 space-y-8 scrollbar-hide">
+    <div className="p-8 pt-10 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">Gym Settings</h1>
@@ -547,7 +544,6 @@ const Profile = () => {
           </div>
         </ProfileSection>
       </div>
-    </div>
   );
 };
 

@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { UserPlus, Check, X, Clock } from 'lucide-react';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
+import Pagination from '../../components/Pagination';
 
 const ClientRequests = () => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
     const [actionType, setActionType] = useState(null);
 
     const [plans, setPlans] = useState([]);
@@ -42,6 +45,15 @@ const ClientRequests = () => {
         fetchRequests();
         fetchPlans();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [requests.length]);
+
+    const paginatedRequests = useMemo(() => {
+        const startIndex = (currentPage - 1) * 10;
+        return requests.slice(startIndex, startIndex + 10);
+    }, [requests, currentPage]);
 
     const handleApproveWithPayment = async (paymentData) => {
         if (!selectedRequest) return;
@@ -80,8 +92,7 @@ const ClientRequests = () => {
     };
 
     return (
-        <div className="flex bg-surface-primary h-screen overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-8 pt-10">
+        <div className="p-8 pt-10">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                         <UserPlus className="text-primary" size={32} /> Client Requests
@@ -101,7 +112,7 @@ const ClientRequests = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-4">
-                        {requests.map((req) => (
+                        {paginatedRequests.map((req) => (
                             <div key={req._id} className="card bg-surface-secondary border-border hover:border-border transition-all">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                     <div className="flex items-center gap-4">
@@ -157,9 +168,13 @@ const ClientRequests = () => {
                                 </div>
                              </div>
                         ))}
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={Math.ceil(requests.length / 10)}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
                 )}
-            </div>
 
             {showPaymentModal && selectedRequest && (
                 <PaymentModal

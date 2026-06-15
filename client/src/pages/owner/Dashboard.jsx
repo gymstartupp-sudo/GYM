@@ -162,8 +162,7 @@ const Dashboard = () => {
     );
 
     return (
-        <div className="flex flex-col h-full bg-surface-primary">
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+        <div className="p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
                         <h1 className="page-heading text-2xl md:text-[36px]">Dashboard Overview</h1>
@@ -283,7 +282,6 @@ const Dashboard = () => {
                         )}
                     </div>
                 </div>
-            </div>
 
             {/* Add Client Modal */}
             {showAddModal && (
