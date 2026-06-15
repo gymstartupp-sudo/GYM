@@ -132,16 +132,14 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <div className="flex bg-surface-primary h-screen overflow-hidden">
-        <div className="flex-1 flex justify-center items-center">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="flex justify-center items-center h-[60vh]">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-8 pt-10 space-y-8 scrollbar-hide">
+    <div className="p-8 pt-10 space-y-8">
       {/* Page Header */}
       <div>
         <h1 className="page-heading text-3xl md:text-4xl flex items-center gap-3">

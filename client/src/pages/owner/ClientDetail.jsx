@@ -93,7 +93,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
     if (loading) {
         return (
-            <div className={propClientId ? "flex justify-center items-center h-64" : "flex bg-surface-primary h-screen justify-center items-center"}>
+            <div className={propClientId ? "flex justify-center items-center h-64" : "flex justify-center items-center h-[60vh]"}>
                 <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
@@ -102,8 +102,8 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     if (!client) return null;
 
     return (
-        <div className={propClientId ? "flex flex-col bg-surface-secondary overflow-hidden" : "flex flex-col bg-surface-primary h-screen overflow-hidden"}>
-            <div className={propClientId ? "flex-1 overflow-y-auto p-4 md:p-6" : "flex-1 overflow-y-auto p-4 md:p-8 pt-8"}>
+        <div className={propClientId ? "flex flex-col bg-surface-secondary overflow-hidden" : ""}>
+            <div className={propClientId ? "flex-1 overflow-y-auto p-4 md:p-6" : "p-4 md:p-8 pt-8"}>
                 {/* Header Actions */}
                 {!propClientId && (
                     <div className="flex justify-between items-center mb-6">

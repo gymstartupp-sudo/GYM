@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { CircleDollarSign, Search, Filter, History, AlertCircle, Clock, ArrowRight, Eye, RefreshCw, Smartphone, X, Trash2 } from 'lucide-react';
@@ -7,6 +7,7 @@ import ClientDetail from './ClientDetail';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
 import { calculateEndDate } from '../../utils/membership';
+import Pagination from '../../components/Pagination';
 
 const Dues = () => {
     const navigate = useNavigate();
@@ -24,6 +25,8 @@ const Dues = () => {
     const [viewClientId, setViewClientId] = useState(null);
     const [isRenewing, setIsRenewing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+
+    const [currentPage, setCurrentPage] = useState(1);
 
     const fetchData = async () => {
         try {
@@ -60,6 +63,10 @@ const Dues = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchTerm]);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -153,6 +160,11 @@ const Dues = () => {
     };
 
     const filteredDues = getFilteredDues();
+
+    const paginatedDues = useMemo(() => {
+        const startIndex = (currentPage - 1) * 10;
+        return filteredDues.slice(startIndex, startIndex + 10);
+    }, [filteredDues, currentPage]);
 
     const handlePayNow = (due) => {
         // Find the corresponding payment record to update
@@ -277,8 +289,7 @@ const Dues = () => {
     };
 
     return (
-        <div className="flex bg-surface-primary h-screen overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+        <div className="p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
@@ -355,7 +366,7 @@ const Dues = () => {
                                 ) : filteredDues.length === 0 ? (
                                     <tr><td colSpan="8" className="text-center p-10 text-text-muted">No {activeTab} dues found.</td></tr>
                                 ) : (
-                                    filteredDues.map((due, idx) => (
+                                    paginatedDues.map((due, idx) => (
                                         <tr key={`${due.clientId}-${idx}`} className="border-b border-border hover:bg-white/[0.02] transition-colors group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
@@ -457,8 +468,12 @@ const Dues = () => {
                             </tbody>
                         </table>
                     </div>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={Math.ceil(filteredDues.length / 10)}
+                        onPageChange={setCurrentPage}
+                    />
                 </div>
-            </div>
 
             {showModal && selectedDue && (
                 <PaymentModal

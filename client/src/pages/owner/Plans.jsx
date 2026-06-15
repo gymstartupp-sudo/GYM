@@ -388,9 +388,7 @@ const Plans = () => {
   };
 
   return (
-    <div className="flex bg-surface-primary h-screen overflow-hidden">
-      <></>
-      <div className="flex-1 overflow-y-auto p-8 pt-10">
+    <div className="p-8 pt-10">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-text-primary tracking-tight">Gym Plans</h1>
@@ -423,7 +421,6 @@ const Plans = () => {
             ))}
           </div>
         )}
-      </div>
 
       {showFormModal && (
         <PlanFormModal

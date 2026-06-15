@@ -15,6 +15,10 @@ const app = express();
 
 app.use(compression({ level: 6 }));
 // Middleware
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Private-Network", "true");
+  next();
+});
 app.use(cors({
   origin: [
     "http://localhost:5173",

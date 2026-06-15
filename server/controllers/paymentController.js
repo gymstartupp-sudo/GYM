@@ -113,8 +113,13 @@ exports.recordPayment = async (req, res, next) => {
           return res.status(400).json({ success: false, message: 'Razorpay payment parameters are missing' });
         }
         
+        const keySecret = process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.trim() : '';
+        if (!keySecret) {
+          return res.status(500).json({ success: false, message: 'Razorpay integration is not configured on the server.' });
+        }
+
         const crypto = require('crypto');
-        const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET.trim());
+        const hmac = crypto.createHmac('sha256', keySecret);
         hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
         const generatedSignature = hmac.digest('hex');
 
@@ -380,8 +385,13 @@ exports.updatePayment = async (req, res, next) => {
         return res.status(400).json({ success: false, message: 'Razorpay payment parameters are missing' });
       }
 
+      const keySecret = process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.trim() : '';
+      if (!keySecret) {
+        return res.status(500).json({ success: false, message: 'Razorpay integration is not configured on the server.' });
+      }
+
       const crypto = require('crypto');
-      const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET.trim());
+      const hmac = crypto.createHmac('sha256', keySecret);
       hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
       const generatedSignature = hmac.digest('hex');
 

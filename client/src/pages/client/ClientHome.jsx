@@ -99,7 +99,7 @@ const ClientHome = () => {
             <p className="text-text-primary text-lg font-semibold">{profile.membership?.durationMonths ? `${profile.membership.durationMonths} Months` : 'N/A'}</p>
           </div>
           <div className="bg-primary/5 rounded-xl p-5 border border-primary/20 shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
-            <p className="text-xs text-text-muted uppercase font-bold tracking-widest mb-2 text-primary/70">Remaining Time</p>
+            <p className="text-xs text-text-muted uppercase font-bold tracking-widest mb-2 text-primary/70">Remaining Days</p>
             <p className="text-text-primary text-lg font-bold">{getDaysLeftDisplay()}</p>
           </div>
           <div className="bg-surface-divider/80 rounded-xl p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">

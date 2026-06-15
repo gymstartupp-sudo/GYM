@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import ClientForm from '../../components/ClientForm';
 import ClientCard from '../../components/ClientCard';
 import ClientDetail from './ClientDetail';
 import PaymentModal from '../../components/PaymentModal';
+import Pagination from '../../components/Pagination';
 
 // ─── Status options config ───────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -102,6 +103,9 @@ const InactiveClients = () => {
   const [allPayments, setAllPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Get status from URL if present
   const queryParams = new URLSearchParams(location.search);
@@ -115,6 +119,11 @@ const InactiveClients = () => {
     const s = new URLSearchParams(location.search).get('status');
     if (s) setFilterStatus(s);
   }, [location.search]);
+
+  // Reset page when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterPlan]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [formInstanceKey, setFormInstanceKey] = useState(0);
   const [isFormDirty, setIsFormDirty] = useState(false);
@@ -266,6 +275,11 @@ const InactiveClients = () => {
     c.personalInfo.mobileNo.includes(searchTerm)
   );
 
+  const paginatedClients = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredClients.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredClients, currentPage]);
+
   const hasStatusFilter = filterStatus !== 'All';
   const hasPlanFilter = filterPlan !== 'All';
   const activeFilterCount = (hasStatusFilter ? 1 : 0) + (hasPlanFilter ? 1 : 0);
@@ -273,9 +287,7 @@ const InactiveClients = () => {
   const clearAll = () => { setFilterStatus('All'); setFilterPlan('All'); };
 
   return (
-    <div className="flex bg-surface-primary h-screen overflow-hidden">
-      <></>
-      <div className="flex-1 overflow-y-auto p-8 pt-10">
+    <div className="p-8 pt-10">
 
         {/* ── Page Header ── */}
         <div className="flex justify-between items-center mb-8">
@@ -398,7 +410,7 @@ const InactiveClients = () => {
               <div className="text-right">Actions</div>
             </div>
             <div className="flex flex-col">
-              {filteredClients.map(client => (
+              {paginatedClients.map(client => (
                 <ClientCard
                   key={client._id}
                   client={client}
@@ -411,6 +423,11 @@ const InactiveClients = () => {
                 />
               ))}
             </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredClients.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
 
@@ -521,7 +538,6 @@ const InactiveClients = () => {
         )}
 
       </div>
-    </div>
   );
 };
 
