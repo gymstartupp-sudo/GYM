@@ -20,15 +20,15 @@ const PlanDetailModal = ({ plan, onClose }) => {
           </button>
         </div>
         <div className="p-6 space-y-4">
-          <div className="flex justify-between items-center bg-surface-hover/60 rounded-lg p-4">
+          <div className="flex justify-between items-center bg-surface-hover/60 rounded-xl p-4 border border-border/70">
             <span className="text-text-secondary text-sm uppercase tracking-wider">Price</span>
             <span className="text-primary text-2xl font-black">₹{plan.price?.toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex justify-between items-center bg-surface-hover/60 rounded-lg p-4">
+          <div className="flex justify-between items-center bg-surface-hover/60 rounded-xl p-4 border border-border/70">
             <span className="text-text-secondary text-sm uppercase tracking-wider">Duration</span>
             <span className="text-text-primary font-semibold">{plan.durationMonths} Month{plan.durationMonths !== 1 ? 's' : ''}</span>
           </div>
-          <div className="bg-surface-hover/60 rounded-lg p-4">
+          <div className="bg-surface-hover/60 rounded-xl p-4 border border-border/70">
             <p className="text-text-secondary text-sm uppercase tracking-wider mb-2">Description</p>
             <p className="text-text-primary text-sm leading-relaxed whitespace-pre-wrap">
               {plan.description?.trim() || 'No description provided for this plan.'}

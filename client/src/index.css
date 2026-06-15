@@ -61,6 +61,7 @@
 }
 
 @layer components {
+
   /* Typography */
   .page-heading {
     @apply text-[36px] font-bold text-text-primary tracking-tight leading-tight;
@@ -84,11 +85,7 @@
 
   /* Forms */
   .input-field {
-    @apply w-full px-4 py-2.5 h-11 bg-surface-card border border-border rounded-input
-           text-text-primary placeholder:text-text-muted
-           focus:outline-none focus:ring-2 focus:ring-offset-0
-           focus:ring-[var(--focus-ring)] focus:border-[var(--focus-ring)]
-           transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed;
+    @apply w-full px-4 py-2.5 h-11 bg-surface-card border border-border rounded-input text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-[var(--focus-ring)] focus:border-[var(--focus-ring)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed;
   }
 
   .password-toggle-field {
@@ -118,27 +115,19 @@
 
   /* Buttons (utility classes for ad-hoc use) */
   .btn-primary {
-    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200
-           bg-primary text-[var(--btn-primary-text)] hover:brightness-95
-           flex items-center justify-center gap-2;
+    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 bg-primary text-[var(--btn-primary-text)] hover:brightness-95 flex items-center justify-center gap-2;
   }
 
   .btn-secondary {
-    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200
-           bg-transparent border border-primary text-primary
-           hover:bg-primary/10 flex items-center justify-center gap-2;
+    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 bg-transparent border border-primary text-primary hover:bg-primary/10 flex items-center justify-center gap-2;
   }
 
   .btn-success {
-    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200
-           bg-success text-white hover:brightness-110
-           flex items-center justify-center gap-2;
+    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 bg-success text-white hover:brightness-110 flex items-center justify-center gap-2;
   }
 
   .btn-danger {
-    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200
-           bg-danger text-white hover:brightness-110
-           flex items-center justify-center gap-2;
+    @apply px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 bg-danger text-white hover:brightness-110 flex items-center justify-center gap-2;
   }
 
   /* Status badges */
@@ -205,9 +194,7 @@
 
   /* Sidebar navigation */
   .sidebar-nav-link {
-    @apply flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm font-medium
-           text-text-secondary hover:text-text-primary hover:bg-surface-hover
-           transition-colors duration-200 no-underline;
+    @apply flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors duration-200 no-underline;
   }
 
   .sidebar-nav-link-active {
@@ -243,8 +230,7 @@
 
   /* Grid table header (client lists) */
   .grid-table-header {
-    @apply hidden md:grid bg-surface-divider border-b border-border px-4 py-3
-           label-text items-center;
+    @apply hidden md:grid bg-surface-divider border-b border-border px-4 py-3 label-text items-center;
   }
 
   .grid-table-row {

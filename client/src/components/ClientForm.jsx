@@ -286,28 +286,28 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     const isValid = await trigger(ownerRequiredFields);
 
     if (isValid) {
-        const data = watch();
-        const payload = {
-          personalInfo: {
-            name: data.name,
-            dob: data.dob,
-            gender: data.gender,
-            address: data.address,
-            email: data.email,
-            mobileNo: data.mobileNo,
-            emergencyContact: data.emergencyContact,
-            medicalCondition: data.medicalCondition?.trim() || ''
-          },
-          password: data.password,
-          membership: {
-            planId: data.planId,
-            startDate: data.startDate,
-            planType: data.planType
-          }
-        };
-        
-        setPendingClientData(payload);
-        setShowPaymentModal(true);
+      const data = watch();
+      const payload = {
+        personalInfo: {
+          name: data.name,
+          dob: data.dob,
+          gender: data.gender,
+          address: data.address,
+          email: data.email,
+          mobileNo: data.mobileNo,
+          emergencyContact: data.emergencyContact,
+          medicalCondition: data.medicalCondition?.trim() || ''
+        },
+        password: data.password,
+        membership: {
+          planId: data.planId,
+          startDate: data.startDate,
+          planType: data.planType
+        }
+      };
+
+      setPendingClientData(payload);
+      setShowPaymentModal(true);
     } else {
       toast.error('Please fix the highlighted errors before submitting.');
     }
@@ -389,9 +389,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Date of Birth <span className="text-red-500">*</span></p>
-        <CustomDatePicker 
-          {...register('dob')} 
-          className={fieldClassName('dob', 'text-text-secondary')} 
+        <CustomDatePicker
+          {...register('dob')}
+          className={fieldClassName('dob', 'text-text-secondary')}
         />
         {showFieldError('dob') && <p className="text-red-500 text-xs mt-1">{errors.dob.message}</p>}
       </div>
@@ -467,9 +467,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Membership Start Date <span className="text-red-500">*</span></p>
-        <CustomDatePicker 
-          {...register('startDate')} 
-          className={fieldClassName('startDate', 'text-text-secondary')} 
+        <CustomDatePicker
+          {...register('startDate')}
+          className={fieldClassName('startDate', 'text-text-secondary')}
         />
         {showFieldError('startDate') && <p className="text-red-500 text-xs mt-1">{errors.startDate.message}</p>}
       </div>
@@ -523,7 +523,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         </div>
       </form>
 
-      <PaymentModal 
+      <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         onSave={handleFinalSubmit}

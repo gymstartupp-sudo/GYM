@@ -84,67 +84,122 @@ const formatDateToYYYYMMDD = (val) => {
   return '';
 };
 
-const isMobileDevice = () => {
-  if (typeof window === 'undefined') return false;
-  return window.matchMedia('(pointer: coarse)').matches;
+const toLocalDateOnly = (value) => {
+  if (!value) return null;
+
+  const date = value instanceof Date ? new Date(value) : new Date(value);
+  if (isNaN(date.getTime())) return null;
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const parseDDMMYYYY = (value) => {
+  if (!value || !/^\d{2}-\d{2}-\d{4}$/.test(value)) return null;
+
+  const [dayStr, monthStr, yearStr] = value.split('-');
+  const day = Number(dayStr);
+  const month = Number(monthStr);
+  const year = Number(yearStr);
+
+  if (yearStr.length !== 4 || day < 1 || day > 31 || month < 1 || month > 12) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day);
+  date.setHours(0, 0, 0, 0);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+};
+
+const isWithinBounds = (date, minDate, maxDate) => {
+  const min = toLocalDateOnly(minDate);
+  const max = toLocalDateOnly(maxDate);
+
+  if (min && date < min) return false;
+  if (max && date > max) return false;
+  return true;
+};
+
+const getYearRangeMessage = (minDate, maxDate) => {
+  const min = toLocalDateOnly(minDate);
+  const max = toLocalDateOnly(maxDate);
+
+  if (min && max) {
+    return `Year should be between ${min.getFullYear()} - ${max.getFullYear()}`;
+  }
+
+  if (min) {
+    return `Year should be ${min.getFullYear()} or later`;
+  }
+
+  if (max) {
+    return `Year should be ${max.getFullYear()} or earlier`;
+  }
+
+  return 'Selected date is outside the allowed range';
 };
 
 // Sanitizes and formats raw digit strings to valid DD-MM-YYYY bounds
 const sanitizeDDMMYYYY = (originalVal) => {
-  // Clean all non-digits
-  let clean = originalVal.replace(/\D/g, '').slice(0, 8);
-  
-  // Validate and adjust day digits (DD)
-  if (clean.length > 0) {
-    const firstDayDigit = Number(clean[0]);
-    if (firstDayDigit > 3) {
-      // Auto-prepend 0 (e.g. typing 5 becomes 05)
-      clean = '0' + clean;
+  const digits = String(originalVal).replace(/\D/g, '').slice(0, 8);
+  const accepted = [];
+
+  for (const digit of digits) {
+    const slotIndex = accepted.length;
+
+    if (slotIndex === 0) {
+      if (/[0-3]/.test(digit)) accepted.push(digit);
+      continue;
     }
-  }
-  
-  if (clean.length >= 2) {
-    const dayVal = Number(clean.slice(0, 2));
-    if (dayVal > 31) {
-      // Clamp day to max 31
-      clean = '31' + clean.slice(2);
+
+    if (slotIndex === 2) {
+      if (/[0-1]/.test(digit)) accepted.push(digit);
+      continue;
     }
-  }
-  
-  // Validate and adjust month digits (MM)
-  if (clean.length > 2) {
-    const firstMonthDigit = Number(clean[2]);
-    if (firstMonthDigit > 1) {
-      // Auto-prepend 0 (e.g. typing 8 becomes 08)
-      clean = clean.slice(0, 2) + '0' + clean.slice(2);
-    }
-  }
-  
-  if (clean.length >= 4) {
-    const monthVal = Number(clean.slice(2, 4));
-    if (monthVal > 12) {
-      // Clamp month to max 12
-      clean = clean.slice(0, 2) + '12' + clean.slice(4);
-    }
+
+    accepted.push(digit);
+
+    if (accepted.length >= 8) break;
   }
 
-  // Format to DD-MM-YYYY layout
+  let day = accepted.slice(0, 2).join('');
+  let month = accepted.slice(2, 4).join('');
+  const year = accepted.slice(4, 8).join('');
+
+  if (day.length === 2 && Number(day) > 31) {
+    day = '31';
+  }
+
+  if (month.length === 2 && Number(month) > 12) {
+    month = '12';
+  }
+
   let temp = '';
-  if (clean.length > 0) {
-    temp += clean.slice(0, 2);
+  if (day.length > 0) {
+    temp += day;
   }
-  if (clean.length > 2) {
-    temp += '-' + clean.slice(2, 4);
-  } else if (clean.length === 2) {
+  if (day.length === 2 || month.length > 0 || year.length > 0) {
     temp += '-';
   }
-  if (clean.length > 4) {
-    temp += '-' + clean.slice(4, 8);
-  } else if (clean.length === 4) {
+  if (month.length > 0) {
+    temp += month;
+  }
+  if (month.length === 2 || year.length > 0) {
     temp += '-';
   }
-  
-  return temp;
+  if (year.length > 0) {
+    temp += year;
+  }
+
+  return temp.slice(0, 10);
 };
 
 const CustomDatePicker = React.forwardRef(({
@@ -152,6 +207,11 @@ const CustomDatePicker = React.forwardRef(({
   onChange,
   onBlur,
   disabled,
+  minDate,
+  maxDate,
+  min,
+  max,
+  onValidationError,
   placeholder = "DD-MM-YYYY",
   className = "",
   error,
@@ -211,13 +271,31 @@ const CustomDatePicker = React.forwardRef(({
 
     if (onChange) {
       if (formatted.length === 10) {
-        const parts = formatted.split('-');
-        onChange({
-          target: {
-            name: rest.name || '',
-            value: `${parts[2]}-${parts[1]}-${parts[0]}`
+        const parsedDate = parseDDMMYYYY(formatted);
+        if (parsedDate && isWithinBounds(parsedDate, minDate || min, maxDate || max)) {
+          if (onValidationError) onValidationError('', formatted);
+          const parts = formatted.split('-');
+          onChange({
+            target: {
+              name: rest.name || '',
+              value: `${parts[2]}-${parts[1]}-${parts[0]}`
+            }
+          });
+        } else {
+          if (onValidationError) {
+            if (!parsedDate) {
+              onValidationError('Enter a valid date in DD-MM-YYYY format', formatted);
+            } else if (!isWithinBounds(parsedDate, minDate || min, maxDate || max)) {
+              onValidationError(getYearRangeMessage(minDate || min, maxDate || max), formatted);
+            }
           }
-        });
+          onChange({
+            target: {
+              name: rest.name || '',
+              value: ''
+            }
+          });
+        }
       } else {
         onChange({
           target: {
@@ -238,6 +316,14 @@ const CustomDatePicker = React.forwardRef(({
       const day = parts[2];
       
       const formatted = `${day}-${month}-${year}`;
+      const parsedDate = parseDDMMYYYY(formatted);
+
+      if (parsedDate && !isWithinBounds(parsedDate, minDate || min, maxDate || max)) {
+        if (onValidationError) onValidationError(getYearRangeMessage(minDate || min, maxDate || max), formatted);
+        return;
+      }
+
+      if (onValidationError) onValidationError('', formatted);
       setTextValue(formatted);
       
       if (onChange) {
@@ -249,6 +335,7 @@ const CustomDatePicker = React.forwardRef(({
         });
       }
     } else {
+      if (onValidationError) onValidationError('');
       setTextValue('');
       if (onChange) {
         onChange({
@@ -308,13 +395,31 @@ const CustomDatePicker = React.forwardRef(({
     setTextValue(sanitized);
     if (onChange) {
       if (sanitized.length === 10) {
-        const parts = sanitized.split('-');
-        onChange({
-          target: {
-            name: rest.name || '',
-            value: `${parts[2]}-${parts[1]}-${parts[0]}`
+        const parsedDate = parseDDMMYYYY(sanitized);
+        if (parsedDate && isWithinBounds(parsedDate, minDate || min, maxDate || max)) {
+          if (onValidationError) onValidationError('', sanitized);
+          const parts = sanitized.split('-');
+          onChange({
+            target: {
+              name: rest.name || '',
+              value: `${parts[2]}-${parts[1]}-${parts[0]}`
+            }
+          });
+        } else {
+          if (onValidationError) {
+            if (!parsedDate) {
+              onValidationError('Enter a valid date in DD-MM-YYYY format', sanitized);
+            } else if (!isWithinBounds(parsedDate, minDate || min, maxDate || max)) {
+              onValidationError(getYearRangeMessage(minDate || min, maxDate || max), sanitized);
+            }
           }
-        });
+          onChange({
+            target: {
+              name: rest.name || '',
+              value: ''
+            }
+          });
+        }
       } else {
         onChange({
           target: {
@@ -322,17 +427,6 @@ const CustomDatePicker = React.forwardRef(({
             value: sanitized
           }
         });
-      }
-    }
-  };
-
-  const handleInputClick = (e) => {
-    // Only open the native picker on desktop clicking the input text to preserve mobile virtual keyboard behavior
-    if (!isMobileDevice() && dateInputRef.current) {
-      try {
-        dateInputRef.current.showPicker();
-      } catch (err) {
-        console.warn("Native showPicker not supported or failed:", err);
       }
     }
   };
@@ -345,11 +439,13 @@ const CustomDatePicker = React.forwardRef(({
         value={textValue}
         onChange={handleTextChange}
         onBlur={onBlur}
-        onClick={handleInputClick}
         onPaste={handlePaste}
         disabled={disabled}
         placeholder={placeholder}
         maxLength={10}
+        inputMode="numeric"
+        pattern="[0-9-]*"
+        autoComplete="off"
         className={`${className} pr-12`}
         {...rest}
       />
@@ -361,7 +457,8 @@ const CustomDatePicker = React.forwardRef(({
           disabled={disabled}
           value={formatDateToYYYYMMDD(textValue)}
           onChange={handleDateChange}
-          max="9999-12-31"
+          min={formatDateToYYYYMMDD(minDate || min)}
+          max={formatDateToYYYYMMDD(maxDate || max)}
           className="absolute inset-0 opacity-0 cursor-pointer w-full h-full [color-scheme:dark]"
           style={{ minWidth: '100%', minHeight: '100%', fontSize: '16px', colorScheme: 'dark' }}
         />

@@ -18,16 +18,16 @@ const Transactions = () => {
     const [loading, setLoading] = useState(true);
     const [gymInfo, setGymInfo] = useState(null);
     const [preselectedClient, setPreselectedClient] = useState(null);
-    
+
     // Modal states
     const [showModal, setShowModal] = useState(false);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [showClientDetailModal, setShowClientDetailModal] = useState(false);
-    
+
     // Data for modals
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [selectedClient, setSelectedClient] = useState(null);
-    
+
     const [formData, setFormData] = useState({
         clientId: '',
         planId: '',
@@ -58,7 +58,7 @@ const Transactions = () => {
             if (gymRes && gymRes.data?.success) {
                 setGymInfo(gymRes.data.data.gym);
             }
-        } catch(e) {
+        } catch (e) {
             toast.error("Failed to load data");
         } finally {
             setLoading(false);
@@ -106,7 +106,7 @@ const Transactions = () => {
         if (client && (client.membership?.planId || client.memberships?.[0]?.planId)) {
             const pId = client.membership?.planId || client.memberships?.[0]?.planId;
             const plan = plans.find(p => p._id === (typeof pId === 'object' ? pId._id : pId));
-            
+
             setFormData(prev => ({
                 ...prev,
                 clientId: clientId,
@@ -130,9 +130,9 @@ const Transactions = () => {
                     return;
                 }
                 const paymentIdToUpdate = selectedPayment?._id || paymentData._paymentId;
-                await api.put(`/payment/${paymentIdToUpdate}`, { 
-                    additionalAmount, 
-                    paymentMethod: paymentData.paymentMethod 
+                await api.put(`/payment/${paymentIdToUpdate}`, {
+                    additionalAmount,
+                    paymentMethod: paymentData.paymentMethod
                 });
                 toast.success("Payment updated successfully");
             } else {
@@ -164,7 +164,7 @@ const Transactions = () => {
 
     const isPaymentCleared = (payment) => {
         if (!payment || payment.status !== 'partial') return false;
-        return payments.some(p => 
+        return payments.some(p =>
             p.clientId === payment.clientId &&
             p.planId === payment.planId &&
             new Date(p.startDate).getTime() === new Date(payment.startDate).getTime() &&
@@ -175,7 +175,7 @@ const Transactions = () => {
     const getStatusBadge = (payment) => {
         const status = typeof payment === 'object' ? payment.status : payment;
         if (!status || status === 'paid') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-widest">PAID</span>;
-        
+
         if (status === 'partial' && typeof payment === 'object') {
             if (isPaymentCleared(payment)) {
                 return (
@@ -186,7 +186,7 @@ const Transactions = () => {
                 );
             }
         }
-        
+
         if (status === 'partial') return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">PARTIALLY</span>;
         return <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase tracking-widest">OVERDUE</span>;
     };
@@ -304,7 +304,7 @@ const Transactions = () => {
                                                 )}
                                             </td>
                                             <td className="p-5 text-center">
-                                                <button 
+                                                <button
                                                     onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
                                                     className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
                                                     title="View Bill"
@@ -314,8 +314,8 @@ const Transactions = () => {
                                             </td>
                                             <td className="p-5">
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <button 
-                                                        onClick={() => { 
+                                                    <button
+                                                        onClick={() => {
                                                             const client = clients.find(c => c._id === payment.clientId);
                                                             if (client) { setSelectedClient(client); setShowClientDetailModal(true); }
                                                         }}
@@ -337,15 +337,15 @@ const Transactions = () => {
             </div>
 
             {/* Modals */}
-            <PaymentModal 
-                isOpen={showModal} 
+            <PaymentModal
+                isOpen={showModal}
                 onClose={() => {
                     setShowModal(false);
                     setSelectedPayment(null);
                     setPreselectedClient(null);
-                }} 
-                onSave={handlePaymentSave} 
-                clients={clients} 
+                }}
+                onSave={handlePaymentSave}
+                clients={clients}
                 plans={plans}
                 payments={allPayments}
                 clientData={selectedPayment ? clients.find(c => c._id === selectedPayment.clientId) : preselectedClient}
@@ -358,10 +358,10 @@ const Transactions = () => {
                     startDate: selectedPayment.startDate ? new Date(selectedPayment.startDate).toISOString().split('T')[0] : '',
                     paymentMethod: selectedPayment.paymentMethod || 'cash',
                     id: selectedPayment._id
-                } : { 
-                    startDate: new Date().toISOString().split('T')[0], 
-                    dueDate: new Date().toISOString().split('T')[0] 
-                }} 
+                } : {
+                    startDate: new Date().toISOString().split('T')[0],
+                    dueDate: new Date().toISOString().split('T')[0]
+                }}
             />
 
             {/* Receipt / Bill Modal */}
@@ -372,14 +372,14 @@ const Transactions = () => {
                         <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
                             <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Invoice Preview</span>
                             <div className="flex gap-2">
-                                <button 
-                                    onClick={() => window.print()} 
+                                <button
+                                    onClick={() => window.print()}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
                                 >
                                     Print Invoice
                                 </button>
-                                <button 
-                                    onClick={() => setShowReceiptModal(false)} 
+                                <button
+                                    onClick={() => setShowReceiptModal(false)}
                                     className="p-1.5 text-text-secondary hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
                                 >
                                     <X size={18} />
@@ -393,10 +393,10 @@ const Transactions = () => {
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-gray-200">
                                 <div className="flex items-center gap-2.5">
                                     {getLogoUrl() ? (
-                                        <img 
-                                            src={getLogoUrl()} 
-                                            alt={gymInfo?.gymName || "Gym Logo"} 
-                                            className="w-12 h-12 object-contain rounded-lg border border-gray-100" 
+                                        <img
+                                            src={getLogoUrl()}
+                                            alt={gymInfo?.gymName || "Gym Logo"}
+                                            className="w-12 h-12 object-contain rounded-lg border border-gray-100"
                                         />
                                     ) : (
                                         <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center font-black text-primary text-lg">
@@ -408,7 +408,7 @@ const Transactions = () => {
                                         <p className="text-[9px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="text-left sm:text-right text-[11px] text-gray-600 space-y-0.5">
                                     <p className="font-bold text-gray-900">Address:</p>
                                     <p className="max-w-[200px] leading-snug whitespace-pre-line">{gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || "Address details"}</p>
@@ -520,8 +520,8 @@ const Transactions = () => {
             {showClientDetailModal && selectedClient && (
                 <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-surface-primary w-full max-w-4xl h-screen shadow-2xl animate-in slide-in-from-right duration-500 relative flex flex-col">
-                        <button 
-                            onClick={() => setShowClientDetailModal(false)} 
+                        <button
+                            onClick={() => setShowClientDetailModal(false)}
                             className="absolute top-6 right-6 p-2.5 bg-surface-divider/80 hover:bg-surface-hover text-text-secondary hover:text-text-primary rounded-full z-[60] transition-all border border-border/50"
                         >
                             <X size={20} />

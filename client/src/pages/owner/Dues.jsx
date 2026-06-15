@@ -174,8 +174,8 @@ const Dues = () => {
                 const pId = p.planId?.toString();
                 const dId = (due.planId?._id || due.planId)?.toString();
                 return p.clientId?.toString() === due.clientId?.toString() &&
-                       pId === dId &&
-                       p.status !== 'paid';
+                    pId === dId &&
+                    p.status !== 'paid';
             });
         }
 
@@ -208,7 +208,7 @@ const Dues = () => {
                     return;
                 }
 
-                await api.put(`/payment/${selectedDue.paymentId}`, { 
+                await api.put(`/payment/${selectedDue.paymentId}`, {
                     additionalAmount,
                     paymentMethod: paymentData.paymentMethod
                 });
@@ -248,7 +248,7 @@ const Dues = () => {
         try {
             const startDateObj = new Date(due.startDate);
             let endDateObj = due.endDate ? new Date(due.endDate) : null;
-            
+
             if (!endDateObj) {
                 const plan = plans.find(p => p._id === due.planId);
                 const duration = plan?.durationMonths || 1;
@@ -257,7 +257,7 @@ const Dues = () => {
                     endDateObj = new Date(endDateStr);
                 }
             }
-            
+
             if (endDateObj) {
                 return `${startDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')} - ${endDateObj.toLocaleDateString('en-GB').replace(/\//g, '-')}`;
             }

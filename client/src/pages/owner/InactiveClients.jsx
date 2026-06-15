@@ -173,26 +173,26 @@ const InactiveClients = () => {
   const handleReactivate = async (client) => {
     // Determine status - use the same logic as ClientCard for consistency
     const currentPlan = client?.memberships?.find(p => {
-        const t = new Date();
-        t.setHours(0,0,0,0);
-        const s = new Date(p.startDate);
-        s.setHours(0,0,0,0);
-        const e = new Date(p.endDate);
-        e.setHours(0,0,0,0);
-        return t >= s && t <= e;
+      const t = new Date();
+      t.setHours(0, 0, 0, 0);
+      const s = new Date(p.startDate);
+      s.setHours(0, 0, 0, 0);
+      const e = new Date(p.endDate);
+      e.setHours(0, 0, 0, 0);
+      return t >= s && t <= e;
     }) || (client?.membership?.startDate ? client.membership : null);
-    
+
     let status = 'Expired';
     if (currentPlan) {
-        const t = new Date();
-        t.setHours(0,0,0,0);
-        const s = new Date(currentPlan.startDate);
-        s.setHours(0,0,0,0);
-        const e = new Date(currentPlan.endDate);
-        e.setHours(0,0,0,0);
-        if (t < s) status = 'Upcoming';
-        else if (t > e) status = 'Expired';
-        else status = 'Active';
+      const t = new Date();
+      t.setHours(0, 0, 0, 0);
+      const s = new Date(currentPlan.startDate);
+      s.setHours(0, 0, 0, 0);
+      const e = new Date(currentPlan.endDate);
+      e.setHours(0, 0, 0, 0);
+      if (t < s) status = 'Upcoming';
+      else if (t > e) status = 'Expired';
+      else status = 'Active';
     }
 
     // CASE 1: Active, Upcoming, Expiring Soon (Expiring Soon is a subset of Active in this check) -> Reactivate directly
@@ -206,7 +206,7 @@ const InactiveClients = () => {
           toast.error('Failed to reactivate client');
         }
       }
-    } 
+    }
     // CASE 2: Expired -> Open Record Payment for renewal
     else {
       setSelectedClientForRenewal(client);
@@ -239,7 +239,7 @@ const InactiveClients = () => {
       setSelectedClientForRenewal(null);
       fetchClients();
       // Refresh payments
-      api.get('/payment').then(res => setAllPayments(res.data.data || [])).catch(() => {});
+      api.get('/payment').then(res => setAllPayments(res.data.data || [])).catch(() => { });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to process payment');
       throw error;
@@ -416,19 +416,19 @@ const InactiveClients = () => {
 
         {/* View Client Modal */}
         {viewClientId && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                <div className="relative bg-surface-secondary border border-border/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-border flex justify-between items-center shrink-0">
-                        <h2 className="text-lg font-bold text-text-primary">Client Details</h2>
-                        <button onClick={() => setViewClientId(null)} className="text-text-secondary hover:text-text-primary transition-colors">
-                            <X size={24} />
-                        </button>
-                    </div>
-                    <div className="overflow-y-auto custom-scrollbar flex-1">
-                        <ClientDetail clientId={viewClientId} onClose={() => setViewClientId(null)} />
-                    </div>
-                </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="relative bg-surface-secondary border border-border/50 rounded-xl w-full max-w-4xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-border flex justify-between items-center shrink-0">
+                <h2 className="text-lg font-bold text-text-primary">Client Details</h2>
+                <button onClick={() => setViewClientId(null)} className="text-text-secondary hover:text-text-primary transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="overflow-y-auto custom-scrollbar flex-1">
+                <ClientDetail clientId={viewClientId} onClose={() => setViewClientId(null)} />
+              </div>
             </div>
+          </div>
         )}
 
         {/* ── Dues Modal ── */}
@@ -449,7 +449,7 @@ const InactiveClients = () => {
                 <button onClick={() => setDuesClient(null)} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary transition-colors">
                   <X size={20} />
                 </button>
-                
+
                 <div className="flex flex-col items-center mb-6 pt-2">
                   <div className="w-20 h-20 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center font-black text-3xl mb-4 border-2 border-red-500/20 shadow-inner">
                     {duesClient.avatar || duesClient.personalInfo?.name.charAt(0).toUpperCase()}
@@ -491,13 +491,13 @@ const InactiveClients = () => {
                   </div>
                 </div>
 
-                <Button 
-                  onClick={() => { 
-                      const client = duesClient;
-                      setDuesClient(null); 
-                      setSelectedClientForRenewal(client);
-                      setShowPaymentModal(true);
-                  }} 
+                <Button
+                  onClick={() => {
+                    const client = duesClient;
+                    setDuesClient(null);
+                    setSelectedClientForRenewal(client);
+                    setShowPaymentModal(true);
+                  }}
                   className="w-full !py-4 text-base font-bold shadow-xl shadow-primary/20"
                 >
                   Collect Payment
@@ -509,15 +509,15 @@ const InactiveClients = () => {
 
         {/* ── Renewal Payment Modal ── */}
         {showPaymentModal && selectedClientForRenewal && (
-            <PaymentModal
-                isOpen={showPaymentModal}
-                onClose={() => { setShowPaymentModal(false); setSelectedClientForRenewal(null); }}
-                onSave={handleRenewalSave}
-                clientData={selectedClientForRenewal}
-                lockClient={true}
-                plans={plans}
-                payments={allPayments}
-            />
+          <PaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => { setShowPaymentModal(false); setSelectedClientForRenewal(null); }}
+            onSave={handleRenewalSave}
+            clientData={selectedClientForRenewal}
+            lockClient={true}
+            plans={plans}
+            payments={allPayments}
+          />
         )}
 
       </div>
