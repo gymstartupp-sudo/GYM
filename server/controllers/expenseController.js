@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const { uploadBillToCloudinary } = require('../utils/cloudinary');
 
 // @desc    Get all expenses
 // @route   GET /api/expenses
@@ -29,7 +30,8 @@ exports.createExpense = async (req, res, next) => {
     }
 
     if (req.file) {
-      req.body.billImage = `/uploads/bills/${req.file.filename}`;
+      const billUrl = await uploadBillToCloudinary(req.file.path);
+      req.body.billImage = billUrl;
     }
 
     const expense = await Expense.create(req.body);
@@ -63,7 +65,8 @@ exports.updateExpense = async (req, res, next) => {
     }
 
     if (req.file) {
-      req.body.billImage = `/uploads/bills/${req.file.filename}`;
+      const billUrl = await uploadBillToCloudinary(req.file.path);
+      req.body.billImage = billUrl;
     }
 
     expense = await Expense.findByIdAndUpdate(req.params.id, req.body, {
