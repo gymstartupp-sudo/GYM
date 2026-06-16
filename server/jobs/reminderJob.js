@@ -33,7 +33,7 @@ const runReminders = async () => {
     today.setHours(0, 0, 0, 0);
 
     // Fetch all active clients
-    const clients = await Client.find({ isActive: true });
+    const clients = await Client.find({ isActive: true, 'membership.requestApproved': true });
     console.log(`Found ${clients.length} active clients to process.`);
 
     for (let client of clients) {

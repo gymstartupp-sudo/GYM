@@ -444,7 +444,7 @@ const CustomDatePicker = React.forwardRef(({
         placeholder={placeholder}
         maxLength={10}
         inputMode="numeric"
-        pattern="[0-9-]*"
+        pattern="[0-9\-]*"
         autoComplete="off"
         className={`${className} pr-12`}
         {...rest}

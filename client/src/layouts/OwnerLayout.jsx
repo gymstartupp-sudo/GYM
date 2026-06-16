@@ -169,7 +169,7 @@ export default function OwnerLayout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden bg-surface-primary text-text-primary">
-        {!isMobile && <OwnerHeader gymName={gymName} isMobile={isMobile} />}
+        {!isMobile && <OwnerHeader gymName={gymName} gymLogo={gymProfile?.gym?.gymLogo || gymProfile?.gym?.billingInfo?.logo} isMobile={isMobile} />}
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>

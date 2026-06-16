@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const clientSchema = new mongoose.Schema({
-  clientId: { type: String, unique: true, sparse: true, trim: true },
+  clientId: { type: String, trim: true },
   gymId: { type: String, required: true },
   gymName: { type: String, required: true },
   personalInfo: {
-    name: { type: String, required: true, maxlength: 20 },
+    name: { type: String, required: true, maxlength: 25 },
     dob: { type: Date, required: true },
     gender: { type: String, required: true },
     address: { type: String, required: true, maxlength: 100 },
@@ -63,7 +63,13 @@ const clientSchema = new mongoose.Schema({
   deactivatedAt: { type: Date, default: null }
 }, { timestamps: true });
 
-clientSchema.index({ gymId: 1, clientId: 1 }, { unique: true, sparse: true });
+clientSchema.index(
+  { gymId: 1, clientId: 1 },
+  { 
+    unique: true, 
+    partialFilterExpression: { clientId: { $exists: true } } 
+  }
+);
 clientSchema.index({ gymId: 1, isActive: 1 });
 clientSchema.index({ gymId: 1, isActive: 1, paymentStatus: 1 });
 

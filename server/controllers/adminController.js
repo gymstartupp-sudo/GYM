@@ -9,7 +9,7 @@ const Owner = require('../models/Owner');
 exports.getDashboardStats = async (req, res, next) => {
   try {
     const totalGyms = await Gym.countDocuments();
-    const totalClients = await Client.countDocuments();
+    const totalClients = await Client.countDocuments({ 'membership.requestApproved': true });
     const totalPayments = await Payment.countDocuments();
 
     res.status(200).json({

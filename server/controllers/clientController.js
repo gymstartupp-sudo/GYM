@@ -59,32 +59,34 @@ exports.getClients = async (req, res, next) => {
     
     let query = { gymId: gymIdStr, isActive: true };
 
+    if (status && status.toLowerCase() === 'pending') {
+      query['membership.requestApproved'] = false;
+    } else {
+      query['membership.requestApproved'] = true;
+    }
+
     if (status && status.toLowerCase() !== 'all') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const s = status.toLowerCase();
 
       if (s === 'active') {
-        query['membership.requestApproved'] = true;
         query.memberships = { 
           $elemMatch: { startDate: { $lte: today }, endDate: { $gte: today } } 
         };
       } else if (s === 'upcoming') {
-        query['membership.requestApproved'] = true;
         query.memberships = { 
           $elemMatch: { startDate: { $gt: today } } 
         };
       } else if (s === 'expiring soon') {
-        query['membership.requestApproved'] = true;
         query.memberships = { 
           $elemMatch: { endDate: { $gte: today, $lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) } } 
         };
       } else if (s === 'dues') {
         query.paymentStatus = { $in: ['overdue', 'partial'] };
       } else if (s === 'pending') {
-        query['membership.requestApproved'] = false;
+        // Handled above
       } else if (s === 'expired') {
-        query['membership.requestApproved'] = true;
         query.$and = [
           { 'memberships.0': { $exists: true } },
           { memberships: { $not: { $elemMatch: { endDate: { $gte: today } } } } }
@@ -384,7 +386,7 @@ exports.getInactiveClients = async (req, res, next) => {
     const gymIdStr = req.userRole === 'owner' ? req.user.gymId : req.query.gymId;
     const { status, planName, plan } = req.query;
     
-    let query = { gymId: gymIdStr, isActive: false };
+    let query = { gymId: gymIdStr, isActive: false, 'membership.requestApproved': true };
 
     if (status && status.toLowerCase() !== 'all') {
       const today = new Date();

@@ -984,7 +984,7 @@ const PaymentModal = ({
                 setSearchQuery(clientData.personalInfo?.name || clientData.name || '');
 
                 // Auto-detect: Check if this client has any active unpaid/partial payment using grouped-latest logic
-                if (payments.length > 0 && !initialData.id && !lockClient) {
+                if (payments.length > 0 && !initialData.id && !lockClient && clientData?._id) {
                     const clientIdStr = String(clientData._id);
                     const clientPayments = payments.filter(p => String(p.clientId) === clientIdStr);
                     const sortedPayments = [...clientPayments].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

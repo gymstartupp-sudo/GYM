@@ -35,7 +35,8 @@ const gymSchema = new mongoose.Schema({
     gmail: String,
     phoneNumber: String
   },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  gymLogo: { type: String, default: "" }
 }, { timestamps: true });
 
 

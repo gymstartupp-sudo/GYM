@@ -53,9 +53,13 @@ const ClientPayments = () => {
 
   const getLogoUrl = () => {
     const gymInfo = profile?.gym;
-    if (!gymInfo?.billingInfo?.logo) return null;
+    const logo = gymInfo?.gymLogo || gymInfo?.billingInfo?.logo;
+    if (!logo) return null;
+    if (logo.startsWith('http://') || logo.startsWith('https://')) {
+      return logo;
+    }
     const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '');
-    return `${backendUrl}${gymInfo.billingInfo.logo}`;
+    return `${backendUrl}${logo}`;
   };
 
   const getBalance = (p) => {
