@@ -98,7 +98,7 @@ const getValidationSchema = (mode) => yup.object({
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
   emergencyContact: yup.string().matches(phoneRegex, phoneError).required(phoneError).notOneOf([yup.ref('mobileNo')], 'Must be different from Mobile Number'),
-  medicalCondition: yup.string().trim().nullable(),
+  medicalCondition: yup.string().trim().max(100, 'Max 100 chars').nullable(),
   planId: yup.string().nullable(),
   startDate: yup.date()
     .transform(parseDateString)
@@ -145,7 +145,8 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       gymId: isOwner ? user?.gymId || '' : '',
       gymName: isOwner ? user?.gymName || '' : '',
       medicalCondition: '',
-      planType: ''
+      planType: '',
+      planId: ''
     },
     mode: 'onChange',
     reValidateMode: 'onChange'
@@ -272,7 +273,19 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         onSuccess?.({ gymName: data.gymName });
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Action failed');
+      const errMsg = error.response?.data?.message || 'Action failed';
+      const detailErrors = error.response?.data?.errors;
+      const detailError = error.response?.data?.error;
+
+      if (detailErrors && Array.isArray(detailErrors)) {
+        toast.error(`${errMsg}: ${detailErrors.join(', ')}`);
+      } else if (detailError && typeof detailError === 'object') {
+        const errorKeys = Object.keys(detailError);
+        const detailedMsg = errorKeys.map(k => `${k.split('.').pop()}: ${detailError[k]}`).join(', ');
+        toast.error(`${errMsg} (${detailedMsg})`);
+      } else {
+        toast.error(errMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -289,7 +302,19 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       toast.success('Client added with payment successfully');
       onSuccess?.(res.data.data);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create client and payment');
+      const errMsg = error.response?.data?.message || 'Failed to create client and payment';
+      const detailErrors = error.response?.data?.errors;
+      const detailError = error.response?.data?.error;
+
+      if (detailErrors && Array.isArray(detailErrors)) {
+        toast.error(`${errMsg}: ${detailErrors.join(', ')}`);
+      } else if (detailError && typeof detailError === 'object') {
+        const errorKeys = Object.keys(detailError);
+        const detailedMsg = errorKeys.map(k => `${k.split('.').pop()}: ${detailError[k]}`).join(', ');
+        toast.error(`${errMsg} (${detailedMsg})`);
+      } else {
+        toast.error(errMsg);
+      }
       throw error; // Re-throw to let PaymentModal handle loading state
     } finally {
       setLoading(false);
@@ -563,11 +588,15 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       </form>
 
       <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
+        isOpen={showPaymentModal && pendingClientData !== null}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPendingClientData(null);
+        }}
         onSave={handleFinalSubmit}
         clientData={pendingClientData}
         planData={plans.find(p => p._id === values.planId)}
+        plans={plans}
       />
     </>
   );

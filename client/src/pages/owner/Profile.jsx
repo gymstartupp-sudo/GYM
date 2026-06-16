@@ -350,6 +350,7 @@ const Profile = () => {
           gymEmail: formState.gym.gymEmail,
           gymContact: formState.gym.gymContact,
           gymType: formState.gym.gymType,
+          gymLogo: formState.gym.gymLogo,
           socialMediaLinks: [
             { platform: 'instagram', url: formState.gym.instagramUrl },
             { platform: 'facebook', url: formState.gym.facebookUrl },
@@ -403,10 +404,30 @@ const Profile = () => {
 
   return (
     <div className="p-8 pt-10 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">Gym Settings</h1>
-            <p className="text-text-secondary mt-2 text-lg">Manage your gym establishment, ownership, and platform configuration.</p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-border pb-6">
+          <div className="flex items-center gap-5">
+            {/* Logo Preview */}
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0">
+              {formState.gym.gymLogo || formState.gym.billingInfo?.logo ? (
+                <img
+                  src={
+                    (formState.gym.gymLogo || formState.gym.billingInfo?.logo).startsWith('http')
+                      ? (formState.gym.gymLogo || formState.gym.billingInfo?.logo)
+                      : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${formState.gym.gymLogo || formState.gym.billingInfo?.logo}`
+                  }
+                  alt="Gym Logo"
+                  className="w-full h-full object-contain p-1"
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl">
+                  {formState.gym.gymName?.charAt(0).toUpperCase() || 'G'}
+                </div>
+              )}
+            </div>
+            <div>
+              <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">{formState.gym.gymName || 'Gym Settings'}</h1>
+              <p className="text-text-secondary mt-2 text-lg">Manage your gym establishment, ownership, and platform configuration.</p>
+            </div>
           </div>
           <div className="flex gap-2 shrink-0">
             {isEditing ? (

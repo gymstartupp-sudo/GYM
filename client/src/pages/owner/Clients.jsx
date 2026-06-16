@@ -389,7 +389,6 @@ const Clients = () => {
                   key={client._id}
                   client={client}
                   onView={(c) => navigate(`/owner/clients/${c._id}`)}
-                  onDelete={selected => handleDelete(selected._id)}
                   onDuesClick={setDuesClient}
                 />
               ))}

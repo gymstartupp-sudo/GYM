@@ -7,8 +7,8 @@
 @layer base {
   :root {
     /* Semantic Color Tokens (based on reference image) */
-    --color-primary: #ECC400;
-    --color-primary-hover: #DCA300;
+    --color-primary: #FFBD07;
+    --color-primary-hover: #E5AA06;
     --color-secondary: #0A7C3F;
     --color-accent: #56F299;
     --color-background: #F4F4F3;
@@ -19,7 +19,7 @@
     --color-text-muted: #8E8E88;
     --color-border: #E2E2DC;
     --color-success-val: #0A7C3F;
-    --color-warning-val: #DCA300;
+    --color-warning-val: #E5AA06;
     --color-error-val: #B91C1C;
     --color-info-val: #0284C7;
 
@@ -48,8 +48,8 @@
     /* Badge Variables */
     --badge-success-bg: rgba(10, 124, 63, 0.12);
     --badge-success-text: #0A7C3F;
-    --badge-warning-bg: rgba(236, 196, 0, 0.15);
-    --badge-warning-text: #DCA300;
+    --badge-warning-bg: rgba(255, 189, 7, 0.15);
+    --badge-warning-text: #E5AA06;
     --badge-danger-bg: rgba(185, 28, 28, 0.12);
     --badge-danger-text: #B91C1C;
     --badge-info-bg: rgba(2, 132, 199, 0.12);
@@ -66,31 +66,31 @@
     --bg-card: #1F1F1F;
     --bg-elevated: #252525;
     --bg-divider: #2A2A2A;
-    --color-accent: #FFD54F;
+    --color-accent: #FFBD07;
     --color-success: #10B981;
     --color-danger: #EF4444;
-    --color-warning: #F59E0B;
+    --color-warning: #FFBD07;
     --text-primary: #FFFFFF;
     --text-secondary: #BDBDBD;
     --text-muted: #8A8A8A;
     --border-color: rgba(255, 255, 255, 0.08);
     --bg-hover: #303030;
-    --sidebar-active-bg: rgba(255, 213, 79, 0.1);
-    --sidebar-active-text: #FFD54F;
-    --sidebar-active-indicator: #FFD54F;
-    --focus-ring: #FFD54F;
+    --sidebar-active-bg: rgba(255, 189, 7, 0.1);
+    --sidebar-active-text: #FFBD07;
+    --sidebar-active-indicator: #FFBD07;
+    --focus-ring: #FFBD07;
     --btn-primary-text: #111111;
     --overlay: rgba(0, 0, 0, 0.6);
 
     /* Badge Variables */
     --badge-success-bg: rgba(16, 185, 129, 0.15);
     --badge-success-text: #10B981;
-    --badge-warning-bg: rgba(245, 158, 11, 0.15);
-    --badge-warning-text: #F59E0B;
+    --badge-warning-bg: rgba(255, 189, 7, 0.15);
+    --badge-warning-text: #FFBD07;
     --badge-danger-bg: rgba(239, 68, 68, 0.15);
     --badge-danger-text: #EF4444;
-    --badge-info-bg: rgba(255, 213, 79, 0.15);
-    --badge-info-text: #FFD54F;
+    --badge-info-bg: rgba(255, 189, 7, 0.15);
+    --badge-info-text: #FFBD07;
 
     /* Header Specifics */
     --header-bg: #111111;

@@ -120,11 +120,12 @@ exports.getDashboardStats = async (req, res, next) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const totalClients = await Client.countDocuments({ gymId: gymIdStr, isActive: true });
+    const totalClients = await Client.countDocuments({ gymId: gymIdStr, isActive: true, 'membership.requestApproved': true });
     
     const activeClients = await Client.countDocuments({ 
       gymId: gymIdStr, 
       isActive: true,
+      'membership.requestApproved': true,
       memberships: { 
         $elemMatch: { 
           startDate: { $lte: today }, 
@@ -136,6 +137,7 @@ exports.getDashboardStats = async (req, res, next) => {
     const expiringSoon = await Client.countDocuments({ 
       gymId: gymIdStr, 
       isActive: true,
+      'membership.requestApproved': true,
       memberships: { 
         $elemMatch: { 
           endDate: { $gte: today, $lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) } 
@@ -149,6 +151,7 @@ exports.getDashboardStats = async (req, res, next) => {
     const expiringSoonList = await Client.find({ 
       gymId: gymIdStr, 
       isActive: true,
+      'membership.requestApproved': true,
       memberships: { 
         $elemMatch: { 
           endDate: { $gte: today, $lte: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000) } 
@@ -156,7 +159,7 @@ exports.getDashboardStats = async (req, res, next) => {
       }
     }).limit(3).lean();
 
-    const clients = await Client.find({ gymId: gymIdStr, isActive: true }).lean();
+    const clients = await Client.find({ gymId: gymIdStr, isActive: true, 'membership.requestApproved': true }).lean();
     
     const expiredClientsList = clients.filter(client => {
       const memberships = client.memberships || (client.membership?.startDate ? [client.membership] : []);
@@ -175,7 +178,7 @@ exports.getDashboardStats = async (req, res, next) => {
 
     const pendingList = await Client.find({ gymId: gymIdStr, 'membership.requestApproved': false, isActive: true }).lean();
 
-    const recentClients = await Client.find({ gymId: gymIdStr, isActive: true })
+    const recentClients = await Client.find({ gymId: gymIdStr, isActive: true, 'membership.requestApproved': true })
       .sort({ createdAt: -1 })
       .limit(5)
       .lean();

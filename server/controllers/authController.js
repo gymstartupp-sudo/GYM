@@ -43,6 +43,17 @@ exports.registerGymOwner = async (req, res, next) => {
     const gymExists = await Gym.findOne({ gymEmail });
     if (gymExists) return res.status(400).json({ success: false, message: 'Gym with this email already exists' });
 
+    let logoUrl = '';
+    if (req.file) {
+      try {
+        const { uploadLogoToCloudinary } = require('../utils/cloudinary');
+        logoUrl = await uploadLogoToCloudinary(req.file.path);
+      } catch (uploadErr) {
+        console.error('Failed to upload logo to Cloudinary during registration:', uploadErr);
+        return res.status(500).json({ success: false, message: 'Failed to upload gym logo to cloud storage' });
+      }
+    }
+
     const newGymId = await generateGymId();
 
     const gym = await Gym.create({
@@ -60,11 +71,12 @@ exports.registerGymOwner = async (req, res, next) => {
       operatingDays: parseJsonField(operatingDays, []),
       operatingHours: parseJsonField(operatingHours, {}),
       password,
+      gymLogo: logoUrl,
       billingInfo: {
         billingIdPrefix,
         helpContact,
         gst,
-        logo: buildLogoPath(req.file),
+        logo: logoUrl,
         addressOnBill,
         regards,
         greetingText,

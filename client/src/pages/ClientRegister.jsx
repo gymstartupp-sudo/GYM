@@ -13,8 +13,7 @@ const ClientRegister = () => {
 
     if (successData) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark to-slate-900 py-12 px-4">
-              <div className="card w-full max-w-lg relative z-10 backdrop-blur-xl bg-card/80 border-primary/40 text-center py-10">
+            <div className="w-full max-w-lg relative z-10 backdrop-blur-md bg-surface-card/90 border border-border text-center py-10 px-8 rounded-2xl shadow-2xl">
                  <div className="flex justify-center mb-6">
                      <CheckCircle size={80} className="text-emerald-500" />
                  </div>
@@ -29,14 +28,12 @@ const ClientRegister = () => {
                  <Link to="/login" className="block w-full">
                      <Button className="w-full text-lg py-3">Return to Login</Button>
                  </Link>
-              </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark to-slate-900 py-12 px-4">
-          <div className="card w-full max-w-3xl relative z-10 backdrop-blur-xl bg-card/80 border-border/50">
+        <div className="w-full max-w-3xl relative z-10 backdrop-blur-md bg-surface-card/90 border border-border p-8 rounded-2xl shadow-2xl">
             <h2 className="text-3xl font-bold text-center text-text-primary mb-8">Client Registration</h2>
             
             <ClientForm mode="self" onSuccess={handleSuccess} />
@@ -44,7 +41,6 @@ const ClientRegister = () => {
             <div className="mt-6 text-center text-text-secondary text-sm">
                Already a member? <Link to="/login" className="text-primary hover:underline ml-1">Login here</Link>
             </div>
-          </div>
         </div>
     );
 };

@@ -21,7 +21,8 @@ import {
   Phone,
   Calendar,
   Clock,
-  UploadCloud
+  UploadCloud,
+  X
 } from 'lucide-react';
 
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
@@ -40,29 +41,29 @@ const MINUTES = ['00', '15', '30', '45'];
 
 const TimeInput = ({ fieldHour, fieldMinute, fieldAmpm, register, setValue, watch }) => {
   return (
-    <div className="flex items-center gap-1 bg-slate-900/60 border border-slate-800 rounded-lg p-1.5 hover:border-slate-700/80 transition-colors">
+    <div className="flex items-center gap-1 bg-surface-card border border-border rounded-lg p-1.5 hover:border-border transition-colors">
       <select
         {...register(fieldHour)}
         onChange={e => setValue(fieldHour, e.target.value)}
-        className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none"
+        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none"
       >
-        {HOURS.map(h => <option key={h} className="bg-slate-950" value={h}>{h}</option>)}
+        {HOURS.map(h => <option key={h} className="bg-surface-card text-text-primary" value={h}>{h}</option>)}
       </select>
-      <span className="text-slate-500 font-bold select-none">:</span>
+      <span className="text-text-muted font-bold select-none">:</span>
       <select
         {...register(fieldMinute)}
         onChange={e => setValue(fieldMinute, e.target.value)}
-        className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none"
+        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none"
       >
-        {MINUTES.map(m => <option key={m} className="bg-slate-950" value={m}>{m}</option>)}
+        {MINUTES.map(m => <option key={m} className="bg-surface-card text-text-primary" value={m}>{m}</option>)}
       </select>
       <select
         {...register(fieldAmpm)}
         onChange={e => setValue(fieldAmpm, e.target.value)}
-        className="bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer w-14 text-center py-1 px-1 bg-slate-800 rounded select-none border border-slate-700/50"
+        className="bg-transparent text-text-secondary font-medium text-xs focus:outline-none cursor-pointer w-14 text-center py-1 px-1 bg-surface-divider rounded select-none border border-border"
       >
-        <option className="bg-slate-950" value="AM">AM</option>
-        <option className="bg-slate-950" value="PM">PM</option>
+        <option className="bg-surface-card text-text-primary" value="AM">AM</option>
+        <option className="bg-surface-card text-text-primary" value="PM">PM</option>
       </select>
     </div>
   );
@@ -127,9 +128,87 @@ const GymRegister = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [logoName, setLogoName] = useState('');
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoError, setLogoError] = useState('');
+  const [isDragActive, setIsDragActive] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // Cleanup preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (logoPreview) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
+  }, [logoPreview]);
+
+  const handleLogoFile = (file) => {
+    if (!file) return;
+
+    // Validate type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setLogoError('Invalid file type. Supports: JPG, JPEG, PNG, WEBP.');
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+      setLogoPreview(null);
+      setLogoName('');
+      setValue('logo', null, { shouldDirty: true });
+      return;
+    }
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoError('File is too large. Limit is 5MB.');
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+      setLogoPreview(null);
+      setLogoName('');
+      setValue('logo', null, { shouldDirty: true });
+      return;
+    }
+
+    setLogoError('');
+    setLogoName(file.name);
+    
+    // Create preview
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+
+    // Update react-hook-form value
+    setValue('logo', [file], { shouldDirty: true, shouldValidate: true });
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setIsDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleLogoFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemoveLogo = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoName('');
+    setLogoPreview(null);
+    setLogoError('');
+    setValue('logo', null, { shouldDirty: true, shouldValidate: true });
+  };
 
   // Smart Sync toggles (Defaulting to true for frictionless "one-click" experience)
   const [syncWhatsapp, setSyncWhatsapp] = useState(true);
@@ -221,11 +300,7 @@ const GymRegister = () => {
 
   const fieldClassName = (field, extra = '') => {
     const isError = showFieldError(field);
-    return `input-field bg-slate-900/50 border border-slate-800 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${extra}
-      ${isError
-        ? 'border-red-500/80 focus:ring-red-500/30 text-red-200 shadow-[0_0_8px_rgba(239,68,68,0.25)]'
-        : 'focus:ring-blue-500/30 focus:border-blue-500/50 hover:border-slate-700/60'
-      }`.trim();
+    return `input-field ${extra} ${isError ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : ''}`.trim();
   };
 
   const isFieldFilled = (field) => {
@@ -356,12 +431,11 @@ const GymRegister = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black py-16 px-4">
-      <div className="card w-full max-w-2xl relative z-10 backdrop-blur-xl bg-slate-950/80 border border-slate-800/80 shadow-2xl p-8 rounded-2xl">
+    <div className="w-full max-w-2xl relative z-10 backdrop-blur-md bg-surface-card/90 border border-border shadow-2xl p-8 rounded-2xl">
 
         {/* Glow effect */}
-        <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl -z-10"></div>
 
         <div className="text-center mb-8">
           <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">Gym Registration</h2>
@@ -373,7 +447,7 @@ const GymRegister = () => {
           <div className="flex items-center justify-between relative">
             <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800 -translate-y-1/2 -z-10 rounded-full"></div>
             <div
-              className="absolute top-1/2 left-0 h-[2px] bg-gradient-to-r from-blue-500 to-indigo-500 -translate-y-1/2 -z-10 rounded-full transition-all duration-500 ease-out"
+              className="absolute top-1/2 left-0 h-[2px] bg-primary -translate-y-1/2 -z-10 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${step === 1 ? '0%' : step === 2 ? '50%' : '100%'}` }}
             ></div>
 
@@ -393,7 +467,7 @@ const GymRegister = () => {
                       ${isCompleted
                         ? 'bg-emerald-500 border-emerald-500 text-text-primary shadow-[0_0_12px_rgba(16,185,129,0.3)]'
                         : isActive
-                          ? 'bg-blue-600 border-blue-500 text-text-primary shadow-[0_0_12px_rgba(59,130,246,0.4)] scale-110'
+                          ? 'bg-primary border-primary text-text-primary shadow-[0_0_12px_rgba(255,189,7,0.4)] scale-110'
                           : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700/60'
                       }`}
                   >
@@ -488,10 +562,9 @@ const GymRegister = () => {
                   <input {...register('location')} placeholder="E.g. Bangalore" className={fieldClassName('location')} maxLength="20" />
                   {showFieldError('location') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
                 </div>
-
-                <div>
+                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-blue-400" />
+                    <Clock className="w-3.5 h-3.5 text-primary" />
                     <span>Operating Hours <span className="text-slate-500 font-normal">(Optional)</span></span>
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -524,7 +597,7 @@ const GymRegister = () => {
               {/* Operating Days Section */}
               <div className="md:col-span-2">
                 <p className="text-xs text-slate-400 mb-2.5 font-medium flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                  <Calendar className="w-3.5 h-3.5 text-primary" />
                   <span>Operating Days</span>
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -533,7 +606,7 @@ const GymRegister = () => {
                       key={day}
                       className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 cursor-pointer border select-none transition-all duration-200
                         ${watch('operatingDays')?.includes(day)
-                          ? 'bg-blue-600/10 border-blue-500/40 text-blue-300 font-medium'
+                          ? 'bg-primary/10 border-primary/40 text-primary font-medium'
                           : 'bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60 hover:bg-slate-850'
                         }`}
                     >
@@ -541,7 +614,7 @@ const GymRegister = () => {
                         type="checkbox"
                         value={day}
                         {...register('operatingDays')}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500"
+                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                       />
                       <span>{day}</span>
                     </label>
@@ -557,7 +630,7 @@ const GymRegister = () => {
                   className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-slate-400 hover:text-text-primary hover:bg-slate-900/40 transition-all select-none"
                 >
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
                     <span>Advanced Business Details</span>
                   </div>
                   {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
@@ -605,7 +678,7 @@ const GymRegister = () => {
               {/* SECTION A: OWNER DETAILS */}
               <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                  <User className="w-4 h-4 text-blue-400" />
+                  <User className="w-4 h-4 text-primary" />
                   <span className="text-sm font-bold text-slate-200">Section A: Owner Details</span>
                 </div>
 
@@ -655,7 +728,7 @@ const GymRegister = () => {
               <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
                 <div className="pb-1 border-b border-slate-800">
                   <div className="flex items-center gap-2 mb-1">
-                    <Mail className="w-4 h-4 text-indigo-400" />
+                    <Mail className="w-4 h-4 text-primary" />
                     <span className="text-sm font-bold text-slate-200">Section B: Communication Settings</span>
                   </div>
                   <p className="text-[11px] text-slate-500 leading-normal">These details are used for automated reminders, membership expiry alerts, and payment notifications.</p>
@@ -672,9 +745,9 @@ const GymRegister = () => {
                           type="checkbox"
                           checked={syncWhatsapp}
                           onChange={(e) => setSyncWhatsapp(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500"
+                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                         />
-                        <span className="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition-colors uppercase tracking-wider">
+                        <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
                           [ Use Gym Contact Number ]
                         </span>
                       </label>
@@ -684,13 +757,13 @@ const GymRegister = () => {
                         {...register('whatsappNumber')}
                         type="tel"
                         placeholder="10-digit WhatsApp number"
-                        className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                        className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
                         onInput={handlePhoneInput}
                         maxLength="10"
                         readOnly={syncWhatsapp}
                       />
                       {syncWhatsapp && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
                           <Check className="w-2.5 h-2.5 stroke-[3px]" />
                           SYNCED
                         </div>
@@ -709,9 +782,9 @@ const GymRegister = () => {
                           type="checkbox"
                           checked={syncSms}
                           onChange={(e) => setSyncSms(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500"
+                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                         />
-                        <span className="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition-colors uppercase tracking-wider">
+                        <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
                           [ Same as Gym Contact Number ]
                         </span>
                       </label>
@@ -721,13 +794,13 @@ const GymRegister = () => {
                         {...register('phoneNumber')}
                         type="tel"
                         placeholder="10-digit SMS number"
-                        className={fieldClassName('phoneNumber', syncSms ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                        className={fieldClassName('phoneNumber', syncSms ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
                         onInput={handlePhoneInput}
                         maxLength="10"
                         readOnly={syncSms}
                       />
                       {syncSms && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
                           <Check className="w-2.5 h-2.5 stroke-[3px]" />
                           SYNCED
                         </div>
@@ -746,9 +819,9 @@ const GymRegister = () => {
                           type="checkbox"
                           checked={syncEmail}
                           onChange={(e) => setSyncEmail(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500"
+                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                         />
-                        <span className="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition-colors uppercase tracking-wider">
+                        <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
                           [ Use Gym Email ]
                         </span>
                       </label>
@@ -758,11 +831,11 @@ const GymRegister = () => {
                         {...register('gmail')}
                         type="email"
                         placeholder="Email address used for reminders"
-                        className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                        className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
                         readOnly={syncEmail}
                       />
                       {syncEmail && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
                           <Check className="w-2.5 h-2.5 stroke-[3px]" />
                           SYNCED
                         </div>
@@ -807,9 +880,9 @@ const GymRegister = () => {
                         type="checkbox"
                         checked={syncAddress}
                         onChange={(e) => setSyncAddress(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500"
+                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                       />
-                      <span className="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition-colors uppercase tracking-wider">
+                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
                         [ Same as Gym Address ]
                       </span>
                     </label>
@@ -818,12 +891,12 @@ const GymRegister = () => {
                     <textarea
                       {...register('addressOnBill')}
                       placeholder="Billing address for invoices"
-                      className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
+                      className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
                       maxLength="100"
                       readOnly={syncAddress}
                     />
                     {syncAddress && (
-                      <div className="absolute right-3 top-4 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                      <div className="absolute right-3 top-4 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
                         <Check className="w-2.5 h-2.5 stroke-[3px]" />
                         SYNCED
                       </div>
@@ -841,22 +914,52 @@ const GymRegister = () => {
 
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Logo <span className="text-slate-500 font-normal">(Optional)</span></p>
-                  <label className="block border border-dashed border-slate-800 rounded-xl px-4 py-4 bg-slate-900/20 cursor-pointer hover:border-blue-500/40 hover:bg-slate-900/40 transition-all text-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      {...register('logo')}
-                      onChange={(event) => {
-                        const file = event.target.files?.[0] || null;
-                        setValue('logo', event.target.files, { shouldDirty: true });
-                        setLogoName(file ? file.name : '');
-                      }}
-                    />
-                    <UploadCloud className="w-6 h-6 text-slate-500 mx-auto mb-1.5" />
-                    <span className="text-xs font-semibold text-slate-300 block">{logoName || 'Upload Logo Image'}</span>
-                    <p className="text-[10px] text-slate-500 mt-1">Supports PNG, JPG up to 5MB</p>
-                  </label>
+                  
+                  {logoPreview ? (
+                    <div className="relative border border-slate-800 rounded-xl p-4 bg-slate-900/30 flex items-center gap-4 group animate-in fade-in duration-200">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-750 bg-black flex items-center justify-center shrink-0">
+                        <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-200 truncate">{logoName}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Ready for upload</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer"
+                        title="Remove logo"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      onDragEnter={handleDrag}
+                      onDragOver={handleDrag}
+                      onDragLeave={handleDrag}
+                      onDrop={handleDrop}
+                      className={`block border border-dashed rounded-xl px-4 py-6 bg-slate-900/20 cursor-pointer hover:bg-slate-900/40 transition-all text-center select-none ${
+                        isDragActive ? 'border-primary bg-primary/5' : 'border-slate-800 hover:border-primary/40'
+                      }`}
+                    >
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0] || null;
+                          handleLogoFile(file);
+                        }}
+                      />
+                      <UploadCloud className={`w-8 h-8 mx-auto mb-2 transition-transform ${isDragActive ? 'text-primary scale-110' : 'text-slate-500'}`} />
+                      <span className="text-xs font-semibold text-slate-300 block">
+                        {isDragActive ? 'Drop image here' : 'Drag & drop your logo here, or browse'}
+                      </span>
+                      <p className="text-[10px] text-slate-500 mt-1">Supports PNG, JPG, JPEG, WEBP up to 5MB</p>
+                    </label>
+                  )}
+                  {logoError && <p className="text-red-500 text-xs mt-1.5 font-medium">{logoError}</p>}
                 </div>
               </div>
 
@@ -870,9 +973,9 @@ const GymRegister = () => {
                         type="checkbox"
                         checked={syncHelpContact}
                         onChange={(e) => setSyncHelpContact(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-blue-500 focus:ring-blue-500/50 accent-blue-500"
+                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                       />
-                      <span className="text-[10px] text-blue-400 font-bold hover:text-blue-300 transition-colors uppercase tracking-wider">
+                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
                         [ Use Gym Contact ]
                       </span>
                     </label>
@@ -882,13 +985,13 @@ const GymRegister = () => {
                       {...register('helpContact')}
                       type="tel"
                       placeholder="Support / Helpdesk number"
-                      className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-blue-500/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
                       onInput={handlePhoneInput}
                       maxLength="10"
                       readOnly={syncHelpContact}
                     />
                     {syncHelpContact && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
                         <Check className="w-2.5 h-2.5 stroke-[3px]" />
                         SYNCED
                       </div>
@@ -964,11 +1067,10 @@ const GymRegister = () => {
 
         <div className="mt-8 text-center text-xs text-slate-400 border-t border-slate-900 pt-5">
           Already have an account?
-          <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold ml-1.5 transition-colors">
+          <Link to="/login" className="text-primary hover:text-primary-hover font-semibold ml-1.5 transition-colors">
             Login here &rarr;
           </Link>
         </div>
-      </div>
     </div>
   );
 };

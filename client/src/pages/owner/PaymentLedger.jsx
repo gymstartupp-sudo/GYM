@@ -38,6 +38,15 @@ const CATEGORY_COLORS = {
     Other: 'bg-slate-500/10 text-slate-400 border-slate-500/20'
 };
 
+const getBillUrl = (billPath) => {
+    if (!billPath) return '';
+    if (billPath.startsWith('http://') || billPath.startsWith('https://')) {
+        return billPath;
+    }
+    const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '');
+    return `${baseUrl}${billPath}`;
+};
+
 const PaymentLedger = () => {
     const { user } = useAuth();
     const [payments, setPayments] = useState([]);
@@ -903,7 +912,7 @@ const PaymentLedger = () => {
                                     <div className="bg-surface-divider/80 p-4 rounded-lg border border-border">
                                         <p className="text-xs text-text-secondary uppercase tracking-wider mb-2">Attached Bill</p>
                                         <a
-                                            href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${currentExpense.billImage}`}
+                                            href={getBillUrl(currentExpense.billImage)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 w-full p-3 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20 hover:bg-emerald-500 hover:text-text-primary transition-all group"

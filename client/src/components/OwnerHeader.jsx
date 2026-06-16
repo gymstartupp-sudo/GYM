@@ -272,7 +272,7 @@ const ConfirmModal = ({ isOpen, title, message, cancelText = 'Cancel', confirmTe
   );
 };
 
-const OwnerHeader = ({ gymName = 'Gym Owner', isMobile = false }) => {
+const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, isMobile = false }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showContactPanel, setShowContactPanel] = useState(false);
@@ -642,9 +642,9 @@ const OwnerHeader = ({ gymName = 'Gym Owner', isMobile = false }) => {
           <button
             id="owner-profile-btn"
             onClick={handleProfileClick}
-            className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200 shadow-md"
+            className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200 shadow-md overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg, #10B981, #059669)',
+              background: gymLogo ? 'transparent' : 'linear-gradient(135deg, #10B981, #059669)',
               color: '#FFFFFF',
               boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
             }}
@@ -658,7 +658,15 @@ const OwnerHeader = ({ gymName = 'Gym Owner', isMobile = false }) => {
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.35)';
             }}
           >
-            {gymAvatar}
+            {gymLogo ? (
+              <img
+                src={gymLogo.startsWith('http') ? gymLogo : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${gymLogo}`}
+                alt="Gym Logo"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              gymAvatar
+            )}
           </button>
 
           {/* Logout */}

@@ -138,9 +138,9 @@ exports.recordPayment = async (req, res, next) => {
       return res.status(409).json({ success: false, message: 'Another payment transaction is already in progress for this client' });
     }
 
-    // FIX: Check that client is active
-    const client = await Client.findOne({ _id: clientId, gymId: gymIdStr, isActive: true });
-    if (!client) return res.status(404).json({ success: false, message: 'Client not found or is deactivated' });
+    // Check that client is active and approved
+    const client = await Client.findOne({ _id: clientId, gymId: gymIdStr, isActive: true, 'membership.requestApproved': true });
+    if (!client) return res.status(404).json({ success: false, message: 'Client not found, is deactivated, or is pending approval' });
 
     const numAmount = Number(amount) || 0;
     const safePaidAmount = Number(paidAmount) || 0;

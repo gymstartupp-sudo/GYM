@@ -146,7 +146,7 @@ const Expired = () => {
                             </button>
                         </div>
                         <div className="overflow-y-auto custom-scrollbar flex-1">
-                            <ClientDetail clientId={viewClientId} onClose={() => setViewClientId(null)} />
+                            <ClientDetail clientId={viewClientId} onClose={() => { setViewClientId(null); fetchData(); }} />
                         </div>
                     </div>
                 </div>

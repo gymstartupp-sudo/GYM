@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const clientSchema = new mongoose.Schema({
-  clientId: { type: String, unique: true, sparse: true, trim: true },
+  clientId: { type: String, trim: true },
   gymId: { type: String, required: true },
   gymName: { type: String, required: true },
   personalInfo: {
-    name: { type: String, required: true, maxlength: 20 },
+    name: { type: String, required: true, maxlength: 25 },
     dob: { type: Date, required: true },
     gender: { type: String, required: true },
     address: { type: String, required: true, maxlength: 100 },
@@ -19,6 +19,10 @@ const clientSchema = new mongoose.Schema({
   whatsappNumber: { type: String },
   expiryReminderSent: { type: Boolean, default: false },
   expiredReminderSent: { type: Boolean, default: false },
+  expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+  expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+  expiryReminderError: { type: String, default: null },
+  expiredReminderError: { type: String, default: null },
   password: { type: String, required: true },
   memberships: [{
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan' },
@@ -47,7 +51,11 @@ const clientSchema = new mongoose.Schema({
     status: { type: String, enum: ['active', 'expired', 'expiring_soon', 'upcoming', 'pending'] },
     requestApproved: { type: Boolean, default: false },
     expiryReminderSent: { type: Boolean, default: false },
-    expiredReminderSent: { type: Boolean, default: false }
+    expiredReminderSent: { type: Boolean, default: false },
+    expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+    expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+    expiryReminderError: { type: String, default: null },
+    expiredReminderError: { type: String, default: null }
   },
   paymentHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
   avatar: { type: String },
@@ -55,7 +63,13 @@ const clientSchema = new mongoose.Schema({
   deactivatedAt: { type: Date, default: null }
 }, { timestamps: true });
 
-clientSchema.index({ gymId: 1, clientId: 1 }, { unique: true, sparse: true });
+clientSchema.index(
+  { gymId: 1, clientId: 1 },
+  { 
+    unique: true, 
+    partialFilterExpression: { clientId: { $exists: true } } 
+  }
+);
 clientSchema.index({ gymId: 1, isActive: 1 });
 clientSchema.index({ gymId: 1, isActive: 1, paymentStatus: 1 });
 

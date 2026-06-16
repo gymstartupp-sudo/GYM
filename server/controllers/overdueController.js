@@ -11,6 +11,7 @@ exports.getOverdueClients = async (req, res, next) => {
     const clients = await Client.find({ 
       gymId: gymIdStr, 
       isActive: true,
+      'membership.requestApproved': true,
       paymentStatus: 'overdue'
     }).sort({ 'membership.endDate': 1 }).lean();
     
@@ -31,7 +32,8 @@ exports.getExpiredClients = async (req, res, next) => {
 
     const clients = await Client.find({ 
       gymId: gymIdStr, 
-      isActive: true 
+      isActive: true,
+      'membership.requestApproved': true
     }).lean();
 
     const expiredClients = clients.filter(client => {
