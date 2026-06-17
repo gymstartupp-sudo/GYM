@@ -146,7 +146,7 @@ const FeedbackList = () => {
                     {/* Client Info */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-text-primary transition-all duration-300">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
                           {item.clientAvatar || item.clientName?.charAt(0).toUpperCase() || 'C'}
                         </div>
                         <div className="min-w-0">
@@ -175,7 +175,7 @@ const FeedbackList = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <button
                         onClick={() => handleOpenModal(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-surface-hover transition-colors cursor-pointer"
+                        className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
                       >
                         <Eye size={16} />
                       </button>

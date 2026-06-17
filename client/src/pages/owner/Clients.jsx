@@ -6,6 +6,7 @@ import { Search, Filter, Plus, X, ChevronDown, Check } from 'lucide-react';
 import Button from '../../components/Button';
 import ClientForm from '../../components/ClientForm';
 import ClientCard from '../../components/ClientCard';
+import ConfirmModal from '../../components/ConfirmModal';
 import { getPlanStatus } from '../../utils/membership';
 import Pagination from '../../components/Pagination';
 
@@ -161,25 +162,10 @@ const Clients = () => {
   useEffect(() => { fetchClients(); }, [fetchClients]);
 
   // Modal helpers
-  const closeAddModal = (force = false) => {
-    if (!force && isFormDirty) {
-      if (!window.confirm('You have unsaved changes. Are you sure you want to close?')) return;
-    }
+  const closeAddModal = () => {
     setShowAddModal(false);
     setFormInstanceKey(k => k + 1);
     setIsFormDirty(false);
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to deactivate this client?')) {
-      try {
-        await api.put(`/client/${id}/deactivate`);
-        toast.success('Client deactivated');
-        fetchClients();
-      } catch {
-        toast.error('Failed to deactivate');
-      }
-    }
   };
 
   // Client-side search and sorting based on days left ascending
@@ -249,7 +235,7 @@ const Clients = () => {
         {showAddModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200">
-              <button type="button" onClick={() => closeAddModal(false)} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
+              <button type="button" onClick={() => closeAddModal()} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
                 <X size={24} />
               </button>
               <div className="p-8">
@@ -258,10 +244,10 @@ const Clients = () => {
                   key={formInstanceKey}
                   mode="owner"
                   showCancel
-                  onCancel={() => closeAddModal(false)}
+                  onCancel={() => closeAddModal()}
                   onDirtyChange={setIsFormDirty}
                   onSuccess={() => {
-                    closeAddModal(true);
+                    closeAddModal();
                     toast.success('Client added successfully');
                     fetchClients();
                   }}

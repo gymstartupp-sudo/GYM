@@ -144,15 +144,14 @@ export default function OwnerLayout() {
 
         {/* Nav */}
         <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
-          {navItems.map((item) => (
+          {navItems.filter(item => item.label !== 'Settings').map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               onClick={() => { if (isMobile) setIsSidebarOpen(false); }}
               title={!showLabels ? item.label : undefined}
               className={({ isActive }) =>
-                `sidebar-nav-link ${isActive ? 'sidebar-nav-link-active' : ''} ${
-                  showLabels ? '' : 'sidebar-nav-link-collapsed'
+                `sidebar-nav-link ${isActive ? 'sidebar-nav-link-active' : ''} ${showLabels ? '' : 'sidebar-nav-link-collapsed'
                 }`
               }
             >
@@ -163,6 +162,23 @@ export default function OwnerLayout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Settings (pinned to bottom) */}
+        <div className={`border border-border/60 rounded-lg mb-3 mt-auto ${showLabels ? 'mx-3' : 'mx-auto'}`}>
+          <NavLink
+            to="/owner/settings"
+            onClick={() => { if (isMobile) setIsSidebarOpen(false); }}
+            title={!showLabels ? 'Settings' : undefined}
+            className={({ isActive }) =>
+              `sidebar-nav-link !mx-0 ${isActive ? 'sidebar-nav-link-active' : ''} ${showLabels ? '' : 'sidebar-nav-link-collapsed'}`
+            }
+          >
+            <span className="flex items-center justify-center w-5 h-5 shrink-0">
+              <Settings size={18} />
+            </span>
+            {showLabels && <span className="truncate whitespace-nowrap leading-none">Settings</span>}
+          </NavLink>
+        </div>
 
 
       </aside>

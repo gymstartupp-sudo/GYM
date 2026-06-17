@@ -4,6 +4,7 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { ChevronLeft, Phone, Mail, User, CreditCard, Calendar, CheckCircle2, AlertCircle, Clock, X, FileText, Trash2 } from 'lucide-react';
 import Button from '../../components/Button';
+import ConfirmModal from '../../components/ConfirmModal';
 import { formatDisplayDate, calculateDaysLeft, getPlanStatus, getPaymentStatus, getClientPlans } from '../../utils/membership';
 import ClientProfileHeader from '../../components/ClientProfileHeader';
 
@@ -13,6 +14,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     const navigate = useNavigate();
     const [client, setClient] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showDeactivateModal, setShowDeactivateModal] = useState(false);
     const [activeTab, setActiveTab] = useState('personal'); // 'personal' or 'payment'
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState(null);
@@ -96,18 +98,17 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     };
 
     const handleDeactivate = async () => {
-        if (window.confirm('Are you sure you want to deactivate this client?')) {
-            try {
-                await api.put(`/client/${id}/deactivate`);
-                toast.success('Client deactivated');
-                if (onClose) {
-                    onClose();
-                } else {
-                    navigate('/owner/clients');
-                }
-            } catch {
-                toast.error('Failed to deactivate');
+        try {
+            await api.put(`/client/${id}/deactivate`);
+            toast.success('Client deactivated');
+            setShowDeactivateModal(false);
+            if (onClose) {
+                onClose();
+            } else {
+                navigate('/owner/clients');
             }
+        } catch {
+            toast.error('Failed to deactivate');
         }
     };
 
@@ -161,7 +162,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                             <Button
                                 type="button"
                                 variant="danger"
-                                onClick={handleDeactivate}
+                                onClick={() => setShowDeactivateModal(true)}
                                 className="!px-4 !py-2.5 text-xs flex items-center gap-1.5"
                             >
                                 <Trash2 size={14} /> Deactivate Client
@@ -615,6 +616,16 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={showDeactivateModal}
+                onCancel={() => setShowDeactivateModal(false)}
+                onConfirm={handleDeactivate}
+                title="Deactivate Client"
+                message="Are you sure you want to deactivate this client?"
+                confirmLabel="Deactivate"
+                danger
+            />
         </div>
     );
 };

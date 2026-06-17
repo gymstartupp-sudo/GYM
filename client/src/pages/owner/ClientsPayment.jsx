@@ -334,10 +334,10 @@ const Transactions = () => {
                                                             const client = clients.find(c => c._id === payment.clientId);
                                                             if (client) { setSelectedClient(client); setShowClientDetailModal(true); }
                                                         }}
-                                                        className="p-2 rounded-lg text-text-secondary hover:text-success hover:bg-emerald-400/10 transition-all"
+                                                        className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
                                                         title="View Client"
                                                     >
-                                                        <Eye size={18} />
+                                                        <Eye size={16} />
                                                     </button>
  
                                                 </div>

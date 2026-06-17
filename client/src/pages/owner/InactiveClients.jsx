@@ -8,6 +8,7 @@ import ClientForm from '../../components/ClientForm';
 import ClientCard from '../../components/ClientCard';
 import ClientDetail from './ClientDetail';
 import PaymentModal from '../../components/PaymentModal';
+import ConfirmModal from '../../components/ConfirmModal';
 import Pagination from '../../components/Pagination';
 
 // ─── Status options config ───────────────────────────────────────────────────
@@ -129,6 +130,8 @@ const InactiveClients = () => {
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [viewClientId, setViewClientId] = useState(null);
   const [duesClient, setDuesClient] = useState(null);
+  const [reactivateClientId, setReactivateClientId] = useState(null);
+  const [reactivateClientName, setReactivateClientName] = useState('');
 
   // Payment Renewal Modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -204,22 +207,28 @@ const InactiveClients = () => {
       else status = 'Active';
     }
 
-    // CASE 1: Active, Upcoming, Expiring Soon (Expiring Soon is a subset of Active in this check) -> Reactivate directly
+    // CASE 1: Active, Upcoming, Expiring Soon (Expiring Soon is a subset of Active in this check) -> Show confirmation
     if (status === 'Active' || status === 'Upcoming') {
-      if (window.confirm(`Are you sure you want to reactivate ${client.personalInfo.name}?`)) {
-        try {
-          await api.put(`/client/${client._id}/reactivate`);
-          toast.success('Client reactivated successfully');
-          fetchClients();
-        } catch {
-          toast.error('Failed to reactivate client');
-        }
-      }
+      setReactivateClientId(client._id);
+      setReactivateClientName(client.personalInfo.name);
     }
     // CASE 2: Expired -> Open Record Payment for renewal
     else {
       setSelectedClientForRenewal(client);
       setShowPaymentModal(true);
+    }
+  };
+
+  const confirmReactivate = async () => {
+    if (!reactivateClientId) return;
+    try {
+      await api.put(`/client/${reactivateClientId}/reactivate`);
+      toast.success('Client reactivated successfully');
+      setReactivateClientId(null);
+      setReactivateClientName('');
+      fetchClients();
+    } catch {
+      toast.error('Failed to reactivate client');
     }
   };
 
@@ -536,6 +545,15 @@ const InactiveClients = () => {
             payments={allPayments}
           />
         )}
+
+        <ConfirmModal
+          isOpen={!!reactivateClientId}
+          onCancel={() => { setReactivateClientId(null); setReactivateClientName(''); }}
+          onConfirm={confirmReactivate}
+          title="Reactivate Client"
+          message={`Are you sure you want to reactivate ${reactivateClientName}?`}
+          confirmLabel="Reactivate"
+        />
 
       </div>
   );

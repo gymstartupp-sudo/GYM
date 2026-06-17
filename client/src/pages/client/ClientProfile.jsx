@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
+import { ChevronLeft } from 'lucide-react';
 import Button from '../../components/Button';
 import CustomDatePicker from '../../components/CustomDatePicker';
+import { DATE_RULES, getDobYearBounds, validateDob } from '../../utils/dateInput';
+
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const phoneRegex = /^[6-9]\d{9}$/;
@@ -11,7 +15,7 @@ const errorInputClass = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rg
 
 // ─── Component: Reusable Field ────────────────────
 const Field = ({ label, value, onChange, disabled = false, textarea = false, type = "text", error, maxLength, ...rest }) => {
-  const Component = type === 'date' ? CustomDatePicker : (textarea ? 'textarea' : 'input');
+  const Component = textarea ? 'textarea' : 'input';
   const baseClass = `input-field ${textarea ? 'h-24 resize-none' : ''}`;
   const statusClass = disabled ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : (error ? errorInputClass : '');
 
@@ -26,7 +30,7 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
         )}
       </div>
       <Component
-        type={(textarea || type === 'date') ? undefined : type}
+        type={textarea ? undefined : type}
         value={value || ''}
         onChange={onChange}
         disabled={disabled}
@@ -40,12 +44,14 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
 };
 
 const ClientProfile = () => {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [formState, setFormState] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const { minYear: dobMinYear, maxYear: dobMaxYear } = getDobYearBounds();
 
   const fetchProfile = async () => {
     try {
@@ -85,20 +91,7 @@ const ClientProfile = () => {
       if (!value) {
         errMsg = 'Date of birth is required';
       } else {
-        const parsed = new Date(value);
-        if (isNaN(parsed.getTime())) {
-          errMsg = 'Enter a valid date of birth (DD-MM-YYYY)';
-        } else {
-          const today = new Date();
-          let age = today.getFullYear() - parsed.getFullYear();
-          const m = today.getMonth() - parsed.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < parsed.getDate())) {
-            age--;
-          }
-          if (age < 14) {
-            errMsg = 'Must be at least 14 years old';
-          }
-        }
+        errMsg = validateDob(value) || '';
       }
     }
 
@@ -113,6 +106,10 @@ const ClientProfile = () => {
   const setPersonalInfo = (key, value) => {
     setFormState((curr) => ({ ...curr, personalInfo: { ...curr.personalInfo, [key]: value } }));
     validateSingleField(key, value);
+  };
+
+  const handleDobChange = (e) => {
+    setPersonalInfo('dob', e.target.value);
   };
 
   const validate = () => {
@@ -138,19 +135,9 @@ const ClientProfile = () => {
     if (!pi.dob) {
       newErrors.dob = 'Date of birth is required';
     } else {
-      const parsed = new Date(pi.dob);
-      if (isNaN(parsed.getTime())) {
-        newErrors.dob = 'Enter a valid date of birth (DD-MM-YYYY)';
-      } else {
-        const today = new Date();
-        let age = today.getFullYear() - parsed.getFullYear();
-        const m = today.getMonth() - parsed.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < parsed.getDate())) {
-          age--;
-        }
-        if (age < 14) {
-          newErrors.dob = 'Must be at least 14 years old';
-        }
+      const dobError = validateDob(pi.dob);
+      if (dobError) {
+        newErrors.dob = dobError;
       }
     }
 
@@ -201,117 +188,138 @@ const ClientProfile = () => {
 
   return (
     <>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </button>
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight">Client Profile</h1>
             <p className="text-text-secondary mt-2 text-base md:text-lg">Manage your personal identity details.</p>
           </div>
-          <div className="flex gap-2">
-            {editing ? (
-              <>
-                <Button type="button" variant="secondary" onClick={handleCancel}>Cancel</Button>
-                <Button type="button" onClick={handleSave} isLoading={saving}>Save Changes</Button>
-              </>
-            ) : (
-              <Button type="button" variant="secondary" onClick={() => setEditing(true)}>Edit Profile</Button>
-            )}
-          </div>
         </div>
+        <div className="flex gap-2">
+          {editing ? (
+            <>
+              <Button type="button" variant="secondary" onClick={handleCancel}>Cancel</Button>
+              <Button type="button" onClick={handleSave} isLoading={saving}>Save Changes</Button>
+            </>
+          ) : (
+            <Button type="button" variant="secondary" onClick={() => setEditing(true)}>Edit Profile</Button>
+          )}
+        </div>
+      </div>
 
-        <div className="card space-y-6 bg-surface-secondary border-border rounded-2xl p-6 md:p-8 shadow-xl">
-          <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4">Personal Info</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field label="Client ID" value={formState.clientId} disabled />
-            <Field label="Home Gym ID" value={formState.gymId} disabled />
+      <div className="card space-y-6 bg-surface-secondary border-border rounded-2xl p-6 md:p-8 shadow-xl">
+        <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4">Personal Info</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Client ID" value={formState.clientId} disabled />
+          <Field label="Home Gym ID" value={formState.gymId} disabled />
 
-            <Field
-              label="Full Name *"
-              value={formState.personalInfo?.name}
+          <Field
+            label="Full Name *"
+            value={formState.personalInfo?.name}
+            disabled={!editing}
+            maxLength={25}
+            error={errors.name}
+            onChange={e => setPersonalInfo('name', e.target.value)}
+          />
+
+          <label className="space-y-1 block group">
+            <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">Gender *</span>
+            <select
+              value={formState.personalInfo?.gender || ''}
+              onChange={e => setPersonalInfo('gender', e.target.value)}
               disabled={!editing}
-              maxLength={25}
-              error={errors.name}
-              onChange={e => setPersonalInfo('name', e.target.value)}
-            />
+              className={`input-field bg-surface-secondary border border-border text-text-primary rounded-xl ${!editing ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : ''}`}
+            >
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
 
-            <label className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">Gender *</span>
-              <select
-                value={formState.personalInfo?.gender || ''}
-                onChange={e => setPersonalInfo('gender', e.target.value)}
-                disabled={!editing}
-                className={`input-field bg-surface-secondary border border-border text-text-primary rounded-xl ${!editing ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : ''}`}
-              >
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </label>
+          <Field
+            label="Email Address *"
+            value={formState.personalInfo?.email}
+            type="email"
+            disabled={!editing}
+            error={errors.email}
+            onChange={e => setPersonalInfo('email', e.target.value)}
+          />
 
-            <Field
-              label="Email Address *"
-              value={formState.personalInfo?.email}
-              type="email"
-              disabled={!editing}
-              error={errors.email}
-              onChange={e => setPersonalInfo('email', e.target.value)}
-            />
+          <Field
+            label="Mobile Number *"
+            value={formState.personalInfo?.mobileNo}
+            type="tel"
+            disabled={!editing}
+            error={errors.mobileNo}
+            maxLength={10}
+            onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
+            onChange={e => setPersonalInfo('mobileNo', e.target.value)}
+          />
 
-            <Field
-              label="Mobile Number *"
-              value={formState.personalInfo?.mobileNo}
-              type="tel"
-              disabled={!editing}
-              error={errors.mobileNo}
-              maxLength={10}
-              onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
-              onChange={e => setPersonalInfo('mobileNo', e.target.value)}
-            />
-
-            <Field
-              label="Date of Birth *"
+          <label className="space-y-1 block group">
+            <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">Date of Birth *</span>
+            <CustomDatePicker
               value={formState.personalInfo?.dob ? formState.personalInfo.dob.slice(0, 10) : ''}
-              type="date"
               disabled={!editing}
-              error={errors.dob}
-              onChange={e => setPersonalInfo('dob', e.target.value)}
+              validationRule={DATE_RULES.DOB}
+              minDate={`${dobMinYear}-01-01`}
+              maxDate={`${dobMaxYear}-12-31`}
+              className={`input-field ${!editing ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : ''} ${errors.dob ? errorInputClass : ''}`.trim()}
+              onChange={handleDobChange}
+              onValidationError={(message) => {
+                setErrors(prev => {
+                  const next = { ...prev };
+                  if (message) next.dob = message;
+                  else delete next.dob;
+                  return next;
+                });
+              }}
             />
+            {errors.dob && editing && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.dob}</p>}
+          </label>
 
+          <Field
+            label="Emergency Contact"
+            value={formState.personalInfo?.emergencyContact}
+            type="tel"
+            disabled={!editing}
+            error={errors.emergencyContact}
+            maxLength={10}
+            onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
+            onChange={e => setPersonalInfo('emergencyContact', e.target.value)}
+          />
+
+          <div className="md:col-span-2">
             <Field
-              label="Emergency Contact"
-              value={formState.personalInfo?.emergencyContact}
-              type="tel"
+              label="Residential Address *"
+              value={formState.personalInfo?.address}
+              textarea
               disabled={!editing}
-              error={errors.emergencyContact}
-              maxLength={10}
-              onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
-              onChange={e => setPersonalInfo('emergencyContact', e.target.value)}
+              maxLength={100}
+              error={errors.address}
+              onChange={e => setPersonalInfo('address', e.target.value)}
             />
+          </div>
 
-            <div className="md:col-span-2">
-              <Field
-                label="Residential Address *"
-                value={formState.personalInfo?.address}
-                textarea
-                disabled={!editing}
-                maxLength={100}
-                error={errors.address}
-                onChange={e => setPersonalInfo('address', e.target.value)}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Field
-                label="Medical Condition / Health Notes"
-                value={formState.personalInfo?.medicalCondition}
-                textarea
-                disabled={!editing}
-                maxLength={100}
-                error={errors.medicalCondition}
-                onChange={e => setPersonalInfo('medicalCondition', e.target.value)}
-              />
-            </div>
+          <div className="md:col-span-2">
+            <Field
+              label="Medical Condition / Health Notes"
+              value={formState.personalInfo?.medicalCondition}
+              textarea
+              disabled={!editing}
+              maxLength={100}
+              error={errors.medicalCondition}
+              onChange={e => setPersonalInfo('medicalCondition', e.target.value)}
+            />
           </div>
         </div>
+      </div>
     </>
   );
 };

@@ -9,26 +9,15 @@ import PasswordInput from './PasswordInput';
 import { useAuth } from '../context/AuthContext';
 import PaymentModal from './PaymentModal';
 import CustomDatePicker from './CustomDatePicker';
+import {
+  DATE_RULES,
+  DOB_MESSAGES,
+  getDateYearValidationError,
+  getDobYearBounds,
+  toDateInputString,
+  validateDob,
+} from '../utils/dateInput';
 
-const ensureYYYYMMDD = (val) => {
-  if (!val) return '';
-  if (val instanceof Date) {
-    if (isNaN(val.getTime())) return '';
-    const d = String(val.getDate()).padStart(2, '0');
-    const m = String(val.getMonth() + 1).padStart(2, '0');
-    const y = val.getFullYear();
-    return `${y}-${m}-${d}`;
-  }
-  const str = String(val).trim();
-  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
-    const parts = str.split('-');
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-  }
-  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-    return str.slice(0, 10);
-  }
-  return str;
-};
 
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
@@ -55,23 +44,6 @@ const getMinDobDate = () => {
   return d;
 };
 
-const parseDateString = (value, originalValue) => {
-  if (typeof originalValue === 'string' && originalValue.trim() !== '') {
-    const parts = originalValue.split('-');
-    if (parts.length === 3) {
-      if (parts[0].length === 2 && parts[2].length === 4) {
-        const d = new Date(parts[2], parts[1] - 1, parts[0]);
-        return isNaN(d.getTime()) ? null : d;
-      }
-      if (parts[0].length === 4 && parts[2].length === 2) {
-        const d = new Date(parts[0], parts[1] - 1, parts[2]);
-        return isNaN(d.getTime()) ? null : d;
-      }
-    }
-  }
-  return value;
-};
-
 const getValidationSchema = (mode) => yup.object({
   gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').matches(/^[A-Z]{3}-\d{2}$/, 'Format: PREFIX-01') : yup.string().nullable(),
   gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
@@ -79,31 +51,29 @@ const getValidationSchema = (mode) => yup.object({
   gender: yup.string().required('Gender is required'),
   email: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
   dob: yup.date()
-    .transform(parseDateString)
-    .typeError('Enter a valid date of birth (DD-MM-YYYY)')
+    .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
+    .nullable()
     .required('Date of birth is required')
-    .max(new Date("9999-12-31"), 'Year cannot exceed 4 digits')
-    .min(getMinDobDate(), 'Enter a valid date of birth (max 100 years old)')
-    .test('age', 'Must be at least 14 years old', function (value) {
-      if (!value || isNaN(new Date(value).getTime())) return false;
-      const today = new Date();
-      const birthDate = new Date(value);
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age >= 14;
+    .test('dobValidation', function (value) {
+      if (!value) return this.createError({ message: 'Date of birth is required' });
+      const error = validateDob(toDateInputString(value));
+      if (error) return this.createError({ message: error });
+      return true;
     }),
+
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
   emergencyContact: yup.string().matches(phoneRegex, phoneError).required(phoneError).notOneOf([yup.ref('mobileNo')], 'Must be different from Mobile Number'),
   medicalCondition: yup.string().trim().max(100, 'Max 100 chars').nullable(),
   planId: yup.string().nullable(),
   startDate: yup.date()
-    .transform(parseDateString)
-    .typeError('Enter a valid start date (DD-MM-YYYY)')
+    .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
+    .nullable()
     .required('Start date is required')
+    .test('validYear', 'Enter a valid date.', (value) => {
+      if (!value) return true;
+      return !getDateYearValidationError(toDateInputString(value));
+    })
     .min(getMinStartDate(), 'Start date cannot be more than 30 days in the past')
     .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),
   planType: yup.string().required('Membership plan is required'),
@@ -207,6 +177,22 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const showFieldError = (field) => Boolean(errors[field]);
   const fieldClassName = (field, extra = '') => `input-field ${extra} ${showFieldError(field) ? 'border-red-500' : ''}`.trim();
 
+  const dobField = register('dob');
+  const startDateField = register('startDate');
+  const { minYear: dobMinYear, maxYear: dobMaxYear } = getDobYearBounds();
+
+  const handleDateFieldChange = (field, e) => {
+    setValue(field, e.target.value, { shouldValidate: true, shouldDirty: true });
+  };
+
+  const handleDateValidationError = (field, message) => {
+    if (message) {
+      setError(field, { type: 'manual', message });
+    } else {
+      clearErrors(field);
+    }
+  };
+
   const hasValue = (field) => {
     const value = values[field];
 
@@ -232,7 +218,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         const payload = {
           personalInfo: {
             name: data.name,
-            dob: ensureYYYYMMDD(data.dob),
+            dob: data.dob,
             gender: data.gender,
             address: data.address,
             email: data.email,
@@ -243,7 +229,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           password: data.password,
           membership: {
             planId: data.planId,
-            startDate: ensureYYYYMMDD(data.startDate),
+            startDate: data.startDate,
             planType: data.planType
           }
         };
@@ -256,7 +242,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           name: data.name,
           gender: data.gender,
           email: data.email,
-          dob: ensureYYYYMMDD(data.dob),
+          dob: data.dob,
           mobileNo: data.mobileNo,
           address: data.address,
           emergencyContact: data.emergencyContact,
@@ -264,7 +250,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           password: data.password,
           confirmPassword: data.confirmPassword,
           planId: data.planId,
-          startDate: ensureYYYYMMDD(data.startDate),
+          startDate: data.startDate,
           planType: data.planType
         };
 
@@ -354,7 +340,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       const payload = {
         personalInfo: {
           name: data.name,
-          dob: ensureYYYYMMDD(data.dob),
+          dob: data.dob,
           gender: data.gender,
           address: data.address,
           email: data.email,
@@ -365,7 +351,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         password: data.password,
         membership: {
           planId: data.planId,
-          startDate: ensureYYYYMMDD(data.startDate),
+          startDate: data.startDate,
           planType: data.planType
         }
       };
@@ -454,8 +440,19 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       <div>
         <p className="text-xs text-text-secondary mb-1">Date of Birth <span className="text-red-500">*</span></p>
         <CustomDatePicker
-          {...register('dob')}
+          name={dobField.name}
+          ref={dobField.ref}
+          onBlur={dobField.onBlur}
+          value={toDateInputString(values.dob)}
+          validationRule={DATE_RULES.DOB}
+          minDate={`${dobMinYear}-01-01`}
+          maxDate={`${dobMaxYear}-12-31`}
           className={fieldClassName('dob', 'text-text-secondary')}
+          onChange={(e) => {
+            dobField.onChange(e);
+            handleDateFieldChange('dob', e);
+          }}
+          onValidationError={(message) => handleDateValidationError('dob', message)}
         />
         {showFieldError('dob') && <p className="text-red-500 text-xs mt-1">{errors.dob.message}</p>}
       </div>
@@ -532,8 +529,19 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       <div>
         <p className="text-xs text-text-secondary mb-1">Membership Start Date <span className="text-red-500">*</span></p>
         <CustomDatePicker
-          {...register('startDate')}
+          name={startDateField.name}
+          ref={startDateField.ref}
+          onBlur={startDateField.onBlur}
+          value={toDateInputString(values.startDate)}
+          validationRule={DATE_RULES.REGISTRATION_START}
+          minDate={getMinStartDate()}
+          maxDate={getMaxStartDate()}
           className={fieldClassName('startDate', 'text-text-secondary')}
+          onChange={(e) => {
+            startDateField.onChange(e);
+            handleDateFieldChange('startDate', e);
+          }}
+          onValidationError={(message) => handleDateValidationError('startDate', message)}
         />
         {showFieldError('startDate') && <p className="text-red-500 text-xs mt-1">{errors.startDate.message}</p>}
       </div>
