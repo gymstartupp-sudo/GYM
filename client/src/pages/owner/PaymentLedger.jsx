@@ -25,6 +25,8 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import CustomDatePicker from '../../components/CustomDatePicker';
+import { DATE_RULES, getCurrentYear, validateExpenseDate } from '../../utils/dateInput';
+
 
 const CATEGORIES = ['Rent', 'Salary', 'Utilities', 'Equipment', 'Maintenance', 'Other'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -92,6 +94,10 @@ const PaymentLedger = () => {
                 errMessage = 'Title / Name is required';
             } else if (val.trim().length > 25) {
                 errMessage = 'Title cannot exceed 25 characters';
+            }
+        } else if (name === 'date') {
+            if (val) {
+                errMessage = validateExpenseDate(val) || '';
             }
         }
 
@@ -510,267 +516,267 @@ const PaymentLedger = () => {
 
     return (
         <div className="p-8 pt-10">
-                {/* Header and Toolbar */}
-                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-border/50 pb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
-                            <TrendingUp className="text-primary h-8 w-8" />
-                            Financial Ledger & Analytics
-                        </h1>
-                        <p className="text-text-secondary mt-1">Analyze historical gym revenue, expenses, and profitability trends.</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                        {/* Month Filter */}
-                        <div className="relative">
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
-                            >
-                                {MONTHS.map((m, idx) => (
-                                    <option key={m} value={idx}>{m}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
-                        </div>
-
-                        {/* Year Filter */}
-                        <div className="relative">
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
-                            >
-                                {yearOptions.map(yr => (
-                                    <option key={yr} value={yr}>{yr}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
-                        </div>
-
-                        {/* Reset button */}
-                        <button
-                            onClick={handleResetPeriod}
-                            className="flex items-center gap-1.5 bg-surface-secondary border border-border text-text-secondary hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm"
-                            title="Reset to Current Month"
-                        >
-                            <RefreshCw size={14} />
-                            Reset
-                        </button>
-
-                        <div className="h-6 w-px bg-surface-divider mx-1 hidden sm:block"></div>
-
-                        {/* Export Buttons */}
-                        <button
-                            onClick={exportPDF}
-                            className="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm font-semibold"
-                        >
-                            <Download size={14} />
-                            PDF
-                        </button>
-                        <button
-                            onClick={exportExcel}
-                            className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm font-semibold"
-                        >
-                            <Download size={14} />
-                            Excel
-                        </button>
-                    </div>
+            {/* Header and Toolbar */}
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-border/50 pb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
+                        <TrendingUp className="text-primary h-8 w-8" />
+                        Financial Ledger & Analytics
+                    </h1>
+                    <p className="text-text-secondary mt-1">Analyze historical gym revenue, expenses, and profitability trends.</p>
                 </div>
-
-                {loading ? (
-                    <>
-                        {/* Skeleton for dashboard cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            {[...Array(4)].map((_, i) => (
-                                <div key={i} className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-surface-divider rounded-xl animate-pulse"></div>
-                                        <div>
-                                            <div className="h-3 w-20 bg-surface-divider rounded animate-pulse mb-2"></div>
-                                            <div className="h-7 w-24 bg-surface-divider rounded animate-pulse"></div>
-                                        </div>
-                                    </div>
-                                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Month Filter */}
+                    <div className="relative">
+                        <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                            className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                        >
+                            {MONTHS.map((m, idx) => (
+                                <option key={m} value={idx}>{m}</option>
                             ))}
-                        </div>
-                        {/* Skeleton for breakdown */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                            <div className="lg:col-span-2 bg-surface-secondary/30 border border-border rounded-2xl p-6">
-                                <div className="h-5 w-48 bg-surface-divider rounded animate-pulse mb-6"></div>
-                                <div className="space-y-6">
-                                    <div><div className="h-4 w-full bg-surface-divider rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-surface-divider rounded-full animate-pulse"></div></div>
-                                    <div><div className="h-4 w-full bg-surface-divider rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-surface-divider rounded-full animate-pulse"></div></div>
-                                </div>
-                            </div>
-                            <div className="bg-surface-secondary/30 border border-border rounded-2xl p-6 flex flex-col items-center justify-center">
-                                <div className="w-16 h-16 bg-surface-divider rounded-full animate-pulse mb-4"></div>
-                                <div className="h-5 w-32 bg-surface-divider rounded animate-pulse mb-2"></div>
-                                <div className="h-10 w-28 bg-surface-divider rounded animate-pulse"></div>
-                            </div>
-                        </div>
-                        {/* Skeleton for expenses table */}
-                        <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden">
-                            <div className="p-6 border-b border-border flex justify-between items-center">
-                                <div className="h-5 w-32 bg-surface-divider rounded animate-pulse"></div>
-                                <div className="h-9 w-28 bg-surface-divider rounded-lg animate-pulse"></div>
-                            </div>
-                            {[...Array(3)].map((_, i) => (
-                                <div key={i} className="flex items-center gap-4 p-4 border-b border-border/50">
-                                    <div className="h-4 w-28 bg-surface-divider rounded animate-pulse"></div>
-                                    <div className="h-5 w-16 bg-surface-divider rounded-full animate-pulse"></div>
-                                    <div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div>
-                                    <div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div>
-                                    <div className="flex gap-2 ml-auto"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div>
-                                </div>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
+                    </div>
+
+                    {/* Year Filter */}
+                    <div className="relative">
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
+                        >
+                            {yearOptions.map(yr => (
+                                <option key={yr} value={yr}>{yr}</option>
                             ))}
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        {/* TOP DASHBOARD CARDS */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
+                    </div>
+
+                    {/* Reset button */}
+                    <button
+                        onClick={handleResetPeriod}
+                        className="flex items-center gap-1.5 bg-surface-secondary border border-border text-text-secondary hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm"
+                        title="Reset to Current Month"
+                    >
+                        <RefreshCw size={14} />
+                        Reset
+                    </button>
+
+                    <div className="h-6 w-px bg-surface-divider mx-1 hidden sm:block"></div>
+
+                    {/* Export Buttons */}
+                    <button
+                        onClick={exportPDF}
+                        className="flex items-center gap-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm font-semibold"
+                    >
+                        <Download size={14} />
+                        PDF
+                    </button>
+                    <button
+                        onClick={exportExcel}
+                        className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500 hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm font-semibold"
+                    >
+                        <Download size={14} />
+                        Excel
+                    </button>
+                </div>
+            </div>
+
+            {loading ? (
+                <>
+                    {/* Skeleton for dashboard cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-4 rounded-xl bg-blue-500/10 text-blue-400">
-                                        <CircleDollarSign size={28} />
-                                    </div>
+                                    <div className="w-14 h-14 bg-surface-divider rounded-xl animate-pulse"></div>
                                     <div>
-                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Total Revenue</p>
-                                        <h3 className="text-2xl font-black text-text-primary">₹{totalRevenue.toLocaleString()}</h3>
+                                        <div className="h-3 w-20 bg-surface-divider rounded animate-pulse mb-2"></div>
+                                        <div className="h-7 w-24 bg-surface-divider rounded animate-pulse"></div>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-4 rounded-xl bg-primary/10 text-primary">
-                                        <TrendingUp size={28} />
-                                    </div>
-                                    <div>
-                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Net Amount</p>
-                                        <h3 className="text-2xl font-black text-text-primary">₹{netAmount.toLocaleString()}</h3>
-                                        <p className="text-xs text-text-muted">After ₹{gatewayFee.toLocaleString()} Gateway Fee</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-4 rounded-xl bg-rose-500/10 text-rose-400">
-                                        <TrendingDown size={28} />
-                                    </div>
-                                    <div>
-                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Overall Expenses</p>
-                                        <h3 className="text-2xl font-black text-text-primary">₹{overallExpensesTotal.toLocaleString()}</h3>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                                <div className="flex items-center gap-4">
-                                    <div className="p-4 rounded-xl bg-emerald-500/10 text-emerald-400">
-                                        <CreditCard size={28} />
-                                    </div>
-                                    <div>
-                                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Profit</p>
-                                        <h3 className="text-2xl font-black text-text-primary">₹{profit.toLocaleString()}</h3>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Month-over-Month Comparison Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Revenue MoM Change</span>
-
-
-
-                                </div>
-                                <div className="flex items-baseline justify-between">
-                                    <span className="text-lg font-bold text-text-primary">₹{totalRevenue.toLocaleString()}</span>
-                                    <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.revenue.toLocaleString()} last month</span>
-                                </div>
-                            </div>
-
-                            <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Expenses MoM Change</span>
-
-                                </div>
-                                <div className="flex items-baseline justify-between">
-                                    <span className="text-lg font-bold text-text-primary">₹{overallExpensesTotal.toLocaleString()}</span>
-                                    <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.expenses.toLocaleString()} last month</span>
-                                </div>
-                            </div>
-
-                            <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Profit MoM Change</span>
-
-                                </div>
-                                <div className="flex items-baseline justify-between">
-                                    <span className="text-lg font-bold text-text-primary">₹{profit.toLocaleString()}</span>
-                                    <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.profit.toLocaleString()} last month</span>
-                                </div>
+                        ))}
+                    </div>
+                    {/* Skeleton for breakdown */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        <div className="lg:col-span-2 bg-surface-secondary/30 border border-border rounded-2xl p-6">
+                            <div className="h-5 w-48 bg-surface-divider rounded animate-pulse mb-6"></div>
+                            <div className="space-y-6">
+                                <div><div className="h-4 w-full bg-surface-divider rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-surface-divider rounded-full animate-pulse"></div></div>
+                                <div><div className="h-4 w-full bg-surface-divider rounded animate-pulse mb-2"></div><div className="h-3 w-full bg-surface-divider rounded-full animate-pulse"></div></div>
                             </div>
                         </div>
-
-
-
-                        {/* SECTION 2 & 3: Payment Breakdown & Pending Payments */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                            <div className="lg:col-span-2 bg-surface-secondary/30 border border-border rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-                                <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2">
-                                    <CreditCard size={20} className="text-primary" />
-                                    Payment Breakdown ({MONTHS[selectedMonth]} {selectedYear})
-                                </h3>
-
-                                <div className="space-y-6">
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-semibold text-text-secondary">Online Payments</span>
-                                            <span className="text-sm font-bold text-text-primary">₹{onlinePaymentsTotal.toLocaleString()} ({onlinePercent}%)</span>
-                                        </div>
-                                        <div className="w-full bg-surface-divider rounded-full h-3">
-                                            <div className="bg-primary h-3 rounded-full" style={{ width: `${onlinePercent}%` }}></div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-sm font-semibold text-text-secondary">Offline Payments</span>
-                                            <span className="text-sm font-bold text-text-primary">₹{offlinePaymentsTotal.toLocaleString()} ({offlinePercent}%)</span>
-                                        </div>
-                                        <div className="w-full bg-surface-divider rounded-full h-3">
-                                            <div className="bg-emerald-500 h-3 rounded-full" style={{ width: `${offlinePercent}%` }}></div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div className="bg-surface-secondary/30 border border-border rounded-2xl p-6 flex flex-col items-center justify-center">
+                            <div className="w-16 h-16 bg-surface-divider rounded-full animate-pulse mb-4"></div>
+                            <div className="h-5 w-32 bg-surface-divider rounded animate-pulse mb-2"></div>
+                            <div className="h-10 w-28 bg-surface-divider rounded animate-pulse"></div>
+                        </div>
+                    </div>
+                    {/* Skeleton for expenses table */}
+                    <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden">
+                        <div className="p-6 border-b border-border flex justify-between items-center">
+                            <div className="h-5 w-32 bg-surface-divider rounded animate-pulse"></div>
+                            <div className="h-9 w-28 bg-surface-divider rounded-lg animate-pulse"></div>
+                        </div>
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="flex items-center gap-4 p-4 border-b border-border/50">
+                                <div className="h-4 w-28 bg-surface-divider rounded animate-pulse"></div>
+                                <div className="h-5 w-16 bg-surface-divider rounded-full animate-pulse"></div>
+                                <div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div>
+                                <div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div>
+                                <div className="flex gap-2 ml-auto"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div>
                             </div>
-
-                            <div className="bg-surface-secondary/30 border border-border rounded-2xl p-6 shadow-2xl backdrop-blur-sm flex flex-col justify-center items-center text-center">
-                                <div className="p-4 rounded-full bg-rose-500/10 text-rose-400 mb-4">
-                                    <TrendingDown size={32} />
+                        ))}
+                    </div>
+                </>
+            ) : (
+                <>
+                    {/* TOP DASHBOARD CARDS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-4 rounded-xl bg-blue-500/10 text-blue-400">
+                                    <CircleDollarSign size={28} />
                                 </div>
-                                <h3 className="text-lg font-bold text-text-primary mb-2">Pending Payments</h3>
-                                <p className="text-sm text-text-secondary mb-4">Unpaid balance in selected period</p>
-                                <h2 className="text-4xl font-black text-rose-500">₹{pendingPaymentsPeriod.toLocaleString()}</h2>
+                                <div>
+                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Total Revenue</p>
+                                    <h3 className="text-2xl font-black text-text-primary">₹{totalRevenue.toLocaleString()}</h3>
+                                </div>
                             </div>
                         </div>
 
-                        {/* EXPENSES LIST */}
-                        <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                            <div className="p-6 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                    <FileText size={20} className="text-primary" />
-                                    <div>
-                                        <h3 className="text-lg font-bold text-text-primary">Expenses List</h3>
-                                        <p className="text-xs text-text-muted">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-4 rounded-xl bg-primary/10 text-primary">
+                                    <TrendingUp size={28} />
+                                </div>
+                                <div>
+                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Net Amount</p>
+                                    <h3 className="text-2xl font-black text-text-primary">₹{netAmount.toLocaleString()}</h3>
+                                    <p className="text-xs text-text-muted">After ₹{gatewayFee.toLocaleString()} Gateway Fee</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-4 rounded-xl bg-rose-500/10 text-rose-400">
+                                    <TrendingDown size={28} />
+                                </div>
+                                <div>
+                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Overall Expenses</p>
+                                    <h3 className="text-2xl font-black text-text-primary">₹{overallExpensesTotal.toLocaleString()}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-4 rounded-xl bg-emerald-500/10 text-emerald-400">
+                                    <CreditCard size={28} />
+                                </div>
+                                <div>
+                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Profit</p>
+                                    <h3 className="text-2xl font-black text-text-primary">₹{profit.toLocaleString()}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Month-over-Month Comparison Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Revenue MoM Change</span>
+
+
+
+                            </div>
+                            <div className="flex items-baseline justify-between">
+                                <span className="text-lg font-bold text-text-primary">₹{totalRevenue.toLocaleString()}</span>
+                                <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.revenue.toLocaleString()} last month</span>
+                            </div>
+                        </div>
+
+                        <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Expenses MoM Change</span>
+
+                            </div>
+                            <div className="flex items-baseline justify-between">
+                                <span className="text-lg font-bold text-text-primary">₹{overallExpensesTotal.toLocaleString()}</span>
+                                <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.expenses.toLocaleString()} last month</span>
+                            </div>
+                        </div>
+
+                        <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Profit MoM Change</span>
+
+                            </div>
+                            <div className="flex items-baseline justify-between">
+                                <span className="text-lg font-bold text-text-primary">₹{profit.toLocaleString()}</span>
+                                <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.profit.toLocaleString()} last month</span>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    {/* SECTION 2 & 3: Payment Breakdown & Pending Payments */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                        <div className="lg:col-span-2 bg-surface-secondary/30 border border-border rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+                            <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2">
+                                <CreditCard size={20} className="text-primary" />
+                                Payment Breakdown ({MONTHS[selectedMonth]} {selectedYear})
+                            </h3>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm font-semibold text-text-secondary">Online Payments</span>
+                                        <span className="text-sm font-bold text-text-primary">₹{onlinePaymentsTotal.toLocaleString()} ({onlinePercent}%)</span>
                                     </div>
-                                              {/* Category Filter Pills */}
+                                    <div className="w-full bg-surface-divider rounded-full h-3">
+                                        <div className="bg-primary h-3 rounded-full" style={{ width: `${onlinePercent}%` }}></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-sm font-semibold text-text-secondary">Offline Payments</span>
+                                        <span className="text-sm font-bold text-text-primary">₹{offlinePaymentsTotal.toLocaleString()} ({offlinePercent}%)</span>
+                                    </div>
+                                    <div className="w-full bg-surface-divider rounded-full h-3">
+                                        <div className="bg-emerald-500 h-3 rounded-full" style={{ width: `${offlinePercent}%` }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-surface-secondary/30 border border-border rounded-2xl p-6 shadow-2xl backdrop-blur-sm flex flex-col justify-center items-center text-center">
+                            <div className="p-4 rounded-full bg-rose-500/10 text-rose-400 mb-4">
+                                <TrendingDown size={32} />
+                            </div>
+                            <h3 className="text-lg font-bold text-text-primary mb-2">Pending Payments</h3>
+                            <p className="text-sm text-text-secondary mb-4">Unpaid balance in selected period</p>
+                            <h2 className="text-4xl font-black text-rose-500">₹{pendingPaymentsPeriod.toLocaleString()}</h2>
+                        </div>
+                    </div>
+
+                    {/* EXPENSES LIST */}
+                    <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                        <div className="p-6 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <FileText size={20} className="text-primary" />
+                                <div>
+                                    <h3 className="text-lg font-bold text-text-primary">Expenses List</h3>
+                                    <p className="text-xs text-text-muted">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
+                                </div>
+                                {/* Category Filter Pills */}
                                 <div className="flex flex-wrap items-center gap-1 bg-surface-divider p-1 rounded-xl border border-border self-start lg:self-auto">
                                     {['All', ...CATEGORIES].map(cat => (
                                         <button
@@ -786,83 +792,83 @@ const PaymentLedger = () => {
                                     ))}
                                 </div>                      </div>
 
-                                <button
-                                    onClick={() => handleOpenModal('add')}
-                                    className="flex items-center gap-2 bg-primary hover:brightness-95 text-text-primary px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
-                                >
-                                    <Plus size={16} /> Add Expense
-                                </button>
-                            </div>
-                            <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
-                                <table className="w-full text-left">
-                                    <thead className="sticky top-0 bg-surface-secondary z-10 border-b border-border">
-                                        <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                            <th className="p-4">Title / Name</th>
-                                            <th className="p-4">Category</th>
-                                            <th className="p-4">Date</th>
-                                            <th className="p-4">Amount</th>
-                                            <th className="p-4 text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {filteredExpenses.length === 0 ? (
-                                            <tr>
-                                                <td colSpan="5" className="p-8 text-center text-text-muted">
-                                                    No expenses recorded matching the selected filters.
-                                                </td>
-                                            </tr>
-                                        ) : filteredExpenses.map(exp => (
-                                            <tr key={exp._id} className="hover:bg-surface-divider/80 transition-colors group">
-                                                <td className="p-4">
-                                                    <span className="text-text-primary font-semibold">{exp.title}</span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${CATEGORY_COLORS[exp.category] || CATEGORY_COLORS.Other}`}>
-                                                        {exp.category}
-                                                    </span>
-                                                </td>
-                                                <td className="p-4 text-text-secondary text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar size={14} className="text-text-muted" />
-                                                        {new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <span className="text-text-primary font-black">₹{exp.amount.toLocaleString()}</span>
-                                                </td>
-                                                <td className="p-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleOpenModal('view', exp); }}
-                                                            className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
-                                                            title="View"
-                                                        >
-                                                            <Eye size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleOpenModal('edit', exp); }}
-                                                            className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-text-primary rounded-lg transition-all"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit2 size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleDelete(exp._id); }}
-                                                            className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-text-primary rounded-lg transition-all"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <button
+                                onClick={() => handleOpenModal('add')}
+                                className="flex items-center gap-2 bg-primary hover:brightness-95 text-text-primary px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
+                            >
+                                <Plus size={16} /> Add Expense
+                            </button>
                         </div>
-                    </>
-                )}
+                        <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
+                            <table className="w-full text-left">
+                                <thead className="sticky top-0 bg-surface-secondary z-10 border-b border-border">
+                                    <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                                        <th className="p-4">Title / Name</th>
+                                        <th className="p-4">Category</th>
+                                        <th className="p-4">Date</th>
+                                        <th className="p-4">Amount</th>
+                                        <th className="p-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {filteredExpenses.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="5" className="p-8 text-center text-text-muted">
+                                                No expenses recorded matching the selected filters.
+                                            </td>
+                                        </tr>
+                                    ) : filteredExpenses.map(exp => (
+                                        <tr key={exp._id} className="hover:bg-surface-divider/80 transition-colors group">
+                                            <td className="p-4">
+                                                <span className="text-text-primary font-semibold">{exp.title}</span>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${CATEGORY_COLORS[exp.category] || CATEGORY_COLORS.Other}`}>
+                                                    {exp.category}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-text-secondary text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar size={14} className="text-text-muted" />
+                                                    {new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="text-text-primary font-black">₹{exp.amount.toLocaleString()}</span>
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleOpenModal('view', exp); }}
+                                                        className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
+                                                        title="View"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleOpenModal('edit', exp); }}
+                                                        className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-text-primary rounded-lg transition-all"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(exp._id); }}
+                                                        className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-text-primary rounded-lg transition-all"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* Add / Edit / View Modal */}
             {showModal && (
@@ -984,10 +990,25 @@ const PaymentLedger = () => {
                                     <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Date</label>
                                     <CustomDatePicker
                                         required
-                                        className="w-full bg-surface-secondary border border-border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary [color-scheme:dark]"
+                                        validationRule={DATE_RULES.EXPENSE}
+                                        minDate={`${getCurrentYear()}-01-01`}
+                                        maxDate={`${getCurrentYear()}-12-31`}
+                                        className={`w-full bg-surface-secondary border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary ${formErrors.date ? 'border-red-500' : 'border-border'}`}
                                         value={formData.date}
-                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, date: e.target.value });
+                                            validateField('date', e.target.value);
+                                        }}
+                                        onValidationError={(message) => {
+                                            setFormErrors(prev => {
+                                                const next = { ...prev };
+                                                if (message) next.date = message;
+                                                else delete next.date;
+                                                return next;
+                                            });
+                                        }}
                                     />
+                                    {formErrors.date && <p className="text-red-500 text-xs mt-1">{formErrors.date}</p>}
                                 </div>
 
                                 <div>

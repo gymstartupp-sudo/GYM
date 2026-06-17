@@ -1,10 +1,10 @@
 import React from 'react';
-import { Eye, RefreshCw, Trash2 } from 'lucide-react';
+import { Eye, RefreshCw } from 'lucide-react';
 import Button from './Button';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../utils/membership';
 import { planStatusStyles, paymentStatusStyles } from '../utils/statusStyles';
 
-const ClientCard = ({ client, onView, onDelete, onRenew, onReactivate, onDuesClick, showRenew = false, showReactivate = false, hideStatus = false, deleteLabel = "Deactivate" }) => {
+const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, showRenew = false, showReactivate = false, hideStatus = false }) => {
   const name = client?.personalInfo?.name || 'Client';
   const avatarText = client?.avatar || name.charAt(0).toUpperCase();
 
@@ -24,7 +24,7 @@ const ClientCard = ({ client, onView, onDelete, onRenew, onReactivate, onDuesCli
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-4 md:gap-2 items-center text-sm">
 
         <div className="flex gap-3 items-center min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-text-primary transition-all duration-300">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
             {avatarText}
           </div>
           <div className="min-w-0">
@@ -76,9 +76,9 @@ const ClientCard = ({ client, onView, onDelete, onRenew, onReactivate, onDuesCli
         )}
 
         <div className={`flex gap-2 justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
-          <Button type="button" variant="secondary" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="!px-3 !py-1.5 text-xs">
-            <Eye size={14} /> View
-          </Button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border" title="View client">
+            <Eye size={16} />
+          </button>
 
           {showReactivate && onReactivate && (
             <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 text-xs">
@@ -89,12 +89,6 @@ const ClientCard = ({ client, onView, onDelete, onRenew, onReactivate, onDuesCli
           {showRenew && onRenew && (
             <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 text-xs">
               <RefreshCw size={14} /> Renew
-            </Button>
-          )}
-
-          {onDelete && (
-            <Button type="button" variant="danger" onClick={(e) => { e.stopPropagation(); onDelete?.(client); }} className="!px-3 !py-1.5 text-xs">
-              <Trash2 size={14} /> {deleteLabel}
             </Button>
           )}
         </div>

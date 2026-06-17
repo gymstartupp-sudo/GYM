@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
+import { ChevronLeft } from 'lucide-react';
 import Button from '../../components/Button';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -156,6 +158,7 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
 
 // ─── Main Profile Page ───────────────────────────────────────────────────────
 const Profile = () => {
+  const navigate = useNavigate();
   const [profile, setProfile]     = useState(null);
   const [formState, setFormState] = useState(null);
   const [loading, setLoading]     = useState(true);
@@ -405,7 +408,14 @@ const Profile = () => {
   return (
     <div className="p-8 pt-10 space-y-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-border pb-6">
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className="flex items-center gap-5">
             {/* Logo Preview */}
             <div className="w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0">
               {formState.gym.gymLogo || formState.gym.billingInfo?.logo ? (
@@ -427,6 +437,7 @@ const Profile = () => {
             <div>
               <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">{formState.gym.gymName || 'Gym Settings'}</h1>
               <p className="text-text-secondary mt-2 text-lg">Manage your gym establishment, ownership, and platform configuration.</p>
+            </div>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">

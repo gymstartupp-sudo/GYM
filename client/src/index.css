@@ -134,6 +134,43 @@
     @apply w-full px-4 py-2.5 h-11 bg-surface-card border border-border rounded-input text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-[var(--focus-ring)] focus:border-[var(--focus-ring)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed;
   }
 
+  .input-field::-webkit-text-decoration,
+  .input-field::-webkit-text-decoration-line,
+  .input-field::-webkit-text-decoration-style,
+  .input-field::-webkit-text-decoration-color,
+  .input-field::placeholder {
+    text-decoration: none !important;
+    -webkit-text-decoration: none !important;
+  }
+
+  input[type="date"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    color: transparent;
+    border: none;
+    background: transparent;
+    outline: none;
+    box-shadow: none;
+    text-decoration: none;
+  }
+
+  input[type="date"]:invalid {
+    box-shadow: none;
+    border: none;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  input[type="date"]::-webkit-outer-spin-button,
+  input[type="date"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
   .password-toggle-field {
     @apply pr-10;
   }
@@ -178,7 +215,7 @@
 
   /* Status badges */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide;
+    @apply inline-flex items-center px-1.5 py-px rounded text-[10px] font-semibold uppercase tracking-wide w-fit;
   }
 
   .badge-active {

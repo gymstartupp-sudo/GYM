@@ -310,7 +310,7 @@ const Dues = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
-                                ? 'bg-primary text-text-primary shadow-lg'
+                                ? 'bg-[var(--color-warning)] text-black shadow-lg'
                                 : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/50'
                                 }`}
                         >
@@ -370,7 +370,7 @@ const Dues = () => {
                                         <tr key={`${due.clientId}-${idx}`} className="border-b border-border hover:bg-white/[0.02] transition-colors group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-text-primary transition-all duration-300">
+                                                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
                                                         {due.clientName?.charAt(0).toUpperCase()}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
@@ -428,9 +428,10 @@ const Dues = () => {
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={() => setViewClientId(due.clientId)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-divider text-text-secondary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-border"
+                                                            className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
+                                                            title="View client"
                                                         >
-                                                            <Eye size={14} /> View
+                                                            <Eye size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handleRenew(due)}
@@ -438,20 +439,15 @@ const Dues = () => {
                                                         >
                                                             <RefreshCw size={14} /> Renew
                                                         </button>
-                                                        <button
-                                                            onClick={() => handleDelete(due.clientId)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-950/20 text-red-400 hover:bg-red-900/40 hover:text-red-300 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-red-900/30"
-                                                        >
-                                                            <Trash2 size={14} /> Deactivate
-                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={() => setViewClientId(due.clientId)}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-divider text-text-secondary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-border"
+                                                            className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
+                                                            title="View client"
                                                         >
-                                                            <Eye size={14} /> View
+                                                            <Eye size={16} />
                                                         </button>
                                                         <button
                                                             onClick={() => handlePayNow(due)}

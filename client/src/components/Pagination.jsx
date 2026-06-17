@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange, disableAutoScroll }) => {
   if (totalPages <= 1) return null;
 
   const getPageNumbers = () => {
@@ -43,6 +43,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
   const handlePageChange = (page) => {
     onPageChange(page);
+    if (disableAutoScroll) return;
     const mainEl = document.querySelector('main');
     if (mainEl) {
       mainEl.scrollTo({ top: 0, behavior: 'smooth' });
