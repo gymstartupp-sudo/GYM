@@ -23,6 +23,8 @@ const clientSchema = new mongoose.Schema({
   expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
   expiryReminderError: { type: String, default: null },
   expiredReminderError: { type: String, default: null },
+  expiryReminderSentAt: { type: Date, default: null },
+  expiredReminderSentAt: { type: Date, default: null },
   password: { type: String, required: true },
   memberships: [{
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan' },
@@ -55,7 +57,9 @@ const clientSchema = new mongoose.Schema({
     expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
     expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
     expiryReminderError: { type: String, default: null },
-    expiredReminderError: { type: String, default: null }
+    expiredReminderError: { type: String, default: null },
+    expiryReminderSentAt: { type: Date, default: null },
+    expiredReminderSentAt: { type: Date, default: null }
   },
   paymentHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
   avatar: { type: String },

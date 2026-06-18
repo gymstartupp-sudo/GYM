@@ -59,6 +59,8 @@ const runReminders = async () => {
         updatedClient.expiryReminderStatus = 'none';
         updatedClient.membership.expiryReminderError = null;
         updatedClient.expiryReminderError = null;
+        updatedClient.membership.expiryReminderSentAt = null;
+        updatedClient.expiryReminderSentAt = null;
       }
       // If active again, reset expiredReminderSent (daysLeft >= 0)
       if (daysLeft >= 0) {
@@ -68,6 +70,8 @@ const runReminders = async () => {
         updatedClient.expiredReminderStatus = 'none';
         updatedClient.membership.expiredReminderError = null;
         updatedClient.expiredReminderError = null;
+        updatedClient.membership.expiredReminderSentAt = null;
+        updatedClient.expiredReminderSentAt = null;
       }
 
       await updatedClient.save();
@@ -90,6 +94,8 @@ const runReminders = async () => {
           updatedClient.expiryReminderStatus = 'failed';
           updatedClient.membership.expiryReminderError = failureReason;
           updatedClient.expiryReminderError = failureReason;
+          updatedClient.membership.expiryReminderSentAt = new Date();
+          updatedClient.expiryReminderSentAt = new Date();
           await updatedClient.save();
         } else {
           // Check duplicate flag
@@ -110,6 +116,8 @@ const runReminders = async () => {
               updatedClient.expiryReminderStatus = 'sent';
               updatedClient.membership.expiryReminderError = null;
               updatedClient.expiryReminderError = null;
+              updatedClient.membership.expiryReminderSentAt = new Date();
+              updatedClient.expiryReminderSentAt = new Date();
               await updatedClient.save();
             } else {
               twilioStatus = 'Failed';
@@ -118,6 +126,8 @@ const runReminders = async () => {
               updatedClient.expiryReminderStatus = 'failed';
               updatedClient.membership.expiryReminderError = failureReason;
               updatedClient.expiryReminderError = failureReason;
+              updatedClient.membership.expiryReminderSentAt = new Date();
+              updatedClient.expiryReminderSentAt = new Date();
               await updatedClient.save();
             }
           }

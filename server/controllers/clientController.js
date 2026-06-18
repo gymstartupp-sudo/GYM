@@ -1,7 +1,9 @@
 const Client = require('../models/Client');
+const Gym = require('../models/Gym');
 const { generateClientId } = require('../utils/generateId');
 const Plan = require('../models/Plan');
 const { buildMembershipWindow } = require('../utils/membership');
+const sendWhatsApp = require('../utils/sendWhatsApp');
 
 // @desc    Get all clients for gym
 // @route   GET /api/client
@@ -55,7 +57,7 @@ const calculateBalances = (clientDoc, preFetchedPayments = []) => {
 exports.getClients = async (req, res, next) => {
   try {
     const gymIdStr = req.userRole === 'owner' ? req.user.gymId : req.query.gymId;
-    const { status, planName, plan } = req.query;
+    const { status, planName, plan, reminder } = req.query;
     
     let query = { gymId: gymIdStr, isActive: true };
 
@@ -97,6 +99,21 @@ exports.getClients = async (req, res, next) => {
     const selectedPlan = planName || plan;
     if (selectedPlan && selectedPlan.toLowerCase() !== 'all') {
       query['membership.planName'] = selectedPlan;
+    }
+
+    // Reminder status filtering
+    if (reminder && reminder.toLowerCase() !== 'all') {
+      const r = reminder.toLowerCase();
+      if (r === 'reminder_pending') {
+        query.$or = [
+          { expiryReminderStatus: { $in: ['none', null] } },
+          { expiryReminderStatus: { $exists: false } }
+        ];
+      } else if (r === 'reminder_sent') {
+        query.expiryReminderStatus = 'sent';
+      } else if (r === 'expired_reminder_sent') {
+        query.expiredReminderStatus = 'sent';
+      }
     }
 
     const rawClients = await Client.find(query).sort({ createdAt: -1 }).lean();
@@ -659,6 +676,60 @@ exports.changeClientPassword = async (req, res, next) => {
     await client.save();
 
     res.status(200).json({ success: true, message: 'Password updated successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Send manual payment reminder via WhatsApp
+// @route   POST /api/client/:id/send-reminder
+// @access  Private (Owner)
+exports.sendManualReminder = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const client = await Client.findById(id);
+    if (!client) {
+      return res.status(404).json({ success: false, message: 'Client not found' });
+    }
+
+    const gym = await Gym.findOne({ owner: req.user._id });
+    const gymName = gym?.gymName || 'Your Gym';
+
+    const membership = client.memberships?.[0] || client.membership;
+    const finalPrice = Number(membership?.finalPrice || 0);
+    const totalPaid = Number(membership?.totalPaid || membership?.paidAmount || 0);
+    const balance = finalPrice - totalPaid;
+    const planName = membership?.planName || 'No Plan';
+    const dueDate = membership?.dueDate
+      ? new Date(membership.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')
+      : 'N/A';
+
+    const clientName = client.personalInfo?.name || 'Client';
+    const phone = client.personalInfo?.mobileNo || client.whatsappNumber;
+
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'No phone number found for this client' });
+    }
+
+    const message = `Dear ${clientName},
+
+Your pending membership payment of ₹${balance} is now overdue.
+
+Plan: ${planName}
+Original Due Date: ${dueDate}
+Gym: ${gymName}
+
+Please clear the pending balance as soon as possible to continue your membership without interruption.
+
+Thank you.`;
+
+    const result = await sendWhatsApp({ phone, message });
+
+    if (result && result.success) {
+      res.status(200).json({ success: true, message: 'Reminder sent successfully' });
+    } else {
+      res.status(500).json({ success: false, message: 'Failed to send reminder', error: result?.error });
+    }
   } catch (err) {
     next(err);
   }

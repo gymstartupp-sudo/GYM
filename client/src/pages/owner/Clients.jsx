@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import ClientForm from '../../components/ClientForm';
 import ClientCard from '../../components/ClientCard';
 import ConfirmModal from '../../components/ConfirmModal';
+import ReminderDetailsModal from '../../components/ReminderDetailsModal';
 import { getPlanStatus } from '../../utils/membership';
 import Pagination from '../../components/Pagination';
 
@@ -18,6 +19,13 @@ const STATUS_OPTIONS = [
   { value: 'Expiring Soon', label: 'Expiring Soon', dot: 'bg-warning' },
   { value: 'Dues', label: 'Dues', dot: 'bg-danger' },
   { value: 'Expired', label: 'Expired', dot: 'bg-text-muted' },
+];
+
+const REMINDER_OPTIONS = [
+  { value: 'All', label: 'All Reminders' },
+  { value: 'Reminder Pending', label: 'Reminder Pending', dot: 'bg-text-muted' },
+  { value: 'Reminder Sent', label: 'Reminder Sent', dot: 'bg-success' },
+  { value: 'Expired Reminder Sent', label: 'Expired Reminder Sent', dot: 'bg-warning' },
 ];
 
 // ─── Custom Dropdown (replaces native <select> for Dark-theme compatibility) ──
@@ -113,6 +121,9 @@ const Clients = () => {
 
   const [filterStatus, setFilterStatus] = useState(initialStatus);
   const [filterPlan, setFilterPlan] = useState('All');
+  const [filterReminder, setFilterReminder] = useState('All');
+  const [reminderModalClient, setReminderModalClient] = useState(null);
+  const [reminderModalTab, setReminderModalTab] = useState('both');
 
   // Sync filter with URL changes
   useEffect(() => {
@@ -123,7 +134,7 @@ const Clients = () => {
   // Reset page when search or filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterStatus, filterPlan]);
+  }, [searchTerm, filterStatus, filterPlan, filterReminder]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [formInstanceKey, setFormInstanceKey] = useState(0);
   const [isFormDirty, setIsFormDirty] = useState(false);
@@ -148,6 +159,7 @@ const Clients = () => {
       const params = new URLSearchParams();
       if (filterStatus !== 'All') params.append('status', filterStatus);
       if (filterPlan !== 'All') params.append('planName', filterPlan);
+      if (filterReminder !== 'All') params.append('reminder', filterReminder);
       const res = await api.get(`/client?${params.toString()}`);
       const fetched = res.data.data || [];
       // Filter out pending clients from the main clients list
@@ -157,7 +169,7 @@ const Clients = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, filterPlan]);
+  }, [filterStatus, filterPlan, filterReminder]);
 
   useEffect(() => { fetchClients(); }, [fetchClients]);
 
@@ -213,9 +225,10 @@ const Clients = () => {
 
   const hasStatusFilter = filterStatus !== 'All';
   const hasPlanFilter = filterPlan !== 'All';
-  const activeFilterCount = (hasStatusFilter ? 1 : 0) + (hasPlanFilter ? 1 : 0);
+  const hasReminderFilter = filterReminder !== 'All';
+  const activeFilterCount = (hasStatusFilter ? 1 : 0) + (hasPlanFilter ? 1 : 0) + (hasReminderFilter ? 1 : 0);
 
-  const clearAll = () => { setFilterStatus('All'); setFilterPlan('All'); };
+  const clearAll = () => { setFilterStatus('All'); setFilterPlan('All'); setFilterReminder('All'); };
 
   return (
     <div className="p-4 md:p-8 md:pt-10">
@@ -293,6 +306,14 @@ const Clients = () => {
                 placeholder="All Plans"
               />
 
+              {/* Reminder */}
+              <CustomDropdown
+                value={filterReminder}
+                onChange={setFilterReminder}
+                options={REMINDER_OPTIONS}
+                placeholder="All Reminders"
+              />
+
               {/* Clear all */}
               {activeFilterCount > 0 && (
                 <button
@@ -319,6 +340,12 @@ const Clients = () => {
                 <FilterBadge
                   label={`Plan: ${filterPlan}`}
                   onClear={() => setFilterPlan('All')}
+                />
+              )}
+              {hasReminderFilter && (
+                <FilterBadge
+                  label={`Reminder: ${REMINDER_OPTIONS.find(o => o.value === filterReminder)?.label}`}
+                  onClear={() => setFilterReminder('All')}
                 />
               )}
             </div>
@@ -376,6 +403,7 @@ const Clients = () => {
                   client={client}
                   onView={(c) => navigate(`/owner/clients/${c._id}`)}
                   onDuesClick={setDuesClient}
+                  onReminderClick={(c, tab) => { setReminderModalClient(c); setReminderModalTab(tab); }}
                 />
               ))}
             </div>
@@ -454,6 +482,14 @@ const Clients = () => {
             </div>
           );
         })()}
+
+        {/* ── Reminder Details Modal ── */}
+        <ReminderDetailsModal
+          isOpen={!!reminderModalClient}
+          onClose={() => { setReminderModalClient(null); setReminderModalTab('both'); }}
+          client={reminderModalClient}
+          activeTab={reminderModalTab}
+        />
 
       </div>
   );

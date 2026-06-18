@@ -349,53 +349,10 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                         );
                                     })()}
 
-                                    {/* WhatsApp Automation Alerts */}
-                                    <div className="mt-6 pt-6 border-t border-border">
-                                        <p className="text-text-muted uppercase text-[10px] font-bold tracking-[0.15em] mb-4">WhatsApp Automation Alerts</p>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {/* Expiring Soon Alert */}
-                                            <div className="p-3 bg-surface-divider/50 rounded-xl border border-border/50 flex flex-col gap-1.5">
-                                                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">3-Day Expiring Soon Alert</span>
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-2">
-                                                        {client.expiryReminderStatus === 'sent' ? (
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Sent</span>
-                                                        ) : client.expiryReminderStatus === 'failed' ? (
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">Failed</span>
-                                                        ) : (
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gray-500/10 text-text-secondary border border-border">Pending</span>
-                                                        )}
-                                                    </div>
-                                                    {client.expiryReminderStatus === 'failed' && client.expiryReminderError && (
-                                                        <p className="text-[10px] text-rose-500 font-medium italic mt-1 leading-tight">{client.expiryReminderError}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Expired Alert */}
-                                            <div className="p-3 bg-surface-divider/50 rounded-xl border border-border/50 flex flex-col gap-1.5">
-                                                <span className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Expired Alert (days left = -1)</span>
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-2">
-                                                        {client.expiredReminderStatus === 'sent' ? (
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Sent</span>
-                                                        ) : client.expiredReminderStatus === 'failed' ? (
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20">Failed</span>
-                                                        ) : (
-                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gray-500/10 text-text-secondary border border-border">Pending</span>
-                                                        )}
-                                                    </div>
-                                                    {client.expiredReminderStatus === 'failed' && client.expiredReminderError && (
-                                                        <p className="text-[10px] text-rose-500 font-medium italic mt-1 leading-tight">{client.expiredReminderError}</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ) : (
+                        ) : (
                         <div className="card bg-surface-divider/80 border-border p-0 overflow-hidden shadow-2xl backdrop-blur-sm">
                             <div className="p-6 border-b border-border flex justify-between items-center bg-surface-divider/80">
                                 <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">

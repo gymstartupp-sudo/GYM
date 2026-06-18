@@ -133,6 +133,10 @@ const InactiveClients = () => {
   const [reactivateClientId, setReactivateClientId] = useState(null);
   const [reactivateClientName, setReactivateClientName] = useState('');
 
+  // Delete confirmation modal states
+  const [deleteClientId, setDeleteClientId] = useState(null);
+  const [deleteClientName, setDeleteClientName] = useState('');
+
   // Payment Renewal Modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedClientForRenewal, setSelectedClientForRenewal] = useState(null);
@@ -173,10 +177,7 @@ const InactiveClients = () => {
   useEffect(() => { fetchClients(); }, [fetchClients]);
 
   // Modal helpers
-  const closeAddModal = (force = false) => {
-    if (!force && isFormDirty) {
-      if (!window.confirm('You have unsaved changes. Are you sure you want to close?')) return;
-    }
+  const closeAddModal = () => {
     setShowAddModal(false);
     setFormInstanceKey(k => k + 1);
     setIsFormDirty(false);
@@ -265,15 +266,20 @@ const InactiveClients = () => {
   };
 
   const handleDelete = async (client) => {
-    if (window.confirm(`Are you sure you want to PERMANENTLY delete ${client.personalInfo.name}? This action cannot be undone.`)) {
-      try {
-        await api.delete(`/client/${client._id}`);
-        toast.success('Client deleted permanently');
-        setClients(prev => prev.filter(c => c._id !== client._id));
-        fetchClients();
-      } catch (error) {
-        toast.error('Failed to delete client');
-      }
+    setDeleteClientId(client._id);
+    setDeleteClientName(client.personalInfo.name);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteClientId) return;
+    try {
+      await api.delete(`/client/${deleteClientId}`);
+      toast.success('Client deleted permanently');
+      setDeleteClientId(null);
+      setDeleteClientName('');
+      fetchClients();
+    } catch (error) {
+      toast.error('Failed to delete client');
     }
   };
 
@@ -429,6 +435,7 @@ const InactiveClients = () => {
                   onDuesClick={setDuesClient}
                   onDelete={handleDelete}
                   deleteLabel="Delete"
+                  hideReminders
                 />
               ))}
             </div>
@@ -553,6 +560,16 @@ const InactiveClients = () => {
           title="Reactivate Client"
           message={`Are you sure you want to reactivate ${reactivateClientName}?`}
           confirmLabel="Reactivate"
+        />
+
+        <ConfirmModal
+          isOpen={!!deleteClientId}
+          onCancel={() => { setDeleteClientId(null); setDeleteClientName(''); }}
+          onConfirm={confirmDelete}
+          title="Delete Client"
+          message={`Are you sure you want to PERMANENTLY delete ${deleteClientName}? This action cannot be undone.`}
+          confirmLabel="Delete"
+          danger
         />
 
       </div>

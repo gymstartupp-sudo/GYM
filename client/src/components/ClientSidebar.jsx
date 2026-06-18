@@ -14,7 +14,6 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
     { to: '/client/plans', label: 'Plans', icon: List },
     { to: '/client/payments', label: 'Payments', icon: CreditCard },
     { to: '/client/feedback', label: 'Feedback', icon: MessageSquare },
-    { to: '/client/settings', label: 'Settings', icon: Settings },
   ];
 
   const sidebarWidthClass = isMobile
@@ -59,7 +58,7 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
         </div>
       </div>
 
-      <div className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
         {navLinks.map(({ to, end, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -79,6 +78,23 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
             {showLabels && <span className="truncate whitespace-nowrap leading-none">{label}</span>}
           </NavLink>
         ))}
+      </nav>
+
+      {/* Settings (pinned to bottom) */}
+      <div className={`border border-border/60 rounded-lg mb-3 mt-auto ${showLabels ? 'mx-3' : 'mx-auto'}`}>
+        <NavLink
+          to="/client/settings"
+          onClick={() => isMobile && onClose()}
+          title={!showLabels ? 'Settings' : undefined}
+          className={({ isActive }) =>
+            `sidebar-nav-link !mx-0 ${isActive ? 'sidebar-nav-link-active' : ''} ${showLabels ? '' : 'sidebar-nav-link-collapsed'}`
+          }
+        >
+          <span className="flex items-center justify-center w-5 h-5 shrink-0">
+            <Settings size={20} />
+          </span>
+          {showLabels && <span className="truncate whitespace-nowrap leading-none">Settings</span>}
+        </NavLink>
       </div>
     </div>
   );
