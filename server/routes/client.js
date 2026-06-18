@@ -20,5 +20,6 @@ router.route('/:id')
 router.put('/:id/approve', protect, authorize('owner'), clientController.approveClient);
 router.put('/:id/deactivate', protect, authorize('owner'), clientController.deactivateClient);
 router.put('/:id/reactivate', protect, authorize('owner'), clientController.reactivateClient);
+router.post('/:id/send-reminder', protect, authorize('owner'), clientController.sendManualReminder);
 
 module.exports = router;

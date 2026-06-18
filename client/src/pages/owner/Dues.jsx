@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { CircleDollarSign, Search, Filter, History, AlertCircle, Clock, ArrowRight, Eye, RefreshCw, Smartphone, X, Trash2 } from 'lucide-react';
+import { CircleDollarSign, Search, Filter, History, AlertCircle, Clock, ArrowRight, Eye, RefreshCw, Smartphone, X, Trash2, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ClientDetail from './ClientDetail';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
+import ReminderTimeline from '../../components/ReminderTimeline';
+import ReminderDetailsModal from '../../components/ReminderDetailsModal';
 import { calculateEndDate } from '../../utils/membership';
 import Pagination from '../../components/Pagination';
 
@@ -27,6 +29,11 @@ const Dues = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const [currentPage, setCurrentPage] = useState(1);
+
+    // Reminder modal states
+    const [reminderModalClient, setReminderModalClient] = useState(null);
+    const [reminderModalTab, setReminderModalTab] = useState('both');
+    const [sendingReminder, setSendingReminder] = useState(null);
 
     const fetchData = async () => {
         try {
@@ -112,7 +119,8 @@ const Dues = () => {
                         balance,
                         isExpired,
                         isOverdue,
-                        isPending
+                        isPending,
+                        rawClient: client
                     });
                 }
             });
@@ -288,6 +296,19 @@ const Dues = () => {
         }
     };
 
+    const handleSendReminder = async (due) => {
+        const clientId = due.clientId;
+        setSendingReminder(clientId);
+        try {
+            await api.post(`/client/${clientId}/send-reminder`);
+            toast.success('Reminder sent successfully');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to send reminder');
+        } finally {
+            setSendingReminder(null);
+        }
+    };
+
     return (
         <div className="p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
@@ -334,7 +355,7 @@ const Dues = () => {
 
                 <div className="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[850px]">
+                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
                             <thead>
                                 <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
                                     <th className="p-4 font-bold">Client Info</th>
@@ -424,39 +445,50 @@ const Dues = () => {
                                                 </td>
                                             )}
                                             <td className="p-4 text-right">
-                                                {due.isExpiredTab ? (
-                                                    <div className="flex items-center justify-end gap-2">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {activeTab === 'overdue' && (
                                                         <button
-                                                            onClick={() => setViewClientId(due.clientId)}
-                                                            className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
-                                                            title="View client"
+                                                            onClick={() => handleSendReminder(due)}
+                                                            disabled={sendingReminder === due.clientId}
+                                                            className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border disabled:opacity-50"
+                                                            title="Send WhatsApp reminder"
                                                         >
-                                                            <Eye size={16} />
+                                                            {sendingReminder === due.clientId ? (
+                                                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                            ) : (
+                                                                <MessageSquare size={16} />
+                                                            )}
                                                         </button>
+                                                    )}
+                                                    {(activeTab === 'overdue' || activeTab === 'expired') && due.rawClient && (
+                                                        <ReminderTimeline
+                                                            client={due.rawClient}
+                                                            onCircleClick={(c, tab) => { setReminderModalClient(c); setReminderModalTab(tab); }}
+                                                        />
+                                                    )}
+                                                    <button
+                                                        onClick={() => setViewClientId(due.clientId)}
+                                                        className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
+                                                        title="View client"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                    {due.isExpiredTab ? (
                                                         <button
                                                             onClick={() => handleRenew(due)}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"
                                                         >
                                                             <RefreshCw size={14} /> Renew
                                                         </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={() => setViewClientId(due.clientId)}
-                                                            className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
-                                                            title="View client"
-                                                        >
-                                                            <Eye size={16} />
-                                                        </button>
+                                                    ) : (
                                                         <button
                                                             onClick={() => handlePayNow(due)}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"
                                                         >
                                                             Pay Now
                                                         </button>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -509,6 +541,14 @@ const Dues = () => {
                     </div>
                 </div>
             )}
+
+            {/* Reminder Details Modal */}
+            <ReminderDetailsModal
+                isOpen={!!reminderModalClient}
+                onClose={() => { setReminderModalClient(null); setReminderModalTab('both'); }}
+                client={reminderModalClient}
+                activeTab={reminderModalTab}
+            />
         </div>
     );
 };

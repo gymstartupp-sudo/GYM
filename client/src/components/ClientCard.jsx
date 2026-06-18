@@ -1,10 +1,11 @@
 import React from 'react';
-import { Eye, RefreshCw } from 'lucide-react';
+import { Eye, RefreshCw, Trash2 } from 'lucide-react';
 import Button from './Button';
+import ReminderTimeline from './ReminderTimeline';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../utils/membership';
 import { planStatusStyles, paymentStatusStyles } from '../utils/statusStyles';
 
-const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, showRenew = false, showReactivate = false, hideStatus = false }) => {
+const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onReminderClick, onDelete, deleteLabel, showRenew = false, showReactivate = false, hideStatus = false, hideReminders = false }) => {
   const name = client?.personalInfo?.name || 'Client';
   const avatarText = client?.avatar || name.charAt(0).toUpperCase();
 
@@ -75,7 +76,9 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, showRe
           </div>
         )}
 
-        <div className={`flex gap-2 justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
+        <div className={`flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
+          {!hideReminders && <ReminderTimeline client={client} onCircleClick={onReminderClick} />}
+
           <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border" title="View client">
             <Eye size={16} />
           </button>
@@ -90,6 +93,17 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, showRe
             <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 text-xs">
               <RefreshCw size={14} /> Renew
             </Button>
+          )}
+
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onDelete(client); }}
+              className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-danger rounded-lg transition-all duration-200 border border-border"
+              title={deleteLabel || 'Delete'}
+            >
+              <Trash2 size={14} />
+            </button>
           )}
         </div>
 
