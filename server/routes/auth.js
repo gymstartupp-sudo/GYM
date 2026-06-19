@@ -2,7 +2,12 @@ const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { validate } = require('../middleware/validate');
+const {
+  validate,
+  emailValidation,
+  phoneValidation,
+  stringValidation
+} = require('../middleware/validate');
 const { uploadLogo } = require('../middleware/upload');
 
 const phoneMessage = 'Please enter a valid 10-digit phone number';
@@ -10,33 +15,43 @@ const passwordMessage = 'Password must be at least 8 characters with 1 uppercase
 
 // Gym Owner Validations
 const gymRegisterValidation = [
-  body('gymIdPrefix', 'Gym ID prefix is required').notEmpty(),
-  body('gymName', 'Gym Name is required').notEmpty(),
-  body('gymEmail', 'Please include a valid email').isEmail(),
-  body('gymContact', phoneMessage).matches(/^[0-9]{10}$/),
-  body('password', passwordMessage)
+  stringValidation('gymIdPrefix', false).withMessage('Gym ID prefix is required'),
+  stringValidation('gymName', false).withMessage('Gym Name is required'),
+  emailValidation('gymEmail'),
+  phoneValidation('gymContact'),
+  stringValidation('password')
     .isLength({ min: 8 })
-    .matches(/^(?=.*[A-Z])(?=.*\d).+$/),
+    .withMessage(passwordMessage)
+    .matches(/^(?=.*[A-Z])(?=.*\d).+$/)
+    .withMessage(passwordMessage),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password confirmation does not match password');
     }
     return true;
-  })
+  }),
+  stringValidation('name', false).withMessage('Owner Name is required'),
+  phoneValidation('mobileNo'),
+  emailValidation('mailId')
 ];
 
 const universalLoginValidation = [
-  body('loginId', 'Email or Phone is required').notEmpty(),
-  body('password', 'Password is required').notEmpty()
+  body('loginId')
+    .isString().withMessage('Login ID must be a string')
+    .trim()
+    .notEmpty().withMessage('Email or Phone is required'),
+  body('password')
+    .isString().withMessage('Password must be a string')
+    .notEmpty().withMessage('Password is required')
 ];
 
 // Client Validations
 const clientRegisterValidation = [
-  body('gymId', 'Gym ID is required').notEmpty(),
-  body('name', 'Name is required').notEmpty(),
-  body('email', 'Please include a valid email').isEmail(),
-  body('mobileNo', phoneMessage).matches(/^[0-9]{10}$/),
-  body('dob', 'Date of birth is required').notEmpty().isISO8601().toDate().custom((value) => {
+  stringValidation('gymId', false).withMessage('Gym ID is required'),
+  stringValidation('name', false).withMessage('Name is required'),
+  emailValidation('email'),
+  phoneValidation('mobileNo'),
+  stringValidation('dob').isISO8601().withMessage('Date of birth is required').toDate().custom((value) => {
     const today = new Date();
     const birthDate = new Date(value);
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -52,7 +67,7 @@ const clientRegisterValidation = [
     }
     return true;
   }),
-  body('startDate', 'Start date is required').notEmpty().isISO8601().toDate().custom((value) => {
+  stringValidation('startDate').isISO8601().withMessage('Start date is required').toDate().custom((value) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -70,9 +85,11 @@ const clientRegisterValidation = [
     }
     return true;
   }),
-  body('password', passwordMessage)
+  stringValidation('password')
     .isLength({ min: 8 })
-    .matches(/^(?=.*[A-Z])(?=.*\d).+$/),
+    .withMessage(passwordMessage)
+    .matches(/^(?=.*[A-Z])(?=.*\d).+$/)
+    .withMessage(passwordMessage),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error('Password confirmation does not match password');
@@ -81,8 +98,13 @@ const clientRegisterValidation = [
   })
 ];
 
+const checkExistsValidation = [
+  emailValidation('email', true),
+  phoneValidation('phone', true)
+];
+
 // Routes
-router.post('/check-exists', authController.checkExists);
+router.post('/check-exists', checkExistsValidation, validate, authController.checkExists);
 
 router.post('/gym/register', uploadLogo.single('logo'), gymRegisterValidation, validate, authController.registerGymOwner);
 router.post('/client/register', clientRegisterValidation, validate, authController.registerClient);

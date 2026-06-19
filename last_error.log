@@ -6,3 +6,75 @@
 [2026-06-03T16:06:18.289Z] undefined
 
 [2026-06-03T16:06:49.877Z] undefined
+
+[2026-06-19T18:48:53.238Z] SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parse (D:\GYM!\GYM\server\node_modules\body-parser\lib\types\json.js:72:19)
+    at D:\GYM!\GYM\server\node_modules\body-parser\lib\read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:228:14)
+    at invokeCallback (D:\GYM!\GYM\server\node_modules\raw-body\index.js:238:16)
+    at done (D:\GYM!\GYM\server\node_modules\raw-body\index.js:227:7)
+    at IncomingMessage.onEnd (D:\GYM!\GYM\server\node_modules\raw-body\index.js:287:7)
+    at IncomingMessage.emit (node:events:508:28)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+
+[2026-06-19T18:49:48.710Z] SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parse (D:\GYM!\GYM\server\node_modules\body-parser\lib\types\json.js:72:19)
+    at D:\GYM!\GYM\server\node_modules\body-parser\lib\read.js:162:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:228:14)
+    at invokeCallback (D:\GYM!\GYM\server\node_modules\raw-body\index.js:238:16)
+    at done (D:\GYM!\GYM\server\node_modules\raw-body\index.js:227:7)
+    at IncomingMessage.onEnd (D:\GYM!\GYM\server\node_modules\raw-body\index.js:287:7)
+    at IncomingMessage.emit (node:events:508:28)
+    at endReadableNT (node:internal/streams/readable:1729:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+
+[2026-06-19T18:52:45.267Z] TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:113:18
+    at Array.forEach (<anonymous>)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:110:44
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at blockNoSqlInjection (D:\GYM!\GYM\server\middleware\security.js:44:3)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+
+[2026-06-19T18:52:45.289Z] TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:113:18
+    at Array.forEach (<anonymous>)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:110:44
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at blockNoSqlInjection (D:\GYM!\GYM\server\middleware\security.js:44:3)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+
+[2026-06-19T18:52:45.295Z] TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:113:18
+    at Array.forEach (<anonymous>)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:110:44
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at blockNoSqlInjection (D:\GYM!\GYM\server\middleware\security.js:44:3)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+
+[2026-06-19T18:52:45.324Z] TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:113:18
+    at Array.forEach (<anonymous>)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:110:44
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at blockNoSqlInjection (D:\GYM!\GYM\server\middleware\security.js:44:3)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)

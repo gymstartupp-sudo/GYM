@@ -4,15 +4,19 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const compression = require('compression');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
 
 // Import Middlewares
 const { errorHandler } = require('./middleware/errorHandler');
+const { blockNoSqlInjection } = require('./middleware/security');
 
 // Import Models
 const Admin = require('./models/Admin');
 
 const app = express();
 
+app.use(helmet());
 app.use(compression({ level: 6 }));
 // Middleware
 app.use((req, res, next) => {
@@ -29,11 +33,36 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(blockNoSqlInjection);
+// Shadow req.query and req.params to make them writable for express-mongo-sanitize in Express 5
+app.use((req, res, next) => {
+  if (req.query) {
+    let queryVal = req.query;
+    Object.defineProperty(req, 'query', {
+      get() { return queryVal; },
+      set(val) { queryVal = val; },
+      configurable: true,
+      enumerable: true
+    });
+  }
+  if (req.params) {
+    let paramsVal = req.params;
+    Object.defineProperty(req, 'params', {
+      get() { return paramsVal; },
+      set(val) { paramsVal = val; },
+      configurable: true,
+      enumerable: true
+    });
+  }
+  next();
+});
+app.use(mongoSanitize());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
 const connectDB = async () => {
   try {
+    mongoose.set('strictQuery', true);
     const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     console.log("Connected DB:", mongoose.connection.name);
