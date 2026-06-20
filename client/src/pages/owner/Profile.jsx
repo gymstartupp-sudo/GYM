@@ -165,6 +165,71 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving]   = useState(false);
   const [errors, setErrors]       = useState({});
+  const fileInputRef = React.useRef(null);
+
+  const handleLogoClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleLogoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Supports: JPG, JPEG, PNG, WEBP.');
+      return;
+    }
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File is too large. Limit is 5MB.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    try {
+      toast.info('Uploading new profile picture...');
+      const res = await api.put('/gym/profile/logo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const newLogoUrl = res.data.data.gymLogo;
+      
+      setFormState(curr => ({
+        ...curr,
+        gym: {
+          ...curr.gym,
+          gymLogo: newLogoUrl,
+          billingInfo: {
+            ...curr.gym.billingInfo,
+            logo: newLogoUrl
+          }
+        }
+      }));
+      
+      setProfile(curr => ({
+        ...curr,
+        gym: {
+          ...curr.gym,
+          gymLogo: newLogoUrl,
+          billingInfo: {
+            ...curr.gym.billingInfo,
+            logo: newLogoUrl
+          }
+        }
+      }));
+      
+      toast.success('Profile picture updated successfully!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update profile picture');
+    }
+  };
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -186,8 +251,10 @@ const Profile = () => {
     if (key === 'gymName' || key === 'name') {
       if (!value?.trim()) errMsg = 'Name is required';
       else if (value.length > 25) errMsg = 'Max 25 characters';
-    } else if (key === 'gymType' || key === 'tagline' || key === 'location' || key === 'regards' || key === 'greetingText') {
+    } else if (key === 'gymType' || key === 'tagline' || key === 'location') {
       if (value && value.length > 20) errMsg = 'Max 20 characters';
+    } else if (key === 'regards' || key === 'greetingText') {
+      if (value && value.length > 50) errMsg = 'Max 50 characters';
     } else if (key === 'gymEmail' || key === 'gmail' || key === 'mailId') {
       if (!value?.trim()) errMsg = 'Email is required';
       else if (!emailRegex.test(value)) errMsg = 'Enter a valid email address';
@@ -316,8 +383,8 @@ const Profile = () => {
     const bi = gym.billingInfo || {};
     if (!bi.billingIdPrefix?.trim()) newErrors.billPrefix = 'Prefix is required';
     if (bi.helpContact && !phoneRegex.test(bi.helpContact)) newErrors.billHelp = 'Enter a valid 10-digit Indian mobile number';
-    if (bi.regards?.length > 20) newErrors.billRegards = 'Max 20 characters';
-    if (bi.greetingText?.length > 20) newErrors.billGreeting = 'Max 20 characters';
+    if (bi.regards?.length > 50) newErrors.billRegards = 'Max 50 characters';
+    if (bi.greetingText?.length > 50) newErrors.billGreeting = 'Max 50 characters';
     if (bi.addressOnBill?.length > 100) newErrors.billAddress = 'Max 100 characters';
 
     setErrors(newErrors);
@@ -417,7 +484,11 @@ const Profile = () => {
             </button>
             <div className="flex items-center gap-5">
             {/* Logo Preview */}
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0">
+            <div 
+              onClick={handleLogoClick}
+              className="relative w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 cursor-pointer group"
+              title="Click to change logo"
+            >
               {formState.gym.gymLogo || formState.gym.billingInfo?.logo ? (
                 <img
                   src={
@@ -426,14 +497,30 @@ const Profile = () => {
                       : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${formState.gym.gymLogo || formState.gym.billingInfo?.logo}`
                   }
                   alt="Gym Logo"
-                  className="w-full h-full object-contain p-1"
+                  className="w-full h-full object-contain p-1 transition-transform duration-200 group-hover:scale-105"
                 />
               ) : (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl">
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl transition-transform duration-200 group-hover:scale-105">
                   {formState.gym.gymName?.charAt(0).toUpperCase() || 'G'}
                 </div>
               )}
+              
+              {/* Instagram-style Hover Overlay */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-text-primary gap-1 select-none">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-primary text-center px-1">
+                  Change Photo
+                </span>
+              </div>
             </div>
+            
+            {/* Hidden Input for profile picture changes */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleLogoChange}
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              className="hidden"
+            />
             <div>
               <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">{formState.gym.gymName || 'Gym Settings'}</h1>
               <p className="text-text-secondary mt-2 text-lg">Manage your gym establishment, ownership, and platform configuration.</p>
@@ -566,12 +653,11 @@ const Profile = () => {
             <Field label="Billing ID Prefix *" value={formState.gym.billingInfo?.billingIdPrefix} disabled={!isEditing} maxLength={5} error={errors.billPrefix} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'billingIdPrefix')} />
             <Field label="Helpdesk Contact" value={formState.gym.billingInfo?.helpContact} type="tel" disabled={!isEditing} error={errors.billHelp} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'helpContact')} />
             <Field label="Register GST" value={formState.gym.billingInfo?.gst} disabled={!isEditing} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'gst')} />
-            <Field label="Logo File Path" value={formState.gym.billingInfo?.logo} disabled />
             <div className="md:col-span-2">
               <Field label="Address On Invoice" value={formState.gym.billingInfo?.addressOnBill} textarea disabled={!isEditing} maxLength={100} error={errors.billAddress} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'addressOnBill')} />
             </div>
-            <Field label="Regards Name" value={formState.gym.billingInfo?.regards} disabled={!isEditing} maxLength={20} error={errors.billRegards} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'regards')} />
-            <Field label="Greeting Footer" value={formState.gym.billingInfo?.greetingText} disabled={!isEditing} maxLength={20} error={errors.billGreeting} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'greetingText')} />
+            <Field label="Regards Name" value={formState.gym.billingInfo?.regards} disabled={!isEditing} maxLength={50} error={errors.billRegards} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'regards')} />
+            <Field label="Greeting Footer" value={formState.gym.billingInfo?.greetingText} disabled={!isEditing} maxLength={50} error={errors.billGreeting} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'greetingText')} />
 
           </div>
         </ProfileSection>

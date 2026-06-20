@@ -344,3 +344,48 @@ exports.changeGymPassword = async (req, res, next) => {
   }
 };
 
+// @desc    Update Gym Logo
+// @route   PUT /api/gym/profile/logo
+// @access  Private (Owner)
+exports.updateGymLogo = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please upload an image file' });
+    }
+
+    let logoUrl = '';
+    try {
+      const { uploadLogoToCloudinary } = require('../utils/cloudinary');
+      logoUrl = await uploadLogoToCloudinary(req.file.path);
+    } catch (uploadErr) {
+      console.error('Failed to upload logo to Cloudinary:', uploadErr);
+      return res.status(500).json({ success: false, message: 'Failed to upload logo to cloud storage' });
+    }
+
+    const gymStrId = req.user._id.toString();
+    const gym = await Gym.findById(gymStrId);
+    if (!gym) {
+      return res.status(404).json({ success: false, message: 'Gym not found' });
+    }
+
+    gym.gymLogo = logoUrl;
+    if (!gym.billingInfo) {
+      gym.billingInfo = {};
+    }
+    gym.billingInfo.logo = logoUrl;
+
+    await gym.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Logo updated successfully',
+      data: {
+        gymLogo: logoUrl,
+        logo: logoUrl
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+

@@ -40,32 +40,87 @@ const handlePhoneInput = (e) => {
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = ['00', '15', '30', '45'];
 
-const TimeInput = ({ fieldHour, fieldMinute, fieldAmpm, register, setValue, watch }) => {
+const CustomSelect = ({ options, value, onChange, className = '', buttonClassName = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   return (
-    <div className="flex items-stretch bg-surface-card border border-border rounded-lg overflow-hidden hover:border-border transition-colors">
-      <select
-        {...register(fieldHour)}
-        onChange={e => setValue(fieldHour, e.target.value)}
-        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-2 select-none border-r border-border"
+    <div ref={containerRef} className={`relative flex-1 flex ${className}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer text-center py-2 select-none flex items-center justify-center gap-1 hover:bg-slate-800/40 transition-colors ${buttonClassName}`}
       >
-        {HOURS.map(h => <option key={h} className="bg-surface-card text-text-primary" value={h}>{h}</option>)}
-      </select>
+        <span>{value}</span>
+        <ChevronDown size={12} className={`text-slate-500 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1 bg-slate-950 border border-slate-800 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-100">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => {
+                onChange(opt);
+                setIsOpen(false);
+              }}
+              className={`w-full text-center py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${
+                value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-slate-300'
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TimeInput = ({ fieldHour, fieldMinute, fieldAmpm, register, setValue, watch }) => {
+  const hourVal = watch(fieldHour) || '6';
+  const minuteVal = watch(fieldMinute) || '00';
+  const ampmVal = watch(fieldAmpm) || 'AM';
+
+  useEffect(() => {
+    register(fieldHour);
+    register(fieldMinute);
+    register(fieldAmpm);
+  }, [register, fieldHour, fieldMinute, fieldAmpm]);
+
+  return (
+    <div className="flex items-stretch bg-surface-card border border-border rounded-input overflow-visible hover:border-border/80 focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-[var(--focus-ring)] focus-within:border-[var(--focus-ring)] transition-all duration-200">
+      <CustomSelect
+        options={HOURS}
+        value={hourVal}
+        onChange={val => setValue(fieldHour, val, { shouldValidate: true, shouldDirty: true })}
+        className="border-r border-border"
+        buttonClassName="rounded-l-input"
+      />
       <span className="text-text-muted font-bold select-none flex items-center px-0.5">:</span>
-      <select
-        {...register(fieldMinute)}
-        onChange={e => setValue(fieldMinute, e.target.value)}
-        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-2 select-none border-r border-border"
-      >
-        {MINUTES.map(m => <option key={m} className="bg-surface-card text-text-primary" value={m}>{m}</option>)}
-      </select>
-      <select
-        {...register(fieldAmpm)}
-        onChange={e => setValue(fieldAmpm, e.target.value)}
-        className="bg-primary/15 text-primary font-bold text-xs focus:outline-none cursor-pointer w-12 text-center py-2 select-none"
-      >
-        <option className="bg-surface-card text-text-primary" value="AM">AM</option>
-        <option className="bg-surface-card text-text-primary" value="PM">PM</option>
-      </select>
+      <CustomSelect
+        options={MINUTES}
+        value={minuteVal}
+        onChange={val => setValue(fieldMinute, val, { shouldValidate: true, shouldDirty: true })}
+        className="border-r border-border"
+      />
+      <CustomSelect
+        options={['AM', 'PM']}
+        value={ampmVal}
+        onChange={val => setValue(fieldAmpm, val, { shouldValidate: true, shouldDirty: true })}
+        buttonClassName="bg-primary/15 text-primary font-bold hover:bg-primary/25 rounded-r-input w-14"
+      />
     </div>
   );
 };
@@ -107,22 +162,21 @@ const schema = yup.object({
   billingIdPrefix: yup.string().trim().required('Billing prefix is required').max(5, 'Max 5 chars').matches(/^[A-Za-z0-9]+$/, 'Alphanumeric only'),
   helpContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   addressOnBill: yup.string().trim().required('Billing address is required').max(100, 'Max 100 chars'),
-  regards: yup.string().trim().required('Regards text is required').max(20, 'Max 20 chars'),
-  greetingText: yup.string().trim().required('Greeting text is required').max(20, 'Max 20 chars'),
-  invoiceSupportEmail: yup.string().trim().email('Please enter a valid email address').nullable(),
+  regards: yup.string().trim().required('Regards text is required').max(50, 'Max 50 chars'),
+  greetingText: yup.string().trim().required('Greeting text is required').max(50, 'Max 50 chars'),
   logo: yup.mixed().nullable()
 });
 
 const stepRequiredFields = {
-  1: ['gymIdPrefix', 'gymName', 'gymEmail', 'gymContact', 'address', 'location'],
-  2: ['name', 'mobileNo', 'mailId', 'password', 'confirmPassword', 'whatsappNumber', 'phoneNumber', 'gmail'],
+  1: ['gymIdPrefix', 'gymName', 'gymEmail', 'gymContact', 'address', 'location', 'password', 'confirmPassword'],
+  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'phoneNumber', 'gmail'],
   3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText']
 };
 
 const stepAllFields = {
-  1: ['gymIdPrefix', 'gymName', 'gymEmail', 'gymContact', 'address', 'location', 'gst', 'gymType', 'tagline', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm'],
-  2: ['name', 'mobileNo', 'mailId', 'password', 'confirmPassword', 'whatsappNumber', 'phoneNumber', 'gmail'],
-  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText', 'invoiceSupportEmail', 'logo']
+  1: ['gymIdPrefix', 'gymName', 'gymEmail', 'gymContact', 'address', 'location', 'gst', 'gymType', 'tagline', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm', 'password', 'confirmPassword'],
+  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'phoneNumber', 'gmail'],
+  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText', 'logo']
 };
 
 const GymRegister = () => {
@@ -403,7 +457,6 @@ const GymRegister = () => {
         addressOnBill: data.addressOnBill,
         regards: data.regards,
         greetingText: data.greetingText,
-        invoiceSupportEmail: data.invoiceSupportEmail || '',
         socialMediaLinks: JSON.stringify(socialMediaLinks),
         operatingDays: JSON.stringify(data.operatingDays || []),
         operatingHours: JSON.stringify(operatingHours)
@@ -426,7 +479,16 @@ const GymRegister = () => {
       toast.success('Registration successful');
       navigate('/registration-success', { state: { gymId } });
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+      const apiError = error.response?.data;
+      if (apiError?.errors && Array.isArray(apiError.errors) && apiError.errors.length > 0) {
+        const errorMsgs = apiError.errors.map(err => {
+          if (typeof err === 'string') return err;
+          return err.message || err.msg || JSON.stringify(err);
+        });
+        toast.error(errorMsgs.join(' | '));
+      } else {
+        toast.error(apiError?.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -495,116 +557,182 @@ const GymRegister = () => {
 
         {/* STEP 1: GYM INFORMATION */}
         {step === 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="md:col-span-2 mb-2">
               <h3 className="text-lg font-bold text-text-primary mb-1">Gym Information</h3>
               <p className="text-xs text-slate-400">Tell us about your gym business.</p>
             </div>
 
-            {/* LEFT COLUMN */}
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Name <span className="text-red-500">*</span></p>
-                <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="25" />
-                {showFieldError('gymName') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymName.message}</p>}
+            {/* Gym Name */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Gym Name <span className="text-red-500">*</span></p>
               </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Email <span className="text-red-500">*</span></p>
-                <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} />
-                {showFieldError('gymEmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymEmail.message}</p>}
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Location <span className="text-red-500">*</span></p>
-                <input {...register('location')} placeholder="E.g. Bangalore" className={fieldClassName('location')} maxLength="20" />
-                {showFieldError('location') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Type <span className="text-slate-500 font-normal">(Optional)</span></p>
-                <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="20" />
+              <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="25" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('gymName') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymName.message}</p>}
               </div>
             </div>
 
-            {/* RIGHT COLUMN */}
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <p className="text-xs text-slate-400 font-medium">Client ID Prefix <span className="text-red-500">*</span></p>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); setShowPrefixHelp(!showPrefixHelp); }}
-                      onMouseEnter={() => setShowPrefixHelp(true)}
-                      onMouseLeave={() => setShowPrefixHelp(false)}
-                      className="text-slate-500 hover:text-primary transition-colors"
-                    >
-                      <HelpCircle size={12} />
-                    </button>
-                    {showPrefixHelp && (
-                      <div className="absolute left-1/2 -translate-x-1/2 top-6 z-50 w-56 p-2.5 bg-surface-secondary border border-border rounded-lg shadow-xl text-left" onMouseEnter={() => setShowPrefixHelp(true)} onMouseLeave={() => setShowPrefixHelp(false)}>
-                        <p className="text-[11px] font-bold text-primary mb-1">Client ID Prefix</p>
-                        <p className="text-[10px] text-text-secondary leading-relaxed">
-                          Enter a <span className="font-bold text-text-primary">3 letter code</span> that identifies your gym.
-                          <br /><br />
-                          This prefix is used to <span className="font-bold text-text-primary">auto-generate unique member IDs</span> (e.g. DNB → DNB-01, DNB-02...).
-                        </p>
-                      </div>
-                    )}
-                  </div>
+            {/* Client ID Prefix */}
+            <div>
+              <div className="flex items-center gap-1.5 h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Client ID Prefix <span className="text-red-500">*</span></p>
+                <div className="relative flex items-center">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); setShowPrefixHelp(!showPrefixHelp); }}
+                    onMouseEnter={() => setShowPrefixHelp(true)}
+                    onMouseLeave={() => setShowPrefixHelp(false)}
+                    className="text-slate-500 hover:text-primary transition-colors flex items-center"
+                  >
+                    <HelpCircle size={12} />
+                  </button>
+                  {showPrefixHelp && (
+                    <div className="absolute left-1/2 -translate-x-1/2 top-6 z-50 w-56 p-2.5 bg-surface-secondary border border-border rounded-lg shadow-xl text-left" onMouseEnter={() => setShowPrefixHelp(true)} onMouseLeave={() => setShowPrefixHelp(false)}>
+                      <p className="text-[11px] font-bold text-primary mb-1">Client ID Prefix</p>
+                      <p className="text-[10px] text-text-secondary leading-relaxed">
+                        Enter a <span className="font-bold text-text-primary">3 letter code</span> that identifies your gym.
+                        <br /><br />
+                        This prefix is used to <span className="font-bold text-text-primary">auto-generate unique member IDs</span> (e.g. DNB → DNB-01, DNB-02...).
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <input
-                  {...register('gymIdPrefix')}
-                  placeholder="E.g. DNB"
-                  className={fieldClassName('gymIdPrefix', 'font-semibold tracking-wider')}
-                  maxLength="3"
-                  onChange={(e) => {
-                    const upper = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
-                    setValue('gymIdPrefix', upper, { shouldValidate: true, shouldTouch: true });
-                  }}
-                />
-                {showFieldError('gymIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymIdPrefix.message}</p>}
               </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Contact Number <span className="text-red-500">*</span></p>
-                <input
-                  {...register('gymContact')}
-                  type="tel"
-                  placeholder="E.g. 9876543210"
-                  className={fieldClassName('gymContact')}
-                  onInput={handlePhoneInput}
-                  maxLength="10"
-                />
-                {showFieldError('gymContact') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymContact.message}</p>}
+              <input
+                {...register('gymIdPrefix')}
+                placeholder="E.g. DNB"
+                className={fieldClassName('gymIdPrefix', 'font-semibold tracking-wider')}
+                maxLength="3"
+                onChange={(e) => {
+                  const upper = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                  setValue('gymIdPrefix', upper, { shouldValidate: true, shouldTouch: true });
+                }}
+              />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('gymIdPrefix') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymIdPrefix.message}</p>}
               </div>
+            </div>
 
-              {/* GST Number */}
-              <div className="md:col-span-2">
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">GST Number <span className="text-slate-500 font-normal">(Optional)</span></p>
-                <input {...register('gst')} placeholder="E.g. 22AAAAA0000A1Z5" className={fieldClassName('gst')} />
+            {/* Gym Email */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Gym Email <span className="text-red-500">*</span></p>
               </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
-                <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="20" />
+              <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('gymEmail') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymEmail.message}</p>}
               </div>
+            </div>
 
-              <div className="hidden md:block" />
+            {/* Contact Number */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Contact Number <span className="text-red-500">*</span></p>
+              </div>
+              <input
+                {...register('gymContact')}
+                type="tel"
+                placeholder="E.g. 9876543210"
+                className={fieldClassName('gymContact')}
+                onInput={handlePhoneInput}
+                maxLength="10"
+              />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('gymContact') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymContact.message}</p>}
+              </div>
+            </div>
+
+            {/* Location */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Location <span className="text-red-500">*</span></p>
+              </div>
+              <input {...register('location')} placeholder="E.g. Bangalore" className={fieldClassName('location')} maxLength="20" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('location') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.location.message}</p>}
+              </div>
+            </div>
+
+            {/* GST Number */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">GST Number <span className="text-slate-500 font-normal">(Optional)</span></p>
+              </div>
+              <input {...register('gst')} placeholder="E.g. 22AAAAA0000A1Z5" className={fieldClassName('gst')} />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('gst') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gst.message}</p>}
+              </div>
+            </div>
+
+            {/* Gym Type */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Gym Type <span className="text-slate-500 font-normal">(Optional)</span></p>
+              </div>
+              <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="20" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('gymType') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymType.message}</p>}
+              </div>
+            </div>
+
+            {/* Tagline */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
+              </div>
+              <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="20" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('tagline') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.tagline.message}</p>}
+              </div>
             </div>
 
             {/* Address - full width below both columns */}
             <div className="md:col-span-2">
-              <p className="text-xs text-slate-400 mb-1.5 font-medium">Address <span className="text-red-500">*</span></p>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Address <span className="text-red-500">*</span></p>
+              </div>
               <textarea
                 {...register('address')}
                 placeholder="E.g. Plot 15, Sector 4, HSR Layout"
                 className={fieldClassName('address', 'h-20 resize-none')}
                 maxLength="100"
               />
-              {showFieldError('address') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.address.message}</p>}
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('address') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.address.message}</p>}
+              </div>
             </div>
+
+            {/* Password */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span>Password <span className="text-red-500">*</span></span>
+                </p>
+              </div>
+              <PasswordInput {...register('password')} placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="20" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('password') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.password.message}</p>}
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span>Confirm Password <span className="text-red-500">*</span></span>
+                </p>
+              </div>
+              <PasswordInput {...register('confirmPassword')} placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="20" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('confirmPassword') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.confirmPassword.message}</p>}
+              </div>
+            </div>
+
+
 
             {/* Operating Days Section */}
             <div className="md:col-span-2">
@@ -632,6 +760,7 @@ const GymRegister = () => {
                   </label>
                 ))}
               </div>
+              <div className="min-h-[12px]" />
             </div>
 
             {/* Operating Hours */}
@@ -664,9 +793,8 @@ const GymRegister = () => {
                   />
                 </div>
               </div>
+              <div className="min-h-[12px]" />
             </div>
-
-
 
             {/* Collapsible Social Media Links */}
             <div className="md:col-span-2 border border-slate-800 rounded-xl overflow-hidden bg-slate-900/20 hover:border-slate-750 transition-colors">
@@ -687,17 +815,23 @@ const GymRegister = () => {
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Website URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
                     <input {...register('websiteUrl')} placeholder="E.g. https://yoursite.com" className={fieldClassName('websiteUrl')} />
-                    {showFieldError('websiteUrl') && <p className="text-red-500 text-xs mt-1">{errors.websiteUrl.message}</p>}
+                    <div className="min-h-[20px] mt-1">
+                      {showFieldError('websiteUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.websiteUrl.message}</p>}
+                    </div>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400 mb-1">Instagram URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
                     <input {...register('instagramUrl')} placeholder="E.g. https://instagram.com/gym" className={fieldClassName('instagramUrl')} />
-                    {showFieldError('instagramUrl') && <p className="text-red-500 text-xs mt-1">{errors.instagramUrl.message}</p>}
+                    <div className="min-h-[20px] mt-1">
+                      {showFieldError('instagramUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.instagramUrl.message}</p>}
+                    </div>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-xs text-slate-400 mb-1">Facebook URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
                     <input {...register('facebookUrl')} placeholder="E.g. https://facebook.com/gym" className={fieldClassName('facebookUrl')} />
-                    {showFieldError('facebookUrl') && <p className="text-red-500 text-xs mt-1">{errors.facebookUrl.message}</p>}
+                    <div className="min-h-[20px] mt-1">
+                      {showFieldError('facebookUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.facebookUrl.message}</p>}
+                    </div>
                   </div>
                 </div>
               )}
@@ -720,11 +854,13 @@ const GymRegister = () => {
                 <span className="text-sm font-bold text-slate-200">Section A: Owner Details</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2">
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
                   <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="25" />
-                  {showFieldError('name') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
+                  <div className="min-h-[20px] mt-1">
+                    {showFieldError('name') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.name.message}</p>}
+                  </div>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Mobile Number <span className="text-red-500">*</span></p>
@@ -736,28 +872,16 @@ const GymRegister = () => {
                     onInput={handlePhoneInput}
                     maxLength="10"
                   />
-                  {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mobileNo.message}</p>}
+                  <div className="min-h-[20px] mt-1">
+                    {showFieldError('mobileNo') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mobileNo.message}</p>}
+                  </div>
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
                   <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} />
-                  {showFieldError('mailId') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mailId.message}</p>}
-                </div>
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-slate-500" />
-                    <span>Password <span className="text-red-500">*</span></span>
-                  </p>
-                  <PasswordInput {...register('password')} placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="20" />
-                  {showFieldError('password') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
-                </div>
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-slate-500" />
-                    <span>Confirm Password <span className="text-red-500">*</span></span>
-                  </p>
-                  <PasswordInput {...register('confirmPassword')} placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="20" />
-                  {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.confirmPassword.message}</p>}
+                  <div className="min-h-[20px] mt-1">
+                    {showFieldError('mailId') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mailId.message}</p>}
+                  </div>
                 </div>
               </div>
             </div>
@@ -890,172 +1014,190 @@ const GymRegister = () => {
 
         {/* STEP 3: BILLING & BRANDING */}
         {step === 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="md:col-span-2 mb-2">
               <h3 className="text-lg font-bold text-text-primary mb-1">Billing & Branding</h3>
               <p className="text-xs text-slate-400">Configure client invoice settings and customize branding details.</p>
             </div>
 
-            {/* LEFT COLUMN */}
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Billing ID <span className="text-red-500">*</span></p>
-                <input
-                  {...register('billingIdPrefix')}
-                  placeholder="E.g. INV"
-                  className={fieldClassName('billingIdPrefix', 'uppercase font-bold tracking-widest')}
-                  maxLength="5"
-                />
-                <p className="text-[10px] text-slate-500 mt-1">Shorthand for invoice records (e.g. INV-0001).</p>
-                {showFieldError('billingIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.billingIdPrefix.message}</p>}
+            {/* Billing ID */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Billing ID <span className="text-red-500">*</span></p>
               </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1.5 select-none">
-                  <span className="text-xs text-slate-400 font-medium">Address on Invoice <span className="text-red-500">*</span></span>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={syncAddress}
-                      onChange={(e) => setSyncAddress(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                    />
-                    <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                      [ Same as Gym Address ]
-                    </span>
-                  </label>
-                </div>
-                <div className="relative">
-                  <textarea
-                    {...register('addressOnBill')}
-                    placeholder="Billing address for invoices"
-                    className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
-                    maxLength="100"
-                    readOnly={syncAddress}
-                  />
-                  {syncAddress && (
-                    <div className="absolute right-3 top-4 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                      <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                      SYNCED
-                    </div>
-                  )}
-                </div>
-                {showFieldError('addressOnBill') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.addressOnBill.message}</p>}
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Regards Text <span className="text-red-500">*</span></p>
-                <input {...register('regards')} placeholder="Regards, Team Gym" className={fieldClassName('regards')} maxLength="20" />
-                <p className="text-[10px] text-slate-500 mt-1">Automatically generated from Gym Name, but customizable.</p>
-                {showFieldError('regards') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.regards.message}</p>}
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Logo <span className="text-slate-500 font-normal">(Optional)</span></p>
-
-                {logoPreview ? (
-                  <div className="relative border border-slate-800 rounded-xl p-4 bg-slate-900/30 flex items-center gap-4 group animate-in fade-in duration-200">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-750 bg-black flex items-center justify-center shrink-0">
-                      <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-200 truncate">{logoName}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Ready for upload</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleRemoveLogo}
-                      className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer"
-                      title="Remove logo"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
+              <input
+                {...register('billingIdPrefix')}
+                placeholder="E.g. INV"
+                className={fieldClassName('billingIdPrefix', 'uppercase font-bold tracking-widest')}
+                maxLength="5"
+              />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('billingIdPrefix') ? (
+                  <p className="text-red-500 text-xs font-medium leading-tight">{errors.billingIdPrefix.message}</p>
                 ) : (
-                  <label
-                    onDragEnter={handleDrag}
-                    onDragOver={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDrop={handleDrop}
-                    className={`block border border-dashed rounded-xl px-4 py-6 bg-slate-900/20 cursor-pointer hover:bg-slate-900/40 transition-all text-center select-none ${isDragActive ? 'border-primary bg-primary/5' : 'border-slate-800 hover:border-primary/40'
-                      }`}
-                  >
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      className="hidden"
-                      onChange={(event) => {
-                        const file = event.target.files?.[0] || null;
-                        handleLogoFile(file);
-                      }}
-                    />
-                    <UploadCloud className={`w-8 h-8 mx-auto mb-2 transition-transform ${isDragActive ? 'text-primary scale-110' : 'text-slate-500'}`} />
-                    <span className="text-xs font-semibold text-slate-300 block">
-                      {isDragActive ? 'Drop image here' : 'Drag & drop your logo here, or browse'}
-                    </span>
-                    <p className="text-[10px] text-slate-500 mt-1">Supports PNG, JPG, JPEG, WEBP up to 5MB</p>
-                  </label>
+                  <p className="text-[10px] text-slate-500 leading-tight">Shorthand for invoice records (e.g. INV-0001).</p>
                 )}
-                {logoError && <p className="text-red-500 text-xs mt-1.5 font-medium">{logoError}</p>}
               </div>
             </div>
 
-            {/* RIGHT COLUMN */}
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-1.5 select-none">
-                  <span className="text-xs text-slate-400 font-medium">Helpdesk Contact <span className="text-red-500">*</span></span>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={syncHelpContact}
-                      onChange={(e) => setSyncHelpContact(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                    />
-                    <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                      [ Use Gym Contact ]
-                    </span>
-                  </label>
-                </div>
-                <div className="relative">
+            {/* Helpdesk Contact */}
+            <div>
+              <div className="flex justify-between items-center h-5 mb-1.5 select-none">
+                <span className="text-xs text-slate-400 font-medium">Helpdesk Contact <span className="text-red-500">*</span></span>
+                <label className="flex items-center gap-1.5 cursor-pointer">
                   <input
-                    {...register('helpContact')}
-                    type="tel"
-                    placeholder="Support / Helpdesk number"
-                    className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
-                    onInput={handlePhoneInput}
-                    maxLength="10"
-                    readOnly={syncHelpContact}
+                    type="checkbox"
+                    checked={syncHelpContact}
+                    onChange={(e) => setSyncHelpContact(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                   />
-                  {syncHelpContact && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                      <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                      SYNCED
-                    </div>
-                  )}
-                </div>
-                {showFieldError('helpContact') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.helpContact.message}</p>}
+                  <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
+                    [ Use Gym Contact ]
+                  </span>
+                </label>
               </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Greeting Message <span className="text-red-500">*</span></p>
-                <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="20" />
-                <p className="text-[10px] text-slate-500 mt-1">Greeting shown at bottom of client dashboard.</p>
-                {showFieldError('greetingText') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.greetingText.message}</p>}
-              </div>
-
-              <div>
-                <p className="text-xs text-slate-400 mb-1.5 font-medium">Invoice Support Email <span className="text-slate-500 font-normal">(Optional)</span></p>
+              <div className="relative">
                 <input
-                  {...register('invoiceSupportEmail')}
-                  type="email"
-                  placeholder="E.g. billing@gym.com"
-                  className={fieldClassName('invoiceSupportEmail')}
+                  {...register('helpContact')}
+                  type="tel"
+                  placeholder="Support / Helpdesk number"
+                  className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                  onInput={handlePhoneInput}
+                  maxLength="10"
+                  readOnly={syncHelpContact}
                 />
-                <p className="text-[10px] text-slate-500 mt-1">If client invoices have dedicated support email.</p>
-                {showFieldError('invoiceSupportEmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.invoiceSupportEmail.message}</p>}
+                {syncHelpContact && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                    <Check className="w-2.5 h-2.5 stroke-[3px]" />
+                    SYNCED
+                  </div>
+                )}
+              </div>
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('helpContact') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.helpContact.message}</p>}
               </div>
             </div>
+
+            {/* Address on Invoice */}
+            <div>
+              <div className="flex justify-between items-center h-5 mb-1.5 select-none">
+                <span className="text-xs text-slate-400 font-medium">Address on Invoice <span className="text-red-500">*</span></span>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={syncAddress}
+                    onChange={(e) => setSyncAddress(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                  />
+                  <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
+                    [ Same as Gym Address ]
+                  </span>
+                </label>
+              </div>
+              <div className="relative">
+                <textarea
+                  {...register('addressOnBill')}
+                  placeholder="Billing address for invoices"
+                  className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
+                  maxLength="100"
+                  readOnly={syncAddress}
+                />
+                {syncAddress && (
+                  <div className="absolute right-3 top-4 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                    <Check className="w-2.5 h-2.5 stroke-[3px]" />
+                    SYNCED
+                  </div>
+                )}
+              </div>
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('addressOnBill') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.addressOnBill.message}</p>}
+              </div>
+            </div>
+
+            {/* Gym Logo */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Gym Logo <span className="text-slate-500 font-normal">(Optional)</span></p>
+              </div>
+              {logoPreview ? (
+                <div className="relative border border-slate-800 rounded-xl px-4 py-2 bg-slate-900/30 flex items-center gap-3 h-20 group animate-in fade-in duration-200">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-750 bg-black flex items-center justify-center shrink-0">
+                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain p-1" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-200 truncate">{logoName}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Ready for upload</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer"
+                    title="Remove logo"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <label
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
+                  className={`flex items-center justify-center gap-3 border border-dashed rounded-xl h-20 bg-slate-900/20 cursor-pointer hover:bg-slate-900/40 transition-all select-none ${isDragActive ? 'border-primary bg-primary/5' : 'border-slate-800 hover:border-primary/40'}`}
+                >
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] || null;
+                      handleLogoFile(file);
+                    }}
+                  />
+                  <UploadCloud className={`w-6 h-6 transition-transform ${isDragActive ? 'text-primary scale-110' : 'text-slate-500'}`} />
+                  <div className="text-left">
+                    <span className="text-xs font-semibold text-slate-300 block">
+                      {isDragActive ? 'Drop image here' : 'Drag & drop logo, or browse'}
+                    </span>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Supports PNG, JPG, JPEG, WEBP up to 5MB</p>
+                  </div>
+                </label>
+              )}
+              <div className="min-h-[20px] mt-1">
+                {logoError && <p className="text-red-500 text-xs font-medium leading-tight">{logoError}</p>}
+              </div>
+            </div>
+
+            {/* Regards Text */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Regards Text <span className="text-red-500">*</span></p>
+              </div>
+              <input {...register('regards')} placeholder="Regards, Team Gym" className={fieldClassName('regards')} maxLength="50" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('regards') ? (
+                  <p className="text-red-500 text-xs font-medium leading-tight">{errors.regards.message}</p>
+                ) : (
+                  <p className="text-[10px] text-slate-500 leading-tight">Automatically generated from Gym Name, but customizable.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Greeting Message */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Greeting Message <span className="text-red-500">*</span></p>
+              </div>
+              <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="50" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('greetingText') ? (
+                  <p className="text-red-500 text-xs font-medium leading-tight">{errors.greetingText.message}</p>
+                ) : (
+                  <p className="text-[10px] text-slate-500 leading-tight">Greeting shown at bottom of client dashboard.</p>
+                )}
+              </div>
+            </div>
+
           </div>
         )}
 
