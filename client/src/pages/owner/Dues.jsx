@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { CircleDollarSign, Search, Filter, History, AlertCircle, Clock, ArrowRight, Eye, RefreshCw, Smartphone, X, Trash2, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CircleDollarSign, Search, Filter, History, AlertCircle, AlertTriangle, Clock, ArrowRight, Eye, RefreshCw, Smartphone, X, Trash2, MessageSquare } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ClientDetail from './ClientDetail';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
@@ -13,11 +13,12 @@ import Pagination from '../../components/Pagination';
 
 const Dues = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [clients, setClients] = useState([]);
     const [plans, setPlans] = useState([]);
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'overdue', 'expired'
+    const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'pending');
     const [expiredClients, setExpiredClients] = useState([]);
 
     // Modal states
@@ -74,6 +75,13 @@ const Dues = () => {
     useEffect(() => {
         setCurrentPage(1);
     }, [activeTab, searchTerm]);
+
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && ['pending', 'overdue', 'expiring', 'expired'].includes(tab)) {
+            setActiveTab(tab);
+        }
+    }, [searchParams]);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -148,6 +156,47 @@ const Dues = () => {
                     isExpiredTab: true,
                     rawClient: c
                 };
+            });
+        } else if (activeTab === 'expiring') {
+            const threeDaysFromNow = new Date(today);
+            threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+            clients.forEach(client => {
+                const allMemberships = [...(client.memberships || [])];
+                if (client.membership && client.membership.startDate) {
+                    const alreadyExists = allMemberships.some(m =>
+                        new Date(m.startDate).getTime() === new Date(client.membership.startDate).getTime() &&
+                        m.planId?.toString() === (client.membership.planId?._id || client.membership.planId)?.toString()
+                    );
+                    if (!alreadyExists) {
+                        allMemberships.push(client.membership);
+                    }
+                }
+
+                allMemberships.forEach(m => {
+                    const endDate = m.endDate ? new Date(m.endDate) : null;
+                    if (!endDate) return;
+
+                    const isExpired = endDate < today;
+                    const isExpiringSoon = !isExpired && endDate >= today && endDate <= threeDaysFromNow;
+
+                    if (isExpiringSoon) {
+                        const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+
+                        list.push({
+                            clientId: client._id,
+                            clientIdDisplay: client.clientId,
+                            clientName: client.personalInfo?.name || client.name,
+                            mobile: client.personalInfo?.mobileNo,
+                            planName: m.planName || m.planId?.name || 'N/A',
+                            startDate: m.startDate,
+                            endDate: m.endDate,
+                            daysLeft: daysLeft,
+                            isExpiringTab: true,
+                            rawClient: client
+                        });
+                    }
+                });
             });
         } else {
             list = getDuesList().filter(due => {
@@ -325,6 +374,7 @@ const Dues = () => {
                     {[
                         { id: 'pending', label: 'Pending', icon: Clock },
                         { id: 'overdue', label: 'Overdue', icon: AlertCircle },
+                        { id: 'expiring', label: 'Expiring Soon', icon: AlertTriangle },
                         { id: 'expired', label: 'Expired', icon: History },
                     ].map(tab => (
                         <button
@@ -359,17 +409,18 @@ const Dues = () => {
                             <thead>
                                 <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
                                     <th className="p-4 font-bold">Client Info</th>
-                                    {activeTab === 'expired' && <th className="p-4 font-bold">Mobile</th>}
-                                    <th className="p-4 font-bold">{activeTab === 'expired' ? 'Last Plan' : 'Plan'}</th>
-                                    {activeTab !== 'expired' && (
+                                    {(activeTab === 'expired' || activeTab === 'expiring') && <th className="p-4 font-bold">Mobile</th>}
+                                    <th className="p-4 font-bold">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Last Plan' : 'Plan'}</th>
+                                    {activeTab !== 'expired' && activeTab !== 'expiring' && (
                                         <>
                                             <th className="p-4 font-bold text-right">Total Amount</th>
                                             <th className="p-4 font-bold text-right">Paid Amount</th>
                                             <th className="p-4 font-bold text-right">Balance</th>
                                         </>
                                     )}
-                                    <th className="p-4 font-bold">{activeTab === 'expired' ? 'Ended On' : 'Due Date'}</th>
+                                    <th className="p-4 font-bold">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Ended On' : 'Due Date'}</th>
                                     {activeTab === 'expired' && <th className="p-4 font-bold text-center">Days Ago</th>}
+                                    {activeTab === 'expiring' && <th className="p-4 font-bold text-center">Days Left</th>}
                                     <th className="p-4 font-bold text-right">Action</th>
                                 </tr>
                             </thead>
@@ -379,7 +430,7 @@ const Dues = () => {
                                         <tr key={i} className="border-b border-border">
                                             <td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse"></div><div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div></div></td>
                                             <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
-                                            {activeTab !== 'expired' && <><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td></>}
+                                            {activeTab !== 'expired' && activeTab !== 'expiring' && <><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td></>}
                                             <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
                                             <td className="p-4 text-right"><div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div></td>
                                         </tr>
@@ -400,7 +451,7 @@ const Dues = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            {activeTab === 'expired' && (
+                                            {(activeTab === 'expired' || activeTab === 'expiring') && (
                                                 <td className="p-4 text-text-secondary text-sm font-medium">
                                                     {due.mobile}
                                                 </td>
@@ -416,7 +467,7 @@ const Dues = () => {
                                                     ) : null;
                                                 })()}
                                             </td>
-                                            {activeTab !== 'expired' && (
+                                            {activeTab !== 'expired' && activeTab !== 'expiring' && (
                                                 <>
                                                     <td className="p-4 text-right text-text-secondary font-bold text-sm">
                                                         ₹{due.finalPrice}
@@ -430,7 +481,7 @@ const Dues = () => {
                                                 </>
                                             )}
                                             <td className="p-4 text-text-secondary text-xs">
-                                                {activeTab === 'expired' ? (
+                                                {(activeTab === 'expired' || activeTab === 'expiring') ? (
                                                     <div className="flex flex-col gap-0.5">
                                                         <span className="whitespace-nowrap">Start: {due.startDate ? new Date(due.startDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
                                                         <span className="whitespace-nowrap">End: {due.endDate ? new Date(due.endDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
@@ -442,6 +493,11 @@ const Dues = () => {
                                             {activeTab === 'expired' && (
                                                 <td className="p-4 text-center">
                                                     <span className="text-text-primary font-black text-sm">-{due.daysAgo}</span>
+                                                </td>
+                                            )}
+                                            {activeTab === 'expiring' && (
+                                                <td className="p-4 text-center">
+                                                    <span className="text-text-primary font-black text-sm">{due.daysLeft}</span>
                                                 </td>
                                             )}
                                             <td className="p-4 text-right">
@@ -460,7 +516,7 @@ const Dues = () => {
                                                             )}
                                                         </button>
                                                     )}
-                                                    {(activeTab === 'overdue' || activeTab === 'expired') && due.rawClient && (
+                                                    {(activeTab === 'overdue' || activeTab === 'expired' || activeTab === 'expiring') && due.rawClient && (
                                                         <ReminderTimeline
                                                             client={due.rawClient}
                                                             onCircleClick={(c, tab) => { setReminderModalClient(c); setReminderModalTab(tab); }}
@@ -473,7 +529,7 @@ const Dues = () => {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
-                                                    {due.isExpiredTab ? (
+                                                    {(due.isExpiredTab || due.isExpiringTab) ? (
                                                         <button
                                                             onClick={() => handleRenew(due)}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-text-primary rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border border-primary/20"

@@ -241,7 +241,7 @@ const Dashboard = () => {
                         <div className="p-4 bg-surface-divider/10 border-t border-border/50">
                             <button
                                 onClick={fetchAllClients}
-                                className="w-full py-3 text-primary text-sm font-bold hover:bg-primary/5 rounded-xl border border-primary/20 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+                                className="w-full py-3 text-primary text-sm font-bold hover:bg-primary/5 rounded-lg border border-border transition-all uppercase tracking-widest flex items-center justify-center gap-2"
                             >
                                 View More Clients
                             </button>
@@ -264,7 +264,7 @@ const Dashboard = () => {
                                 {stats?.stats?.expiringSoon > 3 && (
                                     <div className="p-4 border-t border-border">
                                         <button
-                                            onClick={() => navigate('/owner/clients?status=Expiring Soon')}
+                                            onClick={() => navigate('/owner/dues?tab=expiring')}
                                             className="w-full py-2 text-primary text-sm font-medium hover:bg-primary/10 rounded-lg border border-primary/20 transition-all"
                                         >
                                             View All Expiring
