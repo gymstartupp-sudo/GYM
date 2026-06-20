@@ -61,6 +61,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --bg-primary: #111111;
     --bg-secondary: #181818;
     --bg-card: #1F1F1F;

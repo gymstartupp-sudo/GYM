@@ -10,6 +10,8 @@ const {
   stringValidation
 } = require('../middleware/validate');
 
+const { uploadLogo } = require('../middleware/upload');
+
 const gymProfileValidation = [
   emailValidation('gym.gymEmail', true),
   phoneValidation('gym.gymContact', true),
@@ -26,6 +28,7 @@ router.get('/public/:gymId', [param('gymId').isString().trim().notEmpty()], vali
 
 router.get('/profile', protect, authorize('owner'), gymController.getGymProfile);
 router.put('/profile', protect, authorize('owner'), gymProfileValidation, validate, gymController.updateGymProfile);
+router.put('/profile/logo', protect, authorize('owner'), uploadLogo.single('logo'), gymController.updateGymLogo);
 router.put('/change-password', protect, authorize('owner'), changePasswordValidation, validate, gymController.changeGymPassword);
 router.get('/dashboard', protect, authorize('owner'), gymController.getDashboardStats);
 

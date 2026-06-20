@@ -25,8 +25,8 @@ const gymSchema = new mongoose.Schema({
     gst: String,
     logo: String,
     addressOnBill: { type: String, maxlength: 100 },
-    regards: { type: String, maxlength: 20 },
-    greetingText: { type: String, maxlength: 20 },
+    regards: { type: String, maxlength: 50 },
+    greetingText: { type: String, maxlength: 50 },
     invoiceSupportEmail: { type: String, trim: true },
     allowPartialPayments: { type: Boolean, default: true }
   },
