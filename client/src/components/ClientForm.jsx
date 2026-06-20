@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -8,6 +8,7 @@ import Button from './Button';
 import PasswordInput from './PasswordInput';
 import { useAuth } from '../context/AuthContext';
 import PaymentModal from './PaymentModal';
+import { formatDateToYYYYMMDD } from '../utils/dateInput';
 import CustomDatePicker from './CustomDatePicker';
 import {
   DATE_RULES,
@@ -100,6 +101,18 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
   const isOwner = mode === 'owner';
 
+  const dateResolver = useCallback(async (data, context, options) => {
+    const result = await yupResolver(getValidationSchema(mode))(data, context, options);
+    if (result.values) {
+      ['dob', 'startDate'].forEach((key) => {
+        if (result.values[key] instanceof Date) {
+          result.values[key] = formatDateToYYYYMMDD(result.values[key]);
+        }
+      });
+    }
+    return result;
+  }, [mode]);
+
   const {
     register,
     trigger,
@@ -110,7 +123,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     clearErrors,
     formState: { errors, touchedFields, isSubmitted, isDirty }
   } = useForm({
-    resolver: yupResolver(getValidationSchema(mode)),
+    resolver: dateResolver,
     defaultValues: {
       gymId: isOwner ? user?.gymId || '' : '',
       gymName: isOwner ? user?.gymName || '' : '',
@@ -183,6 +196,18 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
   const handleDateFieldChange = (field, e) => {
     setValue(field, e.target.value, { shouldValidate: true, shouldDirty: true });
+  };
+
+  const handleDateBlur = (field, e) => {
+    const val = e.target.value || '';
+    const parts = val.split('-');
+    if (parts.length === 3) {
+      const [d, m, y] = parts;
+      if (d.length === 2 && m.length === 2 && y.length === 4) {
+        const iso = `${y}-${m}-${d}`;
+        setValue(field, iso, { shouldValidate: true });
+      }
+    }
   };
 
   const handleDateValidationError = (field, message) => {
@@ -442,7 +467,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         <CustomDatePicker
           name={dobField.name}
           ref={dobField.ref}
-          onBlur={dobField.onBlur}
+          onBlur={(e) => handleDateBlur('dob', e)}
           value={toDateInputString(values.dob)}
           validationRule={DATE_RULES.DOB}
           minDate={`${dobMinYear}-01-01`}
@@ -531,7 +556,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         <CustomDatePicker
           name={startDateField.name}
           ref={startDateField.ref}
-          onBlur={startDateField.onBlur}
+          onBlur={(e) => handleDateBlur('startDate', e)}
           value={toDateInputString(values.startDate)}
           validationRule={DATE_RULES.REGISTRATION_START}
           minDate={getMinStartDate()}

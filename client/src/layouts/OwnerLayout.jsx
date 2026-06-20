@@ -164,7 +164,7 @@ export default function OwnerLayout() {
         </nav>
 
         {/* Settings (pinned to bottom) */}
-        <div className={`border border-border/60 rounded-lg mb-3 mt-auto ${showLabels ? 'mx-3' : 'mx-auto'}`}>
+        <div className={`border border-border rounded-lg mb-3 mt-auto ${showLabels ? 'mx-3' : 'mx-auto'}`}>
           <NavLink
             to="/owner/settings"
             onClick={() => { if (isMobile) setIsSidebarOpen(false); }}
