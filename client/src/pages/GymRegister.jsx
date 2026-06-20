@@ -22,7 +22,8 @@ import {
   Calendar,
   Clock,
   UploadCloud,
-  X
+  X,
+  HelpCircle
 } from 'lucide-react';
 
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
@@ -41,26 +42,26 @@ const MINUTES = ['00', '15', '30', '45'];
 
 const TimeInput = ({ fieldHour, fieldMinute, fieldAmpm, register, setValue, watch }) => {
   return (
-    <div className="flex items-center gap-1 bg-surface-card border border-border rounded-lg p-1.5 hover:border-border transition-colors">
+    <div className="flex items-stretch bg-surface-card border border-border rounded-lg overflow-hidden hover:border-border transition-colors">
       <select
         {...register(fieldHour)}
         onChange={e => setValue(fieldHour, e.target.value)}
-        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none"
+        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-2 select-none border-r border-border"
       >
         {HOURS.map(h => <option key={h} className="bg-surface-card text-text-primary" value={h}>{h}</option>)}
       </select>
-      <span className="text-text-muted font-bold select-none">:</span>
+      <span className="text-text-muted font-bold select-none flex items-center px-0.5">:</span>
       <select
         {...register(fieldMinute)}
         onChange={e => setValue(fieldMinute, e.target.value)}
-        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none"
+        className="bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer flex-1 text-center py-2 select-none border-r border-border"
       >
         {MINUTES.map(m => <option key={m} className="bg-surface-card text-text-primary" value={m}>{m}</option>)}
       </select>
       <select
         {...register(fieldAmpm)}
         onChange={e => setValue(fieldAmpm, e.target.value)}
-        className="bg-transparent text-text-secondary font-medium text-xs focus:outline-none cursor-pointer w-14 text-center py-1 px-1 bg-surface-divider rounded select-none border border-border"
+        className="bg-primary/15 text-primary font-bold text-xs focus:outline-none cursor-pointer w-12 text-center py-2 select-none"
       >
         <option className="bg-surface-card text-text-primary" value="AM">AM</option>
         <option className="bg-surface-card text-text-primary" value="PM">PM</option>
@@ -76,7 +77,7 @@ const optionalUrl = yup.string().trim().test(
 );
 
 const schema = yup.object({
-  gymIdPrefix: yup.string().trim().required('Gym ID prefix is required').max(3, 'Max 3 chars').matches(/^[A-Z]{3}$/, 'Exactly 3 uppercase letters'),
+  gymIdPrefix: yup.string().trim().required('Gym ID prefix is required').min(2, 'Min 2 characters').max(3, 'Max 3 characters').matches(/^[A-Z]{2,3}$/, '2-3 uppercase letters only'),
   gymName: yup.string().trim().required('Gym name is required').max(25, 'Max 25 chars'),
   gymEmail: yup.string().trim().email('Please enter a valid email address').required('Gym email is required'),
   gymContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
@@ -132,6 +133,7 @@ const GymRegister = () => {
   const [logoError, setLogoError] = useState('');
   const [isDragActive, setIsDragActive] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showPrefixHelp, setShowPrefixHelp] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -170,7 +172,7 @@ const GymRegister = () => {
 
     setLogoError('');
     setLogoName(file.name);
-    
+
     // Create preview
     if (logoPreview) URL.revokeObjectURL(logoPreview);
     const previewUrl = URL.createObjectURL(file);
@@ -433,644 +435,679 @@ const GymRegister = () => {
   return (
     <div className="w-full max-w-2xl relative z-10 backdrop-blur-md bg-surface-card/90 border border-border shadow-2xl p-8 rounded-2xl">
 
-        {/* Glow effect */}
-        <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+      {/* Glow effect */}
+      <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10"></div>
+      <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl -z-10"></div>
 
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">Gym Registration</h2>
-          <p className="text-sm text-slate-400">Set up your premium SaaS gym workspace in three fast steps.</p>
-        </div>
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">Gym Registration</h2>
+        <p className="text-sm text-slate-400">Set up your premium SaaS gym workspace in three fast steps.</p>
+      </div>
 
-        {/* Modern Stepper */}
-        <div className="mb-10 select-none">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800 -translate-y-1/2 -z-10 rounded-full"></div>
-            <div
-              className="absolute top-1/2 left-0 h-[2px] bg-primary -translate-y-1/2 -z-10 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${step === 1 ? '0%' : step === 2 ? '50%' : '100%'}` }}
-            ></div>
+      {/* Modern Stepper */}
+      <div className="mb-10 select-none">
+        <div className="flex items-center justify-between relative">
+          <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800 -translate-y-1/2 -z-10 rounded-full"></div>
+          <div
+            className="absolute top-1/2 left-0 h-[2px] bg-primary -translate-y-1/2 -z-10 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${step === 1 ? '0%' : step === 2 ? '50%' : '100%'}` }}
+          ></div>
 
-            {[
-              { num: 1, label: 'Gym Info', icon: Building2 },
-              { num: 2, label: 'Owner & Comm', icon: User },
-              { num: 3, label: 'Billing & Brand', icon: CreditCard }
-            ].map((s) => {
-              const Icon = s.icon;
-              const isCompleted = step > s.num;
-              const isActive = step === s.num;
+          {[
+            { num: 1, label: 'Gym Info', icon: Building2 },
+            { num: 2, label: 'Owner & Comm', icon: User },
+            { num: 3, label: 'Billing & Brand', icon: CreditCard }
+          ].map((s) => {
+            const Icon = s.icon;
+            const isCompleted = step > s.num;
+            const isActive = step === s.num;
 
-              return (
-                <div key={s.num} className="flex flex-col items-center flex-1 relative">
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 relative z-10
+            return (
+              <div key={s.num} className="flex flex-col items-center flex-1 relative">
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-300 relative z-10
                       ${isCompleted
-                        ? 'bg-emerald-500 border-emerald-500 text-text-primary shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                        : isActive
-                          ? 'bg-primary border-primary text-text-primary shadow-[0_0_12px_rgba(255,189,7,0.4)] scale-110'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700/60'
-                      }`}
-                  >
-                    {isCompleted ? (
-                      <Check className="w-4 h-4 stroke-[3px]" />
-                    ) : (
-                      <Icon className="w-4 h-4" />
+                      ? 'bg-emerald-500 border-emerald-500 text-text-primary shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                      : isActive
+                        ? 'bg-primary border-primary text-text-primary shadow-[0_0_12px_rgba(255,189,7,0.4)] scale-110'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700/60'
+                    }`}
+                >
+                  {isCompleted ? (
+                    <Check className="w-4 h-4 stroke-[3px]" />
+                  ) : (
+                    <Icon className="w-4 h-4" />
+                  )}
+                </div>
+                <span
+                  className={`mt-2 text-[11px] font-semibold tracking-wide transition-colors duration-300 text-center
+                      ${isActive ? 'text-text-primary font-bold' : isCompleted ? 'text-emerald-400' : 'text-slate-400'}`}
+                >
+                  {s.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
+        {/* STEP 1: GYM INFORMATION */}
+        {step === 1 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="md:col-span-2 mb-2">
+              <h3 className="text-lg font-bold text-text-primary mb-1">Gym Information</h3>
+              <p className="text-xs text-slate-400">Tell us about your gym business.</p>
+            </div>
+
+            {/* LEFT COLUMN */}
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Name <span className="text-red-500">*</span></p>
+                <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="25" />
+                {showFieldError('gymName') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymName.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Email <span className="text-red-500">*</span></p>
+                <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} />
+                {showFieldError('gymEmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymEmail.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Location <span className="text-red-500">*</span></p>
+                <input {...register('location')} placeholder="E.g. Bangalore" className={fieldClassName('location')} maxLength="20" />
+                {showFieldError('location') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Type <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="20" />
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <p className="text-xs text-slate-400 font-medium">Client ID Prefix <span className="text-red-500">*</span></p>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setShowPrefixHelp(!showPrefixHelp); }}
+                      onMouseEnter={() => setShowPrefixHelp(true)}
+                      onMouseLeave={() => setShowPrefixHelp(false)}
+                      className="text-slate-500 hover:text-primary transition-colors"
+                    >
+                      <HelpCircle size={12} />
+                    </button>
+                    {showPrefixHelp && (
+                      <div className="absolute left-1/2 -translate-x-1/2 top-6 z-50 w-56 p-2.5 bg-surface-secondary border border-border rounded-lg shadow-xl text-left" onMouseEnter={() => setShowPrefixHelp(true)} onMouseLeave={() => setShowPrefixHelp(false)}>
+                        <p className="text-[11px] font-bold text-primary mb-1">Client ID Prefix</p>
+                        <p className="text-[10px] text-text-secondary leading-relaxed">
+                          Enter a <span className="font-bold text-text-primary">3 letter code</span> that identifies your gym.
+                          <br /><br />
+                          This prefix is used to <span className="font-bold text-text-primary">auto-generate unique member IDs</span> (e.g. DNB → DNB-01, DNB-02...).
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <span
-                    className={`mt-2 text-[11px] font-semibold tracking-wide transition-colors duration-300 text-center
-                      ${isActive ? 'text-text-primary font-bold' : isCompleted ? 'text-emerald-400' : 'text-slate-400'}`}
+                </div>
+                <input
+                  {...register('gymIdPrefix')}
+                  placeholder="E.g. DNB"
+                  className={fieldClassName('gymIdPrefix', 'font-semibold tracking-wider')}
+                  maxLength="3"
+                  onChange={(e) => {
+                    const upper = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+                    setValue('gymIdPrefix', upper, { shouldValidate: true, shouldTouch: true });
+                  }}
+                />
+                {showFieldError('gymIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymIdPrefix.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Contact Number <span className="text-red-500">*</span></p>
+                <input
+                  {...register('gymContact')}
+                  type="tel"
+                  placeholder="E.g. 9876543210"
+                  className={fieldClassName('gymContact')}
+                  onInput={handlePhoneInput}
+                  maxLength="10"
+                />
+                {showFieldError('gymContact') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymContact.message}</p>}
+              </div>
+
+              {/* GST Number */}
+              <div className="md:col-span-2">
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">GST Number <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <input {...register('gst')} placeholder="E.g. 22AAAAA0000A1Z5" className={fieldClassName('gst')} />
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="20" />
+              </div>
+
+              <div className="hidden md:block" />
+            </div>
+
+            {/* Address - full width below both columns */}
+            <div className="md:col-span-2">
+              <p className="text-xs text-slate-400 mb-1.5 font-medium">Address <span className="text-red-500">*</span></p>
+              <textarea
+                {...register('address')}
+                placeholder="E.g. Plot 15, Sector 4, HSR Layout"
+                className={fieldClassName('address', 'h-20 resize-none')}
+                maxLength="100"
+              />
+              {showFieldError('address') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.address.message}</p>}
+            </div>
+
+            {/* Operating Days Section */}
+            <div className="md:col-span-2">
+              <p className="text-xs text-slate-400 mb-2.5 font-medium flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                <span>Operating Days</span>
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {weekDays.map((day) => (
+                  <label
+                    key={day}
+                    className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 cursor-pointer border select-none transition-all duration-200
+                        ${watch('operatingDays')?.includes(day)
+                        ? 'bg-primary/10 border-primary/40 text-primary font-medium'
+                        : 'bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60 hover:bg-slate-850'
+                      }`}
                   >
-                    {s.label}
-                  </span>
+                    <input
+                      type="checkbox"
+                      value={day}
+                      {...register('operatingDays')}
+                      className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                    />
+                    <span>{day}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Operating Hours */}
+            <div className="md:col-span-2">
+              <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-primary" />
+                <span>Operating Hours <span className="text-slate-500 font-normal">(Optional)</span></span>
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-[10px] text-slate-500 block mb-0.5">Opening</span>
+                  <TimeInput
+                    fieldHour="operatingOpenHour"
+                    fieldMinute="operatingOpenMinute"
+                    fieldAmpm="operatingOpenAmpm"
+                    register={register}
+                    setValue={setValue}
+                    watch={watch}
+                  />
                 </div>
-              );
-            })}
+                <div>
+                  <span className="text-[10px] text-slate-500 block mb-0.5">Closing</span>
+                  <TimeInput
+                    fieldHour="operatingCloseHour"
+                    fieldMinute="operatingCloseMinute"
+                    fieldAmpm="operatingCloseAmpm"
+                    register={register}
+                    setValue={setValue}
+                    watch={watch}
+                  />
+                </div>
+              </div>
+            </div>
+
+
+
+            {/* Collapsible Social Media Links */}
+            <div className="md:col-span-2 border border-slate-800 rounded-xl overflow-hidden bg-slate-900/20 hover:border-slate-750 transition-colors">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-slate-400 hover:text-text-primary hover:bg-slate-900/40 transition-all select-none"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span>Social Media Links</span>
+                </div>
+                {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              {showAdvanced && (
+                <div className="p-5 border-t border-slate-800/60 bg-slate-950/20 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Website URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
+                    <input {...register('websiteUrl')} placeholder="E.g. https://yoursite.com" className={fieldClassName('websiteUrl')} />
+                    {showFieldError('websiteUrl') && <p className="text-red-500 text-xs mt-1">{errors.websiteUrl.message}</p>}
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 mb-1">Instagram URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
+                    <input {...register('instagramUrl')} placeholder="E.g. https://instagram.com/gym" className={fieldClassName('instagramUrl')} />
+                    {showFieldError('instagramUrl') && <p className="text-red-500 text-xs mt-1">{errors.instagramUrl.message}</p>}
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-slate-400 mb-1">Facebook URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
+                    <input {...register('facebookUrl')} placeholder="E.g. https://facebook.com/gym" className={fieldClassName('facebookUrl')} />
+                    {showFieldError('facebookUrl') && <p className="text-red-500 text-xs mt-1">{errors.facebookUrl.message}</p>}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* STEP 2: OWNER & COMMUNICATION */}
+        {step === 2 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div>
+              <h3 className="text-lg font-bold text-text-primary mb-1">Owner & Communication</h3>
+              <p className="text-xs text-slate-400">Manage owner credentials and automated reminder settings.</p>
+            </div>
 
-          {/* STEP 1: GYM INFORMATION */}
-          {step === 1 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="md:col-span-2 mb-2">
-                <h3 className="text-lg font-bold text-text-primary mb-1">Gym Information</h3>
-                <p className="text-xs text-slate-400">Tell us about your gym business.</p>
+            {/* SECTION A: OWNER DETAILS */}
+            <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
+                <User className="w-4 h-4 text-primary" />
+                <span className="text-sm font-bold text-slate-200">Section A: Owner Details</span>
               </div>
 
-              {/* LEFT COLUMN */}
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Client ID  <span className="text-red-500">*</span></p>
+                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
+                  <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="25" />
+                  {showFieldError('name') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Mobile Number <span className="text-red-500">*</span></p>
                   <input
-                    {...register('gymIdPrefix')}
-                    placeholder="E.g. DNB"
-                    className={fieldClassName('gymIdPrefix', 'uppercase font-semibold tracking-wider')}
-                    maxLength="3"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1">This 3-letter prefix will prefix all member IDs (e.g. DNB-01).</p>
-                  {showFieldError('gymIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymIdPrefix.message}</p>}
-                </div>
-
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Email <span className="text-red-500">*</span></p>
-                  <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} />
-                  {showFieldError('gymEmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymEmail.message}</p>}
-                </div>
-
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Address <span className="text-red-500">*</span></p>
-                  <textarea
-                    {...register('address')}
-                    placeholder="E.g. Plot 15, Sector 4, HSR Layout"
-                    className={fieldClassName('address', 'h-20 resize-none')}
-                    maxLength="100"
-                  />
-                  {showFieldError('address') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.address.message}</p>}
-                </div>
-
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Type <span className="text-slate-500 font-normal">(Optional)</span></p>
-                  <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="20" />
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN */}
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Name <span className="text-red-500">*</span></p>
-                  <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="25" />
-                  {showFieldError('gymName') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymName.message}</p>}
-                </div>
-
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Contact Number <span className="text-red-500">*</span></p>
-                  <input
-                    {...register('gymContact')}
+                    {...register('mobileNo')}
                     type="tel"
-                    placeholder="E.g. 9876543210"
-                    className={fieldClassName('gymContact')}
+                    placeholder="10-digit mobile number"
+                    className={fieldClassName('mobileNo')}
                     onInput={handlePhoneInput}
                     maxLength="10"
                   />
-                  {showFieldError('gymContact') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gymContact.message}</p>}
+                  {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mobileNo.message}</p>}
                 </div>
-
+                <div className="md:col-span-2">
+                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
+                  <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} />
+                  {showFieldError('mailId') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mailId.message}</p>}
+                </div>
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Location <span className="text-red-500">*</span></p>
-                  <input {...register('location')} placeholder="E.g. Bangalore" className={fieldClassName('location')} maxLength="20" />
-                  {showFieldError('location') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
-                </div>
-                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-primary" />
-                    <span>Operating Hours <span className="text-slate-500 font-normal">(Optional)</span></span>
+                    <Lock className="w-3 h-3 text-slate-500" />
+                    <span>Password <span className="text-red-500">*</span></span>
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-[10px] text-slate-500 block mb-0.5">Opening</span>
-                      <TimeInput
-                        fieldHour="operatingOpenHour"
-                        fieldMinute="operatingOpenMinute"
-                        fieldAmpm="operatingOpenAmpm"
-                        register={register}
-                        setValue={setValue}
-                        watch={watch}
-                      />
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-500 block mb-0.5">Closing</span>
-                      <TimeInput
-                        fieldHour="operatingCloseHour"
-                        fieldMinute="operatingCloseMinute"
-                        fieldAmpm="operatingCloseAmpm"
-                        register={register}
-                        setValue={setValue}
-                        watch={watch}
-                      />
-                    </div>
-                  </div>
+                  <PasswordInput {...register('password')} placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="20" />
+                  {showFieldError('password') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
                 </div>
-              </div>
-
-              {/* Operating Days Section */}
-              <div className="md:col-span-2">
-                <p className="text-xs text-slate-400 mb-2.5 font-medium flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-primary" />
-                  <span>Operating Days</span>
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {weekDays.map((day) => (
-                    <label
-                      key={day}
-                      className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 cursor-pointer border select-none transition-all duration-200
-                        ${watch('operatingDays')?.includes(day)
-                          ? 'bg-primary/10 border-primary/40 text-primary font-medium'
-                          : 'bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60 hover:bg-slate-850'
-                        }`}
-                    >
-                      <input
-                        type="checkbox"
-                        value={day}
-                        {...register('operatingDays')}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                      />
-                      <span>{day}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Collapsible Advanced Business Details Section */}
-              <div className="md:col-span-2 border border-slate-800 rounded-xl overflow-hidden bg-slate-900/20 hover:border-slate-750 transition-colors">
-                <button
-                  type="button"
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-slate-400 hover:text-text-primary hover:bg-slate-900/40 transition-all select-none"
-                >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
-                    <span>Advanced Business Details</span>
-                  </div>
-                  {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
-                </button>
-
-                {showAdvanced && (
-                  <div className="p-5 border-t border-slate-800/60 bg-slate-950/20 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">GST Number <span className="text-[10px] text-slate-500">(Optional)</span></p>
-                      <input {...register('gst')} placeholder="E.g. 22AAAAA0000A1Z5" className={fieldClassName('gst')} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Tagline <span className="text-[10px] text-slate-500">(Optional)</span></p>
-                      <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="20" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Website URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
-                      <input {...register('websiteUrl')} placeholder="E.g. https://yoursite.com" className={fieldClassName('websiteUrl')} />
-                      {showFieldError('websiteUrl') && <p className="text-red-500 text-xs mt-1">{errors.websiteUrl.message}</p>}
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 mb-1">Instagram URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
-                      <input {...register('instagramUrl')} placeholder="E.g. https://instagram.com/gym" className={fieldClassName('instagramUrl')} />
-                      {showFieldError('instagramUrl') && <p className="text-red-500 text-xs mt-1">{errors.instagramUrl.message}</p>}
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-xs text-slate-400 mb-1">Facebook URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
-                      <input {...register('facebookUrl')} placeholder="E.g. https://facebook.com/gym" className={fieldClassName('facebookUrl')} />
-                      {showFieldError('facebookUrl') && <p className="text-red-500 text-xs mt-1">{errors.facebookUrl.message}</p>}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2: OWNER & COMMUNICATION */}
-          {step === 2 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div>
-                <h3 className="text-lg font-bold text-text-primary mb-1">Owner & Communication</h3>
-                <p className="text-xs text-slate-400">Manage owner credentials and automated reminder settings.</p>
-              </div>
-
-              {/* SECTION A: OWNER DETAILS */}
-              <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                  <User className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-bold text-slate-200">Section A: Owner Details</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
-                    <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="25" />
-                    {showFieldError('name') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Mobile Number <span className="text-red-500">*</span></p>
-                    <input
-                      {...register('mobileNo')}
-                      type="tel"
-                      placeholder="10-digit mobile number"
-                      className={fieldClassName('mobileNo')}
-                      onInput={handlePhoneInput}
-                      maxLength="10"
-                    />
-                    {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mobileNo.message}</p>}
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
-                    <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} />
-                    {showFieldError('mailId') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mailId.message}</p>}
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-slate-500" />
-                      <span>Password <span className="text-red-500">*</span></span>
-                    </p>
-                    <PasswordInput {...register('password')} placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="20" />
-                    {showFieldError('password') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>}
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
-                      <Lock className="w-3 h-3 text-slate-500" />
-                      <span>Confirm Password <span className="text-red-500">*</span></span>
-                    </p>
-                    <PasswordInput {...register('confirmPassword')} placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="20" />
-                    {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.confirmPassword.message}</p>}
-                  </div>
-                </div>
-              </div>
-
-              {/* SECTION B: COMMUNICATION SETTINGS */}
-              <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
-                <div className="pb-1 border-b border-slate-800">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Mail className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-bold text-slate-200">Section B: Communication Settings</span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 leading-normal">These details are used for automated reminders, membership expiry alerts, and payment notifications.</p>
-                </div>
-
-                <div className="space-y-4">
-
-                  {/* WhatsApp Number Field */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5 select-none">
-                      <span className="text-xs text-slate-400 font-medium">WhatsApp Business Number <span className="text-red-500">*</span></span>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={syncWhatsapp}
-                          onChange={(e) => setSyncWhatsapp(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                        />
-                        <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                          [ Use Gym Contact Number ]
-                        </span>
-                      </label>
-                    </div>
-                    <div className="relative">
-                      <input
-                        {...register('whatsappNumber')}
-                        type="tel"
-                        placeholder="10-digit WhatsApp number"
-                        className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
-                        onInput={handlePhoneInput}
-                        maxLength="10"
-                        readOnly={syncWhatsapp}
-                      />
-                      {syncWhatsapp && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                          <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                          SYNCED
-                        </div>
-                      )}
-                    </div>
-                    {syncWhatsapp && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
-                    {showFieldError('whatsappNumber') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.whatsappNumber.message}</p>}
-                  </div>
-
-                  {/* SMS Source Number Field */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5 select-none">
-                      <span className="text-xs text-slate-400 font-medium">SMS Source Number <span className="text-red-500">*</span></span>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={syncSms}
-                          onChange={(e) => setSyncSms(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                        />
-                        <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                          [ Same as Gym Contact Number ]
-                        </span>
-                      </label>
-                    </div>
-                    <div className="relative">
-                      <input
-                        {...register('phoneNumber')}
-                        type="tel"
-                        placeholder="10-digit SMS number"
-                        className={fieldClassName('phoneNumber', syncSms ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
-                        onInput={handlePhoneInput}
-                        maxLength="10"
-                        readOnly={syncSms}
-                      />
-                      {syncSms && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                          <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                          SYNCED
-                        </div>
-                      )}
-                    </div>
-                    {syncSms && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
-                    {showFieldError('phoneNumber') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phoneNumber.message}</p>}
-                  </div>
-
-                  {/* Sender Email Field */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5 select-none">
-                      <span className="text-xs text-slate-400 font-medium">Sender Email <span className="text-red-500">*</span></span>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={syncEmail}
-                          onChange={(e) => setSyncEmail(e.target.checked)}
-                          className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                        />
-                        <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                          [ Use Gym Email ]
-                        </span>
-                      </label>
-                    </div>
-                    <div className="relative">
-                      <input
-                        {...register('gmail')}
-                        type="email"
-                        placeholder="Email address used for reminders"
-                        className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
-                        readOnly={syncEmail}
-                      />
-                      {syncEmail && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                          <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                          SYNCED
-                        </div>
-                      )}
-                    </div>
-                    {syncEmail && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
-                    {showFieldError('gmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gmail.message}</p>}
-                  </div>
-
+                <div>
+                  <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-slate-500" />
+                    <span>Confirm Password <span className="text-red-500">*</span></span>
+                  </p>
+                  <PasswordInput {...register('confirmPassword')} placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="20" />
+                  {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.confirmPassword.message}</p>}
                 </div>
               </div>
             </div>
-          )}
 
-          {/* STEP 3: BILLING & BRANDING */}
-          {step === 3 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="md:col-span-2 mb-2">
-                <h3 className="text-lg font-bold text-text-primary mb-1">Billing & Branding</h3>
-                <p className="text-xs text-slate-400">Configure client invoice settings and customize branding details.</p>
+            {/* SECTION B: COMMUNICATION SETTINGS */}
+            <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
+              <div className="pb-1 border-b border-slate-800">
+                <div className="flex items-center gap-2 mb-1">
+                  <Mail className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-bold text-slate-200">Section B: Communication Settings</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-normal">These details are used for automated reminders, membership expiry alerts, and payment notifications.</p>
               </div>
 
-              {/* LEFT COLUMN */}
               <div className="space-y-4">
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Billing ID <span className="text-red-500">*</span></p>
-                  <input
-                    {...register('billingIdPrefix')}
-                    placeholder="E.g. INV"
-                    className={fieldClassName('billingIdPrefix', 'uppercase font-bold tracking-widest')}
-                    maxLength="5"
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1">Shorthand for invoice records (e.g. INV-0001).</p>
-                  {showFieldError('billingIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.billingIdPrefix.message}</p>}
-                </div>
 
+                {/* WhatsApp Number Field */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-slate-400 font-medium">Address on Invoice <span className="text-red-500">*</span></span>
+                    <span className="text-xs text-slate-400 font-medium">WhatsApp Business Number <span className="text-red-500">*</span></span>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={syncAddress}
-                        onChange={(e) => setSyncAddress(e.target.checked)}
+                        checked={syncWhatsapp}
+                        onChange={(e) => setSyncWhatsapp(e.target.checked)}
                         className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
                       />
                       <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                        [ Same as Gym Address ]
-                      </span>
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <textarea
-                      {...register('addressOnBill')}
-                      placeholder="Billing address for invoices"
-                      className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
-                      maxLength="100"
-                      readOnly={syncAddress}
-                    />
-                    {syncAddress && (
-                      <div className="absolute right-3 top-4 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                        <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                        SYNCED
-                      </div>
-                    )}
-                  </div>
-                  {showFieldError('addressOnBill') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.addressOnBill.message}</p>}
-                </div>
-
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Regards Text <span className="text-red-500">*</span></p>
-                  <input {...register('regards')} placeholder="Regards, Team Gym" className={fieldClassName('regards')} maxLength="20" />
-                  <p className="text-[10px] text-slate-500 mt-1">Automatically generated from Gym Name, but customizable.</p>
-                  {showFieldError('regards') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.regards.message}</p>}
-                </div>
-
-                <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Logo <span className="text-slate-500 font-normal">(Optional)</span></p>
-                  
-                  {logoPreview ? (
-                    <div className="relative border border-slate-800 rounded-xl p-4 bg-slate-900/30 flex items-center gap-4 group animate-in fade-in duration-200">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-750 bg-black flex items-center justify-center shrink-0">
-                        <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-200 truncate">{logoName}</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">Ready for upload</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRemoveLogo}
-                        className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer"
-                        title="Remove logo"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label
-                      onDragEnter={handleDrag}
-                      onDragOver={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDrop={handleDrop}
-                      className={`block border border-dashed rounded-xl px-4 py-6 bg-slate-900/20 cursor-pointer hover:bg-slate-900/40 transition-all text-center select-none ${
-                        isDragActive ? 'border-primary bg-primary/5' : 'border-slate-800 hover:border-primary/40'
-                      }`}
-                    >
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                        className="hidden"
-                        onChange={(event) => {
-                          const file = event.target.files?.[0] || null;
-                          handleLogoFile(file);
-                        }}
-                      />
-                      <UploadCloud className={`w-8 h-8 mx-auto mb-2 transition-transform ${isDragActive ? 'text-primary scale-110' : 'text-slate-500'}`} />
-                      <span className="text-xs font-semibold text-slate-300 block">
-                        {isDragActive ? 'Drop image here' : 'Drag & drop your logo here, or browse'}
-                      </span>
-                      <p className="text-[10px] text-slate-500 mt-1">Supports PNG, JPG, JPEG, WEBP up to 5MB</p>
-                    </label>
-                  )}
-                  {logoError && <p className="text-red-500 text-xs mt-1.5 font-medium">{logoError}</p>}
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN */}
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-slate-400 font-medium">Helpdesk Contact <span className="text-red-500">*</span></span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={syncHelpContact}
-                        onChange={(e) => setSyncHelpContact(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                      />
-                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                        [ Use Gym Contact ]
+                        [ Use Gym Contact Number ]
                       </span>
                     </label>
                   </div>
                   <div className="relative">
                     <input
-                      {...register('helpContact')}
+                      {...register('whatsappNumber')}
                       type="tel"
-                      placeholder="Support / Helpdesk number"
-                      className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      placeholder="10-digit WhatsApp number"
+                      className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
                       onInput={handlePhoneInput}
                       maxLength="10"
-                      readOnly={syncHelpContact}
+                      readOnly={syncWhatsapp}
                     />
-                    {syncHelpContact && (
+                    {syncWhatsapp && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
                         <Check className="w-2.5 h-2.5 stroke-[3px]" />
                         SYNCED
                       </div>
                     )}
                   </div>
-                  {showFieldError('helpContact') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.helpContact.message}</p>}
+                  {syncWhatsapp && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
+                  {showFieldError('whatsappNumber') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.whatsappNumber.message}</p>}
                 </div>
 
+                {/* SMS Source Number Field */}
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Greeting Message <span className="text-red-500">*</span></p>
-                  <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="20" />
-                  <p className="text-[10px] text-slate-500 mt-1">Greeting shown at bottom of client dashboard.</p>
-                  {showFieldError('greetingText') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.greetingText.message}</p>}
+                  <div className="flex justify-between items-center mb-1.5 select-none">
+                    <span className="text-xs text-slate-400 font-medium">SMS Source Number <span className="text-red-500">*</span></span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={syncSms}
+                        onChange={(e) => setSyncSms(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                      />
+                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
+                        [ Same as Gym Contact Number ]
+                      </span>
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <input
+                      {...register('phoneNumber')}
+                      type="tel"
+                      placeholder="10-digit SMS number"
+                      className={fieldClassName('phoneNumber', syncSms ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      onInput={handlePhoneInput}
+                      maxLength="10"
+                      readOnly={syncSms}
+                    />
+                    {syncSms && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                        <Check className="w-2.5 h-2.5 stroke-[3px]" />
+                        SYNCED
+                      </div>
+                    )}
+                  </div>
+                  {syncSms && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
+                  {showFieldError('phoneNumber') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phoneNumber.message}</p>}
                 </div>
 
+                {/* Sender Email Field */}
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Invoice Support Email <span className="text-slate-500 font-normal">(Optional)</span></p>
-                  <input
-                    {...register('invoiceSupportEmail')}
-                    type="email"
-                    placeholder="E.g. billing@gym.com"
-                    className={fieldClassName('invoiceSupportEmail')}
-                  />
-                  <p className="text-[10px] text-slate-500 mt-1">If client invoices have dedicated support email.</p>
-                  {showFieldError('invoiceSupportEmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.invoiceSupportEmail.message}</p>}
+                  <div className="flex justify-between items-center mb-1.5 select-none">
+                    <span className="text-xs text-slate-400 font-medium">Sender Email <span className="text-red-500">*</span></span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={syncEmail}
+                        onChange={(e) => setSyncEmail(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                      />
+                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
+                        [ Use Gym Email ]
+                      </span>
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <input
+                      {...register('gmail')}
+                      type="email"
+                      placeholder="Email address used for reminders"
+                      className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      readOnly={syncEmail}
+                    />
+                    {syncEmail && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                        <Check className="w-2.5 h-2.5 stroke-[3px]" />
+                        SYNCED
+                      </div>
+                    )}
+                  </div>
+                  {syncEmail && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
+                  {showFieldError('gmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gmail.message}</p>}
                 </div>
+
               </div>
             </div>
+          </div>
+        )}
+
+        {/* STEP 3: BILLING & BRANDING */}
+        {step === 3 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="md:col-span-2 mb-2">
+              <h3 className="text-lg font-bold text-text-primary mb-1">Billing & Branding</h3>
+              <p className="text-xs text-slate-400">Configure client invoice settings and customize branding details.</p>
+            </div>
+
+            {/* LEFT COLUMN */}
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Billing ID <span className="text-red-500">*</span></p>
+                <input
+                  {...register('billingIdPrefix')}
+                  placeholder="E.g. INV"
+                  className={fieldClassName('billingIdPrefix', 'uppercase font-bold tracking-widest')}
+                  maxLength="5"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">Shorthand for invoice records (e.g. INV-0001).</p>
+                {showFieldError('billingIdPrefix') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.billingIdPrefix.message}</p>}
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1.5 select-none">
+                  <span className="text-xs text-slate-400 font-medium">Address on Invoice <span className="text-red-500">*</span></span>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncAddress}
+                      onChange={(e) => setSyncAddress(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                    />
+                    <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
+                      [ Same as Gym Address ]
+                    </span>
+                  </label>
+                </div>
+                <div className="relative">
+                  <textarea
+                    {...register('addressOnBill')}
+                    placeholder="Billing address for invoices"
+                    className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
+                    maxLength="100"
+                    readOnly={syncAddress}
+                  />
+                  {syncAddress && (
+                    <div className="absolute right-3 top-4 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                      <Check className="w-2.5 h-2.5 stroke-[3px]" />
+                      SYNCED
+                    </div>
+                  )}
+                </div>
+                {showFieldError('addressOnBill') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.addressOnBill.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Regards Text <span className="text-red-500">*</span></p>
+                <input {...register('regards')} placeholder="Regards, Team Gym" className={fieldClassName('regards')} maxLength="20" />
+                <p className="text-[10px] text-slate-500 mt-1">Automatically generated from Gym Name, but customizable.</p>
+                {showFieldError('regards') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.regards.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Gym Logo <span className="text-slate-500 font-normal">(Optional)</span></p>
+
+                {logoPreview ? (
+                  <div className="relative border border-slate-800 rounded-xl p-4 bg-slate-900/30 flex items-center gap-4 group animate-in fade-in duration-200">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-750 bg-black flex items-center justify-center shrink-0">
+                      <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-200 truncate">{logoName}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Ready for upload</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg transition-colors cursor-pointer"
+                      title="Remove logo"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    onDragEnter={handleDrag}
+                    onDragOver={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDrop={handleDrop}
+                    className={`block border border-dashed rounded-xl px-4 py-6 bg-slate-900/20 cursor-pointer hover:bg-slate-900/40 transition-all text-center select-none ${isDragActive ? 'border-primary bg-primary/5' : 'border-slate-800 hover:border-primary/40'
+                      }`}
+                  >
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] || null;
+                        handleLogoFile(file);
+                      }}
+                    />
+                    <UploadCloud className={`w-8 h-8 mx-auto mb-2 transition-transform ${isDragActive ? 'text-primary scale-110' : 'text-slate-500'}`} />
+                    <span className="text-xs font-semibold text-slate-300 block">
+                      {isDragActive ? 'Drop image here' : 'Drag & drop your logo here, or browse'}
+                    </span>
+                    <p className="text-[10px] text-slate-500 mt-1">Supports PNG, JPG, JPEG, WEBP up to 5MB</p>
+                  </label>
+                )}
+                {logoError && <p className="text-red-500 text-xs mt-1.5 font-medium">{logoError}</p>}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-1.5 select-none">
+                  <span className="text-xs text-slate-400 font-medium">Helpdesk Contact <span className="text-red-500">*</span></span>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncHelpContact}
+                      onChange={(e) => setSyncHelpContact(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                    />
+                    <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
+                      [ Use Gym Contact ]
+                    </span>
+                  </label>
+                </div>
+                <div className="relative">
+                  <input
+                    {...register('helpContact')}
+                    type="tel"
+                    placeholder="Support / Helpdesk number"
+                    className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                    onInput={handlePhoneInput}
+                    maxLength="10"
+                    readOnly={syncHelpContact}
+                  />
+                  {syncHelpContact && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                      <Check className="w-2.5 h-2.5 stroke-[3px]" />
+                      SYNCED
+                    </div>
+                  )}
+                </div>
+                {showFieldError('helpContact') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.helpContact.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Greeting Message <span className="text-red-500">*</span></p>
+                <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="20" />
+                <p className="text-[10px] text-slate-500 mt-1">Greeting shown at bottom of client dashboard.</p>
+                {showFieldError('greetingText') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.greetingText.message}</p>}
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-400 mb-1.5 font-medium">Invoice Support Email <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <input
+                  {...register('invoiceSupportEmail')}
+                  type="email"
+                  placeholder="E.g. billing@gym.com"
+                  className={fieldClassName('invoiceSupportEmail')}
+                />
+                <p className="text-[10px] text-slate-500 mt-1">If client invoices have dedicated support email.</p>
+                {showFieldError('invoiceSupportEmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.invoiceSupportEmail.message}</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Form Actions Button Row */}
+        <div className="flex items-center justify-between pt-6 border-t border-slate-800/80 mt-8">
+          {step > 1 ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handlePrev}
+              disabled={loading}
+              className="px-5 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg"
+            >
+              Back
+            </Button>
+          ) : (
+            <div />
           )}
 
-          {/* Form Actions Button Row */}
-          <div className="flex items-center justify-between pt-6 border-t border-slate-800/80 mt-8">
-            {step > 1 ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handlePrev}
-                disabled={loading}
-                className="px-5 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg"
-              >
-                Back
-              </Button>
-            ) : (
-              <div />
-            )}
-
-            {step < 3 ? (
-              <Button
-                type="button"
-                onClick={handleNext}
-                className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-lg"
-                isLoading={loading}
-                disabled={isStepDisabled}
-              >
-                Save & Continue
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={async () => {
-                  const valid = await trigger(stepRequiredFields[step]);
-                  if (valid) handleSubmit(onSubmit)();
-                }}
-                isLoading={loading}
-                disabled={isStepDisabled}
-                className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-xl"
-              >
-                Launch Gym Dashboard
-              </Button>
-            )}
-          </div>
-        </form>
-
-        <div className="mt-8 text-center text-xs text-slate-400 border-t border-slate-900 pt-5">
-          Already have an account?
-          <Link to="/login" className="text-primary hover:text-primary-hover font-semibold ml-1.5 transition-colors">
-            Login here &rarr;
-          </Link>
+          {step < 3 ? (
+            <Button
+              type="button"
+              onClick={handleNext}
+              className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-lg"
+              isLoading={loading}
+              disabled={isStepDisabled}
+            >
+              Save & Continue
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={async () => {
+                const valid = await trigger(stepRequiredFields[step]);
+                if (valid) handleSubmit(onSubmit)();
+              }}
+              isLoading={loading}
+              disabled={isStepDisabled}
+              className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-xl"
+            >
+              Launch Gym Dashboard
+            </Button>
+          )}
         </div>
+      </form>
+
+      <div className="mt-8 text-center text-xs text-slate-400 border-t border-slate-900 pt-5">
+        Already have an account?
+        <Link to="/login" className="text-primary hover:text-primary-hover font-semibold ml-1.5 transition-colors">
+          Login here &rarr;
+        </Link>
+      </div>
     </div>
   );
 };
