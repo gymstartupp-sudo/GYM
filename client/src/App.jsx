@@ -13,6 +13,7 @@ const ClientRegister = lazy(() => import('./pages/ClientRegister'));
 const RegistrationSuccess = lazy(() => import('./pages/RegistrationSuccess'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ManualTrigger = lazy(() => import('./pages/ManualTrigger'));
 
 // Owner - Lazy loaded for code splitting
 const OwnerLayout = lazy(() => import('./layouts/OwnerLayout'));
@@ -76,6 +77,7 @@ const AppContent = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/registration-success" element={<RegistrationSuccess />} />
+              <Route path="/manual-trigger" element={<ManualTrigger />} />
               
               {/* Owner Routes */}
               <Route path="/owner" element={<ProtectedRoute allowedRoles={['owner']}><OwnerLayout /></ProtectedRoute>}>

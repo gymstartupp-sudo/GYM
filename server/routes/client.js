@@ -57,5 +57,6 @@ router.put('/:id/approve', protect, authorize('owner'), [mongoIdValidation('id',
 router.put('/:id/deactivate', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.deactivateClient);
 router.put('/:id/reactivate', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.reactivateClient);
 router.post('/:id/send-reminder', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.sendManualReminder);
+router.post('/:id/send-overdue-reminder', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.sendManualReminder);
 
 module.exports = router;

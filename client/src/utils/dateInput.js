@@ -401,7 +401,7 @@ export const validateRegistrationStart = (isoDate, { minDate, maxDate } = {}) =>
 
   if (!isWithinBounds(parsed.date, minDate, maxDate)) {
     if (minDate && parsed.date < toLocalDate(minDate)) {
-      return 'Start date cannot be more than 30 days in the past';
+      return `Start date cannot be before ${formatIsoToDisplay(formatDateToYYYYMMDD(minDate))}`;
     }
     if (maxDate && parsed.date > toLocalDate(maxDate)) {
       return 'Start date cannot be more than 90 days in the future';

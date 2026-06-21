@@ -85,6 +85,20 @@ const runReminders = async () => {
       let twilioStatus = 'Skipped';
       let failureReason = '';
 
+      let remainingBalance = 0;
+      if (updatedClient.paymentStatus === 'partial' || updatedClient.paymentStatus === 'overdue') {
+        const activeMembership = [...(updatedClient.memberships || [])]
+          .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+          .find(m => {
+            const finalPrice = m.finalPrice || 0;
+            const totalPaid = m.totalPaid || 0;
+            return (finalPrice - totalPaid) > 0;
+          });
+        if (activeMembership) {
+          remainingBalance = (activeMembership.finalPrice || 0) - (activeMembership.totalPaid || 0);
+        }
+      }
+
       if (daysLeft === 3) {
         reminderType = 'Expiring Soon';
         if (!cleanMobile) {
@@ -105,7 +119,9 @@ const runReminders = async () => {
             failureReason = 'Reminder already sent today (Duplicate Prevention)';
           } else {
             // Send Expiring Soon Reminder
-            const msg = `Dear ${updatedClient.personalInfo.name}, your membership plan is expiring soon. Please renew your plan. Gym Name: ${updatedClient.gymName}. Days Left: ${daysLeft}.`;
+            const msg = remainingBalance > 0
+              ? `Hello ${updatedClient.personalInfo.name},\nYour membership will expire in 3 days.\nYou currently have a pending balance of ₹${remainingBalance}.\nPlease clear the pending balance and renew your membership before expiry.\nGym: ${updatedClient.gymName}`
+              : `Dear ${updatedClient.personalInfo.name}, your membership plan is expiring soon. Please renew your plan. Gym Name: ${updatedClient.gymName}. Days Left: ${daysLeft}.`;
 
             const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
             if (result && result.success) {
@@ -151,7 +167,10 @@ const runReminders = async () => {
           } else {
             // Send Expired Reminder
             const renewalLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}`;
-            const msg = `Dear ${updatedClient.personalInfo.name},\n\nYour membership has expired.\n\nPlease renew your membership using the link below.\n\nRenew Membership:\n${renewalLink}\n\nRegards,\n${updatedClient.gymName}`;
+            const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
+            const msg = remainingBalance > 0
+              ? `Hello ${updatedClient.personalInfo.name},\nYour membership has expired.\nYou still have an outstanding balance of ₹${remainingBalance}.\nPlease clear the pending amount and renew your membership.\nPay Pending Balance: ${paymentLink}\nGym: ${updatedClient.gymName}`
+              : `Dear ${updatedClient.personalInfo.name},\n\nYour membership has expired.\n\nPlease renew your membership using the link below.\n\nRenew Membership:\n${renewalLink}\n\nRegards,\n${updatedClient.gymName}`;
 
             const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
             if (result && result.success) {
@@ -194,8 +213,8 @@ const runReminders = async () => {
   }
 };
 
-// Run every day at 04:15 PM
-cron.schedule('30 16 * * *', async () => {
+// Run every day at 04:30 PM
+cron.schedule('14 01 * * *', async () => {
   console.log('Running daily automated reminderJob...');
   await runReminders();
 });

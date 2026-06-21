@@ -142,6 +142,16 @@ exports.recordPayment = async (req, res, next) => {
     const client = await Client.findOne({ _id: clientId, gymId: gymIdStr, isActive: true, 'membership.requestApproved': true });
     if (!client) return res.status(404).json({ success: false, message: 'Client not found, is deactivated, or is pending approval' });
 
+    // Block renewal/purchase if client has outstanding balance
+    const hasOutstandingBalance = client.memberships && client.memberships.some(m => {
+      const finalPrice = m.finalPrice || 0;
+      const totalPaid = m.totalPaid || 0;
+      return (finalPrice - totalPaid) > 0;
+    });
+    if (hasOutstandingBalance) {
+      return res.status(400).json({ success: false, message: 'Cannot renew or purchase a new membership. Please clear your outstanding balance first.' });
+    }
+
     const numAmount = Number(amount) || 0;
     const safePaidAmount = Number(paidAmount) || 0;
 
@@ -150,13 +160,10 @@ exports.recordPayment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero' });
     }
 
-    // 1. Validate Start Date (30 days past, 90 days future)
+    // 1. Validate Start Date (90 days future)
     if (startDate) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      const minDate = new Date(today);
-      minDate.setDate(today.getDate() - 30);
 
       const maxDate = new Date(today);
       maxDate.setDate(today.getDate() + 90);
@@ -164,45 +171,25 @@ exports.recordPayment = async (req, res, next) => {
       const startVal = new Date(startDate);
       startVal.setHours(0, 0, 0, 0);
 
-      if (startVal < minDate) {
-        return res.status(400).json({ success: false, message: 'Start date cannot be more than 30 days in the past' });
-      }
       if (startVal > maxDate) {
         return res.status(400).json({ success: false, message: 'Start date cannot be more than 90 days in the future' });
       }
     }
 
-    // 2. Validate Due Date
+    // 2. Validate and Auto-Calculate Due Date & 50% Minimum
     const remainingBalance = Math.max(0, numAmount - safePaidAmount);
+    let computedDueDate = null;
     if (remainingBalance > 0) {
-      if (!dueDate) {
-        return res.status(400).json({ success: false, message: 'Due Date is required for partial payments' });
+      if (safePaidAmount < (numAmount * 0.50)) {
+        return res.status(400).json({ success: false, message: 'You must pay at least 50% of the plan price for partial payment.' });
       }
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
+      const durationMonths = planDetails.durationMonths || 1;
       const startVal = new Date(startDate || Date.now());
       startVal.setHours(0, 0, 0, 0);
-
-      const dueVal = new Date(dueDate);
-      dueVal.setHours(0, 0, 0, 0);
-
-      // Expiry Date calculation
-      const { buildMembershipWindow } = require('../utils/membership');
-      const membershipWindow = buildMembershipWindow({ startDate: startVal, durationMonths: planDetails.durationMonths });
-      const endVal = new Date(membershipWindow.endDate);
-      endVal.setHours(0, 0, 0, 0);
-
-      if (dueVal < today) {
-        return res.status(400).json({ success: false, message: 'Due Date cannot be in the past' });
-      }
-      if (dueVal < startVal) {
-        return res.status(400).json({ success: false, message: 'Due Date cannot be earlier than the membership Start Date' });
-      }
-      if (dueVal > endVal) {
-        return res.status(400).json({ success: false, message: `Due Date cannot exceed the membership Expiry Date (${endVal.toLocaleDateString('en-GB')})` });
-      }
+      computedDueDate = new Date(startVal);
+      computedDueDate.setDate(computedDueDate.getDate() + (durationMonths <= 6 ? 15 : 30));
+      computedDueDate.setHours(0, 0, 0, 0);
     }
 
     // FIX: Idempotency key check (replaces fragile 5-second window)
@@ -238,9 +225,6 @@ exports.recordPayment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Partial payments are disabled. Payment must be made in full.' });
     }
 
-    // ISSUE 3: Automatically clear dueDate when remainingBalance becomes 0
-    const computedDueDate = (safePaidAmount >= numAmount) ? null : (dueDate ? new Date(dueDate) : null);
-
     // Create/Update membership in client document
     let activatedPlan = await assignOrRenewPlan(client, planId, startDate, {
       amount: numAmount,
@@ -274,6 +258,34 @@ exports.recordPayment = async (req, res, next) => {
       razorpay_payment_id: razorpay_payment_id || null
     });
 
+    // Reset reminder flags and set overdueReminders
+    client.expiryReminderSent = false;
+    client.expiredReminderSent = false;
+    client.expiryReminderStatus = 'none';
+    client.expiredReminderStatus = 'none';
+    client.expiryReminderError = null;
+    client.expiredReminderError = null;
+    client.expiryReminderSentAt = null;
+    client.expiredReminderSentAt = null;
+    if (client.membership) {
+      client.membership.expiryReminderSent = false;
+      client.membership.expiredReminderSent = false;
+      client.membership.expiryReminderStatus = 'none';
+      client.membership.expiredReminderStatus = 'none';
+      client.membership.expiryReminderError = null;
+      client.membership.expiredReminderError = null;
+      client.membership.expiryReminderSentAt = null;
+      client.membership.expiredReminderSentAt = null;
+    }
+
+    client.overdueReminders = {
+      reminder1: { status: 'none', sentAt: null, error: null },
+      reminder2: { status: 'none', sentAt: null, error: null },
+      reminder3: { status: 'none', sentAt: null, error: null },
+      manualReminders: [],
+      workflowCompleted: (safePaidAmount >= numAmount)
+    };
+
     client.paymentHistory.push(payment._id);
     await client.save();
 
@@ -291,28 +303,6 @@ exports.recordPayment = async (req, res, next) => {
     }
 
     await syncClientStatus(client._id);
-
-    // Reset reminder flags after successful payment renewal
-    await Client.findByIdAndUpdate(client._id, {
-      $set: {
-        'expiryReminderSent': false,
-        'expiredReminderSent': false,
-        'expiryReminderStatus': 'none',
-        'expiredReminderStatus': 'none',
-        'expiryReminderError': null,
-        'expiredReminderError': null,
-        'expiryReminderSentAt': null,
-        'expiredReminderSentAt': null,
-        'membership.expiryReminderSent': false,
-        'membership.expiredReminderSent': false,
-        'membership.expiryReminderStatus': 'none',
-        'membership.expiredReminderStatus': 'none',
-        'membership.expiryReminderError': null,
-        'membership.expiredReminderError': null,
-        'membership.expiryReminderSentAt': null,
-        'membership.expiredReminderSentAt': null
-      }
-    });
 
     res.status(201).json({ success: true, data: payment });
   } catch (err) {
@@ -446,6 +436,11 @@ exports.updatePayment = async (req, res, next) => {
     });
     const actualPrevTotalPaid = allRelated.reduce((sum, p) => sum + (p.paidNow || p.paidAmount || 0), 0);
 
+    const outstandingBalance = Math.max(0, invAmt - actualPrevTotalPaid);
+    if (addedAmount < outstandingBalance) {
+      return res.status(400).json({ success: false, message: 'Partial payments are disabled for balance payments. You must pay the full remaining balance.' });
+    }
+
     const currentTotalPaid = actualPrevTotalPaid + addedAmount;
     const currentBalance = Math.max(0, invAmt - currentTotalPaid);
     const newStatus = currentBalance === 0 ? 'paid' : 'partial';
@@ -498,6 +493,17 @@ exports.updatePayment = async (req, res, next) => {
             client.memberships[mIdx].dueDate = null;
           }
         }
+      }
+      if (currentBalance === 0) {
+        if (!client.overdueReminders) {
+          client.overdueReminders = {
+            reminder1: { status: 'none', sentAt: null, error: null },
+            reminder2: { status: 'none', sentAt: null, error: null },
+            reminder3: { status: 'none', sentAt: null, error: null },
+            manualReminders: []
+          };
+        }
+        client.overdueReminders.workflowCompleted = true;
       }
       await client.save();
     }

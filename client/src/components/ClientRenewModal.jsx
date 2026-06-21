@@ -120,6 +120,27 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
     }
   }, [allowPartialPayments, isOpen, selectedPlan, detectedPendingPayment]);
 
+  const computedDueDateVal = React.useMemo(() => {
+    if (!selectedPlan || !renewalForm.startDate) return '';
+    try {
+      const d = new Date(renewalForm.startDate);
+      if (isNaN(d.getTime())) return '';
+      d.setDate(d.getDate() + (selectedPlan.durationMonths <= 6 ? 15 : 30));
+      return d.toISOString().split('T')[0];
+    } catch (e) {
+      return '';
+    }
+  }, [renewalForm.startDate, selectedPlan]);
+
+  useEffect(() => {
+    if (paymentType === 'partial' && !detectedPendingPayment) {
+      setRenewalForm(prev => ({
+        ...prev,
+        dueDate: computedDueDateVal
+      }));
+    }
+  }, [paymentType, detectedPendingPayment, computedDueDateVal]);
+
   useEffect(() => {
     if (isOpen && profile) {
       loadRenewalData();
@@ -251,6 +272,13 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
       return;
     }
 
+    if (!detectedPendingPayment && paymentType === 'partial') {
+      if (paid < maxLimit * 0.50) {
+        alert("You must pay at least 50% of the plan price for partial payment.");
+        return;
+      }
+    }
+
     if (paymentType === 'partial' && paid < maxLimit) {
       if (!renewalForm.dueDate) {
         alert("Due Date is required for partial payments");
@@ -270,10 +298,6 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
       const end = calculateEndDate(renewalForm.startDate, duration);
       if (end) end.setHours(0, 0, 0, 0);
 
-      if (due < today) {
-        alert("Due Date cannot be in the past.");
-        return;
-      }
       if (due < start) {
         alert("Due Date cannot be earlier than the membership Start Date.");
         return;
@@ -599,7 +623,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
               {/* Payment Type Toggles */}
               <div className="bg-gray-800/20 p-4 rounded-xl border border-gray-800 space-y-4 animate-in fade-in duration-200">
-                {allowPartialPayments && (
+                {allowPartialPayments && !detectedPendingPayment && (
                   <div>
                     <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
                     <div className="flex gap-2">
@@ -674,19 +698,13 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                       ) : selectedPlan.price
                     ) && (
                         <>
-                          <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
-                            Due Date <span className="text-rose-500">*</span>
-                          </label>
-                          <CustomDatePicker
-                            required
-                            validationRule={DATE_RULES.DEFAULT}
-                            disabled={isPaying}
-                            className={`w-full bg-dark border rounded-xl p-3 text-white font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in duration-200 ${dateErrors.dueDate ? 'border-red-500' : 'border-amber-500/50'}`}
-                            value={renewalForm.dueDate}
-                            onChange={(e) => handleRenewalDateChange('dueDate', e)}
-                            onValidationError={(message) => handleDateValidationError('dueDate', message)}
-                          />
-                          {dateErrors.dueDate && <p className="text-red-500 text-xs mt-1">{dateErrors.dueDate}</p>}
+                           <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
+                             Calculated Due Date
+                           </label>
+                           <div className="w-full bg-gray-800/30 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-dark flex items-center justify-between animate-in fade-in duration-200">
+                             <span>{formatDisplayDate(renewalForm.dueDate)}</span>
+                             <Calendar size={14} className="opacity-30" />
+                           </div>
                         </>
                       )}
                   </div>

@@ -71,15 +71,9 @@ const clientRegisterValidation = [
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const minDate = new Date(today);
-    minDate.setDate(today.getDate() - 30);
-
     const maxDate = new Date(today);
     maxDate.setDate(today.getDate() + 90);
 
-    if (value < minDate) {
-      throw new Error('Start date cannot be more than 30 days in the past');
-    }
     if (value > maxDate) {
       throw new Error('Start date cannot be more than 90 days in the future');
     }
