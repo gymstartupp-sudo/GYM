@@ -44,7 +44,11 @@ const LoginPage = () => {
 
             toast.success("Welcome Back!");
         } catch (error) {
-            toast.error(error.response?.data?.message || "Invalid credentials");
+            if (!error.response) {
+                toast.error("Network error: Server is unreachable. Please try again.");
+            } else {
+                toast.error(error.response.data?.message || "Invalid credentials");
+            }
         } finally {
             setLoading(false);
         }

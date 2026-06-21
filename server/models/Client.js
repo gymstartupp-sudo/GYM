@@ -79,6 +79,9 @@ clientSchema.index({ gymId: 1, isActive: 1, paymentStatus: 1 });
 
 clientSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();
+  if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$') || this.password.startsWith('$2y$')) {
+    return next();
+  }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();

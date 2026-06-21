@@ -335,7 +335,10 @@ exports.addClient = async (req, res, next) => {
     });
 
     client.paymentHistory = [paymentRecord._id];
-    await client.save();
+    await Client.updateOne(
+      { _id: client._id },
+      { $set: { paymentHistory: [paymentRecord._id] } }
+    );
     
     const enriched = calculateBalances(client, [paymentRecord]);
     res.status(201).json({ success: true, data: enriched });
