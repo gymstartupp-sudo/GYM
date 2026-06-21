@@ -228,13 +228,10 @@ exports.addClient = async (req, res, next) => {
       }
     }
 
-    // Validate Start Date (30 days past, 90 days future)
+    // Validate Start Date (90 days future)
     if (membership?.startDate) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      const minDate = new Date(today);
-      minDate.setDate(today.getDate() - 30);
 
       const maxDate = new Date(today);
       maxDate.setDate(today.getDate() + 90);
@@ -242,9 +239,6 @@ exports.addClient = async (req, res, next) => {
       const startVal = new Date(membership.startDate);
       startVal.setHours(0, 0, 0, 0);
 
-      if (startVal < minDate) {
-        return res.status(400).json({ success: false, message: 'Start date cannot be more than 30 days in the past' });
-      }
       if (startVal > maxDate) {
         return res.status(400).json({ success: false, message: 'Start date cannot be more than 90 days in the future' });
       }
@@ -277,40 +271,30 @@ exports.addClient = async (req, res, next) => {
     const paidAmountVal = Number(payment.paidAmount) || 0;
     const remainingBalanceVal = Math.max(0, planPriceVal - paidAmountVal);
 
+    let resolvedDueDate = null;
     if (remainingBalanceVal > 0) {
-      if (!payment.dueDate) {
-        return res.status(400).json({ success: false, message: 'Due Date is required for partial payments' });
+      if (paidAmountVal < (planPriceVal * 0.50)) {
+        return res.status(400).json({ success: false, message: 'You must pay at least 50% of the plan price for partial payment.' });
       }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
 
       const startVal = new Date(membership?.startDate || Date.now());
       startVal.setHours(0, 0, 0, 0);
-
-      const dueVal = new Date(payment.dueDate);
-      dueVal.setHours(0, 0, 0, 0);
-
-      const endVal = new Date(membershipWindow.endDate);
-      endVal.setHours(0, 0, 0, 0);
-
-      if (dueVal < today) {
-        return res.status(400).json({ success: false, message: 'Due Date cannot be in the past' });
-      }
-      if (dueVal < startVal) {
-        return res.status(400).json({ success: false, message: 'Due Date cannot be earlier than the membership Start Date' });
-      }
-      if (dueVal > endVal) {
-        return res.status(400).json({ success: false, message: `Due Date cannot exceed the membership Expiry Date (${endVal.toLocaleDateString('en-GB')})` });
-      }
+      resolvedDueDate = new Date(startVal);
+      resolvedDueDate.setDate(resolvedDueDate.getDate() + (planDurationMonths <= 6 ? 15 : 30));
+      resolvedDueDate.setHours(0, 0, 0, 0);
     }
-
-    const resolvedDueDate = remainingBalanceVal === 0 ? null : (payment.dueDate ? new Date(payment.dueDate) : null);
 
     const client = await Client.create({
       clientId, gymId: gymIdStr, gymName: gymNameStr, personalInfo, password,
       avatar: personalInfo.name.charAt(0).toUpperCase(),
       paymentStatus: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
+      overdueReminders: {
+        reminder1: { status: 'none', sentAt: null, error: null },
+        reminder2: { status: 'none', sentAt: null, error: null },
+        reminder3: { status: 'none', sentAt: null, error: null },
+        manualReminders: [],
+        workflowCompleted: (remainingBalanceVal === 0)
+      },
       memberships: [{
         planId, planName, planDurationMonths, startDate: membershipWindow.startDate, endDate: membershipWindow.endDate,
         finalPrice: planPrice, totalPaid: payment.paidAmount, dueDate: resolvedDueDate
@@ -567,51 +551,33 @@ exports.approveClient = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Partial payments are disabled. Payment must be made in full.' });
     }
 
-    // Validate Start Date (30 days past, 90 days future)
+    // Validate Start Date (90 days future)
     const startCheck = new Date(startDateVal);
     startCheck.setHours(0, 0, 0, 0);
 
     const todayCheck = new Date();
     todayCheck.setHours(0, 0, 0, 0);
 
-    const minDateCheck = new Date(todayCheck);
-    minDateCheck.setDate(todayCheck.getDate() - 30);
-
     const maxDateCheck = new Date(todayCheck);
     maxDateCheck.setDate(todayCheck.getDate() + 90);
 
-    if (startCheck < minDateCheck) {
-      return res.status(400).json({ success: false, message: 'Start date cannot be more than 30 days in the past' });
-    }
     if (startCheck > maxDateCheck) {
       return res.status(400).json({ success: false, message: 'Start date cannot be more than 90 days in the future' });
     }
 
-    // Validate Due Date
+    // Validate and Auto-Calculate Due Date & 50% Minimum
+    let resolvedDueDate = null;
     if (remainingBalance > 0) {
-      if (!dueDateVal) {
-        return res.status(400).json({ success: false, message: 'Due Date is required for partial payments' });
+      if (paidAmount < (planPrice * 0.50)) {
+        return res.status(400).json({ success: false, message: 'You must pay at least 50% of the plan price for partial payment.' });
       }
 
-      const due = new Date(dueDateVal);
-      due.setHours(0, 0, 0, 0);
-
-      const end = new Date(membershipWindow.endDate);
-      end.setHours(0, 0, 0, 0);
-
-      if (due < todayCheck) {
-        return res.status(400).json({ success: false, message: 'Due Date cannot be in the past' });
-      }
-      if (due < startCheck) {
-        return res.status(400).json({ success: false, message: 'Due Date cannot be earlier than the membership Start Date' });
-      }
-      if (due > end) {
-        return res.status(400).json({ success: false, message: `Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')})` });
-      }
+      resolvedDueDate = new Date(startCheck);
+      resolvedDueDate.setDate(resolvedDueDate.getDate() + (planDurationMonths <= 6 ? 15 : 30));
+      resolvedDueDate.setHours(0, 0, 0, 0);
     }
 
     const resolvedStatus = paidAmount >= planPrice ? 'paid' : (paidAmount > 0 ? 'partial' : 'overdue');
-    const resolvedDueDate = remainingBalance === 0 ? null : (dueDateVal ? new Date(dueDateVal) : null);
 
     const paymentRecord = await Payment.create({
       paymentId,
@@ -656,6 +622,14 @@ exports.approveClient = async (req, res, next) => {
     client.membership.planName = planName;
     client.membership.planDurationMonths = planDurationMonths;
     client.membership.durationMonths = planDurationMonths; // backward compat
+
+    client.overdueReminders = {
+      reminder1: { status: 'none', sentAt: null, error: null },
+      reminder2: { status: 'none', sentAt: null, error: null },
+      reminder3: { status: 'none', sentAt: null, error: null },
+      manualReminders: [],
+      workflowCompleted: (remainingBalance === 0)
+    };
 
     if (!client.paymentHistory) client.paymentHistory = [];
     client.paymentHistory.push(paymentRecord._id);
@@ -723,6 +697,11 @@ exports.sendManualReminder = async (req, res, next) => {
     const finalPrice = Number(membership?.finalPrice || 0);
     const totalPaid = Number(membership?.totalPaid || membership?.paidAmount || 0);
     const balance = finalPrice - totalPaid;
+
+    if (balance <= 0) {
+      return res.status(400).json({ success: false, message: 'Client has no pending balance' });
+    }
+
     const planName = membership?.planName || 'No Plan';
     const dueDate = membership?.dueDate
       ? new Date(membership.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')
@@ -749,13 +728,41 @@ Thank you.`;
 
     const result = await sendWhatsApp({ phone, message });
 
+    // Initialize overdueReminders if needed
+    if (!client.overdueReminders) {
+      client.overdueReminders = {
+        reminder1: { status: 'none', sentAt: null, error: null },
+        reminder2: { status: 'none', sentAt: null, error: null },
+        reminder3: { status: 'none', sentAt: null, error: null },
+        manualReminders: [],
+        workflowCompleted: false
+      };
+    }
+    if (!client.overdueReminders.manualReminders) {
+      client.overdueReminders.manualReminders = [];
+    }
+
     if (result && result.success) {
+      client.overdueReminders.manualReminders.push({
+        sentAt: new Date(),
+        status: 'sent',
+        error: null
+      });
+      await client.save();
       res.status(200).json({ success: true, message: 'Reminder sent successfully' });
     } else {
+      client.overdueReminders.manualReminders.push({
+        sentAt: new Date(),
+        status: 'failed',
+        error: result?.error || 'Unknown error'
+      });
+      await client.save();
       res.status(500).json({ success: false, message: 'Failed to send reminder', error: result?.error });
     }
   } catch (err) {
     next(err);
   }
 };
+
+exports.sendOverdueReminder = exports.sendManualReminder;
 

@@ -10,12 +10,19 @@ const RenewalRedirect = () => {
   useEffect(() => {
     if (loading) return;
 
+    const isBalance = window.location.search.includes('balance=true');
+    const search = window.location.search || '';
+
     if (user && role === 'client') {
-      navigate('/client?renew=true', { replace: true });
+      if (isBalance) {
+        navigate('/client?renew=true&balance=true', { replace: true });
+      } else {
+        navigate('/client?renew=true', { replace: true });
+      }
     } else if (user && role === 'owner') {
       navigate('/owner/dues', { replace: true });
     } else {
-      navigate(`/login?redirect=/client/renew/${clientId}`, { replace: true });
+      navigate(`/login?redirect=/client/renew/${clientId}${search}`, { replace: true });
     }
   }, [user, role, loading, clientId, navigate]);
 

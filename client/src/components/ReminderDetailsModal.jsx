@@ -2,7 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Check, AlertTriangle, Clock } from 'lucide-react';
 
-const ReminderDetailsModal = ({ isOpen, onClose, client }) => {
+const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   if (!isOpen || !client) return null;
 
   const name = client?.personalInfo?.name || 'Client';
@@ -38,8 +38,31 @@ const ReminderDetailsModal = ({ isOpen, onClose, client }) => {
   const expirySent = fmt(expirySentAt);
   const expiredSent = fmt(expiredSentAt);
 
+  // Check if this modal is showing overdue/dues timeline
+  const isDuesTimeline = activeTab && (
+    activeTab.startsWith('reminder') || 
+    activeTab === 'dues' || 
+    activeTab === 'pending' || 
+    activeTab === 'overdue'
+  );
+
+  // Retrieve memberships details for dues
+  const membershipsWithDues = client.memberships?.filter(m => (m.finalPrice - m.totalPaid) > 0) || [];
+  const hasDues = membershipsWithDues.length > 0 || client.paymentStatus === 'partial' || client.paymentStatus === 'overdue';
+
+  const outstandingMembership = [...(client.memberships || [])]
+    .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+    .find(m => (m.finalPrice - m.totalPaid) > 0);
+
+  const duesPlanName = outstandingMembership?.planName || planName;
+  const duesStartDate = outstandingMembership?.startDate || startDate;
+  const duesDueDate = outstandingMembership?.dueDate;
+  const duesFinalPrice = outstandingMembership?.finalPrice || 0;
+  const duesTotalPaid = outstandingMembership?.totalPaid || 0;
+  const duesBalance = duesFinalPrice - duesTotalPaid;
+
   const StatusBadge = ({ status }) => {
-    if (status === 'sent') return (
+    if (status === 'sent' || status === 'success') return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/20">
         <Check size={10} /> Sent
       </span>
@@ -88,111 +111,305 @@ const ReminderDetailsModal = ({ isOpen, onClose, client }) => {
             </div>
             <div>
               <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Plan</p>
-              <p className="text-sm font-semibold text-text-primary">{planName}</p>
+              <p className="text-sm font-semibold text-text-primary">{isDuesTimeline ? duesPlanName : planName}</p>
             </div>
             <div>
-              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Days Left</p>
-              <p className="text-sm font-semibold text-text-primary">{daysLeft}</p>
+              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">
+                {isDuesTimeline ? 'Outstanding' : 'Days Left'}
+              </p>
+              <p className="text-sm font-semibold text-text-primary">
+                {isDuesTimeline ? `₹${duesBalance}` : daysLeft}
+              </p>
             </div>
           </div>
 
-          {/* Vertical Timeline */}
-          <div className="relative pl-5">
-            {/* Vertical line */}
-            <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-border" />
+          {/* Timeline */}
+          {isDuesTimeline ? (
+            /* Overdue / Dues Timeline */
+            <div className="relative pl-5">
+              <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-border" />
 
-            {/* Step 1: Membership Active */}
-            <div className="relative flex items-start gap-3 mb-5">
-              <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
-                <Check size={9} strokeWidth={3} />
-              </div>
-              <div className="flex-1 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-text-primary">Membership Active</p>
+              {/* Step 1: Partial Payment Created */}
+              <div className="relative flex items-start gap-3 mb-5">
+                <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
+                  <Check size={9} strokeWidth={3} />
                 </div>
-                <span className="text-xs text-text-secondary font-medium">{formatDate(startDate)}</span>
-              </div>
-            </div>
-
-            {/* Step 2: Expiring Soon Reminder */}
-            <div className="relative flex items-start gap-3 mb-5">
-              <div className="relative z-10 shrink-0">
-                {expiryStatus === 'sent' ? (
-                  <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
-                    <Check size={9} strokeWidth={3} />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-text-primary">Partial Payment Created</p>
+                    <span className="text-xs text-text-secondary font-medium">{formatDate(duesStartDate)}</span>
                   </div>
-                ) : expiryStatus === 'failed' ? (
-                  <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
-                    <AlertTriangle size={9} strokeWidth={3} />
-                  </div>
-                ) : (
-                  <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
-                    <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-text-primary">Expiring Soon Reminder</p>
-                  <StatusBadge status={expiryStatus} />
+                  <p className="text-xs text-text-muted mt-1">
+                    Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> | Remaining: <span className="text-primary font-bold">₹{duesBalance}</span> | Due: <span className="text-amber-500 font-medium">{formatDate(duesDueDate)}</span>
+                  </p>
                 </div>
-                {expiryStatus === 'sent' && expirySent && (
-                  <p className="text-xs text-text-muted mt-1">{expirySent.date} {expirySent.time}</p>
-                )}
-                {expiryStatus === 'failed' && (
-                  <p className="text-xs text-danger mt-1">{expiryError || 'Delivery failed'}</p>
-                )}
-                {expiryStatus === 'none' && (
-                  <p className="text-xs text-text-muted mt-1 italic">Not yet triggered</p>
-                )}
               </div>
-            </div>
 
-            {/* Step 3: Membership Expired */}
-            <div className="relative flex items-start gap-3 mb-5">
-              <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
-                <Check size={9} strokeWidth={3} />
-              </div>
-              <div className="flex-1 flex items-center justify-between">
-                <p className="text-sm font-bold text-text-primary">Membership Expired</p>
-                <span className="text-xs text-text-secondary font-medium">{formatDate(endDate)}</span>
-              </div>
-            </div>
-
-            {/* Step 4: Expired Reminder */}
-            <div className="relative flex items-start gap-3">
-              <div className="relative z-10 shrink-0">
-                {expiredStatus === 'sent' ? (
-                  <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
-                    <Check size={9} strokeWidth={3} />
-                  </div>
-                ) : expiredStatus === 'failed' ? (
-                  <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
-                    <AlertTriangle size={9} strokeWidth={3} />
-                  </div>
-                ) : (
-                  <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
-                    <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-text-primary">Expired Reminder</p>
-                  <StatusBadge status={expiredStatus} />
+              {/* Step 2: Overdue Reminder 1 (3 days before due date) */}
+              <div className="relative flex items-start gap-3 mb-5">
+                <div className="relative z-10 shrink-0">
+                  {client.overdueReminders?.reminder1?.status === 'sent' ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : client.overdueReminders?.reminder1?.status === 'failed' ? (
+                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                      <AlertTriangle size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
                 </div>
-                {expiredStatus === 'sent' && expiredSent && (
-                  <p className="text-xs text-text-muted mt-1">{expiredSent.date} {expiredSent.time}</p>
-                )}
-                {expiredStatus === 'failed' && (
-                  <p className="text-xs text-danger mt-1">{expiredError || 'Delivery failed'}</p>
-                )}
-                {expiredStatus === 'none' && (
-                  <p className="text-xs text-text-muted mt-1 italic">Not yet triggered</p>
-                )}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-text-primary">Overdue Reminder 1</p>
+                    <StatusBadge status={client.overdueReminders?.reminder1?.status} />
+                  </div>
+                  {client.overdueReminders?.reminder1?.status === 'sent' && (
+                    <p className="text-xs text-text-muted mt-1">
+                      {formatDate(client.overdueReminders.reminder1.sentAt)} {fmt(client.overdueReminders.reminder1.sentAt)?.time}
+                    </p>
+                  )}
+                  {client.overdueReminders?.reminder1?.status === 'failed' && (
+                    <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder1.error || 'Delivery failed'}</p>
+                  )}
+                  {(!client.overdueReminders?.reminder1?.status || client.overdueReminders.reminder1.status === 'none') && (
+                    <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered 3 days before due date)</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 3: Overdue Reminder 2 (on due date) */}
+              <div className="relative flex items-start gap-3 mb-5">
+                <div className="relative z-10 shrink-0">
+                  {client.overdueReminders?.reminder2?.status === 'sent' ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : client.overdueReminders?.reminder2?.status === 'failed' ? (
+                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                      <AlertTriangle size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-text-primary">Overdue Reminder 2</p>
+                    <StatusBadge status={client.overdueReminders?.reminder2?.status} />
+                  </div>
+                  {client.overdueReminders?.reminder2?.status === 'sent' && (
+                    <p className="text-xs text-text-muted mt-1">
+                      {formatDate(client.overdueReminders.reminder2.sentAt)} {fmt(client.overdueReminders.reminder2.sentAt)?.time}
+                    </p>
+                  )}
+                  {client.overdueReminders?.reminder2?.status === 'failed' && (
+                    <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder2.error || 'Delivery failed'}</p>
+                  )}
+                  {(!client.overdueReminders?.reminder2?.status || client.overdueReminders.reminder2.status === 'none') && (
+                    <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered on due date)</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 4: Overdue Reminder 3 (3 days after due date) */}
+              <div className="relative flex items-start gap-3 mb-5">
+                <div className="relative z-10 shrink-0">
+                  {client.overdueReminders?.reminder3?.status === 'sent' ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : client.overdueReminders?.reminder3?.status === 'failed' ? (
+                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                      <AlertTriangle size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-text-primary">Overdue Reminder 3</p>
+                    <StatusBadge status={client.overdueReminders?.reminder3?.status} />
+                  </div>
+                  {client.overdueReminders?.reminder3?.status === 'sent' && (
+                    <p className="text-xs text-text-muted mt-1">
+                      {formatDate(client.overdueReminders.reminder3.sentAt)} {fmt(client.overdueReminders.reminder3.sentAt)?.time}
+                    </p>
+                  )}
+                  {client.overdueReminders?.reminder3?.status === 'failed' && (
+                    <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder3.error || 'Delivery failed'}</p>
+                  )}
+                  {(!client.overdueReminders?.reminder3?.status || client.overdueReminders.reminder3.status === 'none') && (
+                    <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered 3 days after due date)</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 5: Dues Payment Status */}
+              <div className="relative flex items-start gap-3">
+                <div className="relative z-10 shrink-0">
+                  {client.overdueReminders?.workflowCompleted ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-text-primary">
+                      {client.overdueReminders?.workflowCompleted ? 'Dues Cleared' : 'Dues Outstanding'}
+                    </p>
+                    {client.overdueReminders?.workflowCompleted ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/20">
+                        Paid
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                        Unpaid
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-muted mt-1">
+                    {client.overdueReminders?.workflowCompleted 
+                      ? 'The pending balance was paid in full.' 
+                      : `Remaining balance of ₹${duesBalance} is still outstanding.`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Manual Reminders Section */}
+              {client.overdueReminders?.manualReminders?.length > 0 && (
+                <div className="mt-6 border-t border-border pt-4">
+                  <h4 className="text-[10px] font-black uppercase text-text-muted mb-3 tracking-widest">Manual Reminders History</h4>
+                  <div className="space-y-2">
+                    {client.overdueReminders.manualReminders.map((r, i) => (
+                      <div key={i} className="flex justify-between items-center bg-surface-divider/40 p-2.5 rounded-lg border border-border/50 text-xs">
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={r.status} />
+                          {r.error && <span className="text-[10px] text-red-400 font-medium ml-1">{r.error}</span>}
+                        </div>
+                        <span className="text-text-muted">{formatDate(r.sentAt)} {fmt(r.sentAt)?.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Standard Membership Expiry Timeline */
+            <div className="relative pl-5">
+              {/* Vertical line */}
+              <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-border" />
+
+              {/* Step 1: Membership Active */}
+              <div className="relative flex items-start gap-3 mb-5">
+                <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
+                  <Check size={9} strokeWidth={3} />
+                </div>
+                <div className="flex-1 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">Membership Active</p>
+                  </div>
+                  <span className="text-xs text-text-secondary font-medium">{formatDate(startDate)}</span>
+                </div>
+              </div>
+
+              {/* Step 2: Expiring Soon Reminder */}
+              <div className="relative flex items-start gap-3 mb-5">
+                <div className="relative z-10 shrink-0">
+                  {expiryStatus === 'sent' ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : expiryStatus === 'failed' ? (
+                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                      <AlertTriangle size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-text-primary">
+                      {hasDues ? 'Expiring Soon Reminder + Pending Balance' : 'Expiring Soon Reminder'}
+                    </p>
+                    <StatusBadge status={expiryStatus} />
+                  </div>
+                  {expiryStatus === 'sent' && expirySent && (
+                    <p className="text-xs text-text-muted mt-1">{expirySent.date} {expirySent.time}</p>
+                  )}
+                  {expiryStatus === 'failed' && (
+                    <p className="text-xs text-danger mt-1">{expiryError || 'Delivery failed'}</p>
+                  )}
+                  {expiryStatus === 'none' && (
+                    <p className="text-xs text-text-muted mt-1 italic">Not yet triggered</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Step 3: Membership Expired */}
+              <div className="relative flex items-start gap-3 mb-5">
+                <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
+                  <Check size={9} strokeWidth={3} />
+                </div>
+                <div className="flex-1 flex items-center justify-between">
+                  <p className="text-sm font-bold text-text-primary">Membership Expired</p>
+                  <span className="text-xs text-text-secondary font-medium">{formatDate(endDate)}</span>
+                </div>
+              </div>
+
+              {/* Step 4: Expired Reminder */}
+              <div className="relative flex items-start gap-3">
+                <div className="relative z-10 shrink-0">
+                  {expiredStatus === 'sent' ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : expiredStatus === 'failed' ? (
+                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                      <AlertTriangle size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-text-primary">
+                      {hasDues ? 'Expired Reminder + Pending Balance' : 'Expired Reminder'}
+                    </p>
+                    <StatusBadge status={expiredStatus} />
+                  </div>
+                  {expiredStatus === 'sent' && expiredSent && (
+                    <p className="text-xs text-text-muted mt-1">{expiredSent.date} {expiredSent.time}</p>
+                  )}
+                  {expiredStatus === 'failed' && (
+                    <p className="text-xs text-danger mt-1">{expiredError || 'Delivery failed'}</p>
+                  )}
+                  {expiredStatus === 'none' && (
+                    <p className="text-xs text-text-muted mt-1 italic">Not yet triggered</p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>,

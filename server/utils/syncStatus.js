@@ -46,6 +46,15 @@ const syncClientStatus = async (clientId) => {
       client.paymentStatus = 'partial';
     } else {
       client.paymentStatus = 'paid';
+      if (!client.overdueReminders) {
+        client.overdueReminders = {
+          reminder1: { status: 'none', sentAt: null, error: null },
+          reminder2: { status: 'none', sentAt: null, error: null },
+          reminder3: { status: 'none', sentAt: null, error: null },
+          manualReminders: []
+        };
+      }
+      client.overdueReminders.workflowCompleted = true;
     }
 
     // ── 2. Synchronize `client.membership` (singular) from `memberships[]` ──

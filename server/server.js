@@ -97,6 +97,7 @@ const seedSuperAdmin = async () => {
 // Start jobs
 require('./jobs/statusUpdater');
 require('./jobs/reminderJob');
+require('./jobs/overdueReminderJob');
 
 // Health Check
 app.get("/", (req, res) => res.send("API running"));
@@ -111,6 +112,7 @@ app.use('/api/overdue', require('./routes/overdue'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/expenses', require('./routes/expense'));
 app.use('/api/feedback', require('./routes/feedback'));
+app.use('/api/trigger', require('./routes/trigger'));
 
 // Error Handler Middleware
 app.use(errorHandler);

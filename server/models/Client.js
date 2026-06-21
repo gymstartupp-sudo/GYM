@@ -61,6 +61,29 @@ const clientSchema = new mongoose.Schema({
     expiryReminderSentAt: { type: Date, default: null },
     expiredReminderSentAt: { type: Date, default: null }
   },
+  overdueReminders: {
+    reminder1: {
+      status: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+      sentAt: { type: Date, default: null },
+      error: { type: String, default: null }
+    },
+    reminder2: {
+      status: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+      sentAt: { type: Date, default: null },
+      error: { type: String, default: null }
+    },
+    reminder3: {
+      status: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+      sentAt: { type: Date, default: null },
+      error: { type: String, default: null }
+    },
+    manualReminders: [{
+      sentAt: { type: Date },
+      status: { type: String, enum: ['sent', 'failed'] },
+      error: { type: String, default: null }
+    }],
+    workflowCompleted: { type: Boolean, default: false }
+  },
   paymentHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
   avatar: { type: String },
   isActive: { type: Boolean, default: true },

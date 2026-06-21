@@ -94,7 +94,21 @@ const ClientHome = () => {
         </div>
       </div>
 
-      <div className="card space-y-6 bg-surface-secondary border-border shadow-xl rounded-2xl p-6 md:p-8">
+      {pendingPmt && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-6 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="space-y-1">
+            <h3 className="text-md font-bold text-amber-400">Outstanding Balance Pending</h3>
+            <p className="text-text-secondary text-xs">
+              Please clear your pending balance of <span className="text-text-primary font-bold">₹{pendingPmt.remainingBalance}</span> before renewing your membership.
+            </p>
+          </div>
+          <Button type="button" onClick={() => setShowRenewModal(true)} className="bg-amber-500 hover:bg-amber-600 text-gray-950 font-black text-xs uppercase tracking-widest shrink-0">
+            Pay Pending Balance
+          </Button>
+        </div>
+      )}
+
+      <div className="card space-y-6 bg-surface-secondary border-border shadow-xl rounded-2xl p-6 md:p-8 mt-6">
         <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4 flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Membership Info
         </h2>

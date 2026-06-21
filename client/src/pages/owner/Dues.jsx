@@ -516,9 +516,13 @@ const Dues = () => {
                                                             )}
                                                         </button>
                                                     )}
-                                                    {(activeTab === 'overdue' || activeTab === 'expired' || activeTab === 'expiring') && due.rawClient && (
+                                                    {due.rawClient && (
                                                         <ReminderTimeline
                                                             client={due.rawClient}
+                                                            mode={
+                                                                activeTab === 'pending' ? 'pending' :
+                                                                activeTab === 'overdue' ? 'overdue' : 'membership'
+                                                            }
                                                             onCircleClick={(c, tab) => { setReminderModalClient(c); setReminderModalTab(tab); }}
                                                         />
                                                     )}

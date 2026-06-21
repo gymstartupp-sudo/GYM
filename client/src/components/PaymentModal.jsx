@@ -22,6 +22,18 @@ const toLocalYYYYMMDD = (val) => {
     }
 };
 
+const calculateDueDate = (start, durationMonths) => {
+    if (!start) return '';
+    try {
+        const d = new Date(start);
+        if (isNaN(d.getTime())) return '';
+        d.setDate(d.getDate() + (durationMonths <= 6 ? 15 : 30));
+        return toLocalYYYYMMDD(d);
+    } catch (e) {
+        return '';
+    }
+};
+
 const PaymentModal = ({
     isOpen,
     onClose,
@@ -224,6 +236,31 @@ const PaymentModal = ({
         : 0;
 
     const outstandingBalance = originalPlanPrice - totalPaidSoFar;
+
+    const computedDueDateVal = React.useMemo(() => {
+        const duration = selectedPlan?.durationMonths || planData?.durationMonths || 1;
+        return calculateDueDate(formData.startDate, duration);
+    }, [formData.startDate, selectedPlan, planData]);
+
+    useEffect(() => {
+        if (isUpdateMode) {
+            setPaymentType('full');
+            setFormData(prev => ({
+                ...prev,
+                paidAmount: outstandingBalance,
+                dueDate: ''
+            }));
+        }
+    }, [isUpdateMode, outstandingBalance]);
+
+    useEffect(() => {
+        if (paymentType === 'partial' && !isUpdateMode) {
+            setFormData(prev => ({
+                ...prev,
+                dueDate: computedDueDateVal
+            }));
+        }
+    }, [paymentType, isUpdateMode, computedDueDateVal]);
 
     useEffect(() => {
         if (!allowPartialPayments) {
@@ -449,8 +486,10 @@ const PaymentModal = ({
             return alert("Please enter a valid Start Date");
         }
 
-        if (dateErrors.startDate) {
-            return alert(dateErrors.startDate);
+        if (!isUpdateMode && paymentType === 'partial') {
+            if (paid < originalPlanPrice * 0.50) {
+                return alert("You must pay at least 50% of the plan price for partial payment.");
+            }
         }
 
         if (paid > outstandingBalance) {
@@ -481,9 +520,6 @@ const PaymentModal = ({
             const end = calculateEndDate(formData.startDate, duration);
             if (end) end.setHours(0, 0, 0, 0);
 
-            if (due < today) {
-                return alert("Due Date cannot be in the past.");
-            }
             if (due < start) {
                 return alert("Due Date cannot be earlier than the membership Start Date.");
             }
@@ -709,8 +745,6 @@ const PaymentModal = ({
                                         <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Start Date</label>
                                         <CustomDatePicker
                                             required
-                                            validationRule={DATE_RULES.MEMBERSHIP_START}
-                                            minDate={getMembershipStartMinDate()}
                                             className={`w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all ${dateErrors.startDate ? 'border-red-500' : 'border-border'}`}
                                             value={formData.startDate}
                                             onChange={(e) => handleDateFieldChange('startDate', e)}
@@ -729,10 +763,13 @@ const PaymentModal = ({
                                 </div>
 
                                 <p className="text-[9px] text-text-muted italic ml-1">
-                                    Status: {new Date(formData.startDate).setHours(0, 0, 0, 0) === new Date().setHours(0, 0, 0, 0) ?
-                                        <span className="text-emerald-500 font-bold uppercase tracking-widest">Active Today</span> :
-                                        <span className="text-blue-500 font-bold uppercase tracking-widest">Upcoming (Scheduled)</span>
-                                    }
+                                    Status: {(() => {
+                                        const sd = new Date(formData.startDate).setHours(0, 0, 0, 0);
+                                        const today = new Date().setHours(0, 0, 0, 0);
+                                        if (sd === today) return <span className="text-emerald-500 font-bold uppercase tracking-widest">Active Today</span>;
+                                        if (sd < today) return <span className="text-amber-500 font-bold uppercase tracking-widest">Back-dated</span>;
+                                        return <span className="text-blue-500 font-bold uppercase tracking-widest">Upcoming (Scheduled)</span>;
+                                    })()}
                                 </p>
                             </div>
                         )}
@@ -768,7 +805,7 @@ const PaymentModal = ({
 
                     {/* Payment Completion Type */}
                     <div className="bg-surface-divider/50 p-4 rounded-xl border border-border space-y-4">
-                        {allowPartialPayments && (
+                        {allowPartialPayments && !isUpdateMode && (
                             <div>
                                 <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
                                 <div className="flex gap-2">
@@ -834,30 +871,24 @@ const PaymentModal = ({
                                     )
                                 )}
                             </div>
-                            <div>
+                                          <div>
                                 {paymentType === 'partial' && !isEffectivelyFullPayment && (
-                                    <>
-                                        <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
-                                            Due Date <span className="text-rose-500">*</span>
-                                        </label>
-                                        <CustomDatePicker
-                                            required
-                                            validationRule={DATE_RULES.DEFAULT}
-                                            className={`w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold outline-none focus:border-amber-500 transition-all animate-in fade-in slide-in-from-bottom-1 ${dateErrors.dueDate ? 'border-red-500' : 'border-amber-500/50'}`}
-                                            value={formData.dueDate}
-                                            onChange={(e) => handleDateFieldChange('dueDate', e)}
-                                            onValidationError={(message) => handleDateValidationError('dueDate', message)}
-                                            disabled={isSubmitting}
-                                        />
-                                        {dateErrors.dueDate && <p className="text-red-500 text-xs mt-1">{dateErrors.dueDate}</p>}
-                                    </>
-                                )}
-                                {paymentType === 'partial' && isEffectivelyFullPayment && (
-                                    <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
-                                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
-                                        <p className="text-[9px] text-text-secondary mt-1">Amount covers full remaining balance</p>
-                                    </div>
-                                )}
+                                     <>
+                                         <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
+                                             Calculated Due Date
+                                         </label>
+                                         <div className="w-full bg-surface-divider/80 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-surface-primary flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
+                                             <span>{formatDisplayDate(formData.dueDate)}</span>
+                                             <Calendar size={14} className="opacity-30" />
+                                         </div>
+                                     </>
+                                 )}
+                                 {paymentType === 'partial' && isEffectivelyFullPayment && (
+                                     <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
+                                         <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
+                                         <p className="text-[9px] text-text-secondary mt-1">Amount covers full remaining balance</p>
+                                     </div>
+                                 )}
                             </div>
                         </div>
                     </div>
