@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { Sparkles, Clock, MapPin, Phone, Mail, Calendar } from 'lucide-react';
@@ -33,6 +34,7 @@ const ClientHome = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showRenewModal, setShowRenewModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const fetchProfile = async () => {
     try {
@@ -48,6 +50,13 @@ const ClientHome = () => {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (!loading && profile && searchParams.get('renew') === 'true') {
+      setShowRenewModal(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [loading, profile, searchParams, setSearchParams]);
 
   const getDaysLeftDisplay = () => {
     const membership = profile?.membership;

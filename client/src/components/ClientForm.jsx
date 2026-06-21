@@ -50,8 +50,9 @@ const getValidationSchema = (mode) => yup.object({
   gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
   name: yup.string().trim().required('Name is required').max(25, 'Max 25 chars'),
   gender: yup.string().required('Gender is required'),
-  email: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
+  email: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Email is required'),
   dob: yup.date()
+    .typeError('Date of birth is required')
     .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
     .nullable()
     .required('Date of birth is required')
@@ -68,6 +69,7 @@ const getValidationSchema = (mode) => yup.object({
   medicalCondition: yup.string().trim().max(100, 'Max 100 chars').nullable(),
   planId: yup.string().nullable(),
   startDate: yup.date()
+    .typeError('Start date is required')
     .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
     .nullable()
     .required('Start date is required')
@@ -75,7 +77,6 @@ const getValidationSchema = (mode) => yup.object({
       if (!value) return true;
       return !getDateYearValidationError(toDateInputString(value));
     })
-    .min(getMinStartDate(), 'Start date cannot be more than 30 days in the past')
     .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),
   planType: yup.string().required('Membership plan is required'),
   password: ['self', 'owner'].includes(mode)
@@ -203,7 +204,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     const parts = val.split('-');
     if (parts.length === 3) {
       const [d, m, y] = parts;
-      if (d.length === 2 && m.length === 2 && y.length === 4) {
+      if (d.length === 2 && m.length === 2 && y.length === 4 && /^\d+$/.test(d) && /^\d+$/.test(m) && /^\d+$/.test(y)) {
         const iso = `${y}-${m}-${d}`;
         setValue(field, iso, { shouldValidate: true });
       }
@@ -215,6 +216,23 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       setError(field, { type: 'manual', message });
     } else {
       clearErrors(field);
+    }
+  };
+
+  const checkDuplicate = async (field, fieldValue) => {
+    const value = (fieldValue || values[field] || '').trim();
+    if (!value) return;
+    if (field === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
+    if (field === 'mobileNo' && !/^\d{10}$/.test(value)) return;
+
+    try {
+      const payload = field === 'email' ? { email: value } : { phone: value };
+      await api.post('/auth/check-exists', payload);
+      clearErrors(field);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setError(field, { type: 'manual', message: field === 'email' ? 'Email already exists' : 'Phone number already exists' });
+      }
     }
   };
 
@@ -333,13 +351,12 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   };
 
   const handleNextStep = async () => {
-    const isValid = await trigger(selfStepOneFields);
-
-    if (isValid) {
-      setLoading(true);
+    const emailVal = values.email?.trim();
+    const phoneVal = values.mobileNo?.trim();
+    if (emailVal || phoneVal) {
       try {
-        await api.post('/auth/check-exists', { email: values.email, phone: values.mobileNo });
-        setStep(2);
+        await api.post('/auth/check-exists', { email: emailVal, phone: phoneVal });
+        clearErrors(['email', 'mobileNo']);
       } catch (err) {
         if (err.response?.status === 409) {
           toast.error(err.response.data.message);
@@ -348,18 +365,40 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           } else {
             setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
           }
+          return;
         }
-      } finally {
-        setLoading(false);
       }
+    }
+
+    const isValid = await trigger(selfStepOneFields);
+    if (isValid) {
+      setStep(2);
     } else {
-      toast.error('Please fix errors to proceed.');
+      toast.error('Please fill all the mandatory fields before submitting.');
     }
   };
 
   const handleOwnerSubmit = async () => {
-    const isValid = await trigger(ownerRequiredFields);
+    const emailVal = values.email?.trim();
+    const phoneVal = values.mobileNo?.trim();
+    if (emailVal || phoneVal) {
+      try {
+        await api.post('/auth/check-exists', { email: emailVal, phone: phoneVal });
+        clearErrors(['email', 'mobileNo']);
+      } catch (err) {
+        if (err.response?.status === 409) {
+          toast.error(err.response.data.message);
+          if (err.response.data.message.toLowerCase().includes('email')) {
+            setError('email', { type: 'manual', message: 'Email already exists' });
+          } else {
+            setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+          }
+          return;
+        }
+      }
+    }
 
+    const isValid = await trigger(ownerRequiredFields);
     if (isValid) {
       const data = watch();
       const payload = {
@@ -384,7 +423,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       setPendingClientData(payload);
       setShowPaymentModal(true);
     } else {
-      toast.error('Please fix the highlighted errors before submitting.');
+      toast.error('Please fill all the mandatory fields before submitting.');
     }
   };
 
@@ -458,7 +497,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Email <span className="text-red-500">*</span></p>
-        <input {...register('email')} type="email" placeholder="Email Address" className={fieldClassName('email')} />
+        <input {...register('email')} type="email" placeholder="Email Address" className={fieldClassName('email')} maxLength="25" onBlur={(e) => { register('email').onBlur(e); checkDuplicate('email', e.target.value); }} />
         {showFieldError('email') && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
       </div>
 
@@ -484,7 +523,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Mobile Number <span className="text-red-500">*</span></p>
-        <input {...register('mobileNo')} type="tel" placeholder="10-digit mobile number" className={fieldClassName('mobileNo')} onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10) }} maxLength="10" />
+        <input {...register('mobileNo')} type="tel" placeholder="10-digit mobile number" className={fieldClassName('mobileNo')} onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10) }} maxLength="10" onBlur={(e) => { register('mobileNo').onBlur(e); checkDuplicate('mobileNo', e.target.value); }} />
         {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1">{errors.mobileNo.message}</p>}
       </div>
 
@@ -559,7 +598,6 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           onBlur={(e) => handleDateBlur('startDate', e)}
           value={toDateInputString(values.startDate)}
           validationRule={DATE_RULES.REGISTRATION_START}
-          minDate={getMinStartDate()}
           maxDate={getMaxStartDate()}
           className={fieldClassName('startDate', 'text-text-secondary')}
           onChange={(e) => {

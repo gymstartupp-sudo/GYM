@@ -38,6 +38,7 @@ const ClientPayments = lazy(() => import('./pages/client/ClientPayments'));
 const ClientPlans = lazy(() => import('./pages/client/ClientPlans'));
 const ClientFeedback = lazy(() => import('./pages/client/ClientFeedback'));
 const ClientSettings = lazy(() => import('./pages/client/ClientSettings'));
+const RenewalRedirect = lazy(() => import('./pages/client/RenewalRedirect'));
 
 // Admin - Lazy loaded for code splitting
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -103,6 +104,7 @@ const AppContent = () => {
                 <Route path="feedback" element={<ClientFeedback />} />
                 <Route path="settings" element={<ClientSettings />} />
               </Route>
+              <Route path="/client/renew/:clientId" element={<RenewalRedirect />} />
               
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminDashboard /></ProtectedRoute>} />

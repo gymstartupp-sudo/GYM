@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import Button from '../components/Button';
 import PasswordInput from '../components/PasswordInput';
 import ThemeToggle from '../components/ThemeToggle';
@@ -10,35 +10,128 @@ import api from '../utils/api';
 
 const LoginPage = () => {
     const [formData, setFormData] = useState({});
+    const [errors, setErrors] = useState({});
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(false);
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const isPhone = (val) => /^\d+$/.test(val);
+    const isValidPhone = (val) => /^[6-9]\d{9}$/.test(val);
+    const isValidEmail = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) && val.length <= 50;
 
-    // Removed handleGymIdBlur since the unified login no longer requires explicit client toggling and pre-fetching in this context
+    const validateLoginId = (value) => {
+        if (!value) return '';
+        if (isPhone(value)) {
+            if (value.length < 10) return 'Enter a valid 10-digit Indian mobile number';
+            if (!isValidPhone(value)) return 'Enter a valid 10-digit Indian mobile number';
+        } else {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address';
+            if (value.length > 25) return 'Email cannot exceed 25 characters';
+        }
+        return '';
+    };
+
+    const validatePassword = (value) => {
+        if (!value) return '';
+        if (value.length > 20) return 'Password cannot exceed 20 characters';
+        return '';
+    };
+
+    const isFormValid = useMemo(() => {
+        const loginId = (formData.loginId || '').trim();
+        const password = formData.password || '';
+        if (!loginId || !password) return false;
+        return validateLoginId(loginId) === '' && validatePassword(password) === '';
+    }, [formData]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        let newValue = value;
+
+        if (name === 'loginId') {
+            const firstChar = value.charAt(0);
+            if (/\d/.test(firstChar)) {
+                newValue = value.replace(/\D/g, '').slice(0, 10);
+            } else if (/[a-zA-Z]/.test(firstChar)) {
+                newValue = value.replace(/[^a-zA-Z0-9@._+\-]/g, '').slice(0, 25);
+            }
+        }
+
+        if (name === 'password' && value.length > 20) return;
+
+        setFormData(prev => ({ ...prev, [name]: newValue }));
+
+        if (errors[name]) {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next[name];
+                return next;
+            });
+        }
+
+        if (newValue && newValue.trim()) {
+            const errorMsg = name === 'loginId' ? validateLoginId(newValue) : validatePassword(newValue);
+            if (errorMsg) {
+                setErrors(prev => ({ ...prev, [name]: errorMsg }));
+            }
+        }
+    };
+
+    const handleBlur = (e) => {
+        const { name, value } = e.target;
+        const trimmed = (value || '').trim();
+        if (!trimmed) return;
+        const errorMsg = name === 'loginId' ? validateLoginId(trimmed) : validatePassword(trimmed);
+        if (errorMsg) {
+            setErrors(prev => ({ ...prev, [name]: errorMsg }));
+        } else {
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next[name];
+                return next;
+            });
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Mobile validation if loginId looks like a phone number (numeric)
-        const loginId = formData.loginId || '';
-        if (/^\d+$/.test(loginId)) {
-            if (!/^[6-9]\d{9}$/.test(loginId)) {
-                return toast.error("Enter a valid 10-digit mobile number starting with 6-9");
-            }
+        const loginId = (formData.loginId || '').trim();
+        const newErrors = {};
+
+        if (!loginId) {
+            newErrors.loginId = 'Please enter your email or phone number';
+        } else {
+            const loginIdError = validateLoginId(loginId);
+            if (loginIdError) newErrors.loginId = loginIdError;
         }
 
+        if (!formData.password) {
+            newErrors.password = 'Please enter your password';
+        } else {
+            const pwError = validatePassword(formData.password);
+            if (pwError) newErrors.password = pwError;
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        setErrors({});
         setLoading(true);
         try {
             const res = await api.post('/auth/login', { loginId, password: formData.password });
             const { token, role, data } = res.data;
 
-            // Reconstruct logic based on provided role by the unified endpoint
             const roleForApp = role === 'superadmin' ? 'superadmin' : role;
             login(token, roleForApp, data);
 
-            if (role === 'owner') navigate('/owner');
+            const redirectUrl = searchParams.get('redirect');
+            if (redirectUrl) {
+                navigate(redirectUrl, { replace: true });
+            } else if (role === 'owner') navigate('/owner');
             else if (role === 'client') navigate('/client');
             else navigate('/admin');
 
@@ -67,12 +160,46 @@ const LoginPage = () => {
                     <p className="mt-3 ml-8 text-center text-sm text-text-secondary">Log in to your portal</p>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
                     <div className="space-y-4">
-                        <input name="loginId" value={formData.loginId || ''} placeholder="Email or Phone Number" onChange={handleChange} required className="input-field" maxLength="50" />
-                        <PasswordInput name="password" value={formData.password || ''} placeholder="Password" onChange={handleChange} required className="input-field w-full" maxLength="20" />
+                        <div>
+                            <input
+                                name="loginId"
+                                value={formData.loginId || ''}
+                                placeholder="Email or Phone Number"
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                required
+                                className={`input-field ${errors.loginId ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : ''}`}
+                                maxLength="25"
+                            />
+                            <div className="min-h-[20px] mt-1">
+                                {errors.loginId && <p className="text-red-500 text-xs font-medium leading-tight">{errors.loginId}</p>}
+                            </div>
+                        </div>
+                        <div>
+                            <PasswordInput
+                                name="password"
+                                value={formData.password || ''}
+                                placeholder="Password"
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                required
+                                className={`input-field w-full ${errors.password ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : ''}`}
+                                maxLength="20"
+                            />
+                            <div className="min-h-[20px] mt-1">
+                                {errors.password && <p className="text-red-500 text-xs font-medium leading-tight">{errors.password}</p>}
+                            </div>
+                        </div>
                     </div>
-                    <Button type="submit" isLoading={loading} className="w-full text-lg shadow-lg shadow-primary/20">Login to Platform</Button>
+                    <Button
+                        type="submit"
+                        isLoading={loading}
+                        className="w-full text-lg shadow-lg shadow-primary/20"
+                    >
+                        Login to Platform
+                    </Button>
                 </form>
 
                 <div className="flex justify-between text-sm mt-6 pt-6 border-t border-border">
