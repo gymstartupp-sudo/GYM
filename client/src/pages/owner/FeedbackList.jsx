@@ -129,7 +129,7 @@ const FeedbackList = () => {
         </div>
       ) : (
         <div className="bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto max-h-[calc(100vh-220px)] overflow-y-auto relative">
+          <div className="overflow-x-auto">
             <table className="min-w-full text-left border-collapse">
               <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
                 <tr>
