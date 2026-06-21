@@ -475,6 +475,27 @@ exports.reactivateClient = async (req, res, next) => {
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
     client.isActive = true;
     client.deactivatedAt = null;
+
+    // Reset reminder flags on reactivation
+    client.expiryReminderSent = false;
+    client.expiredReminderSent = false;
+    client.expiryReminderStatus = 'none';
+    client.expiredReminderStatus = 'none';
+    client.expiryReminderError = null;
+    client.expiredReminderError = null;
+    client.expiryReminderSentAt = null;
+    client.expiredReminderSentAt = null;
+    if (client.membership) {
+      client.membership.expiryReminderSent = false;
+      client.membership.expiredReminderSent = false;
+      client.membership.expiryReminderStatus = 'none';
+      client.membership.expiredReminderStatus = 'none';
+      client.membership.expiryReminderError = null;
+      client.membership.expiredReminderError = null;
+      client.membership.expiryReminderSentAt = null;
+      client.membership.expiredReminderSentAt = null;
+    }
+
     await client.save();
     res.status(200).json({ success: true, data: client });
   } catch (err) {

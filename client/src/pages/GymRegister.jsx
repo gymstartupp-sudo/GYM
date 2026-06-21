@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import { useNavigate, Link } from 'react-router-dom';
@@ -75,9 +75,8 @@ const CustomSelect = ({ options, value, onChange, className = '', buttonClassNam
                 onChange(opt);
                 setIsOpen(false);
               }}
-              className={`w-full text-center py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${
-                value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-slate-300'
-              }`}
+              className={`w-full text-center py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-slate-300'
+                }`}
             >
               {opt}
             </button>
@@ -134,7 +133,7 @@ const optionalUrl = yup.string().trim().test(
 const schema = yup.object({
   gymIdPrefix: yup.string().trim().required('Gym ID prefix is required').min(2, 'Min 2 characters').max(3, 'Max 3 characters').matches(/^[A-Z]{2,3}$/, '2-3 uppercase letters only'),
   gymName: yup.string().trim().required('Gym name is required').max(25, 'Max 25 chars'),
-  gymEmail: yup.string().trim().email('Please enter a valid email address').required('Gym email is required'),
+  gymEmail: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Gym email is required'),
   gymContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
   location: yup.string().trim().required('Location is required').max(20, 'Max 20 chars'),
@@ -155,10 +154,10 @@ const schema = yup.object({
   confirmPassword: yup.string().max(20, 'Max 20 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password'),
   name: yup.string().trim().required('Owner name is required').max(25, 'Max 25 chars'),
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  mailId: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
+  mailId: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Email is required'),
   whatsappNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   phoneNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  gmail: yup.string().trim().email('Please enter a valid email address').required('Email is required'),
+  gmail: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Email is required'),
   billingIdPrefix: yup.string().trim().required('Billing prefix is required').max(5, 'Max 5 chars').matches(/^[A-Za-z0-9]+$/, 'Alphanumeric only'),
   helpContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   addressOnBill: yup.string().trim().required('Billing address is required').max(100, 'Max 100 chars'),
@@ -280,6 +279,7 @@ const GymRegister = () => {
     watch,
     setValue,
     setError,
+    clearErrors,
     setFocus,
     formState: { errors, touchedFields, isSubmitted }
   } = useForm({
@@ -293,7 +293,7 @@ const GymRegister = () => {
       operatingCloseMinute: '00',
       operatingCloseAmpm: 'PM'
     },
-    mode: 'onTouched',
+    mode: 'onChange',
     reValidateMode: 'onChange'
   });
 
@@ -367,24 +367,35 @@ const GymRegister = () => {
     return value !== undefined && value !== null && String(value).trim() !== '';
   };
 
-  const isStepDisabled = useMemo(() => {
-    const requiredFields = stepRequiredFields[step];
-    const fieldsForErrors = stepAllFields[step];
-    const hasMissingRequired = requiredFields.some((field) => !isFieldFilled(field));
-    const hasStepErrors = fieldsForErrors.some((field) => Boolean(errors[field]));
+  const checkDuplicate = (field, fieldValue) => {
+    const value = (fieldValue || values[field] || '').trim();
+    if (!value) return;
+    if ((field === 'gymEmail' || field === 'mailId' || field === 'gmail') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
+    if ((field === 'gymContact' || field === 'mobileNo' || field === 'whatsappNumber' || field === 'phoneNumber' || field === 'helpContact') && !/^\d{10}$/.test(value)) return;
 
-    return hasMissingRequired || hasStepErrors || loading;
-  }, [errors, loading, step, values]);
+    setTimeout(async () => {
+      try {
+        const isEmail = field === 'gymEmail' || field === 'mailId' || field === 'gmail';
+        const payload = isEmail ? { email: value } : { phone: value };
+        await api.post('/auth/check-exists', payload);
+        clearErrors(field);
+      } catch (err) {
+        if (err.response?.status === 409) {
+          const isEmail = field === 'gymEmail' || field === 'mailId' || field === 'gmail';
+          setError(field, { type: 'manual', message: isEmail ? 'Email already exists' : 'Phone number already exists', shouldFocus: false });
+        }
+      }
+    }, 60);
+  };
 
   const handleNext = async () => {
-    const isStepValid = await trigger(stepRequiredFields[step]);
-
-    if (isStepValid) {
-      if (step === 1) {
-        setLoading(true);
+    if (step === 1) {
+      const emailVal = values.gymEmail?.trim();
+      const phoneVal = values.gymContact?.trim();
+      if (emailVal || phoneVal) {
         try {
-          await api.post('/auth/check-exists', { email: values.gymEmail, phone: values.gymContact });
-          setStep((currentStep) => currentStep + 1);
+          await api.post('/auth/check-exists', { email: emailVal, phone: phoneVal });
+          clearErrors(['gymEmail', 'gymContact']);
         } catch (err) {
           if (err.response?.status === 409) {
             toast.error(err.response.data.message);
@@ -393,14 +404,39 @@ const GymRegister = () => {
             } else {
               setError('gymContact', { type: 'manual', message: 'Phone number already exists' });
             }
+            return;
           }
-        } finally {
-          setLoading(false);
         }
-      } else {
-        setStep((currentStep) => currentStep + 1);
       }
+    }
+
+    if (step === 2) {
+      const fieldsToCheck = [
+        { field: 'mobileNo', type: 'phone', value: values.mobileNo?.trim() },
+        { field: 'mailId', type: 'email', value: values.mailId?.trim() }
+      ];
+      for (const { field, type, value } of fieldsToCheck) {
+        if (!value) continue;
+        const payload = type === 'email' ? { email: value } : { phone: value };
+        try {
+          await api.post('/auth/check-exists', payload);
+          clearErrors(field);
+        } catch (err) {
+          if (err.response?.status === 409) {
+            setError(field, { type: 'manual', message: type === 'email' ? 'Email already exists' : 'Phone number already exists' });
+            toast.error(err.response.data.message);
+            return;
+          }
+        }
+      }
+    }
+
+    const isStepValid = await trigger(stepRequiredFields[step]);
+
+    if (isStepValid) {
+      setStep((currentStep) => currentStep + 1);
     } else {
+      toast.error('Please fill all the mandatory fields before submitting.');
       setTimeout(() => {
         const firstErrorField = stepRequiredFields[step].find(field => document.querySelector(`[name="${field}"]`)?.classList.contains('border-red-500'));
         if (firstErrorField) {
@@ -620,7 +656,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">Gym Email <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} />
+              <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} maxLength="25" onBlur={(e) => { checkDuplicate('gymEmail', e.target.value); }} />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymEmail') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymEmail.message}</p>}
               </div>
@@ -638,6 +674,7 @@ const GymRegister = () => {
                 className={fieldClassName('gymContact')}
                 onInput={handlePhoneInput}
                 maxLength="10"
+                onBlur={(e) => { checkDuplicate('gymContact', e.target.value); }}
               />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymContact') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymContact.message}</p>}
@@ -871,6 +908,7 @@ const GymRegister = () => {
                     className={fieldClassName('mobileNo')}
                     onInput={handlePhoneInput}
                     maxLength="10"
+                    onBlur={(e) => { checkDuplicate('mobileNo', e.target.value); }}
                   />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('mobileNo') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mobileNo.message}</p>}
@@ -878,7 +916,7 @@ const GymRegister = () => {
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
-                  <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} />
+                  <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} maxLength="25" onBlur={(e) => { checkDuplicate('mailId', e.target.value); }} />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('mailId') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mailId.message}</p>}
                   </div>
@@ -995,6 +1033,7 @@ const GymRegister = () => {
                       placeholder="Email address used for reminders"
                       className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
                       readOnly={syncEmail}
+                      maxLength="25"
                     />
                     {syncEmail && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
@@ -1223,7 +1262,6 @@ const GymRegister = () => {
               onClick={handleNext}
               className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-lg"
               isLoading={loading}
-              disabled={isStepDisabled}
             >
               Save & Continue
             </Button>
@@ -1231,11 +1269,33 @@ const GymRegister = () => {
             <Button
               type="button"
               onClick={async () => {
+                setLoading(true);
+                const contactFields = ['helpContact'];
+                for (const field of contactFields) {
+                  const value = (values[field] || '').trim();
+                  if (value && /^\d{10}$/.test(value)) {
+                    try {
+                      await api.post('/auth/check-exists', { phone: value });
+                      clearErrors(field);
+                    } catch (err) {
+                      if (err.response?.status === 409) {
+                        setError(field, { type: 'manual', message: 'Phone number already exists', shouldFocus: false });
+                        setLoading(false);
+                        toast.error('Phone number already exists');
+                        return;
+                      }
+                    }
+                  }
+                }
                 const valid = await trigger(stepRequiredFields[step]);
-                if (valid) handleSubmit(onSubmit)();
+                if (valid) {
+                  handleSubmit(onSubmit)();
+                } else {
+                  setLoading(false);
+                  toast.error('Please fill all the mandatory fields before submitting.');
+                }
               }}
               isLoading={loading}
-              disabled={isStepDisabled}
               className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-xl"
             >
               Launch Gym Dashboard

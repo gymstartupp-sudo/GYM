@@ -150,8 +150,8 @@ const runReminders = async () => {
             failureReason = 'Reminder already sent today (Duplicate Prevention)';
           } else {
             // Send Expired Reminder
-            const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/pay/${updatedClient.clientId}/${updatedClient.gymId}`;
-            const msg = `Dear ${updatedClient.personalInfo.name}, your membership plan has expired. Renew your membership now. Gym Name: ${updatedClient.gymName}. Payment/Renewal Link: ${paymentLink}`;
+            const renewalLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}`;
+            const msg = `Dear ${updatedClient.personalInfo.name},\n\nYour membership has expired.\n\nPlease renew your membership using the link below.\n\nRenew Membership:\n${renewalLink}\n\nRegards,\n${updatedClient.gymName}`;
 
             const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
             if (result && result.success) {

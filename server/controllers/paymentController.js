@@ -292,6 +292,28 @@ exports.recordPayment = async (req, res, next) => {
 
     await syncClientStatus(client._id);
 
+    // Reset reminder flags after successful payment renewal
+    await Client.findByIdAndUpdate(client._id, {
+      $set: {
+        'expiryReminderSent': false,
+        'expiredReminderSent': false,
+        'expiryReminderStatus': 'none',
+        'expiredReminderStatus': 'none',
+        'expiryReminderError': null,
+        'expiredReminderError': null,
+        'expiryReminderSentAt': null,
+        'expiredReminderSentAt': null,
+        'membership.expiryReminderSent': false,
+        'membership.expiredReminderSent': false,
+        'membership.expiryReminderStatus': 'none',
+        'membership.expiredReminderStatus': 'none',
+        'membership.expiryReminderError': null,
+        'membership.expiredReminderError': null,
+        'membership.expiryReminderSentAt': null,
+        'membership.expiredReminderSentAt': null
+      }
+    });
+
     res.status(201).json({ success: true, data: payment });
   } catch (err) {
     next(err);
