@@ -36,6 +36,37 @@ const CustomDatePicker = React.forwardRef(({
 
   const setRef = useCallback((node) => {
     inputRef.current = node;
+    if (node) {
+      const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      if (descriptor && !node.__valueDescriptorDefined) {
+        Object.defineProperty(node, 'value', {
+          get() {
+            const displayVal = descriptor.get.call(this);
+            const parts = (displayVal || '').split('-');
+            if (parts.length === 3) {
+              const [d, m, y] = parts;
+              if (d.length === 2 && m.length === 2 && y.length === 4 && /^\d+$/.test(d) && /^\d+$/.test(m) && /^\d+$/.test(y)) {
+                return `${y}-${m}-${d}`;
+              }
+            }
+            return displayVal;
+          },
+          set(val) {
+            let nextVal = val;
+            const parts = (val || '').split('-');
+            if (parts.length === 3) {
+              const [y, m, d] = parts;
+              if (y.length === 4 && m.length === 2 && d.length === 2 && /^\d+$/.test(y) && /^\d+$/.test(m) && /^\d+$/.test(d)) {
+                nextVal = `${d}-${m}-${y}`;
+              }
+            }
+            descriptor.set.call(this, nextVal);
+          },
+          configurable: true,
+        });
+        node.__valueDescriptorDefined = true;
+      }
+    }
     if (typeof ref === 'function') {
       ref(node);
     } else if (ref) {
