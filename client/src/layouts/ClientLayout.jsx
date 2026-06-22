@@ -11,6 +11,7 @@ export default function ClientLayout() {
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [clientName, setClientName] = useState(user?.personalInfo?.name || 'Member');
+  const [clientEmail, setClientEmail] = useState(user?.personalInfo?.email || '');
 
   useEffect(() => {
     const handleResize = () => {
@@ -28,12 +29,14 @@ export default function ClientLayout() {
       try {
         const res = await api.get('/client/profile');
         setClientName(res.data.data?.personalInfo?.name || user?.personalInfo?.name || 'Member');
+        setClientEmail(res.data.data?.personalInfo?.email || user?.personalInfo?.email || '');
       } catch {
         setClientName(user?.personalInfo?.name || 'Member');
+        setClientEmail(user?.personalInfo?.email || '');
       }
     };
     fetchProfile();
-  }, [user?.personalInfo?.name]);
+  }, [user?.personalInfo?.name, user?.personalInfo?.email]);
 
   return (
     <div className={`flex h-screen bg-surface-primary overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
@@ -71,7 +74,7 @@ export default function ClientLayout() {
       <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {!isMobile && <ClientHeader clientName={clientName} isMobile={isMobile} />}
+        {!isMobile && <ClientHeader clientName={clientName} clientEmail={clientEmail} isMobile={isMobile} />}
         <main className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8 scrollbar-hide">
           <Outlet />
         </main>

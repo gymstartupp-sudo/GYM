@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, HelpCircle, X, Mail, Phone, Clock, MessageSquare, ChevronRight, LogOut, UserPlus, Sunrise, Sun, Sunset, Moon, Trash2, AlertTriangle, Receipt } from 'lucide-react';
+import { Bell, HelpCircle, X, Mail, Phone, Clock, MessageSquare, ChevronRight, LogOut, UserPlus, Sunrise, Sun, Sunset, Moon, Trash2, AlertTriangle, Receipt, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from './ThemeToggle';
@@ -272,16 +272,28 @@ const ConfirmModal = ({ isOpen, title, message, cancelText = 'Cancel', confirmTe
   );
 };
 
-const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, isMobile = false }) => {
+const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', ownerName = '', isMobile = false }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showContactPanel, setShowContactPanel] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifRef = useRef(null);
 
   const [showClearAllModal, setShowClearAllModal] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const formatNotifTime = (dateStr) => {
     if (!dateStr) return '';
@@ -447,7 +459,7 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, isMobile = false }
 
   const handleProfileClick = () => {
     setShowContactPanel(false);
-    navigate('/owner/profile');
+    setShowProfileDropdown(prev => !prev);
   };
 
   const handleLogout = () => {
@@ -638,57 +650,137 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, isMobile = false }
 
 
 
-          {/* Profile Avatar */}
-          <button
-            id="owner-profile-btn"
-            onClick={handleProfileClick}
-            className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200 shadow-md overflow-hidden"
-            style={{
-              background: gymLogo ? 'transparent' : 'linear-gradient(135deg, #10B981, #059669)',
-              color: '#FFFFFF',
-              boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
-            }}
-            title={`${gymName} — View Profile`}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.06)';
-              e.currentTarget.style.boxShadow = '0 4px 14px rgba(16,185,129,0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.35)';
-            }}
-          >
-            {gymLogo ? (
-              <img
-                src={gymLogo.startsWith('http') ? gymLogo : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${gymLogo}`}
-                alt="Gym Logo"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              gymAvatar
-            )}
-          </button>
+          {/* Profile Avatar & Dropdown Container */}
+          <div className="relative" ref={profileRef}>
+            <button
+              id="owner-profile-btn"
+              onClick={handleProfileClick}
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200 shadow-md overflow-hidden"
+              style={{
+                background: gymLogo ? 'transparent' : 'linear-gradient(135deg, #10B981, #059669)',
+                color: '#FFFFFF',
+                boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
+                border: showProfileDropdown ? '1px solid var(--border-color)' : 'none',
+              }}
+              title={`${gymName} — Profile Menu`}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.06)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(16,185,129,0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.35)';
+              }}
+            >
+              {gymLogo ? (
+                <img
+                  src={gymLogo.startsWith('http') ? gymLogo : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${gymLogo}`}
+                  alt="Gym Logo"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                gymAvatar
+              )}
+            </button>
 
-          {/* Logout */}
-          <button
-            id="owner-logout-btn"
-            onClick={() => setShowLogoutModal(true)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200"
-            style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}
-            title="Logout"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
-              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.35)';
-              e.currentTarget.style.color = '#ef4444';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = 'transparent';
-              e.currentTarget.style.color = 'var(--text-muted)';
-            }}
-          >
-            <LogOut size={17} />
-          </button>
+            {/* Chrome-style Dropdown Menu */}
+            {showProfileDropdown && (
+              <div
+                className="absolute right-0 top-12 w-[320px] rounded-2xl border shadow-2xl z-50 p-6 animate-in fade-in slide-in-from-top-2 duration-200"
+                style={{
+                  borderColor: 'var(--border-color)',
+                  background: 'var(--bg-elevated)',
+                }}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowProfileDropdown(false)}
+                  className="absolute top-4 right-4 p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors"
+                >
+                  <X size={18} />
+                </button>
+
+                {/* Content Container */}
+                <div className="flex flex-col items-center pt-2">
+                  {/* Avatar with thick gold border */}
+                  <div 
+                    className="w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl text-white shadow-md mb-4 border-[3px] overflow-hidden"
+                    style={{
+                      background: gymLogo ? 'transparent' : 'linear-gradient(135deg, #10B981, #059669)',
+                      borderColor: '#FFBD07',
+                    }}
+                  >
+                    {gymLogo ? (
+                      <img
+                        src={gymLogo.startsWith('http') ? gymLogo : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${gymLogo}`}
+                        alt="Gym Logo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      gymAvatar
+                    )}
+                  </div>
+
+                  {/* Name */}
+                  <h3 className="text-lg font-bold text-text-primary tracking-wide text-center uppercase mb-1">
+                    {ownerName || gymName}
+                  </h3>
+
+                  {/* Email */}
+                  <p className="text-xs text-text-secondary text-center mb-4 truncate max-w-full" title={gymEmail}>
+                    {gymEmail || 'owner@rexfit.in'}
+                  </p>
+
+                  {/* View Profile Capsule Button */}
+                  <button
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      navigate('/owner/profile');
+                    }}
+                    className="px-5 py-2.5 rounded-full text-xs font-semibold border text-text-primary transition-all duration-200"
+                    style={{
+                      borderColor: 'var(--border-color)',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--bg-hover)';
+                      e.currentTarget.style.borderColor = 'var(--text-secondary)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                    }}
+                  >
+                    Manage RexFit Profile
+                  </button>
+
+                  {/* Separator line */}
+                  <div className="w-full h-px my-5" style={{ background: 'var(--border-color)' }} />
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      setShowLogoutModal(true);
+                    }}
+                    className="w-full py-3 rounded-xl font-bold text-sm text-center shadow-md transition-all duration-200"
+                    style={{
+                      background: '#FFBD07',
+                      color: '#111111',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#E5AA06';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#FFBD07';
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

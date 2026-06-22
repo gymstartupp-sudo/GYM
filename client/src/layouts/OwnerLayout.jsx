@@ -52,6 +52,8 @@ export default function OwnerLayout() {
 
 
   const gymName = gymProfile?.gym?.gymName || user?.gymName || 'Gym Owner';
+  const gymEmail = gymProfile?.gym?.gymEmail || gymProfile?.owner?.mailId || user?.email || '';
+  const ownerName = gymProfile?.owner?.name || gymName;
 
   const navItems = [
     { to: '/owner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -185,7 +187,15 @@ export default function OwnerLayout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden bg-surface-primary text-text-primary">
-        {!isMobile && <OwnerHeader gymName={gymName} gymLogo={gymProfile?.gym?.gymLogo || gymProfile?.gym?.billingInfo?.logo} isMobile={isMobile} />}
+        {!isMobile && (
+          <OwnerHeader
+            gymName={gymName}
+            gymLogo={gymProfile?.gym?.gymLogo || gymProfile?.gym?.billingInfo?.logo}
+            gymEmail={gymEmail}
+            ownerName={ownerName}
+            isMobile={isMobile}
+          />
+        )}
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
