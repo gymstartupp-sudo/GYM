@@ -497,7 +497,7 @@ const Profile = () => {
                       : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${formState.gym.gymLogo || formState.gym.billingInfo?.logo}`
                   }
                   alt="Gym Logo"
-                  className="w-full h-full object-contain p-1 transition-transform duration-200 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                 />
               ) : (
                 <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl transition-transform duration-200 group-hover:scale-105">
