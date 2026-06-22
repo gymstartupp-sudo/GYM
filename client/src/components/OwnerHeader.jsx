@@ -703,7 +703,7 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', own
                 {/* Content Container */}
                 <div className="flex flex-col items-center pt-2">
                   {/* Avatar with thick gold border */}
-                  <div 
+                  <div
                     className="w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl text-white shadow-md mb-4 border-[3px] overflow-hidden"
                     style={{
                       background: gymLogo ? 'transparent' : 'linear-gradient(135deg, #10B981, #059669)',
@@ -723,7 +723,7 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', own
 
                   {/* Name */}
                   <h3 className="text-lg font-bold text-text-primary tracking-wide text-center uppercase mb-1">
-                    {ownerName || gymName}
+                    {gymName}
                   </h3>
 
                   {/* Email */}

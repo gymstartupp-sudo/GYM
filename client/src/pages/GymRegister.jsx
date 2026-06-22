@@ -410,26 +410,7 @@ const GymRegister = () => {
       }
     }
 
-    if (step === 2) {
-      const fieldsToCheck = [
-        { field: 'mobileNo', type: 'phone', value: values.mobileNo?.trim() },
-        { field: 'mailId', type: 'email', value: values.mailId?.trim() }
-      ];
-      for (const { field, type, value } of fieldsToCheck) {
-        if (!value) continue;
-        const payload = type === 'email' ? { email: value } : { phone: value };
-        try {
-          await api.post('/auth/check-exists', payload);
-          clearErrors(field);
-        } catch (err) {
-          if (err.response?.status === 409) {
-            setError(field, { type: 'manual', message: type === 'email' ? 'Email already exists' : 'Phone number already exists' });
-            toast.error(err.response.data.message);
-            return;
-          }
-        }
-      }
-    }
+
 
     const isStepValid = await trigger(stepRequiredFields[step]);
 
@@ -908,7 +889,6 @@ const GymRegister = () => {
                     className={fieldClassName('mobileNo')}
                     onInput={handlePhoneInput}
                     maxLength="10"
-                    onBlur={(e) => { checkDuplicate('mobileNo', e.target.value); }}
                   />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('mobileNo') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mobileNo.message}</p>}
@@ -916,7 +896,7 @@ const GymRegister = () => {
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
-                  <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} maxLength="25" onBlur={(e) => { checkDuplicate('mailId', e.target.value); }} />
+                  <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} maxLength="25" />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('mailId') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mailId.message}</p>}
                   </div>

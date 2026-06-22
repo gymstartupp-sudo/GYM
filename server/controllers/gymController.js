@@ -80,17 +80,9 @@ exports.updateGymProfile = async (req, res, next) => {
       if (ownerData.name && ownerData.name.length > 25) {
         return res.status(400).json({ success: false, message: 'Owner name cannot exceed 25 characters', field: 'ownerName' });
       }
-      // Duplicate Personal Mobile Check
+      // Personal Mobile Format Check
       if (ownerData.mobileNo) {
         if (!phoneRegex.test(ownerData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'ownerMobile' });
-        const mobileExists = await Owner.findOne({ mobileNo: ownerData.mobileNo, gymId: { $ne: gymStrId } });
-        if (mobileExists) return res.status(400).json({ success: false, message: 'Phone number already exists', field: 'ownerMobile' });
-      }
-
-      // Duplicate Personal Email Check (mailId)
-      if (ownerData.mailId) {
-        const mailExists = await Owner.findOne({ mailId: ownerData.mailId, gymId: { $ne: gymStrId } });
-        if (mailExists) return res.status(400).json({ success: false, message: 'Email already exists', field: 'ownerEmail' });
       }
 
       // Update Owner
