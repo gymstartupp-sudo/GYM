@@ -39,7 +39,3 @@ npm install
 npm run dev
 ```
 
-## Initial Seed Account
-Upon the first boot of the Node server, if the database is connected, it automatically seeds the initial Super Admin:
-- **Email**: admin@gymplatform.com
-- **Password**: Admin@1234
