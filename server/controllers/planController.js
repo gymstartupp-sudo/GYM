@@ -5,7 +5,7 @@ const Plan = require('../models/Plan');
 // @access  Private (Owner)
 exports.createPlan = async (req, res, next) => {
   try {
-    const { name, durationMonths, price, description, isCustom } = req.body;
+    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays } = req.body;
     const gymId = req.user.gymId;
 
     if (!price) {
@@ -43,7 +43,8 @@ exports.createPlan = async (req, res, next) => {
       durationMonths,
       price,
       description,
-      isCustom: !!isCustom
+      isCustom: !!isCustom,
+      partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : 15
     });
 
     res.status(201).json({ success: true, data: plan });
@@ -83,7 +84,7 @@ exports.getPlans = async (req, res, next) => {
 // @access  Private (Owner)
 exports.updatePlan = async (req, res, next) => {
   try {
-    const { name, durationMonths, price, description } = req.body;
+    const { name, durationMonths, price, description, partialPaymentDueDays } = req.body;
     const gymId = req.user.gymId;
 
     if (name && name.length > 25) {
@@ -106,7 +107,7 @@ exports.updatePlan = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
 
-    plan = await Plan.findByIdAndUpdate(req.params.id, { name, durationMonths, price, description }, { new: true, runValidators: true });
+    plan = await Plan.findByIdAndUpdate(req.params.id, { name, durationMonths, price, description, partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : 15 }, { new: true, runValidators: true });
     res.status(200).json({ success: true, data: plan });
   } catch (err) {
     next(err);

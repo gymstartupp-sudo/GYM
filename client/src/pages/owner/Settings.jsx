@@ -18,6 +18,8 @@ const Settings = () => {
   const [gym, setGym] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
+  const [plans, setPlans] = useState([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
 
   // Form states
   const [currentPassword, setCurrentPassword] = useState('');
@@ -50,8 +52,22 @@ const Settings = () => {
     }
   };
 
+  const fetchPlans = async () => {
+    setLoadingPlans(true);
+    try {
+      const res = await api.get('/plan');
+      setPlans(res.data.data || []);
+    } catch (error) {
+      console.error('Error loading plans for settings:', error);
+      toast.error('Failed to load plans');
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
+
   useEffect(() => {
     fetchGymSettings();
+    fetchPlans();
   }, []);
 
   const handlePasswordChange = async (e) => {
@@ -94,6 +110,23 @@ const Settings = () => {
       toast.error(error.response?.data?.message || 'Unable to update password');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleSavePlanDueDays = async (planId, partialPaymentDueDays) => {
+    if (partialPaymentDueDays === '' || isNaN(Number(partialPaymentDueDays)) || Number(partialPaymentDueDays) < 1) {
+      toast.error('Please enter a valid number of days (at least 1)');
+      return;
+    }
+    try {
+      await api.put(`/plan/${planId}`, {
+        partialPaymentDueDays: Number(partialPaymentDueDays)
+      });
+      toast.success('Plan due days updated successfully');
+      fetchPlans();
+    } catch (error) {
+      console.error('Error updating plan due days:', error);
+      toast.error(error.response?.data?.message || 'Failed to update plan due days');
     }
   };
 
@@ -204,6 +237,53 @@ const Settings = () => {
             />
           </button>
         </div>
+
+        {gym.billingInfo?.allowPartialPayments !== false && (
+          <div className="space-y-4 pt-4 border-t border-border/60">
+            <div className="space-y-1">
+              <span className="text-sm font-bold text-text-primary block">Plan Due Days Offset</span>
+              <span className="text-xs text-text-secondary">Configure the number of days from the start date for partial payments to be completed for each plan.</span>
+            </div>
+            {loadingPlans ? (
+              <div className="flex justify-center py-4">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : plans.length === 0 ? (
+              <p className="text-xs text-text-muted italic">No plans available to configure.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {plans.map((p) => (
+                  <div key={p._id} className="flex items-center justify-between p-3.5 bg-surface-divider/40 border border-border/60 rounded-xl">
+                    <div className="flex-1 min-w-0 pr-3">
+                      <span className="text-sm font-semibold text-text-primary block truncate">{p.name}</span>
+                      <span className="text-xs text-text-muted">₹{p.price?.toLocaleString('en-IN')} • {p.durationMonths} Mo</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="365"
+                        className="w-20 bg-surface-primary border border-border rounded-lg px-2.5 py-1.5 text-center text-sm text-text-primary font-bold focus:border-primary outline-none"
+                        value={p.partialPaymentDueDays ?? 15}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? '' : Math.max(1, Number(e.target.value));
+                          setPlans(prev => prev.map(item => item._id === p._id ? { ...item, partialPaymentDueDays: val } : item));
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSavePlanDueDays(p._id, p.partialPaymentDueDays)}
+                        className="px-3.5 py-1.5 bg-primary text-black text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2. Security Section */}

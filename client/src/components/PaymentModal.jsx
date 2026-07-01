@@ -83,6 +83,17 @@ const PaymentModal = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [allowPartialPayments, setAllowPartialPayments] = useState(true);
     const [dateErrors, setDateErrors] = useState({});
+    const [formError, setFormError] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setFormError('');
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        setFormError('');
+    }, [formData, paymentType, selectedPlan, selectedClient]);
 
     useEffect(() => {
         const fetchGymSettings = async () => {
@@ -238,8 +249,17 @@ const PaymentModal = ({
     const outstandingBalance = originalPlanPrice - totalPaidSoFar;
 
     const computedDueDateVal = React.useMemo(() => {
-        const duration = selectedPlan?.durationMonths || planData?.durationMonths || 1;
-        return calculateDueDate(formData.startDate, duration);
+        const plan = selectedPlan || planData;
+        const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
+        if (!formData.startDate) return '';
+        try {
+            const d = new Date(formData.startDate);
+            if (isNaN(d.getTime())) return '';
+            d.setDate(d.getDate() + dueDays);
+            return toLocalYYYYMMDD(d);
+        } catch (e) {
+            return '';
+        }
     }, [formData.startDate, selectedPlan, planData]);
 
     useEffect(() => {
@@ -476,25 +496,32 @@ const PaymentModal = ({
 
         if (isSubmitting) return;
 
-        if (!selectedClient) return alert("Please select a client");
-        if (!selectedPlan) return alert("Please select a plan");
+        if (!selectedClient) {
+            setFormError("Please select a client");
+            return;
+        }
+        if (!selectedPlan) {
+            setFormError("Please select a plan");
+            return;
+        }
 
         const paid = Number(formData.paidAmount) || 0;
 
         // Validations
         if (!formData.startDate || isNaN(new Date(formData.startDate).getTime())) {
-            return alert("Please enter a valid Start Date");
+            setFormError("Please enter a valid Start Date");
+            return;
         }
 
         if (!isUpdateMode && paymentType === 'partial') {
-            if (paid < originalPlanPrice * 0.50) {
-                return alert("You must pay at least 50% of the plan price for partial payment.");
+            if (paid <= 100) {
+                setFormError("You must pay an amount greater than ₹100 for partial payment.");
+                return;
             }
         }
 
         if (paid > outstandingBalance) {
-            const errorMsg = `You cannot pay more than the outstanding balance of ₹${outstandingBalance}`;
-            alert(errorMsg);
+            setFormError(`You cannot pay more than the outstanding balance of ₹${outstandingBalance}`);
             return;
         }
 
@@ -504,7 +531,8 @@ const PaymentModal = ({
         // Due date is only required for TRUE partial payments (balance remains after this payment)
         if (realStatus === 'partial') {
             if (!formData.dueDate || isNaN(new Date(formData.dueDate).getTime())) {
-                return alert("Due Date is required and must be a valid date for partial payments");
+                setFormError("Due Date is required and must be a valid date for partial payments");
+                return;
             }
 
             const today = new Date();
@@ -521,10 +549,12 @@ const PaymentModal = ({
             if (end) end.setHours(0, 0, 0, 0);
 
             if (due < start) {
-                return alert("Due Date cannot be earlier than the membership Start Date.");
+                setFormError("Due Date cannot be earlier than the membership Start Date.");
+                return;
             }
             if (end && due > end) {
-                return alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB').replace(/\//g, '-')}).`);
+                setFormError(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB').replace(/\//g, '-')}).`);
+                return;
             }
         }
 
@@ -892,6 +922,15 @@ const PaymentModal = ({
                             </div>
                         </div>
                     </div>
+
+                    {formError && (
+                        <div className="flex items-start gap-3 p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                            <AlertTriangle className="text-rose-500 shrink-0 mt-0.5" size={16} />
+                            <div className="flex-1">
+                                <p className="text-rose-400 text-xs font-semibold leading-relaxed">{formError}</p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex flex-col sm:flex-row gap-3 pt-4">
                         <Button

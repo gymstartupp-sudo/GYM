@@ -180,15 +180,15 @@ exports.recordPayment = async (req, res, next) => {
     const remainingBalance = Math.max(0, numAmount - safePaidAmount);
     let computedDueDate = null;
     if (remainingBalance > 0) {
-      if (safePaidAmount < (numAmount * 0.50)) {
-        return res.status(400).json({ success: false, message: 'You must pay at least 50% of the plan price for partial payment.' });
+      if (safePaidAmount <= 100) {
+        return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
       }
 
-      const durationMonths = planDetails.durationMonths || 1;
+      const dueDays = planDetails ? (planDetails.partialPaymentDueDays ?? 15) : 15;
       const startVal = new Date(startDate || Date.now());
       startVal.setHours(0, 0, 0, 0);
       computedDueDate = new Date(startVal);
-      computedDueDate.setDate(computedDueDate.getDate() + (durationMonths <= 6 ? 15 : 30));
+      computedDueDate.setDate(computedDueDate.getDate() + dueDays);
       computedDueDate.setHours(0, 0, 0, 0);
     }
 

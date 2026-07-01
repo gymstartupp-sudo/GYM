@@ -252,12 +252,13 @@ exports.addClient = async (req, res, next) => {
     let planId = membership?.planId;
     let planPrice = 0;
 
+    let plan = null;
     if (membership?.planType === 'Custom') {
       planDurationMonths = membership.customMonths;
       planId = null;
       planPrice = payment.amount || 0;
     } else {
-      const plan = await Plan.findOne({ _id: membership?.planId, gymId: gymIdStr, isActive: true });
+      plan = await Plan.findOne({ _id: membership?.planId, gymId: gymIdStr, isActive: true });
       if (!plan) return res.status(400).json({ success: false, message: 'Selected plan not found' });
       planName = plan.name;
       planDurationMonths = plan.durationMonths;
@@ -273,14 +274,15 @@ exports.addClient = async (req, res, next) => {
 
     let resolvedDueDate = null;
     if (remainingBalanceVal > 0) {
-      if (paidAmountVal < (planPriceVal * 0.50)) {
-        return res.status(400).json({ success: false, message: 'You must pay at least 50% of the plan price for partial payment.' });
+      if (paidAmountVal <= 100) {
+        return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
       }
 
+      const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
       const startVal = new Date(membership?.startDate || Date.now());
       startVal.setHours(0, 0, 0, 0);
       resolvedDueDate = new Date(startVal);
-      resolvedDueDate.setDate(resolvedDueDate.getDate() + (planDurationMonths <= 6 ? 15 : 30));
+      resolvedDueDate.setDate(resolvedDueDate.getDate() + dueDays);
       resolvedDueDate.setHours(0, 0, 0, 0);
     }
 
@@ -512,8 +514,9 @@ exports.approveClient = async (req, res, next) => {
     let planDurationMonths = client.membership.planDurationMonths || 1;
     let planPrice = 0;
 
+    let plan = null;
     if (client.membership.planId) {
-      const plan = await Plan.findOne({ _id: client.membership.planId, gymId: client.gymId, isActive: true });
+      plan = await Plan.findOne({ _id: client.membership.planId, gymId: client.gymId, isActive: true });
       if (plan) {
         planName = plan.name;
         planDurationMonths = plan.durationMonths;
@@ -569,12 +572,13 @@ exports.approveClient = async (req, res, next) => {
     // Validate and Auto-Calculate Due Date & 50% Minimum
     let resolvedDueDate = null;
     if (remainingBalance > 0) {
-      if (paidAmount < (planPrice * 0.50)) {
-        return res.status(400).json({ success: false, message: 'You must pay at least 50% of the plan price for partial payment.' });
+      if (paidAmount <= 100) {
+        return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
       }
 
+      const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
       resolvedDueDate = new Date(startCheck);
-      resolvedDueDate.setDate(resolvedDueDate.getDate() + (planDurationMonths <= 6 ? 15 : 30));
+      resolvedDueDate.setDate(resolvedDueDate.getDate() + dueDays);
       resolvedDueDate.setHours(0, 0, 0, 0);
     }
 

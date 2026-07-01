@@ -1,0 +1,637 @@
+{
+  "counts": {
+    "Gym": 13,
+    "Owner": 26,
+    "Admin": 1,
+    "Client": 60,
+    "Payment": 132,
+    "Plan": 54,
+    "Expense": 24,
+    "Counter": 14,
+    "Feedback": 12
+  },
+  "gymOwnedMissingGymId": {},
+  "tenantIsolationViolations": {
+    "Plan": [
+      {
+        "id": "69de0ca4f925e48df851a190",
+        "gymId": "DNB-01"
+      },
+      {
+        "id": "69de298df925e48df851a2a6",
+        "gymId": "ABC-01"
+      },
+      {
+        "id": "69df55a3f4ebd6698a1c4c98",
+        "gymId": "ABC-02"
+      },
+      {
+        "id": "69e35d38228947f80c183c56",
+        "gymId": "DNB-01"
+      },
+      {
+        "id": "69e35e43228947f80c183ca8",
+        "gymId": "DNB-01"
+      },
+      {
+        "id": "69e36f50792bd70c9d7a93ec",
+        "gymId": "DNB-01"
+      },
+      {
+        "id": "69e36f5d11dd48acc30ed493",
+        "gymId": "ABC-02"
+      },
+      {
+        "id": "69e36f7311dd48acc30ed498",
+        "gymId": "ABC-02"
+      },
+      {
+        "id": "69e36f8b11dd48acc30ed49d",
+        "gymId": "ABC-02"
+      },
+      {
+        "id": "69e36ff8792bd70c9d7a9410",
+        "gymId": "DNB-01"
+      },
+      {
+        "id": "69e3bc5b47e21472b8a869a9",
+        "gymId": "NEX-01"
+      },
+      {
+        "id": "69e3bc6f47e21472b8a869ae",
+        "gymId": "NEX-01"
+      },
+      {
+        "id": "69e3bc7f47e21472b8a869b3",
+        "gymId": "NEX-01"
+      },
+      {
+        "id": "69e3db1ff07200d5301efa03",
+        "gymId": "MAR-01"
+      },
+      {
+        "id": "69e3e32ce5ec719dfb973016",
+        "gymId": "NEX-02"
+      },
+      {
+        "id": "69e3e7e2e5ec719dfb97310d",
+        "gymId": "NEX-03"
+      },
+      {
+        "id": "69e4a7877d447efa8d1b7b4e",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69e4a7a37d447efa8d1b7b57",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69e4a7b87d447efa8d1b7b5c",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69e50aba2040cbc33b886925",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69e52983f1e1f64381a29965",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69ec87c8c2b95d39547385a2",
+        "gymId": "NEX-03"
+      },
+      {
+        "id": "69ec87c8c2b95d39547385a3",
+        "gymId": "NEX-03"
+      },
+      {
+        "id": "69ec87c8c2b95d39547385a4",
+        "gymId": "NEX-03"
+      },
+      {
+        "id": "69ec87c8c2b95d39547385a5",
+        "gymId": "NEX-03"
+      },
+      {
+        "id": "69ec899ac2b95d395473862b",
+        "gymId": "NEX-03"
+      }
+    ],
+    "Expense": [
+      {
+        "id": "69f786ee89b68d1f057e3012",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69f7871089b68d1f057e310f",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69f78c9989b68d1f057e482c",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69f78cac89b68d1f057e48ec",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69f78cc589b68d1f057e4932",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69f791bf89b68d1f057e5e54",
+        "gymId": "NEX-05"
+      },
+      {
+        "id": "69fcf0abbcfec8f6c13d4fb5",
+        "gymId": "NEX-05"
+      }
+    ]
+  },
+  "duplicateIdentifiers": {
+    "gymId": [],
+    "clientIdGlobal": [],
+    "clientIdPerGym": [],
+    "paymentIdGlobal": [],
+    "paymentIdPerGym": [],
+    "planIdPerGym": [
+      {
+        "gymId": "NEX-01"
+      },
+      {
+        "gymId": "NEX-04",
+        "name": "Quarterly"
+      },
+      {
+        "gymId": "NEX-07"
+      },
+      {
+        "gymId": "DNB-01"
+      },
+      {
+        "gymId": "NEX-04",
+        "name": "Half-Yearly"
+      },
+      {
+        "gymId": "NEX-03",
+        "name": "Monthly"
+      },
+      {
+        "gymId": "ABC-02"
+      }
+    ]
+  },
+  "orphanRecords": {
+    "paymentsMissingClient": [
+      {
+        "paymentId": "6a1708eeec4be7c1debb3be3",
+        "paymentBusinessId": "INV-006",
+        "clientIdReferenced": "6a1708eeec4be7c1debb3bdd"
+      },
+      {
+        "paymentId": "6a173313ce2433d280ff015e",
+        "paymentBusinessId": "INV-017",
+        "clientIdReferenced": "6a173313ce2433d280ff0158"
+      },
+      {
+        "paymentId": "6a173daf12e91d53b9f342d7",
+        "paymentBusinessId": "INV-020",
+        "clientIdReferenced": "6a173daf12e91d53b9f342d1"
+      },
+      {
+        "paymentId": "6a174ddef2b92ac5ecf707e4",
+        "paymentBusinessId": "INV-022",
+        "clientIdReferenced": "6a174ddef2b92ac5ecf707de"
+      },
+      {
+        "paymentId": "6a17577f5722affcd22a449a",
+        "paymentBusinessId": "INV-025",
+        "clientIdReferenced": "6a17577e5722affcd22a4494"
+      }
+    ],
+    "paymentsMissingGym": [],
+    "plansMissingGym": [
+      "69de0ca4f925e48df851a190",
+      "69de298df925e48df851a2a6",
+      "69df55a3f4ebd6698a1c4c98",
+      "69e35d38228947f80c183c56",
+      "69e35e43228947f80c183ca8",
+      "69e36f50792bd70c9d7a93ec",
+      "69e36f5d11dd48acc30ed493",
+      "69e36f7311dd48acc30ed498",
+      "69e36f8b11dd48acc30ed49d",
+      "69e36ff8792bd70c9d7a9410",
+      "69e3bc5b47e21472b8a869a9",
+      "69e3bc6f47e21472b8a869ae",
+      "69e3bc7f47e21472b8a869b3",
+      "69e3db1ff07200d5301efa03",
+      "69e3e32ce5ec719dfb973016",
+      "69e3e7e2e5ec719dfb97310d",
+      "69e4a7877d447efa8d1b7b4e",
+      "69e4a7a37d447efa8d1b7b57",
+      "69e4a7b87d447efa8d1b7b5c",
+      "69e50aba2040cbc33b886925",
+      "69e52983f1e1f64381a29965",
+      "69ec87c8c2b95d39547385a2",
+      "69ec87c8c2b95d39547385a3",
+      "69ec87c8c2b95d39547385a4",
+      "69ec87c8c2b95d39547385a5",
+      "69ec899ac2b95d395473862b"
+    ],
+    "expensesMissingGym": [
+      "69f786ee89b68d1f057e3012",
+      "69f7871089b68d1f057e310f",
+      "69f78c9989b68d1f057e482c",
+      "69f78cac89b68d1f057e48ec",
+      "69f78cc589b68d1f057e4932",
+      "69f791bf89b68d1f057e5e54",
+      "69fcf0abbcfec8f6c13d4fb5"
+    ],
+    "feedbacksMissingGym": [],
+    "feedbacksMissingClient": [
+      {
+        "feedbackId": "6a2c5aaeab92731a4fc416d8",
+        "clientObjectIdReferenced": "6a269ffdeb6bc7b34b6d9d12"
+      },
+      {
+        "feedbackId": "6a2d617930fd4b3e1fc0c647",
+        "clientObjectIdReferenced": "6a269ffdeb6bc7b34b6d9d12"
+      },
+      {
+        "feedbackId": "6a2d67d4eb19cb83bec6671f",
+        "clientObjectIdReferenced": "6a269ffdeb6bc7b34b6d9d12"
+      },
+      {
+        "feedbackId": "6a312f674c177371c7fe94a4",
+        "clientObjectIdReferenced": "6a269ffdeb6bc7b34b6d9d12"
+      }
+    ],
+    "clientsMissingGym": [],
+    "clientMembershipsMissingPlan": [],
+    "clientPaymentsMissingPayment": [
+      {
+        "clientId": "69f5a64db0c0f832a5517d6a",
+        "paymentId": "69f5a69db0c0f832a5517db7"
+      },
+      {
+        "clientId": "69f5c0cab0c0f832a5518cd6",
+        "paymentId": "69f5e65f76ec92d619f754df"
+      },
+      {
+        "clientId": "69f5c0cab0c0f832a5518cd6",
+        "paymentId": "6a058a34bb9db1d64401c85c"
+      },
+      {
+        "clientId": "69f5c0cab0c0f832a5518cd6",
+        "paymentId": "6a058acabb9db1d64401cc51"
+      },
+      {
+        "clientId": "69f5c382b0c0f832a5518e51",
+        "paymentId": "69f5e5fa76ec92d619f7533c"
+      },
+      {
+        "clientId": "69f5c382b0c0f832a5518e51",
+        "paymentId": "69f5e5fc76ec92d619f75354"
+      },
+      {
+        "clientId": "69f5f2002536db9f84474301",
+        "paymentId": "69f5f2002536db9f84474306"
+      },
+      {
+        "clientId": "69f5f2002536db9f84474301",
+        "paymentId": "69f5fef2093661e3eaad3e8c"
+      },
+      {
+        "clientId": "69f5f2432536db9f844743c6",
+        "paymentId": "69f5f2442536db9f844743cd"
+      },
+      {
+        "clientId": "69f5f3313f16aa7d5bcfa4ff",
+        "paymentId": "69f5f3323f16aa7d5bcfa504"
+      },
+      {
+        "clientId": "69f5f3a53f16aa7d5bcfa6ce",
+        "paymentId": "69f5f3a63f16aa7d5bcfa6d3"
+      },
+      {
+        "clientId": "69f5f3a53f16aa7d5bcfa6ce",
+        "paymentId": "6a058c46bb9db1d64401d5db"
+      },
+      {
+        "clientId": "69f5f3a53f16aa7d5bcfa6ce",
+        "paymentId": "6a058c87bb9db1d64401d81c"
+      },
+      {
+        "clientId": "69f5f3a53f16aa7d5bcfa6ce",
+        "paymentId": "6a058cd8bb9db1d64401d9c6"
+      },
+      {
+        "clientId": "69f5f3a53f16aa7d5bcfa6ce",
+        "paymentId": "6a15e8439b2de43c6f861921"
+      },
+      {
+        "clientId": "69f601023737f60d1457a490",
+        "paymentId": "69f601033737f60d1457a495"
+      },
+      {
+        "clientId": "69f641064869578b01d5c741",
+        "paymentId": "69f641074869578b01d5c74b"
+      },
+      {
+        "clientId": "69f641064869578b01d5c741",
+        "paymentId": "69f645754869578b01d5e1f8"
+      },
+      {
+        "clientId": "69f641064869578b01d5c741",
+        "paymentId": "6a15e57c9b2de43c6f86063a"
+      },
+      {
+        "clientId": "69f641064869578b01d5c741",
+        "paymentId": "6a15e60c9b2de43c6f8609e2"
+      },
+      {
+        "clientId": "69f641064869578b01d5c741",
+        "paymentId": "6a15e6399b2de43c6f860b32"
+      },
+      {
+        "clientId": "69f642b94869578b01d5d122",
+        "paymentId": "69f642b94869578b01d5d127"
+      },
+      {
+        "clientId": "69f642b94869578b01d5d122",
+        "paymentId": "69f6457d4869578b01d5e307"
+      },
+      {
+        "clientId": "69f735eba8bb652c069f3d4f",
+        "paymentId": "69f735eba8bb652c069f3d54"
+      }
+    ]
+  },
+  "schemaInconsistencies": {
+    "Client": [
+      {
+        "key": "overdueReminders.reminder1.sentAt",
+        "types": [
+          "object",
+          "null"
+        ]
+      },
+      {
+        "key": "overdueReminders.reminder2.sentAt",
+        "types": [
+          "null",
+          "object"
+        ]
+      },
+      {
+        "key": "overdueReminders.reminder3.sentAt",
+        "types": [
+          "null",
+          "object"
+        ]
+      },
+      {
+        "key": "deactivatedAt",
+        "types": [
+          "null",
+          "object"
+        ]
+      }
+    ],
+    "Payment": [
+      {
+        "key": "dueDate",
+        "types": [
+          "null",
+          "object"
+        ]
+      }
+    ]
+  },
+  "redundantFieldsUsage": {
+    "payments": {
+      "amount": 132,
+      "mode": 81,
+      "date": 132
+    }
+  },
+  "indexes": {
+    "Gym": [
+      {
+        "v": 2,
+        "key": {
+          "_id": 1
+        },
+        "name": "_id_"
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1
+        },
+        "name": "gymId_1",
+        "background": true,
+        "unique": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymEmail": 1
+        },
+        "name": "gymEmail_1",
+        "background": true,
+        "unique": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymContact": 1
+        },
+        "name": "gymContact_1",
+        "background": true,
+        "unique": true
+      }
+    ],
+    "Owner": [
+      {
+        "v": 2,
+        "key": {
+          "_id": 1
+        },
+        "name": "_id_"
+      }
+    ],
+    "Client": [
+      {
+        "v": 2,
+        "key": {
+          "_id": 1
+        },
+        "name": "_id_"
+      },
+      {
+        "v": 2,
+        "key": {
+          "personalInfo.email": 1
+        },
+        "name": "personalInfo.email_1",
+        "background": true,
+        "unique": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "personalInfo.mobileNo": 1
+        },
+        "name": "personalInfo.mobileNo_1",
+        "background": true,
+        "unique": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1,
+          "isActive": 1
+        },
+        "name": "gymId_1_isActive_1",
+        "background": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1,
+          "isActive": 1,
+          "paymentStatus": 1
+        },
+        "name": "gymId_1_isActive_1_paymentStatus_1",
+        "background": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1,
+          "clientId": 1
+        },
+        "name": "gymId_1_clientId_1",
+        "background": true,
+        "unique": true,
+        "partialFilterExpression": {
+          "clientId": {
+            "$exists": true
+          }
+        }
+      },
+      {
+        "v": 2,
+        "key": {
+          "clientId": 1
+        },
+        "name": "clientId_1",
+        "background": true,
+        "unique": true,
+        "sparse": true
+      }
+    ],
+    "Payment": [
+      {
+        "v": 2,
+        "key": {
+          "_id": 1
+        },
+        "name": "_id_"
+      },
+      {
+        "v": 2,
+        "key": {
+          "paymentId": 1
+        },
+        "name": "paymentId_1",
+        "background": true,
+        "unique": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "clientId": 1
+        },
+        "name": "clientId_1",
+        "background": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1,
+          "createdAt": -1
+        },
+        "name": "gymId_1_createdAt_-1",
+        "background": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1,
+          "clientId": 1,
+          "planId": 1,
+          "startDate": 1
+        },
+        "name": "gymId_1_clientId_1_planId_1_startDate_1",
+        "background": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "idempotencyKey": 1
+        },
+        "name": "idempotencyKey_1",
+        "background": true,
+        "unique": true,
+        "sparse": true
+      }
+    ],
+    "Plan": [
+      {
+        "v": 2,
+        "key": {
+          "_id": 1
+        },
+        "name": "_id_"
+      }
+    ],
+    "Expense": [
+      {
+        "v": 2,
+        "key": {
+          "_id": 1
+        },
+        "name": "_id_"
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1
+        },
+        "name": "gymId_1",
+        "background": true
+      },
+      {
+        "v": 2,
+        "key": {
+          "gymId": 1,
+          "date": -1
+        },
+        "name": "gymId_1_date_-1",
+        "background": true
+      }
+    ],
+    "Feedback": [
+      {
+        "v": 2,
+        "key": {
+          "_id": 1
+        },
+        "name": "_id_"
+      }
+    ]
+  }
+}
