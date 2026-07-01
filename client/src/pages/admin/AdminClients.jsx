@@ -121,10 +121,10 @@ const AdminClients = () => {
                                         </div>
                                     </td>
                                     <td className="p-4 text-sm text-text-secondary">{client.personalInfo.mobileNo}</td>
-                                    <td className="p-4 text-sm text-text-secondary">{client.membership.planName || 'N/A'}</td>
+                                    <td className="p-4 text-sm text-text-secondary">{client.membership?.planName || 'N/A'}</td>
                                     <td className="p-4">
-                                       <span className={`px-2 py-1 text-xs rounded-full ${client.membership.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-text-secondary'}`}>
-                                            {client.membership.status.toUpperCase()}
+                                       <span className={`px-2 py-1 text-xs rounded-full ${client.membership?.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-text-secondary'}`}>
+                                            {(client.membership?.status || 'N/A').toUpperCase()}
                                         </span>
                                     </td>
                                 </tr>

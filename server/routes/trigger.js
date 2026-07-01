@@ -20,4 +20,30 @@ router.post('/reminders', async (req, res, next) => {
   }
 });
 
+// @desc    Check overdue reminders (GET - browser clickable)
+// @route   GET /api/trigger/check-overdue
+// @access  Public
+router.get('/check-overdue', async (req, res, next) => {
+  try {
+    await runOverdueReminders();
+    res.status(200).json({ success: true, message: 'Overdue reminder check completed.' });
+  } catch (err) {
+    console.error('Error running overdue check:', err);
+    res.status(500).json({ success: false, message: 'Failed to run overdue check', error: err.message });
+  }
+});
+
+// @desc    Check membership expiry reminders (GET - browser clickable)
+// @route   GET /api/trigger/check-expiry
+// @access  Public
+router.get('/check-expiry', async (req, res, next) => {
+  try {
+    await runReminders();
+    res.status(200).json({ success: true, message: 'Expiry reminder check completed.' });
+  } catch (err) {
+    console.error('Error running expiry check:', err);
+    res.status(500).json({ success: false, message: 'Failed to run expiry check', error: err.message });
+  }
+});
+
 module.exports = router;

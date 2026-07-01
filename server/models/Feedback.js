@@ -1,12 +1,6 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
-  feedbackId: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
-  },
   gymId: {
     type: String,
     required: true,

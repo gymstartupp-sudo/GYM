@@ -31,6 +31,7 @@ const syncClientStatus = async (clientId) => {
         const balance = finalPrice - totalPaid;
 
         if (balance > 0) {
+          client.hasPartialPayment = true;
           if (m.dueDate && new Date(m.dueDate) < today) {
             hasOverdue = true;
           } else {
@@ -55,6 +56,9 @@ const syncClientStatus = async (clientId) => {
         };
       }
       client.overdueReminders.workflowCompleted = true;
+      if (!client.overdueReminders.duesClearedAt) {
+        client.overdueReminders.duesClearedAt = new Date();
+      }
     }
 
     // ── 2. Synchronize `client.membership` (singular) from `memberships[]` ──

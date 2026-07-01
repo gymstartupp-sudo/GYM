@@ -4,7 +4,7 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { Receipt, Plus, X, Edit2, Eye, FileText, Calendar, CreditCard, User, CheckCircle2 } from 'lucide-react';
 import Button from '../../components/Button';
-import { getPlanStatus, calculateEndDate } from '../../utils/membership';
+import { getPlanStatus, calculateEndDate, toLocalDateString } from '../../utils/membership';
 import PaymentModal from '../../components/PaymentModal';
 import ClientDetail from './ClientDetail';
 import Pagination from '../../components/Pagination';
@@ -373,13 +373,13 @@ const Transactions = () => {
                     amount: selectedPayment.invoiceAmount || selectedPayment.amount || 0,
                     totalPaidSoFar: selectedPayment.totalPaid || selectedPayment.paidAmount || 0,
                     paidAmount: '',
-                    dueDate: selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toISOString().split('T')[0] : '',
-                    startDate: selectedPayment.startDate ? new Date(selectedPayment.startDate).toISOString().split('T')[0] : '',
+                    dueDate: selectedPayment.dueDate ? toLocalDateString(selectedPayment.dueDate) : '',
+                    startDate: selectedPayment.startDate ? toLocalDateString(selectedPayment.startDate) : '',
                     paymentMethod: selectedPayment.paymentMethod || 'cash',
                     id: selectedPayment._id
                 } : {
-                    startDate: new Date().toISOString().split('T')[0],
-                    dueDate: new Date().toISOString().split('T')[0]
+                    startDate: toLocalDateString(new Date()),
+                    dueDate: toLocalDateString(new Date())
                 }}
             />
 

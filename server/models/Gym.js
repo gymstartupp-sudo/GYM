@@ -3,31 +3,34 @@ const bcrypt = require('bcryptjs');
 
 const gymSchema = new mongoose.Schema({
   gymId: { type: String, required: true, unique: true, trim: true },
-  gymIdPrefix: { type: String },
-  gymName: { type: String, required: true, maxlength: 20 },
-  gst: { type: String },
-  tagline: { type: String, maxlength: 20 },
+  gymName: { type: String, required: true, maxlength: 35 },
+  gst: { type: String, maxlength: 15 },
+  tagline: { type: String, maxlength: 35 },
   address: { type: String, required: true, maxlength: 100 },
-  location: { type: String, required: true, maxlength: 20 },
+  state: { type: String, required: true, maxlength: 25 },
+  city: { type: String, required: true, maxlength: 25 },
+  pincode: { type: String, required: true, maxlength: 6 },
   gymEmail: { type: String, required: true, unique: true },
   gymContact: { type: String, required: true, unique: true },
   socialMediaLinks: [{ platform: String, url: String }],
-  gymType: { type: String, maxlength: 20 },
+  gymType: { type: String, maxlength: 35 },
   operatingDays: [{ type: String }],
   operatingHours: {
     open: { type: String },
     close: { type: String }
   },
   password: { type: String, required: true },
+  owner: {
+    name: { type: String, required: true, maxlength: 50 },
+    email: { type: String, required: true, trim: true },
+    mobile: { type: String, required: true, trim: true }
+  },
   billingInfo: {
     billingIdPrefix: { type: String, maxlength: 5 },
     helpContact: String,
-    gst: String,
-    logo: String,
     addressOnBill: { type: String, maxlength: 100 },
-    regards: { type: String, maxlength: 50 },
-    greetingText: { type: String, maxlength: 50 },
-    invoiceSupportEmail: { type: String, trim: true },
+    regards: { type: String, maxlength: 35 },
+    greetingText: { type: String, maxlength: 35 },
     allowPartialPayments: { type: Boolean, default: true }
   },
   reminderSettings: {

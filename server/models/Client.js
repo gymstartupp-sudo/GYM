@@ -6,11 +6,14 @@ const clientSchema = new mongoose.Schema({
   gymId: { type: String, required: true },
   gymName: { type: String, required: true },
   personalInfo: {
-    name: { type: String, required: true, maxlength: 25 },
+    name: { type: String, required: true, maxlength: 50 },
     dob: { type: Date, required: true },
     gender: { type: String, required: true },
     address: { type: String, required: true, maxlength: 100 },
-    email: { type: String, required: true, unique: true },
+    city: { type: String, required: true, maxlength: 25 },
+    state: { type: String, required: true, maxlength: 25 },
+    pincode: { type: String, required: true, maxlength: 6 },
+    email: { type: String, required: true, unique: true, maxlength: 50 },
     mobileNo: { type: String, required: true, unique: true },
     emergencyContact: { type: String },
     medicalCondition: { type: String, maxlength: 100 },
@@ -82,10 +85,12 @@ const clientSchema = new mongoose.Schema({
       status: { type: String, enum: ['sent', 'failed'] },
       error: { type: String, default: null }
     }],
-    workflowCompleted: { type: Boolean, default: false }
+    workflowCompleted: { type: Boolean, default: false },
+    duesClearedAt: { type: Date, default: null }
   },
   paymentHistory: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Payment' }],
   avatar: { type: String },
+  hasPartialPayment: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   deactivatedAt: { type: Date, default: null }
 }, { timestamps: true });

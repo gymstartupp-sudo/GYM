@@ -1,5 +1,4 @@
 const Gym = require('../models/Gym');
-const Owner = require('../models/Owner');
 const Client = require('../models/Client');
 const Plan = require('../models/Plan');
 const Payment = require('../models/Payment');
@@ -12,7 +11,14 @@ exports.getGymProfile = async (req, res, next) => {
   try {
     const gymStrId = req.user._id.toString();
     const gym = await Gym.findById(gymStrId).select('-password');
-    const owner = await Owner.findOne({ gymId: gymStrId });
+    if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
+
+    const owner = gym.owner ? {
+      name: gym.owner.name,
+      mobileNo: gym.owner.mobile,
+      mailId: gym.owner.email
+    } : null;
+
     res.status(200).json({ success: true, data: { gym, owner } });
   } catch (err) {
     next(err);
@@ -85,16 +91,36 @@ exports.updateGymProfile = async (req, res, next) => {
         if (!phoneRegex.test(ownerData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'ownerMobile' });
       }
 
-      // Update Owner
-      const owner = await Owner.findOneAndUpdate({ gymId: gymStrId }, ownerData, { new: true, runValidators: true });
-      req.updatedOwner = owner;
+      // Update Owner in Gym Document
+      const gym = await Gym.findById(gymStrId);
+      if (gym) {
+        gym.owner = {
+          name: ownerData.name || gym.owner?.name,
+          email: ownerData.mailId || gym.owner?.email,
+          mobile: ownerData.mobileNo || gym.owner?.mobile
+        };
+        await gym.save();
+        req.updatedOwner = {
+          name: gym.owner.name,
+          mobileNo: gym.owner.mobile,
+          mailId: gym.owner.email
+        };
+        req.updatedGym = gym;
+      }
     }
+
+    const finalGym = req.updatedGym || await Gym.findById(gymStrId).select('-password');
+    const finalOwner = finalGym?.owner ? {
+      name: finalGym.owner.name,
+      mobileNo: finalGym.owner.mobile,
+      mailId: finalGym.owner.email
+    } : null;
 
     res.status(200).json({ 
       success: true, 
       data: { 
-        gym: req.updatedGym || await Gym.findById(gymStrId).select('-password'), 
-        owner: req.updatedOwner || await Owner.findOne({ gymId: gymStrId }) 
+        gym: finalGym, 
+        owner: finalOwner
       } 
     });
   } catch (err) {

@@ -48,15 +48,8 @@ const generateGymId = async () => {
 };
 
 const generateClientId = async (gymIdStr) => {
-  const gym = await Gym.findOne({ gymId: gymIdStr });
-  const prefix = gym?.gymIdPrefix?.toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-  if (!prefix) {
-    throw new Error('Unable to generate client ID for this gym');
-  }
-
   const sequence = await getNextSequenceValue(`clientId:${gymIdStr}`);
-  return `${prefix}-${String(sequence).padStart(2, '0')}`;
+  return `CL-${String(sequence).padStart(2, '0')}`;
 };
 
 const generatePaymentId = async (gymId, billingPrefix) => {

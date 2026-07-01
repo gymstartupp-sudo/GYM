@@ -22,13 +22,12 @@ import {
   Calendar,
   Clock,
   UploadCloud,
-  X,
-  HelpCircle
+  X
 } from 'lucide-react';
 
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
-const passwordError = 'Password must be at least 8 characters with 1 uppercase and 1 number';
+const passwordError = 'Password must be at least 8 characters with 1 uppercase, 1 number, and 1 special character';
 const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const handlePhoneInput = (e) => {
@@ -131,15 +130,16 @@ const optionalUrl = yup.string().trim().test(
 );
 
 const schema = yup.object({
-  gymIdPrefix: yup.string().trim().required('Gym ID prefix is required').min(2, 'Min 2 characters').max(3, 'Max 3 characters').matches(/^[A-Z]{2,3}$/, '2-3 uppercase letters only'),
-  gymName: yup.string().trim().required('Gym name is required').max(25, 'Max 25 chars'),
-  gymEmail: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Gym email is required'),
+  gymName: yup.string().trim().required('Gym name is required').max(35, 'Max 35 chars'),
+  gymEmail: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Gym email is required'),
   gymContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
-  location: yup.string().trim().required('Location is required').max(20, 'Max 20 chars'),
-  gst: yup.string().trim().nullable(),
-  gymType: yup.string().trim().nullable().max(20, 'Max 20 chars'),
-  tagline: yup.string().trim().nullable().max(20, 'Max 20 chars'),
+  state: yup.string().trim().required('State is required').max(25, 'Max 25 chars'),
+  city: yup.string().trim().required('City is required').max(25, 'Max 25 chars'),
+  pincode: yup.string().trim().matches(/^\d{6}$/, 'Pincode must be 6 digits').required('Pincode is required'),
+  gst: yup.string().trim().nullable().max(15, 'Max 15 chars'),
+  gymType: yup.string().trim().nullable().max(35, 'Max 35 chars'),
+  tagline: yup.string().trim().nullable().max(35, 'Max 35 chars'),
   instagramUrl: optionalUrl,
   facebookUrl: optionalUrl,
   websiteUrl: optionalUrl,
@@ -150,30 +150,30 @@ const schema = yup.object({
   operatingCloseHour: yup.string().nullable(),
   operatingCloseMinute: yup.string().nullable(),
   operatingCloseAmpm: yup.string().nullable(),
-  password: yup.string().min(8, passwordError).max(20, 'Max 20 chars').matches(/^(?=.*[A-Z])(?=.*\d).+$/, passwordError).required(passwordError),
-  confirmPassword: yup.string().max(20, 'Max 20 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password'),
-  name: yup.string().trim().required('Owner name is required').max(25, 'Max 25 chars'),
+  password: yup.string().min(8, passwordError).max(30, 'Max 30 chars').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]).+$/, passwordError).required(passwordError),
+  confirmPassword: yup.string().max(30, 'Max 30 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password'),
+  name: yup.string().trim().required('Owner name is required').max(50, 'Max 50 chars'),
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  mailId: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Email is required'),
+  mailId: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
   whatsappNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   phoneNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  gmail: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Email is required'),
+  gmail: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
   billingIdPrefix: yup.string().trim().required('Billing prefix is required').max(5, 'Max 5 chars').matches(/^[A-Za-z0-9]+$/, 'Alphanumeric only'),
   helpContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   addressOnBill: yup.string().trim().required('Billing address is required').max(100, 'Max 100 chars'),
-  regards: yup.string().trim().required('Regards text is required').max(50, 'Max 50 chars'),
-  greetingText: yup.string().trim().required('Greeting text is required').max(50, 'Max 50 chars'),
+  regards: yup.string().trim().required('Regards text is required').max(35, 'Max 35 chars'),
+  greetingText: yup.string().trim().required('Greeting text is required').max(35, 'Max 35 chars'),
   logo: yup.mixed().nullable()
 });
 
 const stepRequiredFields = {
-  1: ['gymIdPrefix', 'gymName', 'gymEmail', 'gymContact', 'address', 'location', 'password', 'confirmPassword'],
+  1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'password', 'confirmPassword'],
   2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'phoneNumber', 'gmail'],
   3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText']
 };
 
 const stepAllFields = {
-  1: ['gymIdPrefix', 'gymName', 'gymEmail', 'gymContact', 'address', 'location', 'gst', 'gymType', 'tagline', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm', 'password', 'confirmPassword'],
+  1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'gst', 'gymType', 'tagline', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm', 'password', 'confirmPassword'],
   2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'phoneNumber', 'gmail'],
   3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText', 'logo']
 };
@@ -271,6 +271,7 @@ const GymRegister = () => {
   const [syncEmail, setSyncEmail] = useState(true);
   const [syncAddress, setSyncAddress] = useState(true);
   const [syncHelpContact, setSyncHelpContact] = useState(true);
+  const [syncOwnerMobile, setSyncOwnerMobile] = useState(true);
 
   const {
     register,
@@ -311,6 +312,13 @@ const GymRegister = () => {
       setValue('whatsappNumber', gymContact, { shouldValidate: isSubmitted });
     }
   }, [gymContact, syncWhatsapp, setValue, isSubmitted]);
+
+  // Owner Mobile Sync
+  useEffect(() => {
+    if (syncOwnerMobile && gymContact) {
+      setValue('mobileNo', gymContact, { shouldValidate: isSubmitted });
+    }
+  }, [gymContact, syncOwnerMobile, setValue, isSubmitted]);
 
   // SMS Sync
   useEffect(() => {
@@ -452,11 +460,13 @@ const GymRegister = () => {
       };
 
       Object.entries({
-        gymIdPrefix: data.gymIdPrefix,
         gymName: data.gymName,
         gymEmail: data.gymEmail,
         gymContact: data.gymContact,
         address: data.address,
+        state: data.state,
+        city: data.city,
+        pincode: data.pincode,
         location: data.location,
         gst: data.gst || '',
         gymType: data.gymType || '',
@@ -585,50 +595,20 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">Gym Name <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="25" />
+              <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymName') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymName.message}</p>}
               </div>
             </div>
 
-            {/* Client ID Prefix */}
+            {/* Tagline */}
             <div>
-              <div className="flex items-center gap-1.5 h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Client ID Prefix <span className="text-red-500">*</span></p>
-                <div className="relative flex items-center">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); setShowPrefixHelp(!showPrefixHelp); }}
-                    onMouseEnter={() => setShowPrefixHelp(true)}
-                    onMouseLeave={() => setShowPrefixHelp(false)}
-                    className="text-slate-500 hover:text-primary transition-colors flex items-center"
-                  >
-                    <HelpCircle size={12} />
-                  </button>
-                  {showPrefixHelp && (
-                    <div className="absolute left-1/2 -translate-x-1/2 top-6 z-50 w-56 p-2.5 bg-surface-secondary border border-border rounded-lg shadow-xl text-left" onMouseEnter={() => setShowPrefixHelp(true)} onMouseLeave={() => setShowPrefixHelp(false)}>
-                      <p className="text-[11px] font-bold text-primary mb-1">Client ID Prefix</p>
-                      <p className="text-[10px] text-text-secondary leading-relaxed">
-                        Enter a <span className="font-bold text-text-primary">3 letter code</span> that identifies your gym.
-                        <br /><br />
-                        This prefix is used to <span className="font-bold text-text-primary">auto-generate unique member IDs</span> (e.g. DNB → DNB-01, DNB-02...).
-                      </p>
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
               </div>
-              <input
-                {...register('gymIdPrefix')}
-                placeholder="E.g. DNB"
-                className={fieldClassName('gymIdPrefix', 'font-semibold tracking-wider')}
-                maxLength="3"
-                onChange={(e) => {
-                  const upper = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
-                  setValue('gymIdPrefix', upper, { shouldValidate: true, shouldTouch: true });
-                }}
-              />
+              <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
-                {showFieldError('gymIdPrefix') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymIdPrefix.message}</p>}
+                {showFieldError('tagline') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.tagline.message}</p>}
               </div>
             </div>
 
@@ -637,7 +617,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">Gym Email <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} maxLength="25" onBlur={(e) => { checkDuplicate('gymEmail', e.target.value); }} />
+              <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} maxLength="50" onBlur={(e) => { checkDuplicate('gymEmail', e.target.value); }} />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymEmail') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymEmail.message}</p>}
               </div>
@@ -662,23 +642,14 @@ const GymRegister = () => {
               </div>
             </div>
 
-            {/* Location */}
-            <div>
-              <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Location <span className="text-red-500">*</span></p>
-              </div>
-              <input {...register('location')} placeholder="E.g. Bangalore" className={fieldClassName('location')} maxLength="20" />
-              <div className="min-h-[20px] mt-1">
-                {showFieldError('location') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.location.message}</p>}
-              </div>
-            </div>
+
 
             {/* GST Number */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">GST Number <span className="text-slate-500 font-normal">(Optional)</span></p>
               </div>
-              <input {...register('gst')} placeholder="E.g. 22AAAAA0000A1Z5" className={fieldClassName('gst')} />
+              <input {...register('gst')} placeholder="E.g. 22AAAAA0000A1Z5" className={fieldClassName('gst')} maxLength="15" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gst') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gst.message}</p>}
               </div>
@@ -689,22 +660,13 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">Gym Type <span className="text-slate-500 font-normal">(Optional)</span></p>
               </div>
-              <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="20" />
+              <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymType') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymType.message}</p>}
               </div>
             </div>
 
-            {/* Tagline */}
-            <div>
-              <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
-              </div>
-              <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="20" />
-              <div className="min-h-[20px] mt-1">
-                {showFieldError('tagline') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.tagline.message}</p>}
-              </div>
-            </div>
+
 
             {/* Address - full width below both columns */}
             <div className="md:col-span-2">
@@ -722,15 +684,48 @@ const GymRegister = () => {
               </div>
             </div>
 
-            {/* Password */}
+            {/* State */}
             <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">State <span className="text-red-500">*</span></p>
+              </div>
+              <input {...register('state')} placeholder="E.g. Karnataka" className={fieldClassName('state')} maxLength="25" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('state') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.state.message}</p>}
+              </div>
+            </div>
+
+            {/* City */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">City <span className="text-red-500">*</span></p>
+              </div>
+              <input {...register('city')} placeholder="E.g. Bengaluru" className={fieldClassName('city')} maxLength="25" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('city') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.city.message}</p>}
+              </div>
+            </div>
+
+            {/* Pincode */}
+            <div >
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-slate-400 font-medium">Pincode <span className="text-red-500">*</span></p>
+              </div>
+              <input {...register('pincode')} placeholder="E.g. 560102" className={fieldClassName('pincode')} maxLength="6" onInput={(e) => { let val = e.target.value.replace(/\D/g, ''); e.target.value = val.slice(0, 6); }} />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('pincode') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.pincode.message}</p>}
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="md:col-start-1">
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
                   <Lock className="w-3 h-3 text-slate-500" />
                   <span>Password <span className="text-red-500">*</span></span>
                 </p>
               </div>
-              <PasswordInput {...register('password')} placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="20" />
+              <PasswordInput {...register('password')} placeholder="Min 8 characters" className={fieldClassName('password')} maxLength="30" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('password') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.password.message}</p>}
               </div>
@@ -744,7 +739,7 @@ const GymRegister = () => {
                   <span>Confirm Password <span className="text-red-500">*</span></span>
                 </p>
               </div>
-              <PasswordInput {...register('confirmPassword')} placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="20" />
+              <PasswordInput {...register('confirmPassword')} placeholder="Retype password" className={fieldClassName('confirmPassword')} maxLength="30" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('confirmPassword') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.confirmPassword.message}</p>}
               </div>
@@ -875,28 +870,49 @@ const GymRegister = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2">
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
-                  <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="25" />
+                  <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="50" />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('name') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.name.message}</p>}
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Mobile Number <span className="text-red-500">*</span></p>
-                  <input
-                    {...register('mobileNo')}
-                    type="tel"
-                    placeholder="10-digit mobile number"
-                    className={fieldClassName('mobileNo')}
-                    onInput={handlePhoneInput}
-                    maxLength="10"
-                  />
-                  <div className="min-h-[20px] mt-1">
-                    {showFieldError('mobileNo') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mobileNo.message}</p>}
+                  <div className="flex justify-between items-center mb-1.5 select-none">
+                    <span className="text-xs text-slate-400 font-medium">Personal Mobile Number <span className="text-red-500">*</span></span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={syncOwnerMobile}
+                        onChange={(e) => setSyncOwnerMobile(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                      />
+                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
+                        [ Same as Gym ]
+                      </span>
+                    </label>
                   </div>
+                  <div className="relative">
+                    <input
+                      {...register('mobileNo')}
+                      type="tel"
+                      placeholder="10-digit mobile number"
+                      className={fieldClassName('mobileNo', syncOwnerMobile ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      onInput={handlePhoneInput}
+                      maxLength="10"
+                      readOnly={syncOwnerMobile}
+                    />
+                    {syncOwnerMobile && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                        <Check className="w-2.5 h-2.5 stroke-[3px]" />
+                        SYNCED
+                      </div>
+                    )}
+                  </div>
+                  {syncOwnerMobile && <p className="text-[10px] text-slate-500 mt-1">Using Gym Contact Number</p>}
+                  {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mobileNo.message}</p>}
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
-                  <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} maxLength="25" />
+                  <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} maxLength="50" />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('mailId') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mailId.message}</p>}
                   </div>
@@ -1192,7 +1208,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">Regards Text <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('regards')} placeholder="Regards, Team Gym" className={fieldClassName('regards')} maxLength="50" />
+              <input {...register('regards')} placeholder="Regards, Team Gym" className={fieldClassName('regards')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('regards') ? (
                   <p className="text-red-500 text-xs font-medium leading-tight">{errors.regards.message}</p>
@@ -1207,7 +1223,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">Greeting Message <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="50" />
+              <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('greetingText') ? (
                   <p className="text-red-500 text-xs font-medium leading-tight">{errors.greetingText.message}</p>

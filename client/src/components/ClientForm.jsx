@@ -22,7 +22,55 @@ import {
 
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
-const passwordError = 'Password must be at least 8 characters with 1 uppercase and 1 number';
+const passwordError = 'Password must be at least 8 characters with 1 uppercase, 1 number, and 1 special character';
+
+const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => String(o.value) === String(value));
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div
+        className={`${className} cursor-pointer flex justify-between items-center ${errorClassName} ${isOpen ? 'border-primary ring-1 ring-primary/50' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+        tabIndex={0}
+      >
+        <span className={selectedOption ? '' : 'text-slate-400'}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
+      </div>
+      {isOpen && (
+        <ul className="absolute z-50 w-full mt-1 bg-surface-card border border-border rounded-lg shadow-xl max-h-60 overflow-auto">
+          {options.map((option) => (
+            <li
+              key={option.value}
+              className={`px-4 py-2.5 cursor-pointer transition-colors border border-transparent rounded-md text-text-primary hover:bg-surface-hover hover:text-primary hover:border-primary ${String(value) === String(option.value) ? 'font-medium bg-surface-hover/50' : ''}`}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+            >
+              {option.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const getMinStartDate = () => {
   const d = new Date();
@@ -46,11 +94,11 @@ const getMinDobDate = () => {
 };
 
 const getValidationSchema = (mode) => yup.object({
-  gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').matches(/^[A-Z]{3}-\d{2}$/, 'Format: PREFIX-01') : yup.string().nullable(),
+  gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').max(8, 'Max 8 chars') : yup.string().nullable(),
   gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
-  name: yup.string().trim().required('Name is required').max(25, 'Max 25 chars'),
+  name: yup.string().trim().required('Name is required').max(50, 'Max 50 chars'),
   gender: yup.string().required('Gender is required'),
-  email: yup.string().trim().email('Please enter a valid email address').max(25, 'Email cannot exceed 25 characters').required('Email is required'),
+  email: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
   dob: yup.date()
     .typeError('Date of birth is required')
     .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
@@ -65,6 +113,9 @@ const getValidationSchema = (mode) => yup.object({
 
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
+  city: yup.string().trim().required('City is required').max(25, 'Max 25 chars'),
+  state: yup.string().trim().required('State is required').max(25, 'Max 25 chars'),
+  pincode: yup.string().matches(/^\d{6}$/, 'Pincode must be exactly 6 digits').required('Pincode is required'),
   emergencyContact: yup.string().matches(phoneRegex, phoneError).required(phoneError).notOneOf([yup.ref('mobileNo')], 'Must be different from Mobile Number'),
   medicalCondition: yup.string().trim().max(100, 'Max 100 chars').nullable(),
   planId: yup.string().nullable(),
@@ -80,16 +131,16 @@ const getValidationSchema = (mode) => yup.object({
     .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),
   planType: yup.string().required('Membership plan is required'),
   password: ['self', 'owner'].includes(mode)
-    ? yup.string().min(8, passwordError).max(20, 'Max 20 chars').matches(/^(?=.*[A-Z])(?=.*\d).+$/, passwordError).required(passwordError)
+    ? yup.string().min(8, passwordError).max(50, 'Max 50 chars').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]).+$/, passwordError).required(passwordError)
     : yup.string().nullable(),
   confirmPassword: ['self', 'owner'].includes(mode)
-    ? yup.string().max(20, 'Max 20 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password')
+    ? yup.string().max(50, 'Max 50 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password')
     : yup.string().nullable()
 });
 
-const selfStepOneFields = ['gymId', 'gymName', 'name', 'gender', 'email', 'dob', 'mobileNo', 'address', 'emergencyContact'];
+const selfStepOneFields = ['gymId', 'gymName', 'name', 'gender', 'email', 'dob', 'mobileNo', 'address', 'city', 'state', 'pincode', 'emergencyContact'];
 const selfStepTwoFields = ['planType', 'startDate', 'password', 'confirmPassword'];
-const ownerRequiredFields = ['name', 'gender', 'email', 'dob', 'mobileNo', 'address', 'emergencyContact', 'password', 'confirmPassword', 'planType', 'startDate'];
+const ownerRequiredFields = ['name', 'gender', 'email', 'dob', 'mobileNo', 'address', 'city', 'state', 'pincode', 'emergencyContact', 'password', 'confirmPassword', 'planType', 'startDate'];
 
 const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, onDirtyChange }) => {
   const { user } = useAuth();
@@ -145,6 +196,15 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       onDirtyChange(isDirty || Object.keys(touchedFields).length > 0);
     }
   }, [isDirty, touchedFields, onDirtyChange]);
+
+  useEffect(() => {
+    if (!isOwner && watchGymId && watchGymId.trim().length >= 3) {
+      const delayDebounceFn = setTimeout(() => {
+        fetchGymName();
+      }, 500);
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [watchGymId, isOwner]);
 
   useEffect(() => {
     if (isOwner && user?.gymId) {
@@ -264,6 +324,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
             dob: data.dob,
             gender: data.gender,
             address: data.address,
+            city: data.city,
+            state: data.state,
+            pincode: data.pincode,
             email: data.email,
             mobileNo: data.mobileNo,
             emergencyContact: data.emergencyContact,
@@ -288,6 +351,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           dob: data.dob,
           mobileNo: data.mobileNo,
           address: data.address,
+          city: data.city,
+          state: data.state,
+          pincode: data.pincode,
           emergencyContact: data.emergencyContact,
           medicalCondition: data.medicalCondition?.trim() || '',
           password: data.password,
@@ -320,11 +386,19 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     }
   };
 
+  const onInvalid = () => {
+    toast.error('Please fill all the mandatory fields before submitting.');
+  };
+
   const handleFinalSubmit = async (paymentData) => {
     setLoading(true);
     try {
       const payload = {
         ...pendingClientData,
+        membership: {
+          ...pendingClientData.membership,
+          startDate: paymentData.startDate
+        },
         payment: paymentData
       };
       const res = await api.post('/client', payload);
@@ -407,6 +481,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           dob: data.dob,
           gender: data.gender,
           address: data.address,
+          city: data.city,
+          state: data.state,
+          pincode: data.pincode,
           email: data.email,
           mobileNo: data.mobileNo,
           emergencyContact: data.emergencyContact,
@@ -450,9 +527,8 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           <input
             {...register('gymId')}
             placeholder="Enter Gym ID (e.g. NEX-01)"
-            onBlur={fetchGymName}
             className={fieldClassName('gymId', 'uppercase')}
-            maxLength="6"
+            maxLength="8"
           />
           {fetchingGym && <p className="text-xs text-primary mt-1">Verifying gym...</p>}
           {showFieldError('gymId') && <p className="text-red-500 text-xs mt-1">{errors.gymId.message}</p>}
@@ -480,24 +556,29 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Full Name <span className="text-red-500">*</span></p>
-        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="25" />
+        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="50" />
         {showFieldError('name') && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
       </div>
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Gender <span className="text-red-500">*</span></p>
-        <select {...register('gender')} className={fieldClassName('gender', 'text-text-secondary bg-surface-secondary')}>
-          <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
+        <CustomSelect
+          value={watch('gender')}
+          onChange={(val) => setValue('gender', val, { shouldValidate: true, shouldDirty: true })}
+          options={[
+            { label: 'Male', value: 'Male' },
+            { label: 'Female', value: 'Female' },
+            { label: 'Other', value: 'Other' }
+          ]}
+          placeholder="Select Gender"
+          className={fieldClassName('gender', 'focus:border-primary focus:ring-primary/50')}
+        />
         {showFieldError('gender') && <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>}
       </div>
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Email <span className="text-red-500">*</span></p>
-        <input {...register('email')} type="email" placeholder="Email Address" className={fieldClassName('email')} maxLength="25" onBlur={(e) => { register('email').onBlur(e); checkDuplicate('email', e.target.value); }} />
+        <input {...register('email')} type="email" placeholder="Email Address" className={fieldClassName('email')} maxLength="50" onBlur={(e) => { register('email').onBlur(e); checkDuplicate('email', e.target.value); }} />
         {showFieldError('email') && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
       </div>
 
@@ -539,6 +620,25 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         {showFieldError('address') && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
       </div>
 
+      <div>
+        <p className="text-xs text-text-secondary mb-1">State <span className="text-red-500">*</span></p>
+        <input {...register('state')} placeholder="E.g. Karnataka" className={fieldClassName('state')} maxLength="25" />
+        {showFieldError('state') && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
+      </div>
+
+      <div>
+        <p className="text-xs text-text-secondary mb-1">City <span className="text-red-500">*</span></p>
+        <input {...register('city')} placeholder="E.g. Bengaluru" className={fieldClassName('city')} maxLength="25" />
+        {showFieldError('city') && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
+      </div>
+
+
+      <div className="md:col-start-1">
+        <p className="text-xs text-text-secondary mb-1">Pincode <span className="text-red-500">*</span></p>
+        <input {...register('pincode')} placeholder="E.g. 560102" className={fieldClassName('pincode')} maxLength="6" onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6) }} />
+        {showFieldError('pincode') && <p className="text-red-500 text-xs mt-1">{errors.pincode.message}</p>}
+      </div>
+
       <div className="md:col-span-2">
         <p className="text-xs text-text-secondary mb-1">Medical Condition (Optional)</p>
         <textarea {...register('medicalCondition')} placeholder="Any medical condition or injury history" className="input-field h-20 resize-none" maxLength="100" />
@@ -548,12 +648,12 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         <>
           <div>
             <p className="text-xs text-text-secondary mb-1">Password <span className="text-red-500">*</span></p>
-            <PasswordInput {...register('password')} placeholder="Create password" className={fieldClassName('password')} maxLength="20" />
+            <PasswordInput {...register('password')} placeholder="Create password" className={fieldClassName('password')} maxLength="50" />
             {showFieldError('password') && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
           <div>
             <p className="text-xs text-text-secondary mb-1">Confirm Password <span className="text-red-500">*</span></p>
-            <PasswordInput {...register('confirmPassword')} placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="20" />
+            <PasswordInput {...register('confirmPassword')} placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="50" />
             {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
           </div>
         </>
@@ -569,23 +669,16 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div className="md:col-span-2">
         <p className="text-xs text-text-secondary mb-1">Membership Plan <span className="text-red-500">*</span></p>
-        <select
-          {...register('planType')}
-          className={fieldClassName('planType', 'text-text-secondary bg-surface-secondary')}
-          onChange={(e) => {
-            const val = e.target.value;
-            setValue('planType', val);
-            setValue('planId', val);
+        <CustomSelect
+          value={watch('planType')}
+          onChange={(val) => {
+            setValue('planType', val, { shouldValidate: true, shouldDirty: true });
+            setValue('planId', val, { shouldValidate: true, shouldDirty: true });
           }}
-        >
-          <option value="">Select a plan</option>
-          {plans.map((plan) => (
-            <option key={plan._id} value={plan._id}>
-              {plan.name} ({plan.durationMonths} months)
-            </option>
-          ))}
-
-        </select>
+          options={plans.map(p => ({ label: `${p.name} (${p.durationMonths} months)`, value: String(p._id) }))}
+          placeholder="Select a plan"
+          className={fieldClassName('planType', 'text-text-secondary bg-surface-secondary')}
+        />
         {showFieldError('planType') && <p className="text-red-500 text-xs mt-1">{errors.planType.message}</p>}
         {!isOwner && plans.length === 0 && <p className="text-yellow-500 text-xs mt-1">Verify the Gym ID first to load that gym&apos;s plans.</p>}
       </div>
@@ -616,12 +709,12 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           </div>
           <div>
             <p className="text-xs text-text-secondary mb-1">Password <span className="text-red-500">*</span></p>
-            <PasswordInput {...register('password')} placeholder="Create password" className={fieldClassName('password')} maxLength="20" />
+            <PasswordInput {...register('password')} placeholder="Create password" className={fieldClassName('password')} maxLength="50" />
             {showFieldError('password') && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
           </div>
           <div>
             <p className="text-xs text-text-secondary mb-1">Confirm Password <span className="text-red-500">*</span></p>
-            <PasswordInput {...register('confirmPassword')} placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="20" />
+            <PasswordInput {...register('confirmPassword')} placeholder="Confirm password" className={fieldClassName('confirmPassword')} maxLength="50" />
             {showFieldError('confirmPassword') && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
           </div>
         </>
@@ -651,7 +744,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
               Next
             </Button>
           ) : (
-            <Button type="button" isLoading={loading} className="ml-auto w-full md:w-auto" onClick={isOwner ? handleOwnerSubmit : () => { handleSubmit(onSubmit)() }}>
+            <Button type="button" isLoading={loading} className="ml-auto w-full md:w-auto" onClick={isOwner ? handleOwnerSubmit : () => { handleSubmit(onSubmit, onInvalid)() }}>
               {isOwner ? 'Add Client' : 'Submit Membership Request'}
             </Button>
           )}

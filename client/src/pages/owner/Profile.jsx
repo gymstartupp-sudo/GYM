@@ -251,7 +251,7 @@ const Profile = () => {
     if (key === 'gymName' || key === 'name') {
       if (!value?.trim()) errMsg = 'Name is required';
       else if (value.length > 25) errMsg = 'Max 25 characters';
-    } else if (key === 'gymType' || key === 'tagline' || key === 'location') {
+    } else if (key === 'gymType' || key === 'tagline') {
       if (value && value.length > 20) errMsg = 'Max 20 characters';
     } else if (key === 'regards' || key === 'greetingText') {
       if (value && value.length > 50) errMsg = 'Max 50 characters';
@@ -270,6 +270,12 @@ const Profile = () => {
       } else if (value.length > 100) {
         errMsg = 'Max 100 characters';
       }
+    } else if (key === 'city' || key === 'state') {
+      if (!value?.trim()) errMsg = `${key === 'city' ? 'City' : 'State'} is required`;
+      else if (value.length > 25) errMsg = 'Max 25 characters';
+    } else if (key === 'pincode') {
+      if (!value?.trim()) errMsg = 'Pincode is required';
+      else if (!/^\d{6}$/.test(value)) errMsg = 'Pincode must be exactly 6 digits';
     } else if (key === 'billingIdPrefix') {
       if (!value?.trim()) errMsg = 'Prefix is required';
     }
@@ -279,10 +285,13 @@ const Profile = () => {
       gymName: 'gymName',
       gymType: 'gymType',
       tagline: 'tagline',
-      location: 'location',
+
       gymEmail: 'gymEmail',
       gymContact: 'gymContact',
       address: 'address',
+      city: 'city',
+      state: 'state',
+      pincode: 'pincode',
       name: 'ownerName',
       mobileNo: 'ownerMobile',
       mailId: 'ownerEmail',
@@ -352,7 +361,7 @@ const Profile = () => {
 
     if (gym.gymType?.length > 20) newErrors.gymType = 'Max 20 characters';
     if (gym.tagline?.length > 20) newErrors.tagline = 'Max 20 characters';
-    if (gym.location?.length > 20) newErrors.location = 'Max 20 characters';
+
 
     if (!gym.gymEmail?.trim()) newErrors.gymEmail = 'Email is required';
     else if (!emailRegex.test(gym.gymEmail)) newErrors.gymEmail = 'Enter a valid email address';
@@ -362,6 +371,15 @@ const Profile = () => {
 
     if (!gym.address?.trim()) newErrors.address = 'Address is required';
     else if (gym.address.length > 100) newErrors.address = 'Max 100 characters';
+
+    if (!gym.city?.trim()) newErrors.city = 'City is required';
+    else if (gym.city.length > 25) newErrors.city = 'Max 25 characters';
+
+    if (!gym.state?.trim()) newErrors.state = 'State is required';
+    else if (gym.state.length > 25) newErrors.state = 'Max 25 characters';
+
+    if (!gym.pincode?.trim()) newErrors.pincode = 'Pincode is required';
+    else if (!/^\d{6}$/.test(gym.pincode)) newErrors.pincode = 'Pincode must be exactly 6 digits';
 
     // Owner validations
     if (!owner.name?.trim()) newErrors.ownerName = 'Owner name is required';
@@ -416,7 +434,10 @@ const Profile = () => {
           gst: formState.gym.gst,
           tagline: formState.gym.tagline,
           address: formState.gym.address,
-          location: formState.gym.location,
+          city: formState.gym.city,
+          state: formState.gym.state,
+          pincode: formState.gym.pincode,
+
           gymEmail: formState.gym.gymEmail,
           gymContact: formState.gym.gymContact,
           gymType: formState.gym.gymType,
@@ -543,10 +564,9 @@ const Profile = () => {
         <ProfileSection title="Establishment Details">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Gym ID" value={formState.gym.gymId} disabled />
-            <Field label="Client ID Prefix" value={formState.gym.gymIdPrefix} disabled />
             <Field label="Gym Name *" value={formState.gym.gymName} disabled={!isEditing} maxLength={25} error={errors.gymName} onChange={e => setSectionValue('gym', 'gymName', e.target.value)} />
             <Field label="Gym Type" value={formState.gym.gymType} disabled={!isEditing} maxLength={20} error={errors.gymType} onChange={e => setSectionValue('gym', 'gymType', e.target.value)} />
-            <Field label="Location *" value={formState.gym.location} disabled={!isEditing} maxLength={20} error={errors.location} onChange={e => setSectionValue('gym', 'location', e.target.value)} />
+
             <Field label="Tagline" value={formState.gym.tagline} disabled={!isEditing} maxLength={20} error={errors.tagline} onChange={e => setSectionValue('gym', 'tagline', e.target.value)} />
             <Field label="Gym Email *" value={formState.gym.gymEmail} type="email" disabled={!isEditing} error={errors.gymEmail} onChange={e => setSectionValue('gym', 'gymEmail', e.target.value)} />
             <Field label="Gym Contact *" value={formState.gym.gymContact} type="tel" disabled={!isEditing} error={errors.gymContact} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'gymContact', e.target.value)} />
@@ -626,6 +646,9 @@ const Profile = () => {
             <div className="md:col-span-2">
               <Field label="Establishment Address *" value={formState.gym.address} textarea disabled={!isEditing} maxLength={100} error={errors.address} onChange={e => setSectionValue('gym', 'address', e.target.value)} />
             </div>
+            <Field label="City *" value={formState.gym.city} disabled={!isEditing} maxLength={25} error={errors.city} onChange={e => setSectionValue('gym', 'city', e.target.value)} />
+            <Field label="State *" value={formState.gym.state} disabled={!isEditing} maxLength={25} error={errors.state} onChange={e => setSectionValue('gym', 'state', e.target.value)} />
+            <Field label="Pincode *" value={formState.gym.pincode} disabled={!isEditing} maxLength={6} error={errors.pincode} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6)} onChange={e => setSectionValue('gym', 'pincode', e.target.value)} />
           </div>
         </ProfileSection>
 
@@ -652,7 +675,6 @@ const Profile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Billing ID Prefix *" value={formState.gym.billingInfo?.billingIdPrefix} disabled={!isEditing} maxLength={5} error={errors.billPrefix} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'billingIdPrefix')} />
             <Field label="Helpdesk Contact" value={formState.gym.billingInfo?.helpContact} type="tel" disabled={!isEditing} error={errors.billHelp} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'helpContact')} />
-            <Field label="Register GST" value={formState.gym.billingInfo?.gst} disabled={!isEditing} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'gst')} />
             <div className="md:col-span-2">
               <Field label="Address On Invoice" value={formState.gym.billingInfo?.addressOnBill} textarea disabled={!isEditing} maxLength={100} error={errors.billAddress} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'addressOnBill')} />
             </div>

@@ -286,6 +286,8 @@ exports.recordPayment = async (req, res, next) => {
       workflowCompleted: (safePaidAmount >= numAmount)
     };
 
+    if (safePaidAmount < numAmount) client.hasPartialPayment = true;
+
     client.paymentHistory.push(payment._id);
     await client.save();
 
@@ -494,6 +496,7 @@ exports.updatePayment = async (req, res, next) => {
           }
         }
       }
+      client.hasPartialPayment = true;
       if (currentBalance === 0) {
         if (!client.overdueReminders) {
           client.overdueReminders = {
@@ -504,6 +507,7 @@ exports.updatePayment = async (req, res, next) => {
           };
         }
         client.overdueReminders.workflowCompleted = true;
+        client.overdueReminders.duesClearedAt = new Date();
       }
       await client.save();
     }

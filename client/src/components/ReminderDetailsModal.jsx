@@ -41,7 +41,7 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   // Retrieve memberships details for dues
   const membershipsWithDues = client.memberships?.filter(m => (m.finalPrice - m.totalPaid) > 0) || [];
   const hasDues = membershipsWithDues.length > 0 || client.paymentStatus === 'partial' || client.paymentStatus === 'overdue';
-  const hasPaymentHistory = hasDues || (client.overdueReminders && Object.keys(client.overdueReminders).length > 0);
+  const hasPaymentHistory = client?.hasPartialPayment === true || hasDues;
 
   const outstandingMembership = [...(client.memberships || [])]
     .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
@@ -53,6 +53,13 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   const duesFinalPrice = outstandingMembership?.finalPrice || 0;
   const duesTotalPaid = outstandingMembership?.totalPaid || 0;
   const duesBalance = duesFinalPrice - duesTotalPaid;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const endDateNorm = endDate ? (() => { const d = new Date(endDate); d.setHours(0, 0, 0, 0); return d; })() : null;
+  const startDateNorm = startDate ? (() => { const d = new Date(startDate); d.setHours(0, 0, 0, 0); return d; })() : null;
+  const isMembershipExpired = endDateNorm ? today > endDateNorm : false;
+  const isMembershipActive = startDateNorm ? today >= startDateNorm && !isMembershipExpired : false;
 
   const getStepStatus = (stepObj) => {
     if (stepObj?.status && stepObj.status !== 'none') return stepObj.status;
@@ -343,8 +350,16 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
 
               {/* Step 1: Membership Active */}
               <div className="relative flex items-start gap-3 mb-5">
-                <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
-                  <Check size={9} strokeWidth={3} />
+                <div className="relative z-10 shrink-0">
+                  {isMembershipActive ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 flex items-center justify-between">
                   <div>
@@ -392,8 +407,16 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
 
               {/* Step 3: Membership Expired */}
               <div className="relative flex items-start gap-3 mb-5">
-                <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
-                  <Check size={9} strokeWidth={3} />
+                <div className="relative z-10 shrink-0">
+                  {isMembershipExpired ? (
+                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                      <Check size={9} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 flex items-center justify-between">
                   <p className="text-sm font-bold text-text-primary">Membership Expired</p>

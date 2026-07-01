@@ -1,5 +1,4 @@
 const Gym = require('../models/Gym');
-const Owner = require('../models/Owner');
 const Client = require('../models/Client');
 const Admin = require('../models/Admin');
 const jwt = require('jsonwebtoken');
@@ -34,10 +33,10 @@ const generateToken = (id, role, extra = {}) => {
 exports.registerGymOwner = async (req, res, next) => {
   try {
     const {
-      gymIdPrefix, gymName, gst, tagline, address, location, gymEmail, gymContact, socialMediaLinks, gymType, operatingDays, operatingHours, password,
-      name, mobileNo, mailId, role = 'Owner',
+      gymName, gst, tagline, address, state, city, pincode, gymEmail, gymContact, socialMediaLinks, gymType, operatingDays, operatingHours, password,
+      name, mobileNo, mailId,
       whatsappNumber, gmail, phoneNumber,
-      billingIdPrefix, helpContact, addressOnBill, regards, greetingText, invoiceSupportEmail
+      billingIdPrefix, helpContact, addressOnBill, regards, greetingText
     } = req.body;
 
     const gymExists = await Gym.findOne({ gymEmail });
@@ -58,12 +57,13 @@ exports.registerGymOwner = async (req, res, next) => {
 
     const gym = await Gym.create({
       gymId: newGymId,
-      gymIdPrefix,
       gymName,
       gst,
       tagline,
       address,
-      location,
+      state,
+      city,
+      pincode,
       gymEmail,
       gymContact,
       socialMediaLinks: parseJsonField(socialMediaLinks, []).filter((item) => item?.platform && item?.url),
@@ -72,22 +72,19 @@ exports.registerGymOwner = async (req, res, next) => {
       operatingHours: parseJsonField(operatingHours, {}),
       password,
       gymLogo: logoUrl,
+      owner: {
+        name,
+        email: mailId,
+        mobile: mobileNo
+      },
       billingInfo: {
         billingIdPrefix,
         helpContact,
-        gst,
-        logo: logoUrl,
         addressOnBill,
         regards,
-        greetingText,
-        invoiceSupportEmail: invoiceSupportEmail || ''
+        greetingText
       },
       reminderSettings: { whatsappNumber, gmail, phoneNumber }
-    });
-
-    const owner = await Owner.create({
-      gymId: gym._id,
-      name, mobileNo, mailId, role
     });
 
     res.status(201).json({
@@ -154,7 +151,7 @@ exports.checkExists = async (req, res, next) => {
 exports.registerClient = async (req, res, next) => {
   try {
     const {
-      gymId, name, dob, gender, address, email, mobileNo, emergencyContact, medicalCondition, password,
+      gymId, name, dob, gender, address, city, state, pincode, email, mobileNo, emergencyContact, medicalCondition, password,
       planId, startDate, planType, customMonths
     } = req.body;
 
@@ -179,7 +176,7 @@ exports.registerClient = async (req, res, next) => {
     const client = await Client.create({
       gymId,
       gymName: gymExists.gymName,
-      personalInfo: { name, dob, gender, address, email, mobileNo, emergencyContact, medicalCondition },
+      personalInfo: { name, dob, gender, address, city, state, pincode, email, mobileNo, emergencyContact, medicalCondition },
       password,
       membership: {
         planId: planType === 'Custom' ? null : planId,
@@ -229,6 +226,12 @@ exports.universalLogin = async (req, res, next) => {
     const gymQuery = isEmail ? { gymEmail: loginId } : { gymContact: loginId };
     const gym = await Gym.findOne(gymQuery);
     if (gym && (await gym.matchPassword(password))) {
+      if (!gym.isActive) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your gym account has been deactivated. Please contact the administrator.'
+        });
+      }
       return res.json({
         success: true,
         data: gym,
@@ -242,6 +245,15 @@ exports.universalLogin = async (req, res, next) => {
     const client = await Client.findOne(clientQuery);
     
     if (client && (await client.matchPassword(password))) {
+      // Block login if client's gym has been deactivated by admin
+      const clientGym = await Gym.findOne({ gymId: client.gymId }).select('isActive').lean();
+      if (!clientGym || clientGym.isActive === false) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your gym account has been suspended. Please contact your gym owner.'
+        });
+      }
+
       if (!client.membership.requestApproved) {
         return res.status(401).json({ success: false, message: 'Your membership is pending approval by the gym owner' });
       }

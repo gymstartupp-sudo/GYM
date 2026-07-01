@@ -8,7 +8,7 @@ import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
 import ReminderTimeline from '../../components/ReminderTimeline';
 import ReminderDetailsModal from '../../components/ReminderDetailsModal';
-import { calculateEndDate } from '../../utils/membership';
+import { calculateEndDate, toLocalDateString } from '../../utils/membership';
 import Pagination from '../../components/Pagination';
 
 const Dues = () => {
@@ -574,8 +574,8 @@ const Dues = () => {
                         amount: selectedDue.finalPrice,
                         totalPaidSoFar: isUpdating ? selectedDue.totalPaid : 0,
                         paidAmount: '',
-                        dueDate: selectedDue.dueDate ? new Date(selectedDue.dueDate).toISOString().split('T')[0] : '',
-                        startDate: isRenewing ? new Date().toISOString().split('T')[0] : (selectedDue.startDate ? new Date(selectedDue.startDate).toISOString().split('T')[0] : ''),
+                        dueDate: selectedDue.dueDate ? toLocalDateString(selectedDue.dueDate) : '',
+                        startDate: isRenewing ? toLocalDateString(new Date()) : (selectedDue.startDate ? toLocalDateString(selectedDue.startDate) : ''),
                         paymentMethod: isUpdating ? (selectedDue.paymentMethod || 'cash') : 'cash',
                         id: isUpdating ? selectedDue.paymentId : undefined
                     }}

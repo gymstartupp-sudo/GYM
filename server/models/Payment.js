@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
-  paymentId: { type: String, unique: true },
+  paymentId: { type: String },
   idempotencyKey: { type: String, unique: true, sparse: true }, // Prevents duplicate payments
   gymId: { type: String, required: true },
   clientId: { type: String, required: true },
@@ -29,5 +29,5 @@ const paymentSchema = new mongoose.Schema({
 paymentSchema.index({ clientId: 1 });
 paymentSchema.index({ gymId: 1, createdAt: -1 });
 paymentSchema.index({ gymId: 1, clientId: 1, planId: 1, startDate: 1 });
-
+paymentSchema.index({ gymId: 1, paymentId: 1 }, { unique: true });
 module.exports = mongoose.model('Payment', paymentSchema);

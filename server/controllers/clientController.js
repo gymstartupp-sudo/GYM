@@ -287,6 +287,7 @@ exports.addClient = async (req, res, next) => {
     const client = await Client.create({
       clientId, gymId: gymIdStr, gymName: gymNameStr, personalInfo, password,
       avatar: personalInfo.name.charAt(0).toUpperCase(),
+      hasPartialPayment: paidAmountVal > 0 && paidAmountVal < planPriceVal,
       paymentStatus: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
       overdueReminders: {
         reminder1: { status: 'none', sentAt: null, error: null },
@@ -622,6 +623,8 @@ exports.approveClient = async (req, res, next) => {
     client.membership.planName = planName;
     client.membership.planDurationMonths = planDurationMonths;
     client.membership.durationMonths = planDurationMonths; // backward compat
+
+    client.hasPartialPayment = remainingBalance > 0;
 
     client.overdueReminders = {
       reminder1: { status: 'none', sentAt: null, error: null },
