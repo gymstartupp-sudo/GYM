@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const Gym = require('../models/Gym');
 const Client = require('../models/Client');
 const Admin = require('../models/Admin');
-const Owner = require('../models/Owner');
 
 const protect = async (req, res, next) => {
   let token;
@@ -18,6 +17,13 @@ const protect = async (req, res, next) => {
       if (decoded.role === 'client') {
         user = await Client.findById(decoded.id).select('-password').lean();
         role = 'client';
+        // Block login if the client's gym has been deactivated by admin
+        if (user && user.gymId) {
+          const gym = await Gym.findOne({ gymId: user.gymId }).select('isActive').lean();
+          if (!gym || gym.isActive === false) {
+            return res.status(403).json({ success: false, message: 'Not authorized, your gym account has been suspended' });
+          }
+        }
       } else if (decoded.role === 'owner') {
         if (decoded.gymId) {
           // Verify gym is active in the database

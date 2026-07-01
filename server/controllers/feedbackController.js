@@ -1,11 +1,4 @@
 const Feedback = require('../models/Feedback');
-const { getNextSequenceValue } = require('../utils/generateId');
-
-// Helper to generate a unique feedback ID
-const generateFeedbackId = async () => {
-  const sequence = await getNextSequenceValue('feedback_sequence');
-  return `FB-${String(sequence).padStart(4, '0')}`;
-};
 
 // @desc    Submit new feedback
 // @route   POST /api/feedback/submit
@@ -27,10 +20,7 @@ const submitFeedback = async (req, res) => {
       return res.status(400).json({ message: 'Message is required' });
     }
 
-    const feedbackId = await generateFeedbackId();
-
     const feedback = new Feedback({
-      feedbackId,
       gymId,
       clientObjectId,
       clientId,

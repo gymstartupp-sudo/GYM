@@ -195,6 +195,20 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                         <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Address</p>
                                         <p className="text-text-primary font-medium">{client.personalInfo.address}</p>
                                     </div>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">City</p>
+                                            <p className="text-text-primary font-medium">{client.personalInfo.city || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">State</p>
+                                            <p className="text-text-primary font-medium">{client.personalInfo.state || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Pincode</p>
+                                            <p className="text-text-primary font-medium">{client.personalInfo.pincode || 'N/A'}</p>
+                                        </div>
+                                    </div>
                                     <div>
                                         <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Medical Condition</p>
                                         <p className="text-text-primary font-medium italic">{client.personalInfo.medicalCondition || 'None reported'}</p>

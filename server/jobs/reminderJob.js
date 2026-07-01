@@ -214,7 +214,7 @@ const runReminders = async () => {
 };
 
 // Run every day at 04:30 PM
-cron.schedule('14 01 * * *', async () => {
+cron.schedule('41 14 * * *', async () => {
   console.log('Running daily automated reminderJob...');
   await runReminders();
 });

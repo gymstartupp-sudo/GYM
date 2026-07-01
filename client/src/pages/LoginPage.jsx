@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import Button from '../components/Button';
@@ -15,6 +15,15 @@ const LoginPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const reason = searchParams.get('reason');
+        if (reason === 'suspended') {
+            toast.error('Your account or associated gym has been suspended. Please contact the administrator.');
+        } else if (reason === 'expired') {
+            toast.error('Your session has expired. Please login again.');
+        }
+    }, [searchParams]);
 
     const isPhone = (val) => /^\d+$/.test(val);
     const isValidPhone = (val) => /^[6-9]\d{9}$/.test(val);

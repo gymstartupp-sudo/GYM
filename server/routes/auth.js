@@ -15,7 +15,6 @@ const passwordMessage = 'Password must be at least 8 characters with 1 uppercase
 
 // Gym Owner Validations
 const gymRegisterValidation = [
-  stringValidation('gymIdPrefix', false).withMessage('Gym ID prefix is required'),
   stringValidation('gymName', false).withMessage('Gym Name is required'),
   emailValidation('gymEmail'),
   phoneValidation('gymContact'),
