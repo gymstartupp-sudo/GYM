@@ -1,6 +1,7 @@
 const Client = require('../models/Client');
 const Gym = require('../models/Gym');
-const { generateClientId } = require('../utils/generateId');
+const Payment = require('../models/Payment');
+const { generateClientId, generatePaymentId } = require('../utils/generateId');
 const Plan = require('../models/Plan');
 const { buildMembershipWindow } = require('../utils/membership');
 const sendWhatsApp = require('../utils/sendWhatsApp');
@@ -56,10 +57,9 @@ const calculateBalances = (clientDoc, preFetchedPayments = []) => {
 // @query   status, planName, plan
 exports.getClients = async (req, res, next) => {
   try {
-    const gymIdStr = req.userRole === 'owner' ? req.user.gymId : req.query.gymId;
     const { status, planName, plan, reminder } = req.query;
     
-    let query = { gymId: gymIdStr, isActive: true };
+    let query = { isActive: true };
 
     if (status && status.toLowerCase() === 'pending') {
       query['membership.requestApproved'] = false;
@@ -154,7 +154,7 @@ exports.getClientProfile = async (req, res, next) => {
     
     const payments = await Payment.find({ clientId: client._id.toString() }).lean();
     const enriched = calculateBalances(client, payments);
-    const gym = await Gym.findOne({ gymId: client.gymId }).select('gymName tagline address location gymEmail gymContact gymType operatingDays operatingHours billingInfo').lean();
+    const gym = await Gym.findOne({ gymId: client.gymId }).select('-password').lean();
     res.status(200).json({ success: true, data: { ...enriched, gym } });
   } catch (err) {
     next(err);
@@ -192,7 +192,7 @@ exports.updateClientProfile = async (req, res, next) => {
     const Gym = require('../models/Gym');
     const payments = await Payment.find({ clientId }).lean();
     const enriched = calculateBalances(client, payments);
-    const gym = await Gym.findOne({ gymId: client.gymId }).select('gymName tagline address location gymEmail gymContact gymType operatingDays operatingHours billingInfo').lean();
+    const gym = await Gym.findOne({ gymId: client.gymId }).select('-password').lean();
     res.status(200).json({ success: true, data: { ...enriched, gym } });
   } catch (err) {
     next(err);
@@ -244,8 +244,19 @@ exports.addClient = async (req, res, next) => {
       }
     }
 
-    const clientExists = await Client.findOne({ gymId: gymIdStr, 'personalInfo.email': personalInfo.email });
-    if (clientExists) return res.status(400).json({ success: false, message: 'Client email exists in this gym.' });
+    const clientExists = await Client.findOne({
+      $or: [
+        { 'personalInfo.email': personalInfo.email },
+        { 'personalInfo.mobileNo': personalInfo.mobileNo }
+      ]
+    });
+    if (clientExists) {
+      const isEmail = clientExists.personalInfo.email === personalInfo.email;
+      return res.status(400).json({
+        success: false,
+        message: isEmail ? 'Client email exists in this gym.' : 'Client mobile number exists in this gym.'
+      });
+    }
 
     let planName = membership?.planType;
     let planDurationMonths = 1;
@@ -258,7 +269,7 @@ exports.addClient = async (req, res, next) => {
       planId = null;
       planPrice = payment.amount || 0;
     } else {
-      plan = await Plan.findOne({ _id: membership?.planId, gymId: gymIdStr, isActive: true });
+      plan = await Plan.findOne({ _id: membership?.planId, isActive: true });
       if (!plan) return res.status(400).json({ success: false, message: 'Selected plan not found' });
       planName = plan.name;
       planDurationMonths = plan.durationMonths;
@@ -286,6 +297,13 @@ exports.addClient = async (req, res, next) => {
       resolvedDueDate.setHours(0, 0, 0, 0);
     }
 
+    // ── Pre-generate payment ID BEFORE creating the client ──────────────────
+    // This ensures if gym lookup or ID generation fails, no orphaned client is left in DB
+    const gym = await Gym.findOne({ gymId: gymIdStr });
+    const paymentId = await generatePaymentId(gymIdStr, gym?.billingInfo?.billingIdPrefix || 'BILL');
+    // ────────────────────────────────────────────────────────────────────────
+
+    // Now create the client
     const client = await Client.create({
       clientId, gymId: gymIdStr, gymName: gymNameStr, personalInfo, password,
       avatar: personalInfo.name.charAt(0).toUpperCase(),
@@ -308,31 +326,38 @@ exports.addClient = async (req, res, next) => {
       }
     });
 
-    const Payment = require('../models/Payment');
-    const Gym = require('../models/Gym');
-    const { generatePaymentId } = require('../utils/generateId');
-    const gym = await Gym.findOne({ gymId: gymIdStr });
-    const paymentId = await generatePaymentId(gymIdStr, gym?.billingInfo?.billingIdPrefix || 'BILL');
+    // ── Create payment record — if this fails, rollback by deleting the client ──
+    let paymentRecord;
+    try {
+      paymentRecord = await Payment.create({
+        paymentId, gymId: gymIdStr, clientId: client._id.toString(), clientName: personalInfo.name, planId, planName,
+        amount: planPrice, paidAmount: payment.paidAmount,
+        invoiceAmount: planPrice,
+        paidNow: payment.paidAmount,
+        totalPaid: payment.paidAmount,
+        remainingBalance: remainingBalanceVal,
+        status: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
+        paymentMethod: payment.paymentMethod, dueDate: resolvedDueDate, startDate: membershipWindow.startDate, isPlanActivated: true
+      });
+    } catch (paymentErr) {
+      // Rollback: delete the client since payment failed
+      await Client.deleteOne({ _id: client._id });
+      throw new Error(`Payment creation failed — client registration has been rolled back. ${paymentErr.message}`);
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
-    const paymentRecord = await Payment.create({
-      paymentId, gymId: gymIdStr, clientId: client._id.toString(), clientName: personalInfo.name, planId, planName,
-      amount: planPrice, paidAmount: payment.paidAmount,
-      status: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
-      paymentMethod: payment.paymentMethod, dueDate: resolvedDueDate, startDate: membershipWindow.startDate, isPlanActivated: true
-    });
-
-    client.paymentHistory = [paymentRecord._id];
     await Client.updateOne(
       { _id: client._id },
       { $set: { paymentHistory: [paymentRecord._id] } }
     );
-    
+
     const enriched = calculateBalances(client, [paymentRecord]);
     res.status(201).json({ success: true, data: enriched });
   } catch (err) {
     next(err);
   }
 };
+
 
 // @desc    Get Client by ID (For Owner)
 // @route   GET /api/client/:id
@@ -390,10 +415,9 @@ exports.deleteClient = async (req, res, next) => {
 // @access  Private (Owner, Admin)
 exports.getInactiveClients = async (req, res, next) => {
   try {
-    const gymIdStr = req.userRole === 'owner' ? req.user.gymId : req.query.gymId;
     const { status, planName, plan } = req.query;
     
-    let query = { gymId: gymIdStr, isActive: false, 'membership.requestApproved': true };
+    let query = { isActive: false, 'membership.requestApproved': true };
 
     if (status && status.toLowerCase() !== 'all') {
       const today = new Date();
@@ -504,7 +528,6 @@ exports.approveClient = async (req, res, next) => {
   try {
     const client = await Client.findById(req.params.id);
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
-    if (client.gymId !== req.user.gymId) return res.status(403).json({ success: false, message: 'Unauthorized' });
 
     if (client.membership && client.membership.requestApproved) {
       return res.status(400).json({ success: false, message: 'Client is already approved' });
@@ -516,7 +539,7 @@ exports.approveClient = async (req, res, next) => {
 
     let plan = null;
     if (client.membership.planId) {
-      plan = await Plan.findOne({ _id: client.membership.planId, gymId: client.gymId, isActive: true });
+      plan = await Plan.findOne({ _id: client.membership.planId, isActive: true });
       if (plan) {
         planName = plan.name;
         planDurationMonths = plan.durationMonths;
@@ -541,10 +564,6 @@ exports.approveClient = async (req, res, next) => {
     }
 
     // 1. Create a Payment record so there is an audit trail
-    const Payment = require('../models/Payment');
-    const Gym = require('../models/Gym');
-    const { generatePaymentId } = require('../utils/generateId');
-
     const gym = await Gym.findOne({ gymId: client.gymId });
     const paymentId = await generatePaymentId(client.gymId, gym?.billingInfo?.billingIdPrefix || 'BILL');
 

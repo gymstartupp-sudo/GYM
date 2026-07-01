@@ -60,9 +60,7 @@ const getClientFeedback = async (req, res) => {
 // @access  Private (Owner/Admin)
 const getGymFeedback = async (req, res) => {
   try {
-    const { gymId } = req.params;
-
-    const feedbacks = await Feedback.find({ gymId })
+    const feedbacks = await Feedback.find({})
       .sort({ createdAt: -1 });
 
     res.status(200).json(feedbacks);
@@ -88,11 +86,6 @@ const updateFeedbackStatus = async (req, res) => {
 
     if (!feedback) {
       return res.status(404).json({ message: 'Feedback not found' });
-    }
-
-    // Verify owner has access to this feedback's gym
-    if (req.user.role === 'owner' && req.user.gymId !== feedback.gymId) {
-      return res.status(403).json({ message: 'Not authorized to update this feedback' });
     }
 
     feedback.status = status;

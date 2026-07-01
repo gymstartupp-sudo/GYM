@@ -12,9 +12,22 @@ const Counter = require('../models/Counter');
 exports.getDashboardStats = async (req, res, next) => {
   try {
     const totalGyms = await Gym.countDocuments();
-    // Active clients = isActive: true across all gyms
-    const totalClients = await Client.countDocuments({ isActive: true });
-    const totalPayments = await Payment.countDocuments();
+    const gyms = await Gym.find({ isActive: true });
+    let totalClients = 0;
+    let totalPayments = 0;
+    const { getTenantConnection } = require('../utils/connectionManager');
+
+    for (const gym of gyms) {
+      try {
+        const conn = await getTenantConnection(gym.dbName);
+        const TenantClient = conn.model('Client');
+        const TenantPayment = conn.model('Payment');
+        totalClients += await TenantClient.countDocuments({ isActive: true });
+        totalPayments += await TenantPayment.countDocuments();
+      } catch (err) {
+        console.error(`Error counting stats in tenant ${gym.dbName}:`, err);
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -51,18 +64,23 @@ exports.getGymProfile = async (req, res, next) => {
     const gym = await Gym.findById(req.params.id).select('-password').lean();
     if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
 
-    const gymIdStr = gym.gymId;
     const owner = gym.owner ? {
       name: gym.owner.name,
       mobileNo: gym.owner.mobile,
       mailId: gym.owner.email
     } : null;
 
+    const { getTenantConnection } = require('../utils/connectionManager');
+    const conn = await getTenantConnection(gym.dbName);
+    const TenantClient = conn.model('Client');
+    const TenantPlan = conn.model('Plan');
+    const TenantPayment = conn.model('Payment');
+
     const [totalClients, activeClients, totalPlans, totalPayments] = await Promise.all([
-      Client.countDocuments({ gymId: gymIdStr }),
-      Client.countDocuments({ gymId: gymIdStr, isActive: true }),
-      Plan.countDocuments({ gymId: gymIdStr }),
-      Payment.countDocuments({ gymId: gymIdStr })
+      TenantClient.countDocuments({}),
+      TenantClient.countDocuments({ isActive: true }),
+      TenantPlan.countDocuments({}),
+      TenantPayment.countDocuments({})
     ]);
 
     res.status(200).json({
@@ -100,34 +118,25 @@ exports.toggleGymStatus = async (req, res, next) => {
 // @access  Private (SuperAdmin)
 exports.deleteGym = async (req, res, next) => {
   try {
-    const gym = await Gym.findById(req.params.id).select('_id gymId gymName').lean();
+    const gym = await Gym.findById(req.params.id).select('_id gymId gymName dbName').lean();
     if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
 
-    const gymIdStr = gym.gymId;
+    // Cascade drop the tenant database
+    const { getTenantConnection } = require('../utils/connectionManager');
+    try {
+      const conn = await getTenantConnection(gym.dbName);
+      await conn.db.dropDatabase();
+      console.log(`Database ${gym.dbName} dropped successfully`);
+    } catch (dbErr) {
+      console.error(`Failed to drop database ${gym.dbName}:`, dbErr);
+    }
 
-    // Cascade delete all associated data using gymId string
-    await Promise.all([
-      Client.deleteMany({ gymId: gymIdStr }),
-      Plan.deleteMany({ gymId: gymIdStr }),
-      Payment.deleteMany({ gymId: gymIdStr }),
-      Expense.deleteMany({ gymId: gymIdStr }),
-      Feedback.deleteMany({ gymId: gymIdStr }),
-      Counter.deleteMany({
-        name: {
-          $in: [
-            `clientId:${gymIdStr}`,
-            new RegExp(`^paymentId:${gymIdStr}:`)
-          ]
-        }
-      })
-    ]);
-
-    // Finally delete the gym itself
+    // Finally delete the gym platform metadata document
     await Gym.deleteOne({ _id: gym._id });
 
     res.status(200).json({
       success: true,
-      message: `Gym "${gym.gymName}" and all associated data deleted permanently`
+      message: `Gym "${gym.gymName}" and its isolated database deleted permanently`
     });
   } catch (err) {
     next(err);

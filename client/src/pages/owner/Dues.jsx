@@ -27,6 +27,7 @@ const Dues = () => {
     const [isUpdating, setIsUpdating] = useState(false);
     const [viewClientId, setViewClientId] = useState(null);
     const [isRenewing, setIsRenewing] = useState(false);
+    const [pendingAlertClientId, setPendingAlertClientId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -258,11 +259,71 @@ const Dues = () => {
         setShowModal(true);
     };
 
+    // Returns total pending balance across all memberships for a client
+    const getClientPendingBalance = (client) => {
+        if (!client) return 0;
+        const allMems = [...(client.memberships || [])];
+        if (client.membership?.startDate) {
+            const alreadyIn = allMems.some(m =>
+                new Date(m.startDate).getTime() === new Date(client.membership.startDate).getTime()
+            );
+            if (!alreadyIn) allMems.push(client.membership);
+        }
+        return allMems.reduce((sum, m) => {
+            const finalPrice = Number(m.finalPrice || m.amount || 0);
+            const totalPaid = Number(m.totalPaid || m.paidAmount || 0);
+            return sum + Math.max(0, finalPrice - totalPaid);
+        }, 0);
+    };
+
+    // Returns the first membership with an outstanding balance (for pay-first flow)
+    const getClientPendingMembership = (client) => {
+        if (!client) return null;
+        const allMems = [...(client.memberships || [])];
+        if (client.membership?.startDate) {
+            const alreadyIn = allMems.some(m =>
+                new Date(m.startDate).getTime() === new Date(client.membership.startDate).getTime()
+            );
+            if (!alreadyIn) allMems.push(client.membership);
+        }
+        return allMems.find(m => {
+            const finalPrice = Number(m.finalPrice || m.amount || 0);
+            const totalPaid = Number(m.totalPaid || m.paidAmount || 0);
+            return (finalPrice - totalPaid) > 0;
+        }) || null;
+    };
+
     const handleRenew = (due) => {
+        const client = due.rawClient || clients.find(c => c._id === due.clientId);
+        const pendingBalance = getClientPendingBalance(client);
+
+        if (pendingBalance > 0) {
+            // Client still has unpaid dues — show inline alert instead of opening modal
+            setPendingAlertClientId(due.clientId?.toString());
+            return;
+        }
+
+        setPendingAlertClientId(null);
         setSelectedDue(due);
         setIsRenewing(true);
         setIsUpdating(false);
         setShowModal(true);
+    };
+
+    const handlePayPendingDue = (due) => {
+        const client = due.rawClient || clients.find(c => c._id === due.clientId);
+        const pendingMem = getClientPendingMembership(client);
+        if (!pendingMem) return;
+
+        // Build a synthetic "due" object for the pending membership
+        const pendingDue = {
+            ...pendingMem,
+            clientId: due.clientId,
+            clientName: due.clientName,
+            rawClient: client
+        };
+        setPendingAlertClientId(null);
+        handlePayNow(pendingDue);
     };
 
     const handlePaymentSave = async (paymentData) => {
@@ -439,7 +500,8 @@ const Dues = () => {
                                     <tr><td colSpan="8" className="text-center p-10 text-text-muted">No {activeTab} dues found.</td></tr>
                                 ) : (
                                     paginatedDues.map((due, idx) => (
-                                        <tr key={`${due.clientId}-${idx}`} className="border-b border-border hover:bg-white/[0.02] transition-colors group">
+                                        <React.Fragment key={`${due.clientId}-${idx}`}>
+                                        <tr className="border-b border-border hover:bg-white/[0.02] transition-colors group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
@@ -551,6 +613,43 @@ const Dues = () => {
                                                 </div>
                                             </td>
                                         </tr>
+                                        {/* Inline pending balance alert */}
+                                        {pendingAlertClientId === due.clientId?.toString() && (() => {
+                                            const client = due.rawClient || clients.find(c => c._id === due.clientId);
+                                            const pendingBalance = getClientPendingBalance(client);
+                                            return (
+                                                <tr key={`pending-alert-${due.clientId}`}>
+                                                    <td colSpan="8" className="px-4 pb-3">
+                                                        <div className="flex items-center justify-between gap-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl px-4 py-3 text-sm animate-in slide-in-from-top-2 duration-200">
+                                                            <div className="flex items-center gap-2">
+                                                                <AlertCircle size={16} className="shrink-0 text-amber-400" />
+                                                                <span className="font-semibold">
+                                                                    ⚠️ <strong>{due.clientName}</strong> has an outstanding balance of{' '}
+                                                                    <span className="text-rose-400 font-black">₹{pendingBalance}</span>.
+                                                                    Please clear the pending amount before renewing.
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                <button
+                                                                    onClick={() => handlePayPendingDue(due)}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-black font-bold rounded-lg text-[11px] uppercase tracking-wider hover:bg-amber-400 transition-all"
+                                                                >
+                                                                    <CircleDollarSign size={14} /> Pay ₹{pendingBalance}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setPendingAlertClientId(null)}
+                                                                    className="p-1.5 hover:bg-amber-500/20 rounded-lg transition-colors"
+                                                                    title="Dismiss"
+                                                                >
+                                                                    <X size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })()}
+                                        </React.Fragment>
                                     ))
                                 )}
                             </tbody>

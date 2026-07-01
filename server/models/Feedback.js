@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
+const { createTenantModelProxy } = require('../utils/tenantContext');
 
 const feedbackSchema = new mongoose.Schema({
   gymId: {
     type: String,
-    required: true,
     ref: 'Gym'
   },
   clientObjectId: {
@@ -49,4 +49,8 @@ const feedbackSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Feedback', feedbackSchema);
+const Feedback = createTenantModelProxy('Feedback', feedbackSchema);
+Feedback.schema = feedbackSchema;
+
+module.exports = Feedback;
+

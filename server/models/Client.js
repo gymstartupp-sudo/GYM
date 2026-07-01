@@ -3,16 +3,16 @@ const bcrypt = require('bcryptjs');
 
 const clientSchema = new mongoose.Schema({
   clientId: { type: String, trim: true },
-  gymId: { type: String, required: true },
-  gymName: { type: String, required: true },
+  gymId: { type: String },
+  gymName: { type: String },
   personalInfo: {
     name: { type: String, required: true, maxlength: 50 },
     dob: { type: Date, required: true },
     gender: { type: String, required: true },
     address: { type: String, required: true, maxlength: 100 },
-    city: { type: String, required: true, maxlength: 25 },
-    state: { type: String, required: true, maxlength: 25 },
-    pincode: { type: String, required: true, maxlength: 6 },
+    city: { type: String, maxlength: 25 },
+    state: { type: String, maxlength: 25 },
+    pincode: { type: String, maxlength: 6 },
     email: { type: String, required: true, unique: true, maxlength: 50 },
     mobileNo: { type: String, required: true, unique: true },
     emergencyContact: { type: String },
@@ -96,14 +96,14 @@ const clientSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 clientSchema.index(
-  { gymId: 1, clientId: 1 },
+  { clientId: 1 },
   { 
     unique: true, 
     partialFilterExpression: { clientId: { $exists: true } } 
   }
 );
-clientSchema.index({ gymId: 1, isActive: 1 });
-clientSchema.index({ gymId: 1, isActive: 1, paymentStatus: 1 });
+clientSchema.index({ isActive: 1 });
+clientSchema.index({ isActive: 1, paymentStatus: 1 });
 
 clientSchema.pre('save', async function (next) {
   if (!this.isModified('password') || !this.password) return next();
@@ -119,4 +119,7 @@ clientSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('Client', clientSchema);
+const { createTenantModelProxy } = require('../utils/tenantContext');
+const Client = createTenantModelProxy('Client', clientSchema);
+Client.schema = clientSchema;
+module.exports = Client;

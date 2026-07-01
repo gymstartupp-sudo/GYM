@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
+const { createTenantModelProxy } = require('../utils/tenantContext');
 
 const planSchema = new mongoose.Schema({
-  gymId: { type: String, required: true },
+  gymId: { type: String },
   name: { type: String, required: true },
   durationMonths: { type: Number, required: true },
   price: { type: Number, required: true },
@@ -11,4 +12,8 @@ const planSchema = new mongoose.Schema({
   partialPaymentDueDays: { type: Number, default: 15 }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Plan', planSchema);
+const Plan = createTenantModelProxy('Plan', planSchema);
+Plan.schema = planSchema;
+
+module.exports = Plan;
+

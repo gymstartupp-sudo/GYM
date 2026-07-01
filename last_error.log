@@ -78,3 +78,1095 @@
     at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
     at blockNoSqlInjection (D:\GYM!\GYM\server\middleware\security.js:44:3)
     at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+
+[2026-07-01T08:47:04.777Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:04.884Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:04.888Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:50.483Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:50.600Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:50.607Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:56.778Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:56.783Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:47:56.787Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:48:26.766Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:48:26.770Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:48:26.773Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:48:56.767Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:48:56.771Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:48:56.774Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:49:26.767Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:49:26.769Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:49:26.773Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:49:56.772Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:49:56.776Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:49:56.780Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:50:26.769Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:50:26.774Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:50:26.781Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:50:56.763Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:50:56.766Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:50:56.769Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:51:26.765Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:51:26.772Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:51:26.776Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:51:56.771Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:51:56.776Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:51:56.780Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:52:26.771Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:52:26.774Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:52:26.777Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:53:04.765Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:53:04.770Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:53:04.773Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:54:04.777Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:54:04.781Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:54:04.785Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:55:04.778Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:55:04.785Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:55:04.789Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:56:04.794Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:56:04.807Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:56:04.812Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:04.759Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:04.766Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:04.775Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:34.361Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:34.454Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:34.457Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.488Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.492Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.498Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.503Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.510Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.517Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.522Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.527Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.534Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.538Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.547Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.553Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.560Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:37.566Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:39.679Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:39.682Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:39.685Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:39.689Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:40.956Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:57:40.963Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.929Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.946Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.951Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.964Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.974Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.981Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.991Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:09.997Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:10.001Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:58:10.009Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:59:34.560Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T08:59:53.078Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T09:00:50.313Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T09:00:59.191Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T09:01:00.642Z] TypeError: Cannot read properties of undefined (reading 'gymId')
+    at tenantDbMiddleware (D:\GYM!\GYM\server\middleware\tenantDbMiddleware.js:8:45)
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+    at processParams (D:\GYM!\GYM\server\node_modules\router\index.js:582:12)
+    at next (D:\GYM!\GYM\server\node_modules\router\index.js:291:5)
+    at D:\GYM!\GYM\server\node_modules\express-mongo-sanitize\index.js:122:5
+    at Layer.handleRequest (D:\GYM!\GYM\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (D:\GYM!\GYM\server\node_modules\router\index.js:342:13)
+    at D:\GYM!\GYM\server\node_modules\router\index.js:297:9
+
+[2026-07-01T09:13:33.505Z] ReferenceError: generatePaymentId is not defined
+    at exports.addClient (D:\GYM!\GYM\server\controllers\clientController.js:312:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-01T09:59:19.942Z] ReferenceError: generatePaymentId is not defined
+    at exports.addClient (D:\GYM!\GYM\server\controllers\clientController.js:322:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-01T10:28:04.220Z] ReferenceError: generatePaymentId is not defined
+    at exports.addClient (D:\GYM!\GYM\server\controllers\clientController.js:322:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-01T10:30:29.770Z] ReferenceError: generatePaymentId is not defined
+    at exports.addClient (D:\GYM!\GYM\server\controllers\clientController.js:322:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-01T10:33:10.965Z] ReferenceError: generatePaymentId is not defined
+    at exports.addClient (D:\GYM!\GYM\server\controllers\clientController.js:322:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-01T10:35:20.981Z] ReferenceError: generatePaymentId is not defined
+    at exports.addClient (D:\GYM!\GYM\server\controllers\clientController.js:322:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

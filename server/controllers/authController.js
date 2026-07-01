@@ -54,37 +54,84 @@ exports.registerGymOwner = async (req, res, next) => {
     }
 
     const newGymId = await generateGymId();
+    const dbName = `gym_${newGymId.replace('-', '_')}`;
+
+    const parsedSocialMediaLinks = parseJsonField(socialMediaLinks, []).filter((item) => item?.platform && item?.url);
+    const parsedOperatingDays = parseJsonField(operatingDays, []);
+    const parsedOperatingHours = parseJsonField(operatingHours, {});
 
     const gym = await Gym.create({
       gymId: newGymId,
+      dbName,
       gymName,
-      gst,
-      tagline,
-      address,
-      state,
-      city,
-      pincode,
       gymEmail,
       gymContact,
-      socialMediaLinks: parseJsonField(socialMediaLinks, []).filter((item) => item?.platform && item?.url),
-      gymType,
-      operatingDays: parseJsonField(operatingDays, []),
-      operatingHours: parseJsonField(operatingHours, {}),
       password,
-      gymLogo: logoUrl,
       owner: {
         name,
         email: mailId,
-        mobile: mobileNo
+        mobile: mobileNo,
+        phone: mobileNo
       },
+      address,
+      city,
+      state,
+      pincode,
+      gst: gst || "",
+      gymLogo: logoUrl || "",
+      tagline: tagline || "",
+      gymType: gymType || "",
+      operatingDays: parsedOperatingDays,
+      operatingHours: parsedOperatingHours,
       billingInfo: {
-        billingIdPrefix,
-        helpContact,
-        addressOnBill,
-        regards,
-        greetingText
+        billingIdPrefix: billingIdPrefix || "BILL",
+        helpContact: helpContact || "",
+        addressOnBill: addressOnBill || "",
+        regards: regards || "",
+        greetingText: greetingText || "",
+        allowPartialPayments: true
       },
-      reminderSettings: { whatsappNumber, gmail, phoneNumber }
+      reminderSettings: {
+        whatsappNumber: whatsappNumber || "",
+        gmail: gmail || "",
+        phoneNumber: phoneNumber || ""
+      },
+      socialMediaLinks: parsedSocialMediaLinks,
+      status: 'Active',
+      subscription: 'Premium',
+      isActive: true
+    });
+
+    // Automatically create database and initialize collections
+    const { getTenantConnection } = require('../utils/connectionManager');
+    const conn = await getTenantConnection(dbName);
+    
+    await conn.createCollection('clients');
+    await conn.createCollection('plans');
+    await conn.createCollection('payments');
+    await conn.createCollection('expenses');
+    await conn.createCollection('feedbacks');
+    await conn.createCollection('counters');
+    await conn.createCollection('settings');
+
+    const TenantSetting = conn.model('Setting');
+    await TenantSetting.create({
+      partialPayment: {
+        enabled: true,
+        minimumPercentage: 50
+      },
+      dueSettings: {
+        defaultDaysFor1To6Months: 15,
+        defaultDaysAbove6Months: 30,
+        allowCustomDueDays: true,
+        customPlanDueDays: {
+          "1 Month": 15,
+          "2 Months": 15,
+          "3 Months": 15,
+          "6 Months": 15,
+          "12 Months": 30
+        }
+      }
     });
 
     res.status(201).json({
@@ -93,7 +140,7 @@ exports.registerGymOwner = async (req, res, next) => {
       data: { 
         gymId: newGymId,
         gymName: gym.gymName,
-        token: generateToken(gym._id, 'owner', { gymId: newGymId, gymName: gym.gymName })
+        token: generateToken(gym._id, 'owner', { gymId: newGymId, gymName: gym.gymName, dbName })
       }
     });
   } catch (err) {
@@ -106,14 +153,28 @@ exports.registerGymOwner = async (req, res, next) => {
 // @access  Public
 exports.checkExists = async (req, res, next) => {
   try {
-    const { email, phone } = req.body;
+    const { email, phone, gymId } = req.body;
     let exists = false;
     let message = '';
+    const { getTenantConnection } = require('../utils/connectionManager');
 
     if (email) {
-      const [gymEmailExists, clientEmailExists, adminEmailExists] = await Promise.all([
+      let clientEmailExists = null;
+      if (gymId) {
+        try {
+          const gym = await Gym.findOne({ gymId }).lean();
+          if (gym) {
+            const conn = await getTenantConnection(gym.dbName);
+            const TenantClient = conn.model('Client');
+            clientEmailExists = await TenantClient.findOne({ 'personalInfo.email': email }).lean();
+          }
+        } catch (err) {
+          console.error(`checkExists email check error:`, err);
+        }
+      }
+
+      const [gymEmailExists, adminEmailExists] = await Promise.all([
         Gym.findOne({ gymEmail: email }).lean(),
-        Client.findOne({ 'personalInfo.email': email }).lean(),
         Admin.findOne({ email }).lean()
       ]);
 
@@ -124,10 +185,21 @@ exports.checkExists = async (req, res, next) => {
     }
 
     if (phone && !exists) {
-      const [gymPhoneExists, clientPhoneExists] = await Promise.all([
-        Gym.findOne({ gymContact: phone }).lean(),
-        Client.findOne({ 'personalInfo.mobileNo': phone }).lean()
-      ]);
+      let clientPhoneExists = null;
+      if (gymId) {
+        try {
+          const gym = await Gym.findOne({ gymId }).lean();
+          if (gym) {
+            const conn = await getTenantConnection(gym.dbName);
+            const TenantClient = conn.model('Client');
+            clientPhoneExists = await TenantClient.findOne({ 'personalInfo.mobileNo': phone }).lean();
+          }
+        } catch (err) {
+          console.error(`checkExists phone check error:`, err);
+        }
+      }
+
+      const gymPhoneExists = await Gym.findOne({ gymContact: phone }).lean();
 
       if (gymPhoneExists || clientPhoneExists) {
         exists = true;
@@ -158,8 +230,21 @@ exports.registerClient = async (req, res, next) => {
     const gymExists = await Gym.findOne({ gymId });
     if (!gymExists) return res.status(400).json({ success: false, message: 'Gym not found' });
 
-    const clientExists = await Client.findOne({ gymId, 'personalInfo.email': email });
-    if (clientExists) return res.status(400).json({ success: false, message: 'Client with this email already registered in this gym' });
+    const clientExists = await Client.findOne({
+      $or: [
+        { 'personalInfo.email': email },
+        { 'personalInfo.mobileNo': mobileNo }
+      ]
+    });
+    if (clientExists) {
+      const isEmail = clientExists.personalInfo.email === email;
+      return res.status(400).json({
+        success: false,
+        message: isEmail 
+          ? 'Client with this email already registered in this gym' 
+          : 'Client with this mobile number already registered in this gym'
+      });
+    }
 
     let planName = planType;
     let planDurationMonths = 1;
@@ -167,7 +252,7 @@ exports.registerClient = async (req, res, next) => {
     if (planType === 'Custom') {
       planDurationMonths = customMonths;
     } else {
-      const plan = await Plan.findOne({ _id: planId, gymId, isActive: true });
+      const plan = await Plan.findOne({ _id: planId, isActive: true });
       if (!plan) return res.status(400).json({ success: false, message: 'Selected plan not found' });
       planName = plan.name;
       planDurationMonths = plan.durationMonths;
@@ -208,6 +293,7 @@ exports.universalLogin = async (req, res, next) => {
   try {
     const { loginId, password } = req.body;
     const isEmail = loginId.includes('@');
+    const { getTenantConnection } = require('../utils/connectionManager');
 
     // 1. Check Admin
     if (isEmail) {
@@ -235,33 +321,49 @@ exports.universalLogin = async (req, res, next) => {
       return res.json({
         success: true,
         data: gym,
-        token: generateToken(gym._id, 'owner', { gymId: gym.gymId, gymName: gym.gymName }),
+        token: generateToken(gym._id, 'owner', { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }),
         role: 'owner'
       });
     }
 
-    // 3. Check Client
+    // 3. Check Client (Dynamic lookup across tenant databases)
     const clientQuery = isEmail ? { 'personalInfo.email': loginId } : { 'personalInfo.mobileNo': loginId };
-    const client = await Client.findOne(clientQuery);
+    const gyms = await Gym.find({ isActive: true }).lean();
+    let foundClient = null;
+    let clientGym = null;
+
+    for (const g of gyms) {
+      try {
+        const conn = await getTenantConnection(g.dbName);
+        const TenantClient = conn.model('Client');
+        const client = await TenantClient.findOne(clientQuery);
+        if (client && (await client.matchPassword(password))) {
+          foundClient = client;
+          clientGym = g;
+          break;
+        }
+      } catch (err) {
+        console.error(`universalLogin search client error in tenant ${g.dbName}:`, err);
+      }
+    }
     
-    if (client && (await client.matchPassword(password))) {
+    if (foundClient && clientGym) {
       // Block login if client's gym has been deactivated by admin
-      const clientGym = await Gym.findOne({ gymId: client.gymId }).select('isActive').lean();
-      if (!clientGym || clientGym.isActive === false) {
+      if (clientGym.isActive === false) {
         return res.status(403).json({
           success: false,
           message: 'Your gym account has been suspended. Please contact your gym owner.'
         });
       }
 
-      if (!client.membership.requestApproved) {
+      if (!foundClient.membership.requestApproved) {
         return res.status(401).json({ success: false, message: 'Your membership is pending approval by the gym owner' });
       }
 
       return res.json({
         success: true,
-        data: client,
-        token: generateToken(client._id, 'client'),
+        data: foundClient,
+        token: generateToken(foundClient._id, 'client', { gymId: foundClient.gymId, dbName: clientGym.dbName }),
         role: 'client'
       });
     }
