@@ -56,7 +56,7 @@ const generatePaymentId = async (gymId, billingPrefix) => {
   const counterName = `paymentId:${gymId}:${billingPrefix.toUpperCase()}`;
   let sequence = await getNextSequenceValue(counterName);
 
-  // Sync/Correction: check highest existing paymentId for this prefix to avoid collisions
+  // Sync/Correction: check highest existing paymentId for this prefix and gymId to avoid collisions
   const escapedPrefix = billingPrefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   const lastPayment = await Payment.findOne({
     gymId,

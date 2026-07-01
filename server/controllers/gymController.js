@@ -15,7 +15,7 @@ exports.getGymProfile = async (req, res, next) => {
 
     const owner = gym.owner ? {
       name: gym.owner.name,
-      mobileNo: gym.owner.mobile,
+      mobileNo: gym.owner.mobile || gym.owner.phone,
       mailId: gym.owner.email
     } : null;
 
@@ -76,9 +76,9 @@ exports.updateGymProfile = async (req, res, next) => {
       // Password Safeguard
       delete gymData.password;
 
-      // Update Gym
-      const gym = await Gym.findByIdAndUpdate(gymStrId, gymData, { new: true, runValidators: true }).select('-password');
-      req.updatedGym = gym; // temp store for response
+      // Update on Gym model directly
+      const gym = await Gym.findByIdAndUpdate(gymStrId, { $set: gymData }, { new: true, runValidators: true }).select('-password');
+      req.updatedGym = gym;
     }
 
     // ─── 2. Owner Data Checks ─────────────────────────────────────────────────
@@ -97,7 +97,8 @@ exports.updateGymProfile = async (req, res, next) => {
         gym.owner = {
           name: ownerData.name || gym.owner?.name,
           email: ownerData.mailId || gym.owner?.email,
-          mobile: ownerData.mobileNo || gym.owner?.mobile
+          mobile: ownerData.mobileNo || gym.owner?.mobile,
+          phone: ownerData.mobileNo || gym.owner?.phone
         };
         await gym.save();
         req.updatedOwner = {
@@ -110,16 +111,18 @@ exports.updateGymProfile = async (req, res, next) => {
     }
 
     const finalGym = req.updatedGym || await Gym.findById(gymStrId).select('-password');
+    const finalGymObj = finalGym ? finalGym.toObject() : {};
+
     const finalOwner = finalGym?.owner ? {
       name: finalGym.owner.name,
-      mobileNo: finalGym.owner.mobile,
+      mobileNo: finalGym.owner.mobile || finalGym.owner.phone,
       mailId: finalGym.owner.email
     } : null;
 
     res.status(200).json({ 
       success: true, 
       data: { 
-        gym: finalGym, 
+        gym: finalGymObj, 
         owner: finalOwner
       } 
     });
@@ -133,15 +136,12 @@ exports.updateGymProfile = async (req, res, next) => {
 // @access  Private (Owner)
 exports.getDashboardStats = async (req, res, next) => {
   try {
-    const gymIdStr = req.user.gymId;
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const totalClients = await Client.countDocuments({ gymId: gymIdStr, isActive: true, 'membership.requestApproved': true });
+    const totalClients = await Client.countDocuments({ isActive: true, 'membership.requestApproved': true });
     
     const activeClients = await Client.countDocuments({ 
-      gymId: gymIdStr, 
       isActive: true,
       'membership.requestApproved': true,
       memberships: { 
@@ -153,7 +153,6 @@ exports.getDashboardStats = async (req, res, next) => {
     });
 
     const expiringSoon = await Client.countDocuments({ 
-      gymId: gymIdStr, 
       isActive: true,
       'membership.requestApproved': true,
       memberships: { 
@@ -163,11 +162,10 @@ exports.getDashboardStats = async (req, res, next) => {
       }
     });
 
-    const totalPlans = await Plan.countDocuments({ gymId: gymIdStr, isActive: true });
+    const totalPlans = await Plan.countDocuments({ isActive: true });
 
     // Fetch lists with highly efficient lean queries
     const expiringSoonList = await Client.find({ 
-      gymId: gymIdStr, 
       isActive: true,
       'membership.requestApproved': true,
       memberships: { 
@@ -177,7 +175,7 @@ exports.getDashboardStats = async (req, res, next) => {
       }
     }).limit(3).lean();
 
-    const clients = await Client.find({ gymId: gymIdStr, isActive: true, 'membership.requestApproved': true }).lean();
+    const clients = await Client.find({ isActive: true, 'membership.requestApproved': true }).lean();
     
     const expiredClientsList = clients.filter(client => {
       const memberships = client.memberships || (client.membership?.startDate ? [client.membership] : []);
@@ -194,9 +192,9 @@ exports.getDashboardStats = async (req, res, next) => {
     const expiredClients = expiredClientsList.length;
     const expiredList = expiredClientsList.slice(0, 3);
 
-    const pendingList = await Client.find({ gymId: gymIdStr, 'membership.requestApproved': false, isActive: true }).lean();
+    const pendingList = await Client.find({ 'membership.requestApproved': false, isActive: true }).lean();
 
-    const recentClients = await Client.find({ gymId: gymIdStr, isActive: true, 'membership.requestApproved': true })
+    const recentClients = await Client.find({ isActive: true, 'membership.requestApproved': true })
       .sort({ createdAt: -1 })
       .limit(5)
       .lean();
@@ -204,11 +202,10 @@ exports.getDashboardStats = async (req, res, next) => {
     // Financial calculations via database-level mathematical reductions (highly scalable)
     const [revenueAgg, expenseAgg] = await Promise.all([
       Payment.aggregate([
-        { $match: { gymId: gymIdStr } },
         { $group: { _id: null, total: { $sum: "$paidAmount" } } }
       ]),
       Expense.aggregate([
-        { $match: { gymId: gymIdStr, isReminder: { $ne: true } } },
+        { $match: { isReminder: { $ne: true } } },
         { $group: { _id: null, total: { $sum: "$amount" } } }
       ])
     ]);
@@ -227,7 +224,6 @@ exports.getDashboardStats = async (req, res, next) => {
       Payment.aggregate([
         {
           $match: {
-            gymId: gymIdStr,
             $or: [
               { paymentDate: { $gte: sixMonthsAgo } },
               { createdAt: { $gte: sixMonthsAgo } }
@@ -253,7 +249,6 @@ exports.getDashboardStats = async (req, res, next) => {
       Expense.aggregate([
         {
           $match: {
-            gymId: gymIdStr,
             isReminder: { $ne: true },
             $or: [
               { date: { $gte: sixMonthsAgo } },
@@ -387,11 +382,6 @@ exports.updateGymLogo = async (req, res, next) => {
     }
 
     gym.gymLogo = logoUrl;
-    if (!gym.billingInfo) {
-      gym.billingInfo = {};
-    }
-    gym.billingInfo.logo = logoUrl;
-
     await gym.save();
 
     res.status(200).json({

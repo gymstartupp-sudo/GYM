@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
+const { createTenantModelProxy } = require('../utils/tenantContext');
 
 const paymentSchema = new mongoose.Schema({
   paymentId: { type: String },
   idempotencyKey: { type: String, unique: true, sparse: true }, // Prevents duplicate payments
-  gymId: { type: String, required: true },
+  gymId: { type: String },
   clientId: { type: String, required: true },
   clientName: { type: String },
   planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan' },
@@ -27,7 +28,12 @@ const paymentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 paymentSchema.index({ clientId: 1 });
-paymentSchema.index({ gymId: 1, createdAt: -1 });
-paymentSchema.index({ gymId: 1, clientId: 1, planId: 1, startDate: 1 });
-paymentSchema.index({ gymId: 1, paymentId: 1 }, { unique: true });
-module.exports = mongoose.model('Payment', paymentSchema);
+paymentSchema.index({ createdAt: -1 });
+paymentSchema.index({ clientId: 1, planId: 1, startDate: 1 });
+paymentSchema.index({ paymentId: 1 }, { unique: true });
+
+const Payment = createTenantModelProxy('Payment', paymentSchema);
+Payment.schema = paymentSchema;
+
+module.exports = Payment;
+

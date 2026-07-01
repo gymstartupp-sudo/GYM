@@ -3,6 +3,8 @@ const Client = require('../models/Client');
 const Gym = require('../models/Gym');
 const sendWhatsApp = require('../utils/sendWhatsApp');
 const { syncClientStatus } = require('../utils/syncStatus');
+const { getTenantConnection } = require('../utils/connectionManager');
+const { runWithTenantContext } = require('../utils/tenantContext');
 
 // Helper to validate and format Indian mobile numbers
 const getValidWhatsAppNumber = (client) => {
@@ -29,174 +31,190 @@ const getValidWhatsAppNumber = (client) => {
 const runReminders = async () => {
   console.log('--- Starting WhatsApp Expiry Reminders Job ---');
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const gyms = await Gym.find({ isActive: true });
+    
+    for (const gym of gyms) {
+      try {
+        const conn = await getTenantConnection(gym.dbName);
+        const models = {
+          Client: conn.model('Client'),
+          Plan: conn.model('Plan'),
+          Payment: conn.model('Payment'),
+          Expense: conn.model('Expense'),
+          Feedback: conn.model('Feedback'),
+          Counter: conn.model('Counter'),
+          Setting: conn.model('Setting')
+        };
 
-    // Fetch all active clients
-    const clients = await Client.find({ isActive: true, 'membership.requestApproved': true });
-    console.log(`Found ${clients.length} active clients to process.`);
+        await runWithTenantContext({ tenantDb: conn, models }, async () => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
 
-    for (let client of clients) {
-      // 1. Sync latest memberships from payment history and client records
-      await syncClientStatus(client._id);
+          // Fetch all active clients
+          const clients = await Client.find({ isActive: true, 'membership.requestApproved': true });
+          console.log(`[Gym: ${gym.gymId}] Found ${clients.length} active clients to process.`);
 
-      // Fetch latest document after sync
-      const updatedClient = await Client.findById(client._id);
-      if (!updatedClient || !updatedClient.membership || !updatedClient.membership.endDate) {
-        console.log(`Client ${client.personalInfo?.name || 'Unknown'} has no active membership plan to calculate.`);
-        continue;
-      }
+          for (let client of clients) {
+            // 1. Sync latest memberships from payment history and client records
+            await syncClientStatus(client._id);
 
-      // 2. Read daysLeft from the synced membership field
-      const daysLeft = updatedClient.membership.daysLeft;
+            // Fetch latest document after sync
+            const updatedClient = await Client.findById(client._id);
+            if (!updatedClient || !updatedClient.membership || !updatedClient.membership.endDate) {
+              console.log(`Client ${client.personalInfo?.name || 'Unknown'} has no active membership plan to calculate.`);
+              continue;
+            }
 
-      // Flag Reset Rules:
-      // If renewed, reset expiryReminderSent (daysLeft > 3)
-      if (daysLeft > 3) {
-        updatedClient.membership.expiryReminderSent = false;
-        updatedClient.expiryReminderSent = false;
-        updatedClient.membership.expiryReminderStatus = 'none';
-        updatedClient.expiryReminderStatus = 'none';
-        updatedClient.membership.expiryReminderError = null;
-        updatedClient.expiryReminderError = null;
-        updatedClient.membership.expiryReminderSentAt = null;
-        updatedClient.expiryReminderSentAt = null;
-      }
-      // If active again, reset expiredReminderSent (daysLeft >= 0)
-      if (daysLeft >= 0) {
-        updatedClient.membership.expiredReminderSent = false;
-        updatedClient.expiredReminderSent = false;
-        updatedClient.membership.expiredReminderStatus = 'none';
-        updatedClient.expiredReminderStatus = 'none';
-        updatedClient.membership.expiredReminderError = null;
-        updatedClient.expiredReminderError = null;
-        updatedClient.membership.expiredReminderSentAt = null;
-        updatedClient.expiredReminderSentAt = null;
-      }
+            // 2. Read daysLeft from the synced membership field
+            const daysLeft = updatedClient.membership.daysLeft;
 
-      await updatedClient.save();
-
-      // 3. Validation Rules (Skip invalid or dummy numbers)
-      const cleanMobile = getValidWhatsAppNumber(updatedClient);
-      const formattedWhatsApp = cleanMobile ? `+91${cleanMobile}` : null;
-
-      // Log Info placeholders
-      let reminderType = 'None';
-      let twilioStatus = 'Skipped';
-      let failureReason = '';
-
-      let remainingBalance = 0;
-      if (updatedClient.paymentStatus === 'partial' || updatedClient.paymentStatus === 'overdue') {
-        const activeMembership = [...(updatedClient.memberships || [])]
-          .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
-          .find(m => {
-            const finalPrice = m.finalPrice || 0;
-            const totalPaid = m.totalPaid || 0;
-            return (finalPrice - totalPaid) > 0;
-          });
-        if (activeMembership) {
-          remainingBalance = (activeMembership.finalPrice || 0) - (activeMembership.totalPaid || 0);
-        }
-      }
-
-      if (daysLeft === 3) {
-        reminderType = 'Expiring Soon';
-        if (!cleanMobile) {
-          twilioStatus = 'Failed';
-          failureReason = 'Invalid/Dummy WhatsApp number';
-          updatedClient.membership.expiryReminderStatus = 'failed';
-          updatedClient.expiryReminderStatus = 'failed';
-          updatedClient.membership.expiryReminderError = failureReason;
-          updatedClient.expiryReminderError = failureReason;
-          updatedClient.membership.expiryReminderSentAt = new Date();
-          updatedClient.expiryReminderSentAt = new Date();
-          await updatedClient.save();
-        } else {
-          // Check duplicate flag
-          const isSent = updatedClient.membership.expiryReminderSent || updatedClient.expiryReminderSent;
-          if (isSent) {
-            twilioStatus = 'Skipped';
-            failureReason = 'Reminder already sent today (Duplicate Prevention)';
-          } else {
-            // Send Expiring Soon Reminder
-            const msg = remainingBalance > 0
-              ? `Hello ${updatedClient.personalInfo.name},\nYour membership will expire in 3 days.\nYou currently have a pending balance of ₹${remainingBalance}.\nPlease clear the pending balance and renew your membership before expiry.\nGym: ${updatedClient.gymName}`
-              : `Dear ${updatedClient.personalInfo.name}, your membership plan is expiring soon. Please renew your plan. Gym Name: ${updatedClient.gymName}. Days Left: ${daysLeft}.`;
-
-            const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
-            if (result && result.success) {
-              twilioStatus = 'Success';
-              updatedClient.membership.expiryReminderSent = true;
-              updatedClient.expiryReminderSent = true;
-              updatedClient.membership.expiryReminderStatus = 'sent';
-              updatedClient.expiryReminderStatus = 'sent';
+            // Flag Reset Rules:
+            // If renewed, reset expiryReminderSent (daysLeft > 3)
+            if (daysLeft > 3) {
+              updatedClient.membership.expiryReminderSent = false;
+              updatedClient.expiryReminderSent = false;
+              updatedClient.membership.expiryReminderStatus = 'none';
+              updatedClient.expiryReminderStatus = 'none';
               updatedClient.membership.expiryReminderError = null;
               updatedClient.expiryReminderError = null;
-              updatedClient.membership.expiryReminderSentAt = new Date();
-              updatedClient.expiryReminderSentAt = new Date();
-              await updatedClient.save();
-            } else {
-              twilioStatus = 'Failed';
-              failureReason = result ? result.error : 'Twilio send error';
-              updatedClient.membership.expiryReminderStatus = 'failed';
-              updatedClient.expiryReminderStatus = 'failed';
-              updatedClient.membership.expiryReminderError = failureReason;
-              updatedClient.expiryReminderError = failureReason;
-              updatedClient.membership.expiryReminderSentAt = new Date();
-              updatedClient.expiryReminderSentAt = new Date();
-              await updatedClient.save();
+              updatedClient.membership.expiryReminderSentAt = null;
+              updatedClient.expiryReminderSentAt = null;
             }
-          }
-        }
-      } else if (daysLeft <= -1) {
-        reminderType = 'Expired';
-        if (!cleanMobile) {
-          twilioStatus = 'Failed';
-          failureReason = 'Invalid/Dummy WhatsApp number';
-          updatedClient.membership.expiredReminderStatus = 'failed';
-          updatedClient.expiredReminderStatus = 'failed';
-          updatedClient.membership.expiredReminderError = failureReason;
-          updatedClient.expiredReminderError = failureReason;
-          await updatedClient.save();
-        } else {
-          // Check duplicate flag
-          const isSent = updatedClient.membership.expiredReminderSent || updatedClient.expiredReminderSent;
-          if (isSent) {
-            twilioStatus = 'Skipped';
-            failureReason = 'Reminder already sent today (Duplicate Prevention)';
-          } else {
-            // Send Expired Reminder
-            const renewalLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}`;
-            const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
-            const msg = remainingBalance > 0
-              ? `Hello ${updatedClient.personalInfo.name},\nYour membership has expired.\nYou still have an outstanding balance of ₹${remainingBalance}.\nPlease clear the pending amount and renew your membership.\nPay Pending Balance: ${paymentLink}\nGym: ${updatedClient.gymName}`
-              : `Dear ${updatedClient.personalInfo.name},\n\nYour membership has expired.\n\nPlease renew your membership using the link below.\n\nRenew Membership:\n${renewalLink}\n\nRegards,\n${updatedClient.gymName}`;
-
-            const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
-            if (result && result.success) {
-              twilioStatus = 'Success';
-              updatedClient.membership.expiredReminderSent = true;
-              updatedClient.expiredReminderSent = true;
-              updatedClient.membership.expiredReminderStatus = 'sent';
-              updatedClient.expiredReminderStatus = 'sent';
+            // If active again, reset expiredReminderSent (daysLeft >= 0)
+            if (daysLeft >= 0) {
+              updatedClient.membership.expiredReminderSent = false;
+              updatedClient.expiredReminderSent = false;
+              updatedClient.membership.expiredReminderStatus = 'none';
+              updatedClient.expiredReminderStatus = 'none';
               updatedClient.membership.expiredReminderError = null;
               updatedClient.expiredReminderError = null;
-              await updatedClient.save();
-            } else {
-              twilioStatus = 'Failed';
-              failureReason = result ? result.error : 'Twilio send error';
-              updatedClient.membership.expiredReminderStatus = 'failed';
-              updatedClient.expiredReminderStatus = 'failed';
-              updatedClient.membership.expiredReminderError = failureReason;
-              updatedClient.expiredReminderError = failureReason;
-              await updatedClient.save();
+              updatedClient.membership.expiredReminderSentAt = null;
+              updatedClient.expiredReminderSentAt = null;
             }
-          }
-        }
-      }
 
-      // 4. Output detailed terminal logs as requested
-      console.log(`[CLIENT PROCESSED]
+            await updatedClient.save();
+
+            // 3. Validation Rules (Skip invalid or dummy numbers)
+            const cleanMobile = getValidWhatsAppNumber(updatedClient);
+            const formattedWhatsApp = cleanMobile ? `+91${cleanMobile}` : null;
+
+            // Log Info placeholders
+            let reminderType = 'None';
+            let twilioStatus = 'Skipped';
+            let failureReason = '';
+
+            let remainingBalance = 0;
+            if (updatedClient.paymentStatus === 'partial' || updatedClient.paymentStatus === 'overdue') {
+              const activeMembership = [...(updatedClient.memberships || [])]
+                .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+                .find(m => {
+                  const finalPrice = m.finalPrice || 0;
+                  const totalPaid = m.totalPaid || 0;
+                  return (finalPrice - totalPaid) > 0;
+                });
+              if (activeMembership) {
+                remainingBalance = (activeMembership.finalPrice || 0) - (activeMembership.totalPaid || 0);
+              }
+            }
+
+            if (daysLeft === 3) {
+              reminderType = 'Expiring Soon';
+              if (!cleanMobile) {
+                twilioStatus = 'Failed';
+                failureReason = 'Invalid/Dummy WhatsApp number';
+                updatedClient.membership.expiryReminderStatus = 'failed';
+                updatedClient.expiryReminderStatus = 'failed';
+                updatedClient.membership.expiryReminderError = failureReason;
+                updatedClient.expiryReminderError = failureReason;
+                updatedClient.membership.expiryReminderSentAt = new Date();
+                updatedClient.expiryReminderSentAt = new Date();
+                await updatedClient.save();
+              } else {
+                // Check duplicate flag
+                const isSent = updatedClient.membership.expiryReminderSent || updatedClient.expiryReminderSent;
+                if (isSent) {
+                  twilioStatus = 'Skipped';
+                  failureReason = 'Reminder already sent today (Duplicate Prevention)';
+                } else {
+                  // Send Expiring Soon Reminder
+                  const msg = remainingBalance > 0
+                    ? `Hello ${updatedClient.personalInfo.name},\nYour membership will expire in 3 days.\nYou currently have a pending balance of ₹${remainingBalance}.\nPlease clear the pending balance and renew your membership before expiry.\nGym: ${updatedClient.gymName}`
+                    : `Dear ${updatedClient.personalInfo.name}, your membership plan is expiring soon. Please renew your plan. Gym Name: ${updatedClient.gymName}. Days Left: ${daysLeft}.`;
+
+                  const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
+                  if (result && result.success) {
+                    twilioStatus = 'Success';
+                    updatedClient.membership.expiryReminderSent = true;
+                    updatedClient.expiryReminderSent = true;
+                    updatedClient.membership.expiryReminderStatus = 'sent';
+                    updatedClient.expiryReminderStatus = 'sent';
+                    updatedClient.membership.expiryReminderError = null;
+                    updatedClient.expiryReminderError = null;
+                    updatedClient.membership.expiryReminderSentAt = new Date();
+                    updatedClient.expiryReminderSentAt = new Date();
+                    await updatedClient.save();
+                  } else {
+                    twilioStatus = 'Failed';
+                    failureReason = result ? result.error : 'Twilio send error';
+                    updatedClient.membership.expiryReminderStatus = 'failed';
+                    updatedClient.expiryReminderStatus = 'failed';
+                    updatedClient.membership.expiryReminderError = failureReason;
+                    updatedClient.expiryReminderError = failureReason;
+                    updatedClient.membership.expiryReminderSentAt = new Date();
+                    updatedClient.expiryReminderSentAt = new Date();
+                    await updatedClient.save();
+                  }
+                }
+              }
+            } else if (daysLeft <= -1) {
+              reminderType = 'Expired';
+              if (!cleanMobile) {
+                twilioStatus = 'Failed';
+                failureReason = 'Invalid/Dummy WhatsApp number';
+                updatedClient.membership.expiredReminderStatus = 'failed';
+                updatedClient.expiredReminderStatus = 'failed';
+                updatedClient.membership.expiredReminderError = failureReason;
+                updatedClient.expiredReminderError = failureReason;
+                await updatedClient.save();
+              } else {
+                // Check duplicate flag
+                const isSent = updatedClient.membership.expiredReminderSent || updatedClient.expiredReminderSent;
+                if (isSent) {
+                  twilioStatus = 'Skipped';
+                  failureReason = 'Reminder already sent today (Duplicate Prevention)';
+                } else {
+                  // Send Expired Reminder
+                  const renewalLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}`;
+                  const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
+                  const msg = remainingBalance > 0
+                    ? `Hello ${updatedClient.personalInfo.name},\nYour membership has expired.\nYou still have an outstanding balance of ₹${remainingBalance}.\nPlease clear the pending amount and renew your membership.\nPay Pending Balance: ${paymentLink}\nGym: ${updatedClient.gymName}`
+                    : `Dear ${updatedClient.personalInfo.name},\n\nYour membership has expired.\n\nPlease renew your membership using the link below.\n\nRenew Membership:\n${renewalLink}\n\nRegards,\n${updatedClient.gymName}`;
+
+                  const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
+                  if (result && result.success) {
+                    twilioStatus = 'Success';
+                    updatedClient.membership.expiredReminderSent = true;
+                    updatedClient.expiredReminderSent = true;
+                    updatedClient.membership.expiredReminderStatus = 'sent';
+                    updatedClient.expiredReminderStatus = 'sent';
+                    updatedClient.membership.expiredReminderError = null;
+                    updatedClient.expiredReminderError = null;
+                    await updatedClient.save();
+                  } else {
+                    twilioStatus = 'Failed';
+                    failureReason = result ? result.error : 'Twilio send error';
+                    updatedClient.membership.expiredReminderStatus = 'failed';
+                    updatedClient.expiredReminderStatus = 'failed';
+                    updatedClient.membership.expiredReminderError = failureReason;
+                    updatedClient.expiredReminderError = failureReason;
+                    await updatedClient.save();
+                  }
+                }
+              }
+            }
+
+            // 4. Output detailed terminal logs
+            console.log(`[CLIENT PROCESSED]
 - Client Name     : ${updatedClient.personalInfo.name}
 - Client ID       : ${updatedClient.clientId}
 - WhatsApp Number : ${formattedWhatsApp || 'Invalid (' + (updatedClient.personalInfo?.mobileNo || 'N/A') + ')'}
@@ -205,6 +223,11 @@ const runReminders = async () => {
 - Twilio Status   : ${twilioStatus}
 - Failure Reason  : ${failureReason || 'N/A'}
 --------------------------------------------------`);
+          }
+        });
+      } catch (gymErr) {
+        console.error(`Error in runReminders for gym ${gym.gymId} (${gym.dbName}):`, gymErr);
+      }
     }
 
     console.log('--- WhatsApp Expiry Reminders Job Completed ---');

@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
+const { createTenantModelProxy } = require('../utils/tenantContext');
 
 const expenseSchema = new mongoose.Schema({
   gymId: {
     type: String,
-    required: true,
     index: true
   },
   title: {
@@ -45,6 +45,10 @@ const expenseSchema = new mongoose.Schema({
   timestamps: true
 });
 
-expenseSchema.index({ gymId: 1, date: -1 });
+expenseSchema.index({ date: -1 });
 
-module.exports = mongoose.model('Expense', expenseSchema);
+const Expense = createTenantModelProxy('Expense', expenseSchema);
+Expense.schema = expenseSchema;
+
+module.exports = Expense;
+

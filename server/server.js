@@ -63,7 +63,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const connectDB = async () => {
   try {
     mongoose.set('strictQuery', true);
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    let uri = process.env.MONGODB_URI;
+    if (uri && !uri.includes('/platform_db')) {
+      const url = require('url');
+      try {
+        const parsed = new url.URL(uri);
+        parsed.pathname = '/platform_db';
+        uri = parsed.toString();
+      } catch (e) {
+        if (uri.includes('?')) {
+          uri = uri.replace(/\/[^/?]*\?/, '/platform_db?');
+        } else {
+          uri = uri.endsWith('/') ? uri + 'platform_db' : uri + '/platform_db';
+        }
+      }
+    }
+    const conn = await mongoose.connect(uri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     console.log("Connected DB:", mongoose.connection.name);
 
@@ -101,6 +116,10 @@ require('./jobs/overdueReminderJob');
 
 // Health Check
 app.get("/", (req, res) => res.send("API running"));
+
+// Global Tenant DB Middleware
+const { tenantDbMiddleware } = require('./middleware/tenantDbMiddleware');
+app.use(tenantDbMiddleware);
 
 // Routes (to be loaded)
 app.use('/api/auth', require('./routes/auth'));

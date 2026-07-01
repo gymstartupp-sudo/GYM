@@ -26,12 +26,12 @@ exports.createPlan = async (req, res, next) => {
     }
 
     if (isCustom) {
-      const existingPlan = await Plan.findOne({ name, gymId, isActive: true });
+      const existingPlan = await Plan.findOne({ name, isActive: true });
       if (existingPlan) {
         return res.status(400).json({ success: false, message: 'Plan already exists' });
       }
     } else {
-      const existingPlan = await Plan.findOne({ durationMonths, isCustom: false, gymId, isActive: true });
+      const existingPlan = await Plan.findOne({ durationMonths, isCustom: false, isActive: true });
       if (existingPlan) {
         return res.status(400).json({ success: false, message: 'Standard plan already created' });
       }
@@ -58,21 +58,7 @@ exports.createPlan = async (req, res, next) => {
 // @access  Public or Private
 exports.getPlans = async (req, res, next) => {
   try {
-    let gymId = null;
-    if(req.userRole === 'owner') {
-        gymId = req.user.gymId;
-    } else if(req.userRole === 'client') {
-        gymId = req.user.gymId;
-    } else if(req.query.gymId) {
-        gymId = req.query.gymId;
-    }
-
-    if(!gymId) {
-        return res.status(400).json({ success: false, message: 'gymId is required' });
-    }
-
-    const plans = await Plan.find({ gymId, isActive: true }).lean();
-    
+    const plans = await Plan.find({ isActive: true }).lean();
     res.status(200).json({ success: true, data: plans });
   } catch (err) {
     next(err);
@@ -85,7 +71,6 @@ exports.getPlans = async (req, res, next) => {
 exports.updatePlan = async (req, res, next) => {
   try {
     const { name, durationMonths, price, description, partialPaymentDueDays } = req.body;
-    const gymId = req.user.gymId;
 
     if (name && name.length > 25) {
       return res.status(400).json({ success: false, message: 'Plan name cannot exceed 25 characters' });
@@ -103,10 +88,6 @@ exports.updatePlan = async (req, res, next) => {
     let plan = await Plan.findById(req.params.id);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
 
-    if (plan.gymId !== gymId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
-    }
-
     plan = await Plan.findByIdAndUpdate(req.params.id, { name, durationMonths, price, description, partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : 15 }, { new: true, runValidators: true });
     res.status(200).json({ success: true, data: plan });
   } catch (err) {
@@ -119,14 +100,8 @@ exports.updatePlan = async (req, res, next) => {
 // @access  Private (Owner)
 exports.deletePlan = async (req, res, next) => {
   try {
-    const gymId = req.user.gymId;
-
     const plan = await Plan.findById(req.params.id);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
-
-    if (plan.gymId !== gymId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
-    }
 
     await Plan.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
     res.status(200).json({ success: true, data: {} });

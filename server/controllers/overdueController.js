@@ -6,10 +6,7 @@ const { getPlanStatus } = require('../utils/membership');
 // @access  Private (Owner)
 exports.getOverdueClients = async (req, res, next) => {
   try {
-    const gymIdStr = req.user.gymId;
-    
     const clients = await Client.find({ 
-      gymId: gymIdStr, 
       isActive: true,
       'membership.requestApproved': true,
       paymentStatus: 'overdue'
@@ -26,12 +23,10 @@ exports.getOverdueClients = async (req, res, next) => {
 // @access  Private (Owner)
 exports.getExpiredClients = async (req, res, next) => {
   try {
-    const gymIdStr = req.user.gymId;
     const today = new Date();
     today.setHours(0,0,0,0);
 
     const clients = await Client.find({ 
-      gymId: gymIdStr, 
       isActive: true,
       'membership.requestApproved': true
     }).lean();

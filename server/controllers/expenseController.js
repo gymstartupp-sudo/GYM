@@ -6,8 +6,7 @@ const { uploadBillToCloudinary } = require('../utils/cloudinary');
 // @access  Private (Owner)
 exports.getExpenses = async (req, res, next) => {
   try {
-    const gymIdStr = req.user.gymId;
-    const expenses = await Expense.find({ gymId: gymIdStr }).sort({ date: -1 }).lean();
+    const expenses = await Expense.find({}).sort({ date: -1 }).lean();
     res.status(200).json({ success: true, count: expenses.length, data: expenses });
   } catch (err) {
     next(err);
@@ -52,11 +51,6 @@ exports.updateExpense = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Expense not found' });
     }
 
-    // Make sure user owns expense
-    if (expense.gymId !== req.user.gymId) {
-      return res.status(401).json({ success: false, message: 'Not authorized' });
-    }
-
     if (req.body.amount && Number(req.body.amount) > 10000000) {
       return res.status(400).json({ success: false, message: 'Expense amount cannot exceed 1 crore (₹10,000,000)' });
     }
@@ -89,11 +83,6 @@ exports.deleteExpense = async (req, res, next) => {
 
     if (!expense) {
       return res.status(404).json({ success: false, message: 'Expense not found' });
-    }
-
-    // Make sure user owns expense
-    if (expense.gymId !== req.user.gymId) {
-      return res.status(401).json({ success: false, message: 'Not authorized' });
     }
 
     await expense.deleteOne();

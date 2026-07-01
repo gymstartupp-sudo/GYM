@@ -86,7 +86,7 @@ exports.recordPayment = async (req, res, next) => {
     if (!planId) return res.status(400).json({ success: false, message: 'Plan is required for payment' });
 
     const Plan = require('../models/Plan');
-    const planDetails = await Plan.findOne({ _id: planId, gymId: gymIdStr, isActive: true });
+    const planDetails = await Plan.findOne({ _id: planId, isActive: true });
     if (!planDetails) {
       return res.status(400).json({ success: false, message: 'Selected plan not found or is inactive' });
     }
@@ -139,17 +139,24 @@ exports.recordPayment = async (req, res, next) => {
     }
 
     // Check that client is active and approved
-    const client = await Client.findOne({ _id: clientId, gymId: gymIdStr, isActive: true, 'membership.requestApproved': true });
+    const client = await Client.findOne({ _id: clientId, isActive: true, 'membership.requestApproved': true });
     if (!client) return res.status(404).json({ success: false, message: 'Client not found, is deactivated, or is pending approval' });
 
     // Block renewal/purchase if client has outstanding balance
-    const hasOutstandingBalance = client.memberships && client.memberships.some(m => {
-      const finalPrice = m.finalPrice || 0;
-      const totalPaid = m.totalPaid || 0;
-      return (finalPrice - totalPaid) > 0;
-    });
-    if (hasOutstandingBalance) {
-      return res.status(400).json({ success: false, message: 'Cannot renew or purchase a new membership. Please clear your outstanding balance first.' });
+    let pendingBalance = 0;
+    if (client.memberships) {
+      pendingBalance = client.memberships.reduce((sum, m) => {
+        const finalPrice = m.finalPrice || 0;
+        const totalPaid = m.totalPaid || 0;
+        return sum + Math.max(0, finalPrice - totalPaid);
+      }, 0);
+    }
+    if (pendingBalance > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot renew or purchase a new membership. Please clear your outstanding balance of ₹${pendingBalance} first.`,
+        pendingBalance
+      });
     }
 
     const numAmount = Number(amount) || 0;
@@ -203,7 +210,6 @@ exports.recordPayment = async (req, res, next) => {
       // Fallback: 5-second duplicate prevention for clients without idempotency keys
       const recentPayment = await Payment.findOne({
         clientId: client._id,
-        gymId: gymIdStr,
         planId: planId,
         createdAt: { $gt: new Date(Date.now() - 5000) }
       });
@@ -214,7 +220,7 @@ exports.recordPayment = async (req, res, next) => {
     }
 
     const gym = await Gym.findOne({ gymId: gymIdStr });
-    const paymentId = await generatePaymentId(gymIdStr, gym.billingInfo?.billingIdPrefix || 'BILL');
+    const paymentId = await generatePaymentId(gymIdStr, gym?.billingInfo?.billingIdPrefix || 'BILL');
 
     // Status logic for the Payment record itself
     let paymentStatus = 'pending';
@@ -319,8 +325,7 @@ exports.recordPayment = async (req, res, next) => {
 // @access  Private (Owner, Admin)
 exports.getPayments = async (req, res, next) => {
   try {
-    let gymIdStr = req.userRole === 'owner' ? req.user.gymId : req.query.gymId;
-    const rawPayments = await Payment.find({ gymId: gymIdStr }).sort({ createdAt: -1 });
+    const rawPayments = await Payment.find({}).sort({ createdAt: -1 });
     
     // On-the-fly migration for old records — persist corrections to DB
     const bulkOps = [];
@@ -377,9 +382,7 @@ exports.updatePayment = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { additionalAmount, paymentMethod, razorpay_payment_id } = req.body;
-    const gymIdStr = req.user.gymId;
-
-    const payment = await Payment.findOne({ _id: id, gymId: gymIdStr });
+    const payment = await Payment.findById(id);
     if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
 
     lockKey = `payment-${payment.clientId.toString()}`;
@@ -414,24 +417,19 @@ exports.updatePayment = async (req, res, next) => {
       }
     }
 
-    // FIX: Verify the payment belongs to this gym (already done above via gymId filter)
-
     const addedAmount = Number(additionalAmount) || 0;
     if (addedAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Additional amount must be greater than zero' });
     }
 
     // 1. Generate new Payment ID for this transaction
-    const gym = await Gym.findOne({ gymId: gymIdStr });
-    if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
-    
-    const newPaymentId = await generatePaymentId(gymIdStr, gym.billingInfo?.billingIdPrefix || 'BILL');
+    const gym = await Gym.findOne({ gymId: payment.gymId });
+    const newPaymentId = await generatePaymentId(payment.gymId, gym?.billingInfo?.billingIdPrefix || 'BILL');
 
     const invAmt = payment.invoiceAmount || payment.amount || 0;
 
     // 2. Compute TRUE cumulative paid by summing paidNow across ALL related transactions
     const allRelated = await Payment.find({
-      gymId: gymIdStr,
       clientId: payment.clientId,
       planId: payment.planId,
       startDate: payment.startDate
@@ -447,14 +445,14 @@ exports.updatePayment = async (req, res, next) => {
     const currentBalance = Math.max(0, invAmt - currentTotalPaid);
     const newStatus = currentBalance === 0 ? 'paid' : 'partial';
 
-    if (gym.billingInfo?.allowPartialPayments === false && currentBalance > 0) {
+    if (gym?.billingInfo?.allowPartialPayments === false && currentBalance > 0) {
       return res.status(400).json({ success: false, message: 'Partial payments are disabled. Remaining balance must be paid in full.' });
     }
 
     // 3. Create a NEW immutable payment record (installment snapshot)
     const newTransaction = await Payment.create({
       paymentId: newPaymentId,
-      gymId: gymIdStr,
+      gymId: payment.gymId,
       clientId: payment.clientId,
       clientName: payment.clientName,
       planId: payment.planId,
@@ -533,14 +531,15 @@ exports.createRazorpayOrder = async (req, res, next) => {
   try {
     const { planId, paidAmount, paymentId, additionalAmount } = req.body;
     let gymIdStr = req.user.gymId;
-    let finalAmountToPay = 0;
 
     const gym = await Gym.findOne({ gymId: gymIdStr });
     if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
 
+    let finalAmountToPay = 0;
+
     if (paymentId) {
       // Dues payment
-      const payment = await Payment.findOne({ _id: paymentId, gymId: gymIdStr });
+      const payment = await Payment.findOne({ _id: paymentId });
       if (!payment) return res.status(404).json({ success: false, message: 'Payment record not found' });
 
       // Secure client requests: check payment ownership
@@ -552,13 +551,13 @@ exports.createRazorpayOrder = async (req, res, next) => {
 
       // Compute TRUE cumulative paid
       const allRelated = await Payment.find({
-        gymId: gymIdStr,
         clientId: payment.clientId,
         planId: payment.planId,
         startDate: payment.startDate
       });
       const actualPrevTotalPaid = allRelated.reduce((sum, p) => sum + (p.paidNow || p.paidAmount || 0), 0);
       const outstandingBalance = Math.max(0, invAmt - actualPrevTotalPaid);
+      const gym = await Gym.findOne({ gymId: payment.gymId });
 
       const requestedAmt = Number(additionalAmount) || 0;
       if (requestedAmt <= 0) {
@@ -567,17 +566,20 @@ exports.createRazorpayOrder = async (req, res, next) => {
       if (requestedAmt > outstandingBalance) {
         return res.status(400).json({ success: false, message: `Payment exceeds outstanding balance of ₹${outstandingBalance}` });
       }
-      if (gym.billingInfo?.allowPartialPayments === false && requestedAmt < outstandingBalance) {
+      if (gym?.billingInfo?.allowPartialPayments === false && requestedAmt < outstandingBalance) {
         return res.status(400).json({ success: false, message: 'Partial payments are disabled. Remaining balance must be paid in full.' });
       }
       finalAmountToPay = requestedAmt;
     } else if (planId) {
       // New plan/Renewal payment
       const Plan = require('../models/Plan');
-      const planDetails = await Plan.findOne({ _id: planId, gymId: gymIdStr, isActive: true });
+      const planDetails = await Plan.findOne({ _id: planId, isActive: true });
       if (!planDetails) {
         return res.status(400).json({ success: false, message: 'Selected plan not found or is inactive' });
       }
+
+      const gymIdStr = req.user.gymId || req.user._id.toString();
+      const gym = await Gym.findOne({ gymId: gymIdStr });
 
       const requestedPaid = Number(paidAmount) || 0;
       if (requestedPaid <= 0) {
@@ -586,7 +588,7 @@ exports.createRazorpayOrder = async (req, res, next) => {
       if (requestedPaid > planDetails.price) {
         return res.status(400).json({ success: false, message: 'Paid amount cannot exceed plan price' });
       }
-      if (gym.billingInfo?.allowPartialPayments === false && requestedPaid < planDetails.price) {
+      if (gym?.billingInfo?.allowPartialPayments === false && requestedPaid < planDetails.price) {
         return res.status(400).json({ success: false, message: 'Partial payments are disabled. Payment must be made in full.' });
       }
       finalAmountToPay = requestedPaid;

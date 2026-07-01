@@ -286,7 +286,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     if (field === 'mobileNo' && !/^\d{10}$/.test(value)) return;
 
     try {
-      const payload = field === 'email' ? { email: value } : { phone: value };
+      const payload = {
+        ...(field === 'email' ? { email: value } : { phone: value }),
+        gymId: values.gymId
+      };
       await api.post('/auth/check-exists', payload);
       clearErrors(field);
     } catch (err) {
