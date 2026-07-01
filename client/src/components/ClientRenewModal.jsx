@@ -57,6 +57,17 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
   const [paymentType, setPaymentType] = useState('full'); // 'full' or 'partial'
   const [showPlanDropdown, setShowPlanDropdown] = useState(false);
   const [planSearchQuery, setPlanSearchQuery] = useState('');
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormError('');
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    setFormError('');
+  }, [renewalForm, paymentType, selectedPlan]);
 
   const [renewalForm, setRenewalForm] = useState({
     startDate: new Date().toISOString().split('T')[0],
@@ -125,7 +136,8 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
     try {
       const d = new Date(renewalForm.startDate);
       if (isNaN(d.getTime())) return '';
-      d.setDate(d.getDate() + (selectedPlan.durationMonths <= 6 ? 15 : 30));
+      const dueDays = selectedPlan.partialPaymentDueDays ?? 15;
+      d.setDate(d.getDate() + dueDays);
       return d.toISOString().split('T')[0];
     } catch (e) {
       return '';
@@ -247,17 +259,17 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
   const handleRenewSubmit = (e) => {
     e.preventDefault();
     if (!selectedPlan) {
-      alert("Please select a membership plan");
+      setFormError("Please select a membership plan");
       return;
     }
 
     if (!detectedPendingPayment) {
       if (!renewalForm.startDate || isNaN(new Date(renewalForm.startDate).getTime())) {
-        alert("Please enter a valid Start Date");
+        setFormError("Please enter a valid Start Date");
         return;
       }
       if (dateErrors.startDate) {
-        alert(dateErrors.startDate);
+        setFormError(dateErrors.startDate);
         return;
       }
     }
@@ -268,20 +280,20 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
     const paid = Number(renewalForm.paidAmount) || 0;
     if (paid > maxLimit) {
-      alert(`Paid amount cannot exceed outstanding balance of ₹${maxLimit}`);
+      setFormError(`Paid amount cannot exceed outstanding balance of ₹${maxLimit}`);
       return;
     }
 
     if (!detectedPendingPayment && paymentType === 'partial') {
-      if (paid < maxLimit * 0.50) {
-        alert("You must pay at least 50% of the plan price for partial payment.");
+      if (paid <= 100) {
+        setFormError("You must pay an amount greater than ₹100 for partial payment.");
         return;
       }
     }
 
     if (paymentType === 'partial' && paid < maxLimit) {
       if (!renewalForm.dueDate) {
-        alert("Due Date is required for partial payments");
+        setFormError("Due Date is required for partial payments");
         return;
       }
 
@@ -299,11 +311,11 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
       if (end) end.setHours(0, 0, 0, 0);
 
       if (due < start) {
-        alert("Due Date cannot be earlier than the membership Start Date.");
+        setFormError("Due Date cannot be earlier than the membership Start Date.");
         return;
       }
       if (end && due > end) {
-        alert(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')}).`);
+        setFormError(`Due Date cannot exceed the membership Expiry Date (${end.toLocaleDateString('en-GB')}).`);
         return;
       }
     }
@@ -711,6 +723,15 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                 </div>
               </div>
             </>
+          )}
+
+          {formError && (
+            <div className="flex items-start gap-3 p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
+              <AlertTriangle className="text-rose-500 shrink-0 mt-0.5" size={16} />
+              <div className="flex-1">
+                <p className="text-rose-400 text-xs font-semibold leading-relaxed">{formError}</p>
+              </div>
+            </div>
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-800">

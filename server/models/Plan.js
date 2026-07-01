@@ -7,7 +7,8 @@ const planSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   description: { type: String },
   isCustom: { type: Boolean, default: false },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: true },
+  partialPaymentDueDays: { type: Number, default: 15 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Plan', planSchema);
