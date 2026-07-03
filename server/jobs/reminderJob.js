@@ -51,7 +51,7 @@ const runReminders = async () => {
           today.setHours(0, 0, 0, 0);
 
           // Fetch all active clients
-          const clients = await Client.find({ isActive: true, 'membership.requestApproved': true });
+          const clients = await Client.find({ isActive: true, isDeleted: { $ne: true }, 'membership.requestApproved': true });
           console.log(`[Gym: ${gym.gymId}] Found ${clients.length} active clients to process.`);
 
           for (let client of clients) {

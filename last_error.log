@@ -1170,3 +1170,15 @@
 [2026-07-01T10:35:20.981Z] ReferenceError: generatePaymentId is not defined
     at exports.addClient (D:\GYM!\GYM\server\controllers\clientController.js:322:23)
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-03T19:45:42.394Z] TypeError: Cannot destructure property 'membership' of 'req.body' as it is undefined.
+    at exports.restoreClient (D:\GYM!\GYM\server\controllers\clientController.js:834:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-03T19:45:44.597Z] TypeError: Cannot destructure property 'membership' of 'req.body' as it is undefined.
+    at exports.restoreClient (D:\GYM!\GYM\server\controllers\clientController.js:834:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-07-03T19:45:52.237Z] TypeError: Cannot destructure property 'membership' of 'req.body' as it is undefined.
+    at exports.restoreClient (D:\GYM!\GYM\server\controllers\clientController.js:834:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

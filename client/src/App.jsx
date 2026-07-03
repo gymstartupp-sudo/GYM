@@ -20,6 +20,7 @@ const OwnerLayout = lazy(() => import('./layouts/OwnerLayout'));
 const OwnerDashboard = lazy(() => import('./pages/owner/Dashboard'));
 const OwnerClients = lazy(() => import('./pages/owner/Clients'));
 const OwnerInactiveClients = lazy(() => import('./pages/owner/InactiveClients'));
+const OwnerDeletedClients = lazy(() => import('./pages/owner/DeletedClients'));
 const OwnerPlans = lazy(() => import('./pages/owner/Plans'));
 const ClientsPayment = lazy(() => import('./pages/owner/ClientsPayment'));
 const OwnerDues = lazy(() => import('./pages/owner/Dues'));
@@ -45,6 +46,7 @@ const RenewalRedirect = lazy(() => import('./pages/client/RenewalRedirect'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminGyms = lazy(() => import('./pages/admin/AdminGyms'));
 const AdminClients = lazy(() => import('./pages/admin/AdminClients'));
+const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -85,6 +87,7 @@ const AppContent = () => {
                 <Route path="dashboard" element={<OwnerDashboard />} />
                 <Route path="clients" element={<OwnerClients />} />
                 <Route path="inactive-clients" element={<OwnerInactiveClients />} />
+                <Route path="deleted-clients" element={<OwnerDeletedClients />} />
                 <Route path="plans" element={<OwnerPlans />} />
                 <Route path="clients-payment" element={<ClientsPayment />} />
                 <Route path="dues" element={<OwnerDues />} />
@@ -112,6 +115,7 @@ const AppContent = () => {
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/gyms" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminGyms /></ProtectedRoute>} />
               <Route path="/admin/gyms/:gymId/clients" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminClients /></ProtectedRoute>} />
+              <Route path="/admin/issues" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminIssues /></ProtectedRoute>} />
 
             </Routes>
         </Suspense>

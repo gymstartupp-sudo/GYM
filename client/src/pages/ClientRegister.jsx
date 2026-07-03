@@ -6,9 +6,11 @@ import ClientForm from '../components/ClientForm';
 
 const ClientRegister = () => {
     const [successData, setSuccessData] = useState(null);
+    const [actionType, setActionType] = useState('create');
 
-    const handleSuccess = (data) => {
+    const handleSuccess = (data, type) => {
         setSuccessData(data);
+        if (type) setActionType(type);
     };
 
     if (successData) {
@@ -17,12 +19,22 @@ const ClientRegister = () => {
                  <div className="flex justify-center mb-6">
                      <CheckCircle size={80} className="text-emerald-500" />
                  </div>
-                 <h2 className="text-3xl font-bold text-text-primary mb-2">Account Created!</h2>
+                 <h2 className="text-3xl font-bold text-text-primary mb-2">
+                     {actionType === 'restore' ? 'Client Restored!' : 'Account Created!'}
+                 </h2>
                  <p className="text-text-secondary font-medium mb-6">Your Gym: <span className="text-text-primary font-bold">{successData.gymName}</span></p>
 
                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mt-6 text-left mb-8">
-                     <p className="text-yellow-400 font-medium text-sm">Your membership request has been sent to the gym owner for approval.</p>
-                     <p className="text-text-secondary text-sm mt-1">Your Client ID will be generated after approval. You can log in once the owner activates your request.</p>
+                     <p className="text-yellow-400 font-medium text-sm">
+                         {actionType === 'restore' 
+                             ? 'Your restore request has been sent to the gym owner for approval.' 
+                             : 'Your membership request has been sent to the gym owner for approval.'}
+                     </p>
+                     <p className="text-text-secondary text-sm mt-1">
+                         {actionType === 'restore'
+                             ? 'You can log in once the owner approves your restoration request.'
+                             : 'Your Client ID will be generated after approval. You can log in once the owner activates your request.'}
+                     </p>
                  </div>
                  
                  <Link to="/login" className="block w-full">

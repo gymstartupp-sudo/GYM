@@ -332,40 +332,102 @@
 
 /* Print invoice styles */
 @media print {
+  /* Hide all elements on the page by default */
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
 
+  /* Show only the invoice container and its children */
   .print-invoice-container,
   .print-invoice-container * {
-    visibility: visible;
+    visibility: visible !important;
   }
 
+
+
+  /* Reset the modal backdrop container overlay layout constraints so it doesn't limit the child */
+  .fixed.inset-0.z-50 {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  /* Expand print invoice container to occupy full A4 width */
   .print-invoice-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
     background: white !important;
     color: #111827 !important;
     box-shadow: none !important;
     border: none !important;
+    transform: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 14px !important;
   }
 
+  /* Make the printable body a flex column stretching to A4 height */
+  .print-invoice-container > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 200mm !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Push the regards/footer section to the very bottom of the page */
+  .print-invoice-container > div:last-child > div:last-child {
+    margin-top: auto !important;
+    padding-top: 20px !important;
+  }
+
+  /* Optimize font sizes for readable corporate print layout */
+  .print-invoice-container h2 {
+    font-size: 18px !important;
+  }
+  .print-invoice-container h4 {
+    font-size: 9px !important;
+  }
+  .print-invoice-container p,
+  .print-invoice-container span,
+  .print-invoice-container td,
+  .print-invoice-container th {
+    font-size: 12px !important;
+  }
+
+  /* Spaced table cells for billing software look */
+  .print-invoice-container th,
+  .print-invoice-container td {
+    padding: 10px 8px !important;
+  }
+
+  /* Preserve colors, text colors, fonts and borders on all child elements */
   .print-invoice-container * {
     color: #111827 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .no-print {
-    display: none !important;
-    visibility: hidden !important;
-  }
-
+  /* Setup A4 Page size and portrait orientation with 10mm margin */
   @page {
-    size: auto;
-    margin: 10mm 15mm 10mm 15mm;
+    size: A4 portrait;
+    margin: 10mm;
   }
 }
 

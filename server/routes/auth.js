@@ -101,6 +101,7 @@ router.post('/check-exists', checkExistsValidation, validate, authController.che
 
 router.post('/gym/register', uploadLogo.single('logo'), gymRegisterValidation, validate, authController.registerGymOwner);
 router.post('/client/register', clientRegisterValidation, validate, authController.registerClient);
+router.put('/client/:id/restore', authController.publicRestoreClient);
 
 router.post('/login', universalLoginValidation, validate, authController.universalLogin);
 

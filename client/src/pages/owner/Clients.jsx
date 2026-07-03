@@ -259,9 +259,13 @@ const Clients = () => {
                   showCancel
                   onCancel={() => closeAddModal()}
                   onDirtyChange={setIsFormDirty}
-                  onSuccess={() => {
+                  onSuccess={(client, actionType) => {
                     closeAddModal();
-                    toast.success('Client added successfully');
+                    if (actionType === 'restore') {
+                      toast.success('Client restored successfully');
+                    } else {
+                      toast.success('Client added successfully');
+                    }
                     fetchClients();
                   }}
                 />

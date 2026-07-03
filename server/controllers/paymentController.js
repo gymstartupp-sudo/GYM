@@ -138,9 +138,9 @@ exports.recordPayment = async (req, res, next) => {
       return res.status(409).json({ success: false, message: 'Another payment transaction is already in progress for this client' });
     }
 
-    // Check that client is active and approved
-    const client = await Client.findOne({ _id: clientId, isActive: true, 'membership.requestApproved': true });
-    if (!client) return res.status(404).json({ success: false, message: 'Client not found, is deactivated, or is pending approval' });
+    // Check that client exists, is not deleted, and is approved
+    const client = await Client.findOne({ _id: clientId, isDeleted: { $ne: true }, 'membership.requestApproved': true });
+    if (!client) return res.status(404).json({ success: false, message: 'Client not found or is pending approval' });
 
     // Block renewal/purchase if client has outstanding balance
     let pendingBalance = 0;

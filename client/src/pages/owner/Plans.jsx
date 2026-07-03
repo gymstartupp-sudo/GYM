@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
-import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react';
 
 // ─── Plan Detail Modal ──────────────────────────────────────────────────────
 const PlanDetailModal = ({ plan, onClose }) => {
@@ -27,6 +27,10 @@ const PlanDetailModal = ({ plan, onClose }) => {
           <div className="flex justify-between items-center bg-surface-hover/60 rounded-xl p-4 border border-border/70">
             <span className="text-text-secondary text-sm uppercase tracking-wider">Duration</span>
             <span className="text-text-primary font-semibold">{plan.durationMonths} Month{plan.durationMonths !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="flex justify-between items-center bg-surface-hover/60 rounded-xl p-4 border border-border/70">
+            <span className="text-text-secondary text-sm uppercase tracking-wider">Partial Payment Due Limit</span>
+            <span className="text-text-primary font-semibold">{plan.partialPaymentDueDays ?? 15} Day{(plan.partialPaymentDueDays ?? 15) !== 1 ? 's' : ''}</span>
           </div>
           <div className="bg-surface-hover/60 rounded-xl p-4 border border-border/70">
             <p className="text-text-secondary text-sm uppercase tracking-wider mb-2">Description</p>
@@ -64,10 +68,15 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => (
       </button>
     </div>
 
-    {/* Duration badge */}
-    <span className="inline-block text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 mb-4 w-fit">
-      {plan.durationMonths}M Plan
-    </span>
+    {/* Header info */}
+    <div className="flex items-center gap-2 mb-4">
+      <span className="inline-block text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 w-fit">
+        {plan.durationMonths}M Plan
+      </span>
+      <span className="text-xs font-medium text-text-secondary bg-surface-divider border border-border px-2.5 py-1 rounded-full flex items-center gap-1.5" title="Clients using this plan">
+        <Users size={12} className="text-primary" /> {plan.clientCount || 0} client{plan.clientCount !== 1 ? 's' : ''}
+      </span>
+    </div>
 
     <h3 className="text-xl font-bold text-text-primary mb-1">{plan.name}</h3>
     <p className="text-primary text-3xl font-black mb-6">
@@ -86,14 +95,15 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => (
 );
 
 // ─── Create / Edit Modal ────────────────────────────────────────────────────
-const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
+const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
   const [isCustom, setIsCustom] = useState(editingPlan?.isCustom ?? false);
   const [standardType, setStandardType] = useState('');
   const [formData, setFormData] = useState({
     name: editingPlan?.name || '',
     durationMonths: editingPlan?.durationMonths || '',
     price: editingPlan?.price || '',
-    description: editingPlan?.description || ''
+    description: editingPlan?.description || '',
+    partialPaymentDueDays: editingPlan?.partialPaymentDueDays ?? 15
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -120,6 +130,15 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
           errMessage = 'Enter a valid price';
         } else if (num >= 100000) {
           errMessage = 'Plan price must be under ₹1,00,000';
+        }
+      }
+    } else if (name === 'partialPaymentDueDays') {
+      const num = Number(val);
+      if (val !== '') {
+        if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+          errMessage = 'Due days must be a positive whole number';
+        } else if (num > 90) {
+          errMessage = 'Due days cannot exceed 90 days';
         }
       }
     } else if (name === 'description') {
@@ -152,6 +171,7 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
   }, [editingPlan]);
 
   const handleCategoryChange = (category) => {
+    if (editingPlan?.isAssigned) return;
     const custom = category === 'Custom';
     setIsCustom(custom);
     setStandardType('');
@@ -161,6 +181,7 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
   };
 
   const handleStandardSelect = (e) => {
+    if (editingPlan?.isAssigned) return;
     const type = e.target.value;
     setStandardType(type);
     let name = '';
@@ -183,7 +204,10 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
       toast.error("Please fix validation errors first");
       return;
     }
-    if (formData.name.trim().length > 25) {
+
+    // Input Normalization
+    const cleanName = formData.name.trim().replace(/\s+/g, ' ');
+    if (cleanName.length > 25) {
       toast.error("Plan name cannot exceed 25 characters");
       return;
     }
@@ -195,13 +219,60 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
       toast.error("Plan price must be under 1 Lakh");
       return;
     }
+    if (formData.partialPaymentDueDays !== '') {
+      const dueDaysNum = Number(formData.partialPaymentDueDays);
+      if (isNaN(dueDaysNum) || !Number.isInteger(dueDaysNum) || dueDaysNum < 1 || dueDaysNum > 90) {
+        toast.error("Partial payment due limit must be a whole number between 1 and 90 days");
+        return;
+      }
+    }
     if (formData.description && formData.description.length > 150) {
       toast.error("Plan description cannot exceed 150 characters");
       return;
     }
+
+    // Protect historical membership changes on submit
+    if (editingPlan && editingPlan.isAssigned) {
+      const isCustomChanged = isCustom !== editingPlan.isCustom;
+      const durationChanged = Number(formData.durationMonths) !== editingPlan.durationMonths;
+      if (isCustomChanged || durationChanged) {
+        toast.error('This membership plan has already been assigned to clients and its duration or type cannot be changed.');
+        return;
+      }
+    }
+
+    // Case-Insensitive Duplicate Name check
+    const normalizedName = cleanName.toLowerCase();
+    const nameConflict = plans.some(p => {
+      if (editingPlan && p._id === editingPlan._id) return false;
+      const pNorm = p.name.trim().replace(/\s+/g, ' ').toLowerCase();
+      return pNorm === normalizedName;
+    });
+    if (nameConflict) {
+      toast.error(`A membership plan named "${cleanName}" already exists. Please choose another name.`);
+      return;
+    }
+
+    // Duplicate Standard Duration check
+    if (!isCustom) {
+      const durationConflict = plans.some(p => {
+        if (editingPlan && p._id === editingPlan._id) return false;
+        return !p.isCustom && Number(p.durationMonths) === Number(formData.durationMonths);
+      });
+      if (durationConflict) {
+        toast.error(`A standard ${formData.durationMonths} Month membership plan already exists. Only one active standard plan is allowed for each duration.`);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
-      const payload = { ...formData, isCustom };
+      const payload = { 
+        ...formData, 
+        name: cleanName, 
+        isCustom,
+        partialPaymentDueDays: formData.partialPaymentDueDays ? Number(formData.partialPaymentDueDays) : 15
+      };
       if (editingPlan) {
         await api.put(`/plan/${editingPlan._id}`, payload);
         toast.success('Plan updated');
@@ -226,6 +297,14 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
+          {/* Assigned Locked Banner */}
+          {editingPlan?.isAssigned && (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-xs text-yellow-500 flex items-start gap-2 leading-relaxed mb-2">
+              <span className="font-bold uppercase tracking-wider shrink-0 mt-0.5 border border-yellow-500/40 rounded px-1 text-[9px] bg-yellow-500/10">Locked</span>
+              <span>This membership plan has already been assigned to clients. Its duration and type cannot be changed because they are part of historical membership records.</span>
+            </div>
+          )}
+
           {/* Plan Category */}
           <div>
             <label className="text-xs text-text-secondary mb-2 block uppercase tracking-wider">Plan Category *</label>
@@ -233,14 +312,16 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
               <button
                 type="button"
                 onClick={() => handleCategoryChange('Standard')}
-                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${!isCustom ? 'bg-primary border-primary text-black' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-600'}`}
+                disabled={editingPlan?.isAssigned}
+                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${!isCustom ? 'bg-primary border-primary text-black' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-600'} ${editingPlan?.isAssigned ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Standard
               </button>
               <button
                 type="button"
                 onClick={() => handleCategoryChange('Custom')}
-                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${isCustom ? 'bg-primary border-primary text-black' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-600'}`}
+                disabled={editingPlan?.isAssigned}
+                className={`py-2 px-4 rounded-lg border text-sm font-medium transition-all ${isCustom ? 'bg-primary border-primary text-black' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-600'} ${editingPlan?.isAssigned ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Custom
               </button>
@@ -254,7 +335,8 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
                 value={standardType} 
                 onChange={handleStandardSelect} 
                 required={!isCustom}
-                className="input-field appearance-none cursor-pointer"
+                disabled={editingPlan?.isAssigned}
+                className={`input-field appearance-none cursor-pointer ${editingPlan?.isAssigned ? 'opacity-50 cursor-not-allowed bg-surface-divider' : ''}`}
               >
                 <option value="">-- Choose Plan --</option>
                 <option value="Monthly">Monthly (1 Month)</option>
@@ -289,16 +371,15 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 onChange={(e) => {
-                  // Strip non-digits
+                  if (editingPlan?.isAssigned) return;
                   const raw = e.target.value.replace(/\D/g, '');
-                  // Enforce max 2 digits
                   const clamped = raw.slice(0, 2);
                   setFormData(prev => ({ ...prev, durationMonths: clamped }));
                   validateField('durationMonths', clamped);
                 }}
                 required 
-                readOnly={!isCustom}
-                className={`input-field ${!isCustom ? 'opacity-50 cursor-not-allowed bg-surface-divider' : ''}`} 
+                readOnly={!isCustom || editingPlan?.isAssigned}
+                className={`input-field ${(!isCustom || editingPlan?.isAssigned) ? 'opacity-50 cursor-not-allowed bg-surface-divider' : ''}`} 
                 placeholder="1-12" 
               />
               {errors.durationMonths && <p className="text-red-500 text-xs mt-1">{errors.durationMonths}</p>}
@@ -312,9 +393,7 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 onChange={(e) => {
-                  // Strip non-digits
                   const raw = e.target.value.replace(/\D/g, '');
-                  // Enforce max 5 digits
                   const clamped = raw.slice(0, 5);
                   setFormData(prev => ({ ...prev, price: clamped }));
                   validateField('price', clamped);
@@ -325,6 +404,27 @@ const PlanFormModal = ({ editingPlan, onClose, onSuccess }) => {
               />
               {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
             </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Partial Payment Due Limit (Days) *</label>
+            <input 
+              name="partialPaymentDueDays" 
+              value={formData.partialPaymentDueDays} 
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                const clamped = raw.slice(0, 2);
+                setFormData(prev => ({ ...prev, partialPaymentDueDays: clamped }));
+                validateField('partialPaymentDueDays', clamped);
+              }}
+              required 
+              className="input-field" 
+              placeholder="e.g. 15" 
+            />
+            {errors.partialPaymentDueDays && <p className="text-red-500 text-xs mt-1">{errors.partialPaymentDueDays}</p>}
           </div>
 
           <div>
@@ -424,6 +524,7 @@ const Plans = () => {
 
       {showFormModal && (
         <PlanFormModal
+          plans={plans}
           editingPlan={editingPlan}
           onClose={() => { setShowFormModal(false); setEditingPlan(null); }}
           onSuccess={handleFormSuccess}

@@ -16,7 +16,9 @@ const Admin = require('./models/Admin');
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(compression({ level: 6 }));
 // Middleware
 app.use((req, res, next) => {
@@ -131,6 +133,7 @@ app.use('/api/overdue', require('./routes/overdue'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/expenses', require('./routes/expense'));
 app.use('/api/feedback', require('./routes/feedback'));
+app.use('/api/issues', require('./routes/issues'));
 app.use('/api/trigger', require('./routes/trigger'));
 
 // Error Handler Middleware

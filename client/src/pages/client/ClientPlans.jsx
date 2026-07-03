@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { Eye, X } from 'lucide-react';
+import { Eye, X, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
 
@@ -11,7 +11,7 @@ const PlanDetailModal = ({ plan, onClose }) => {
             <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-start p-6 border-b border-border">
                     <div>
-                        <h2 className="text-2xl font-bold text-text-primary">{plan.planName}</h2>
+                        <h2 className="text-2xl font-bold text-text-primary">{plan.name}</h2>
                         <p className="text-primary text-sm mt-1">{plan.durationMonths} month{plan.durationMonths !== 1 ? 's' : ''} plan</p>
                     </div>
                     <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors mt-1 ml-4">
@@ -44,10 +44,15 @@ const PlanDetailModal = ({ plan, onClose }) => {
 
 const PlanCard = ({ plan, onViewDetails }) => (
     <div className="card relative flex flex-col group border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-primary/10 hover:shadow-xl">
-        <span className="inline-block text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 mb-4 w-fit">
-            {plan.durationMonths}M Plan
-        </span>
-        <h3 className="text-xl font-bold text-text-primary mb-1">{plan.planName}</h3>
+        <div className="flex items-center gap-2 mb-4">
+            <span className="inline-block text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 w-fit">
+                {plan.durationMonths}M Plan
+            </span>
+            <span className="text-xs font-medium text-text-secondary bg-surface-divider border border-border px-2.5 py-1 rounded-full flex items-center gap-1.5" title="Clients using this plan">
+                <Users size={12} className="text-primary" /> {plan.clientCount || 0} client{plan.clientCount !== 1 ? 's' : ''}
+            </span>
+        </div>
+        <h3 className="text-xl font-bold text-text-primary mb-1">{plan.name}</h3>
         <p className="text-primary text-3xl font-black mb-6">
             ₹{plan.price?.toLocaleString('en-IN')}
             <span className="text-sm text-text-secondary font-normal"> / {plan.durationMonths} mo</span>

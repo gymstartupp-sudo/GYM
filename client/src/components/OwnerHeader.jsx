@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, HelpCircle, X, Mail, Phone, Clock, MessageSquare, ChevronRight, LogOut, UserPlus, Sunrise, Sun, Sunset, Moon, Trash2, AlertTriangle, Receipt, Camera } from 'lucide-react';
+import { Bell, HelpCircle, X, Mail, Phone, MessageSquare, ChevronRight, LogOut, UserPlus, Sunrise, Sun, Sunset, Moon, Trash2, AlertTriangle, Receipt, Camera, Bug } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from './ThemeToggle';
 import LogoutModal from './LogoutModal';
+import ReportIssueModal from './ReportIssueModal';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
@@ -14,18 +15,12 @@ const HEADER_BORDER = 'var(--header-border)';
 /**
  * ContactUsPanel — Slide-in support panel for gym owners.
  */
-const ContactUsPanel = ({ isOpen, onClose }) => {
-  const [emailSent, setEmailSent] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) setEmailSent(false);
-  }, [isOpen]);
+const ContactUsPanel = ({ isOpen, onClose, onReportIssue, gymEmail, ownerName, ownerPhone }) => {
 
   if (!isOpen) return null;
 
   const SUPPORT_EMAIL = 'support@rexfit.in';
   const SUPPORT_PHONE = '+91 98765 43210';
-  const BUSINESS_HOURS = 'Mon–Sat, 9 AM – 6 PM';
 
   return (
     <>
@@ -76,9 +71,12 @@ const ContactUsPanel = ({ isOpen, onClose }) => {
         {/* Contact Info */}
         <div className="p-5 space-y-3">
           {/* Email */}
-          <div
-            className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer group"
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
+          <a
+            href={`https://mail.google.com/mail/?extsrc=mailto&url=mailto:${SUPPORT_EMAIL}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer group text-text-primary no-underline"
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', textDecoration: 'none', display: 'flex' }}
             onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'}
             onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
           >
@@ -88,12 +86,12 @@ const ContactUsPanel = ({ isOpen, onClose }) => {
             >
               <Mail size={14} className="text-emerald-400" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Support Email</p>
               <p className="text-sm font-medium text-text-primary truncate">{SUPPORT_EMAIL}</p>
             </div>
             <ChevronRight size={14} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
-          </div>
+          </a>
 
           {/* Phone */}
           <div
@@ -112,37 +110,17 @@ const ContactUsPanel = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Business Hours */}
-          <div
-            className="flex items-center gap-3 p-3 rounded-xl"
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}
-          >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}
-            >
-              <Clock size={14} className="text-amber-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">Business Hours</p>
-              <p className="text-sm font-medium text-text-primary">{BUSINESS_HOURS}</p>
-            </div>
-          </div>
         </div>
 
-        {/* Open Email Button */}
+        {/* Report an Issue Button */}
         <div className="px-5 pb-5">
-          <a
-            href={`mailto:${SUPPORT_EMAIL}?subject=RexFit%20Support%20Request&body=Hello%20RexFit%20Support%20Team%2C%0A%0A`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={onReportIssue}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200"
             style={{
               background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
               color: '#FFFFFF',
               boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
-              textDecoration: 'none',
-              display: 'flex',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'linear-gradient(135deg, #4f46e5, #4338ca)';
@@ -153,9 +131,9 @@ const ContactUsPanel = ({ isOpen, onClose }) => {
               e.currentTarget.style.boxShadow = '0 4px 14px rgba(99,102,241,0.35)';
             }}
           >
-            <Mail size={15} />
-            Open Email
-          </a>
+            <Bug size={15} />
+            Report an Issue
+          </button>
         </div>
       </div>
     </>
@@ -272,10 +250,11 @@ const ConfirmModal = ({ isOpen, title, message, cancelText = 'Cancel', confirmTe
   );
 };
 
-const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', ownerName = '', isMobile = false }) => {
+const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', ownerName = '', ownerPhone = '', isMobile = false }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showContactPanel, setShowContactPanel] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const profileRef = useRef(null);
@@ -787,6 +766,18 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', own
       <ContactUsPanel
         isOpen={showContactPanel}
         onClose={() => setShowContactPanel(false)}
+        onReportIssue={() => { setShowContactPanel(false); setShowReportModal(true); }}
+        gymEmail={gymEmail}
+        ownerName={ownerName}
+        ownerPhone={ownerPhone}
+      />
+
+      <ReportIssueModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        gymName={gymName}
+        ownerName={ownerName}
+        ownerPhone={ownerPhone}
       />
 
       <LogoutModal

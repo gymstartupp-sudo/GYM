@@ -59,7 +59,7 @@ exports.getClients = async (req, res, next) => {
   try {
     const { status, planName, plan, reminder } = req.query;
     
-    let query = { isActive: true };
+    let query = { isActive: true, isDeleted: { $ne: true } };
 
     if (status && status.toLowerCase() === 'pending') {
       query['membership.requestApproved'] = false;
@@ -397,14 +397,16 @@ exports.deactivateClient = async (req, res, next) => {
 // @access  Private (Owner)
 exports.deleteClient = async (req, res, next) => {
   try {
-    const client = await Client.findByIdAndDelete(req.params.id);
+    const client = await Client.findById(req.params.id);
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
     
-    // Also delete associated payments for full cleanup if necessary
-    const Payment = require('../models/Payment');
-    await Payment.deleteMany({ clientId: req.params.id });
+    client.isDeleted = true;
+    client.deletedAt = new Date();
+    client.deletedBy = req.user?._id || null;
     
-    res.status(200).json({ success: true, message: 'Client and associated records deleted permanently', data: {} });
+    await client.save();
+    
+    res.status(200).json({ success: true, message: 'Client deleted successfully', data: {} });
   } catch (err) {
     next(err);
   }
@@ -417,7 +419,7 @@ exports.getInactiveClients = async (req, res, next) => {
   try {
     const { status, planName, plan } = req.query;
     
-    let query = { isActive: false, 'membership.requestApproved': true };
+    let query = { isActive: false, isDeleted: { $ne: true }, 'membership.requestApproved': true };
 
     if (status && status.toLowerCase() !== 'all') {
       const today = new Date();
@@ -639,6 +641,9 @@ exports.approveClient = async (req, res, next) => {
     client.memberships.push(newPlan);
 
     client.gymName = req.user.gymName;
+    client.isDeleted = false;
+    client.deletedAt = null;
+    client.deletedBy = null;
     client.membership.requestApproved = true;
     client.membership.startDate = membershipWindow.startDate;
     client.membership.endDate = membershipWindow.endDate;
@@ -791,4 +796,147 @@ Thank you.`;
 };
 
 exports.sendOverdueReminder = exports.sendManualReminder;
+
+// @desc    Get soft deleted clients for gym
+// @route   GET /api/client/deleted
+// @access  Private (Owner, Admin)
+exports.getDeletedClients = async (req, res, next) => {
+  try {
+    const rawClients = await Client.find({ isDeleted: true }).sort({ deletedAt: -1 }).lean();
+    
+    const Payment = require('../models/Payment');
+    const clientIds = rawClients.map(c => c._id.toString());
+    const allPayments = await Payment.find({ clientId: { $in: clientIds } }).lean();
+
+    const paymentsMap = new Map();
+    allPayments.forEach(p => {
+      const cId = p.clientId?.toString();
+      if (cId) {
+        if (!paymentsMap.has(cId)) {
+          paymentsMap.set(cId, []);
+        }
+        paymentsMap.get(cId).push(p);
+      }
+    });
+
+    const clients = rawClients.map(c => calculateBalances(c, paymentsMap.get(c._id.toString()) || []));
+    res.status(200).json({ success: true, count: clients.length, data: clients });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.restoreClient = async (req, res, next) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
+    
+    const { membership, payment } = req.body || {};
+    if (membership && payment) {
+      const Plan = require('../models/Plan');
+      const Gym = require('../models/Gym');
+      const Payment = require('../models/Payment');
+      const { generatePaymentId } = require('../utils/generateId');
+      const { buildMembershipWindow } = require('../utils/membership');
+      const { syncClientStatus } = require('../utils/syncStatus');
+
+      let planName = membership.planType;
+      let planDurationMonths = 1;
+      let planId = membership.planId;
+      let planPrice = 0;
+
+      let plan = null;
+      if (membership.planType === 'Custom') {
+        planDurationMonths = membership.customMonths || 1;
+        planId = null;
+        planPrice = payment.amount || 0;
+      } else {
+        plan = await Plan.findOne({ _id: membership.planId, isActive: true });
+        if (!plan) return res.status(400).json({ success: false, message: 'Selected plan not found' });
+        planName = plan.name;
+        planDurationMonths = plan.durationMonths;
+        planPrice = plan.price;
+      }
+
+      const planPriceVal = Number(planPrice) || 0;
+      const paidAmountVal = Number(payment.paidAmount) || 0;
+      const remainingBalanceVal = Math.max(0, planPriceVal - paidAmountVal);
+
+      let resolvedDueDate = null;
+      if (remainingBalanceVal > 0) {
+        if (paidAmountVal <= 100) {
+          return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
+        }
+        const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
+        const startVal = new Date(membership.startDate || Date.now());
+        startVal.setHours(0, 0, 0, 0);
+        resolvedDueDate = new Date(startVal);
+        resolvedDueDate.setDate(resolvedDueDate.getDate() + dueDays);
+        resolvedDueDate.setHours(0, 0, 0, 0);
+      }
+
+      const gym = await Gym.findOne({ gymId: client.gymId });
+      const paymentId = await generatePaymentId(client.gymId, gym?.billingInfo?.billingIdPrefix || 'BILL');
+      const membershipWindow = buildMembershipWindow({ startDate: membership.startDate || Date.now(), durationMonths: planDurationMonths });
+
+      client.isDeleted = false;
+      client.deletedAt = null;
+      client.deletedBy = null;
+      client.isActive = true;
+      client.deactivatedAt = null;
+      client.hasPartialPayment = paidAmountVal > 0 && paidAmountVal < planPriceVal;
+      client.paymentStatus = paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue');
+      
+      client.overdueReminders = {
+        reminder1: { status: 'none', sentAt: null, error: null },
+        reminder2: { status: 'none', sentAt: null, error: null },
+        reminder3: { status: 'none', sentAt: null, error: null },
+        manualReminders: [],
+        workflowCompleted: (remainingBalanceVal === 0)
+      };
+
+      if (!client.memberships) client.memberships = [];
+      const newPlan = {
+        planId, planName, planDurationMonths, startDate: membershipWindow.startDate, endDate: membershipWindow.endDate,
+        finalPrice: planPrice, totalPaid: payment.paidAmount, dueDate: resolvedDueDate
+      };
+      client.memberships.push(newPlan);
+      client.membership = {
+        planId, planName, planDurationMonths, durationMonths: planDurationMonths,
+        startDate: membershipWindow.startDate, endDate: membershipWindow.endDate, daysLeft: membershipWindow.daysLeft, requestApproved: true
+      };
+
+      await client.save();
+
+      const paymentRecord = await Payment.create({
+        paymentId, gymId: client.gymId, clientId: client._id.toString(), clientName: client.personalInfo.name, planId, planName,
+        amount: planPrice, paidAmount: payment.paidAmount,
+        invoiceAmount: planPrice,
+        paidNow: payment.paidAmount,
+        totalPaid: payment.paidAmount,
+        remainingBalance: remainingBalanceVal,
+        status: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
+        paymentMethod: payment.paymentMethod, dueDate: resolvedDueDate, startDate: membershipWindow.startDate, isPlanActivated: true,
+        mode: payment.paymentMethod, date: new Date(), paymentDate: new Date()
+      });
+
+      client.paymentHistory.push(paymentRecord._id);
+      await client.save();
+      await syncClientStatus(client._id);
+    } else {
+      client.isDeleted = false;
+      client.deletedAt = null;
+      client.deletedBy = null;
+      client.isActive = true;
+      client.deactivatedAt = null;
+      await client.save();
+      const { syncClientStatus } = require('../utils/syncStatus');
+      await syncClientStatus(client._id);
+    }
+    
+    res.status(200).json({ success: true, message: 'Client restored successfully', data: client });
+  } catch (err) {
+    next(err);
+  }
+};
 

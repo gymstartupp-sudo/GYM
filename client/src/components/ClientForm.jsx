@@ -93,50 +93,77 @@ const getMinDobDate = () => {
   return d;
 };
 
-const getValidationSchema = (mode) => yup.object({
-  gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').max(8, 'Max 8 chars') : yup.string().nullable(),
-  gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
-  name: yup.string().trim().required('Name is required').max(50, 'Max 50 chars'),
-  gender: yup.string().required('Gender is required'),
-  email: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
-  dob: yup.date()
-    .typeError('Date of birth is required')
-    .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
-    .nullable()
-    .required('Date of birth is required')
-    .test('dobValidation', function (value) {
-      if (!value) return this.createError({ message: 'Date of birth is required' });
-      const error = validateDob(toDateInputString(value));
-      if (error) return this.createError({ message: error });
-      return true;
-    }),
+const getValidationSchema = (mode, isRestoring = false) => {
+  if (isRestoring) {
+    return yup.object({
+      gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').max(8, 'Max 8 chars') : yup.string().nullable(),
+      gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
+      planId: yup.string().nullable(),
+      startDate: yup.date()
+        .typeError('Start date is required')
+        .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
+        .nullable()
+        .required('Start date is required')
+        .test('validYear', 'Enter a valid date.', (value) => {
+          if (!value) return true;
+          return !getDateYearValidationError(toDateInputString(value));
+        })
+        .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),
+      planType: yup.string().required('Membership plan is required'),
+      password: ['self', 'owner'].includes(mode)
+        ? yup.string().min(8, passwordError).max(50, 'Max 50 chars').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]).+$/, passwordError).required(passwordError)
+        : yup.string().nullable(),
+      confirmPassword: ['self', 'owner'].includes(mode)
+        ? yup.string().max(50, 'Max 50 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password')
+        : yup.string().nullable()
+    });
+  }
 
-  mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
-  city: yup.string().trim().required('City is required').max(25, 'Max 25 chars'),
-  state: yup.string().trim().required('State is required').max(25, 'Max 25 chars'),
-  pincode: yup.string().matches(/^\d{6}$/, 'Pincode must be exactly 6 digits').required('Pincode is required'),
-  emergencyContact: yup.string().matches(phoneRegex, phoneError).required(phoneError).notOneOf([yup.ref('mobileNo')], 'Must be different from Mobile Number'),
-  medicalCondition: yup.string().trim().max(100, 'Max 100 chars').nullable(),
-  planId: yup.string().nullable(),
-  startDate: yup.date()
-    .typeError('Start date is required')
-    .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
-    .nullable()
-    .required('Start date is required')
-    .test('validYear', 'Enter a valid date.', (value) => {
-      if (!value) return true;
-      return !getDateYearValidationError(toDateInputString(value));
-    })
-    .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),
-  planType: yup.string().required('Membership plan is required'),
-  password: ['self', 'owner'].includes(mode)
-    ? yup.string().min(8, passwordError).max(50, 'Max 50 chars').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]).+$/, passwordError).required(passwordError)
-    : yup.string().nullable(),
-  confirmPassword: ['self', 'owner'].includes(mode)
-    ? yup.string().max(50, 'Max 50 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password')
-    : yup.string().nullable()
-});
+  return yup.object({
+    gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').max(8, 'Max 8 chars') : yup.string().nullable(),
+    gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
+    name: yup.string().trim().required('Name is required').max(50, 'Max 50 chars'),
+    gender: yup.string().required('Gender is required'),
+    email: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
+    dob: yup.date()
+      .typeError('Date of birth is required')
+      .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
+      .nullable()
+      .required('Date of birth is required')
+      .test('dobValidation', function (value) {
+        if (!value) return this.createError({ message: 'Date of birth is required' });
+        const error = validateDob(toDateInputString(value));
+        if (error) return this.createError({ message: error });
+        return true;
+      }),
+
+    mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
+    address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
+    city: yup.string().trim().required('City is required').max(25, 'Max 25 chars'),
+    state: yup.string().trim().required('State is required').max(25, 'Max 25 chars'),
+    pincode: yup.string().matches(/^\d{6}$/, 'Pincode must be exactly 6 digits').required('Pincode is required'),
+    emergencyContact: yup.string().matches(phoneRegex, phoneError).required(phoneError).notOneOf([yup.ref('mobileNo')], 'Must be different from Mobile Number'),
+    medicalCondition: yup.string().trim().max(100, 'Max 100 chars').nullable(),
+    planId: yup.string().nullable(),
+    startDate: yup.date()
+      .typeError('Start date is required')
+      .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
+      .nullable()
+      .required('Start date is required')
+      .test('validYear', 'Enter a valid date.', (value) => {
+        if (!value) return true;
+        return !getDateYearValidationError(toDateInputString(value));
+      })
+      .max(getMaxStartDate(), 'Start date cannot be more than 90 days in the future'),
+    planType: yup.string().required('Membership plan is required'),
+    password: ['self', 'owner'].includes(mode)
+      ? yup.string().min(8, passwordError).max(50, 'Max 50 chars').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]).+$/, passwordError).required(passwordError)
+      : yup.string().nullable(),
+    confirmPassword: ['self', 'owner'].includes(mode)
+      ? yup.string().max(50, 'Max 50 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password')
+      : yup.string().nullable()
+  });
+};
 
 const selfStepOneFields = ['gymId', 'gymName', 'name', 'gender', 'email', 'dob', 'mobileNo', 'address', 'city', 'state', 'pincode', 'emergencyContact'];
 const selfStepTwoFields = ['planType', 'startDate', 'password', 'confirmPassword'];
@@ -150,11 +177,14 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const [step, setStep] = useState(1);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingClientData, setPendingClientData] = useState(null);
+  const [duplicateModal, setDuplicateModal] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [restoringClientId, setRestoringClientId] = useState(null);
 
   const isOwner = mode === 'owner';
 
   const dateResolver = useCallback(async (data, context, options) => {
-    const result = await yupResolver(getValidationSchema(mode))(data, context, options);
+    const result = await yupResolver(getValidationSchema(mode, isRestoring))(data, context, options);
     if (result.values) {
       ['dob', 'startDate'].forEach((key) => {
         if (result.values[key] instanceof Date) {
@@ -163,7 +193,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       });
     }
     return result;
-  }, [mode]);
+  }, [mode, isRestoring]);
 
   const {
     register,
@@ -281,7 +311,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
   const checkDuplicate = async (field, fieldValue) => {
     const value = (fieldValue || values[field] || '').trim();
-    if (!value) return;
+    if (isRestoring || !value) return;
     if (field === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
     if (field === 'mobileNo' && !/^\d{10}$/.test(value)) return;
 
@@ -294,6 +324,14 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       clearErrors(field);
     } catch (err) {
       if (err.response?.status === 409) {
+        const data = err.response.data;
+        if (data.exists && data.client) {
+          setDuplicateModal({
+            type: data.isDeleted ? 'deleted' : 'active',
+            isExpired: data.isExpired,
+            client: data.client
+          });
+        }
         setError(field, { type: 'manual', message: field === 'email' ? 'Email already exists' : 'Phone number already exists' });
       }
     }
@@ -343,32 +381,54 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           }
         };
 
-        const res = await api.post('/client', payload);
-        onSuccess?.(res.data.data);
+        if (isRestoring) {
+          const res = await api.put(`/client/${restoringClientId}/restore`, {
+            membership: payload.membership
+          });
+          toast.success('Client restored successfully');
+          onSuccess?.(res.data.data, 'restore');
+        } else {
+          const res = await api.post('/client', payload);
+          onSuccess?.(res.data.data, 'create');
+        }
       } else {
-        const payload = {
-          gymId: data.gymId,
-          name: data.name,
-          gender: data.gender,
-          email: data.email,
-          dob: data.dob,
-          mobileNo: data.mobileNo,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          pincode: data.pincode,
-          emergencyContact: data.emergencyContact,
-          medicalCondition: data.medicalCondition?.trim() || '',
-          password: data.password,
-          confirmPassword: data.confirmPassword,
-          planId: data.planId,
-          startDate: data.startDate,
-          planType: data.planType
-        };
+        if (isRestoring) {
+          await api.put(`/auth/client/${restoringClientId}/restore`, {
+            gymId: data.gymId,
+            password: data.password,
+            membership: {
+              planId: data.planId,
+              startDate: data.startDate,
+              planType: data.planType
+            }
+          });
+          toast.success('Restore request submitted for approval');
+          onSuccess?.({ gymName: data.gymName }, 'restore');
+        } else {
+          const payload = {
+            gymId: data.gymId,
+            name: data.name,
+            gender: data.gender,
+            email: data.email,
+            dob: data.dob,
+            mobileNo: data.mobileNo,
+            address: data.address,
+            city: data.city,
+            state: data.state,
+            pincode: data.pincode,
+            emergencyContact: data.emergencyContact,
+            medicalCondition: data.medicalCondition?.trim() || '',
+            password: data.password,
+            confirmPassword: data.confirmPassword,
+            planId: data.planId,
+            startDate: data.startDate,
+            planType: data.planType
+          };
 
-        await api.post('/auth/client/register', payload);
-        toast.success('Registration submitted for approval');
-        onSuccess?.({ gymName: data.gymName });
+          await api.post('/auth/client/register', payload);
+          toast.success('Registration submitted for approval');
+          onSuccess?.({ gymName: data.gymName }, 'create');
+        }
       }
     } catch (error) {
       const errMsg = error.response?.data?.message || 'Action failed';
@@ -404,9 +464,19 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         },
         payment: paymentData
       };
-      const res = await api.post('/client', payload);
-      toast.success('Client added with payment successfully');
-      onSuccess?.(res.data.data);
+
+      if (isRestoring) {
+        const res = await api.put(`/client/${restoringClientId}/restore`, {
+          membership: payload.membership,
+          payment: payload.payment
+        });
+        toast.success('Client restored and payment recorded');
+        onSuccess?.(res.data.data, 'restore');
+      } else {
+        const res = await api.post('/client', payload);
+        toast.success('Client added with payment successfully');
+        onSuccess?.(res.data.data, 'create');
+      }
     } catch (error) {
       const errMsg = error.response?.data?.message || 'Failed to create client and payment';
       const detailErrors = error.response?.data?.errors;
@@ -430,17 +500,26 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const handleNextStep = async () => {
     const emailVal = values.email?.trim();
     const phoneVal = values.mobileNo?.trim();
-    if (emailVal || phoneVal) {
+    if (!isRestoring && (emailVal || phoneVal)) {
       try {
-        await api.post('/auth/check-exists', { email: emailVal, phone: phoneVal });
+        await api.post('/auth/check-exists', { email: emailVal, phone: phoneVal, gymId: values.gymId });
         clearErrors(['email', 'mobileNo']);
       } catch (err) {
         if (err.response?.status === 409) {
-          toast.error(err.response.data.message);
-          if (err.response.data.message.toLowerCase().includes('email')) {
-            setError('email', { type: 'manual', message: 'Email already exists' });
+          const data = err.response.data;
+          if (data.exists && data.client) {
+            setDuplicateModal({
+              type: data.isDeleted ? 'deleted' : 'active',
+              isExpired: data.isExpired,
+              client: data.client
+            });
           } else {
-            setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+            toast.error(data.message || 'Duplicate detected');
+            if (data.message?.toLowerCase().includes('email')) {
+              setError('email', { type: 'manual', message: 'Email already exists' });
+            } else {
+              setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+            }
           }
           return;
         }
@@ -458,17 +537,26 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const handleOwnerSubmit = async () => {
     const emailVal = values.email?.trim();
     const phoneVal = values.mobileNo?.trim();
-    if (emailVal || phoneVal) {
+    if (!isRestoring && (emailVal || phoneVal)) {
       try {
-        await api.post('/auth/check-exists', { email: emailVal, phone: phoneVal });
+        await api.post('/auth/check-exists', { email: emailVal, phone: phoneVal, gymId: values.gymId });
         clearErrors(['email', 'mobileNo']);
       } catch (err) {
         if (err.response?.status === 409) {
-          toast.error(err.response.data.message);
-          if (err.response.data.message.toLowerCase().includes('email')) {
-            setError('email', { type: 'manual', message: 'Email already exists' });
+          const data = err.response.data;
+          if (data.exists && data.client) {
+            setDuplicateModal({
+              type: data.isDeleted ? 'deleted' : 'active',
+              isExpired: data.isExpired,
+              client: data.client
+            });
           } else {
-            setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+            toast.error(data.message || 'Duplicate detected');
+            if (data.message?.toLowerCase().includes('email')) {
+              setError('email', { type: 'manual', message: 'Email already exists' });
+            } else {
+              setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+            }
           }
           return;
         }
@@ -765,6 +853,137 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         planData={plans.find(p => p._id === values.planId)}
         plans={plans}
       />
+
+      {duplicateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-surface-secondary border border-border rounded-xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 relative">
+            <h2 className="text-xl font-bold text-text-primary mb-3 text-center">
+              {duplicateModal.type === 'active' ? 'Client Already Exists' : 'Client Previously Deleted'}
+            </h2>
+            
+            <p className="text-sm text-text-secondary mb-5 text-center">
+              {duplicateModal.type === 'active'
+                ? 'A client with this phone number already exists.'
+                : 'A client with this phone number was previously deleted.'}
+            </p>
+
+            <div className="bg-surface-divider/50 border border-border/50 rounded-xl p-4 mb-5 space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-text-secondary font-medium">Name</span>
+                <span className="text-text-primary font-bold">
+                  {duplicateModal.client.personalInfo?.name || duplicateModal.client.name}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-text-secondary font-medium">Phone Number</span>
+                <span className="text-text-primary font-bold">
+                  {duplicateModal.client.personalInfo?.mobileNo || duplicateModal.client.phone}
+                </span>
+              </div>
+              {duplicateModal.type === 'deleted' && duplicateModal.client.deletedAt && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-text-secondary font-medium">Deleted On</span>
+                  <span className="text-text-primary font-bold">
+                    {new Date(duplicateModal.client.deletedAt).toLocaleDateString('en-GB').replace(/\//g, '-')}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {duplicateModal.type === 'deleted' && (
+              <p className="text-sm text-text-primary font-semibold mb-5 text-center">
+                Would you like to restore this client instead of creating a new one?
+              </p>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setDuplicateModal(null)}
+              >
+                Cancel
+              </Button>
+              {duplicateModal.type === 'active' ? (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setDuplicateModal(null);
+                    onCancel?.();
+                    if (isOwner) {
+                      navigate(`/owner/clients/${duplicateModal.client._id}`);
+                    } else {
+                      navigate('/login');
+                    }
+                  }}
+                >
+                  {isOwner ? 'View Client' : 'Login Here'}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  className="bg-primary hover:bg-primary/90 text-black font-bold"
+                  onClick={async () => {
+                    if (duplicateModal.isExpired) {
+                      const c = duplicateModal.client;
+                      const p = c.personalInfo || {};
+
+                      const setValIfPresent = (field, dbVal) => {
+                        if (dbVal !== undefined && dbVal !== null && dbVal !== '') {
+                          setValue(field, dbVal, { shouldValidate: true, shouldDirty: true });
+                        }
+                      };
+
+                      setValIfPresent('name', p.name);
+                      setValIfPresent('gender', p.gender);
+                      setValIfPresent('email', p.email);
+                      if (p.dob) {
+                        setValIfPresent('dob', p.dob.substring(0, 10));
+                      }
+                      setValIfPresent('mobileNo', p.mobileNo);
+                      setValIfPresent('address', p.address);
+                      setValIfPresent('city', p.city);
+                      setValIfPresent('state', p.state);
+                      setValIfPresent('pincode', p.pincode);
+                      setValIfPresent('emergencyContact', p.emergencyContact);
+                      setValIfPresent('medicalCondition', p.medicalCondition);
+                      
+                      clearErrors(['email', 'mobileNo']);
+                      setIsRestoring(true);
+                      setRestoringClientId(c._id);
+                      setDuplicateModal(null);
+                      if (!isOwner) {
+                        setStep(2);
+                      }
+                      toast.info('Restoring client details. Please select a plan and set a password to complete registration.');
+                    } else {
+                      try {
+                        if (isOwner) {
+                          await api.put(`/client/${duplicateModal.client._id}/restore`);
+                        } else {
+                          await api.put(`/auth/client/${duplicateModal.client._id}/restore`, { gymId: values.gymId });
+                        }
+                        toast.success('Client restored successfully.');
+                        setDuplicateModal(null);
+                        onCancel?.();
+                        if (isOwner) {
+                          navigate(`/owner/clients/${duplicateModal.client._id}`);
+                        } else {
+                          navigate('/login');
+                        }
+                      } catch (err) {
+                        toast.error('Failed to restore client.');
+                      }
+                    }
+                  }}
+                >
+                  Restore Client
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
