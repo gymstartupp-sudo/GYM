@@ -48,11 +48,13 @@ router.route('/')
   .post(protect, authorize('owner'), addClientValidation, validate, clientController.addClient);
 
 router.get('/inactive', protect, authorize('owner', 'superadmin'), getClientsQueryValidation, validate, clientController.getInactiveClients);
+router.get('/deleted', protect, authorize('owner', 'superadmin'), clientController.getDeletedClients);
 
 router.route('/:id')
   .get(protect, authorize('owner', 'superadmin'), [mongoIdValidation('id', 'param')], validate, clientController.getClientById)
   .delete(protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.deleteClient);
 
+router.put('/:id/restore', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.restoreClient);
 router.put('/:id/approve', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.approveClient);
 router.put('/:id/deactivate', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.deactivateClient);
 router.put('/:id/reactivate', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.reactivateClient);

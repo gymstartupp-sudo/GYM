@@ -632,8 +632,8 @@ const PaymentModal = ({
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
                                         <input
                                             type="text"
-                                            className="w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium"
-                                            placeholder="Type Client Name or ID (e.g. NEX-C-01)"
+                                            className="w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-secondary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-text-muted font-medium"
+                                            placeholder="Type Client Name or ID (e.g. CL-01)"
                                             value={searchQuery}
                                             onChange={(e) => {
                                                 setSearchQuery(e.target.value);
@@ -703,19 +703,42 @@ const PaymentModal = ({
                                         <input
                                             type="text"
                                             disabled={!selectedClient}
-                                            className="w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                            placeholder="Type Plan Name (e.g. Monthly, Yearly)"
+                                            className="w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-text-muted font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                            placeholder="Search or select a plan..."
                                             value={planSearchQuery}
                                             onChange={(e) => {
                                                 setPlanSearchQuery(e.target.value);
                                                 setShowPlanDropdown(true);
                                             }}
-                                            onFocus={() => setShowPlanDropdown(true)}
+                                            onFocus={() => {
+                                                setPlanSearchQuery('');
+                                                setShowPlanDropdown(true);
+                                            }}
+                                            onBlur={() => {
+                                                // Restore selected plan name if user didn't pick a new one
+                                                setTimeout(() => {
+                                                    if (selectedPlan) setPlanSearchQuery(selectedPlan.name);
+                                                }, 200);
+                                            }}
                                         />
-                                        <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 text-text-muted transition-transform duration-300 ${showPlanDropdown ? 'rotate-180' : ''}`} size={18} />
+                                        <ChevronDown
+                                            className={`absolute right-4 top-1/2 -translate-y-1/2 text-text-muted transition-transform duration-300 cursor-pointer ${showPlanDropdown ? 'rotate-180' : ''}`}
+                                            size={18}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault(); // prevent input blur before toggle
+                                                if (!selectedClient) return;
+                                                if (showPlanDropdown) {
+                                                    setShowPlanDropdown(false);
+                                                    if (selectedPlan) setPlanSearchQuery(selectedPlan.name);
+                                                } else {
+                                                    setPlanSearchQuery('');
+                                                    setShowPlanDropdown(true);
+                                                }
+                                            }}
+                                        />
                                     </div>
 
-                                    {selectedPlan && billingPeriodText && (
+                                    {selectedPlan && billingPeriodText && !showPlanDropdown && (
                                         <div className="mt-2.5 p-3 bg-surface-divider/80 border border-border/50 rounded-xl flex items-center justify-between text-xs text-text-secondary animate-in fade-in duration-300">
                                             <span>Billing Period:</span>
                                             <span className="text-text-primary font-bold">{billingPeriodText}</span>
@@ -901,24 +924,24 @@ const PaymentModal = ({
                                     )
                                 )}
                             </div>
-                                          <div>
+                            <div>
                                 {paymentType === 'partial' && !isEffectivelyFullPayment && (
-                                     <>
-                                         <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
-                                             Calculated Due Date
-                                         </label>
-                                         <div className="w-full bg-surface-divider/80 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-surface-primary flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
-                                             <span>{formatDisplayDate(formData.dueDate)}</span>
-                                             <Calendar size={14} className="opacity-30" />
-                                         </div>
-                                     </>
-                                 )}
-                                 {paymentType === 'partial' && isEffectivelyFullPayment && (
-                                     <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
-                                         <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
-                                         <p className="text-[9px] text-text-secondary mt-1">Amount covers full remaining balance</p>
-                                     </div>
-                                 )}
+                                    <>
+                                        <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
+                                            Calculated Due Date
+                                        </label>
+                                        <div className="w-full bg-surface-divider/80 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-surface-primary flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
+                                            <span>{formatDisplayDate(formData.dueDate)}</span>
+                                            <Calendar size={14} className="opacity-30" />
+                                        </div>
+                                    </>
+                                )}
+                                {paymentType === 'partial' && isEffectivelyFullPayment && (
+                                    <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
+                                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
+                                        <p className="text-[9px] text-text-secondary mt-1">Amount covers full remaining balance</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

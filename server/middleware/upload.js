@@ -1,4 +1,5 @@
 const fs = require('fs');
+const crypto = require('crypto');
 const path = require('path');
 const multer = require('multer');
 
@@ -57,4 +58,30 @@ const uploadBill = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-module.exports = { uploadLogo, uploadBill };
+// ─── Issue Screenshots & Video ───────────────────────────────────────────────
+const issueRoot = path.join(__dirname, '..', 'uploads', 'issues');
+if (!fs.existsSync(issueRoot)) fs.mkdirSync(issueRoot, { recursive: true });
+
+const issueStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, issueRoot),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const rand = crypto.randomBytes(8).toString('hex');
+    cb(null, `issue-${Date.now()}-${rand}${ext}`);
+  }
+});
+
+const issueFileFilter = (req, file, cb) => {
+  const isImage = file.mimetype.startsWith('image/');
+  const isVideo = file.mimetype.startsWith('video/');
+  if (!isImage && !isVideo) return cb(new Error('Only image or video files are allowed'));
+  cb(null, true);
+};
+
+const uploadIssueFiles = multer({
+  storage: issueStorage,
+  fileFilter: issueFileFilter,
+  limits: { fileSize: 20 * 1024 * 1024, files: 6 } // 5 screenshots + 1 video
+});
+
+module.exports = { uploadLogo, uploadBill, uploadIssueFiles };

@@ -8,6 +8,7 @@ exports.getOverdueClients = async (req, res, next) => {
   try {
     const clients = await Client.find({ 
       isActive: true,
+      isDeleted: { $ne: true },
       'membership.requestApproved': true,
       paymentStatus: 'overdue'
     }).sort({ 'membership.endDate': 1 }).lean();
@@ -28,6 +29,7 @@ exports.getExpiredClients = async (req, res, next) => {
 
     const clients = await Client.find({ 
       isActive: true,
+      isDeleted: { $ne: true },
       'membership.requestApproved': true
     }).lean();
 

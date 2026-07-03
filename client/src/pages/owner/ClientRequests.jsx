@@ -116,8 +116,12 @@ const ClientRequests = () => {
                             <div key={req._id} className="card bg-surface-secondary border-border hover:border-border transition-all">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl">
-                                            {req.personalInfo.name.charAt(0).toUpperCase()}
+                                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner overflow-hidden">
+                                            {req.avatar && req.avatar.length > 1 ? (
+                                                <img src={req.avatar} alt={req.personalInfo.name} className="w-full h-full object-cover rounded-xl" />
+                                            ) : (
+                                                (req.avatar || req.personalInfo.name.charAt(0)).toUpperCase()
+                                            )}
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-bold text-text-primary">{req.personalInfo.name}</h3>

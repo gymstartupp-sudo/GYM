@@ -26,6 +26,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import CustomDatePicker from '../../components/CustomDatePicker';
 import { DATE_RULES, getCurrentYear, validateExpenseDate } from '../../utils/dateInput';
+import ConfirmModal from '../../components/ConfirmModal';
 
 
 const CATEGORIES = ['Rent', 'Salary', 'Utilities', 'Equipment', 'Maintenance', 'Other'];
@@ -66,6 +67,10 @@ const PaymentLedger = () => {
     const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', 'view'
     const [currentExpense, setCurrentExpense] = useState(null);
     const [selectedExpenseId, setSelectedExpenseId] = useState(null);
+
+    // Confirm delete modal state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [expenseToDelete, setExpenseToDelete] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         amount: '',
@@ -97,7 +102,16 @@ const PaymentLedger = () => {
             }
         } else if (name === 'date') {
             if (val) {
-                errMessage = validateExpenseDate(val) || '';
+                const yearMessage = validateExpenseDate(val);
+                if (yearMessage) {
+                    errMessage = yearMessage;
+                } else {
+                    const d = new Date(val);
+                    if (d.getMonth() !== selectedMonth || d.getFullYear() !== selectedYear) {
+                        const monthName = MONTHS[selectedMonth];
+                        errMessage = `Date must be within the selected month (${monthName} ${selectedYear})`;
+                    }
+                }
             }
         }
 
@@ -447,11 +461,20 @@ const PaymentLedger = () => {
             });
         } else {
             setCurrentExpense(null);
+            const today = new Date();
+            let defaultDateStr = today.toISOString().split('T')[0];
+            if (today.getMonth() !== selectedMonth || today.getFullYear() !== selectedYear) {
+                const defaultDate = new Date(selectedYear, selectedMonth, 1);
+                const y = defaultDate.getFullYear();
+                const m = String(defaultDate.getMonth() + 1).padStart(2, '0');
+                const d = String(defaultDate.getDate()).padStart(2, '0');
+                defaultDateStr = `${y}-${m}-${d}`;
+            }
             setFormData({
                 title: '',
                 amount: '',
                 category: 'Other',
-                date: new Date().toISOString().split('T')[0],
+                date: defaultDateStr,
                 note: '',
                 billImage: null
             });
@@ -503,16 +526,36 @@ const PaymentLedger = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this?")) return;
+    const handleDelete = (id) => {
+        setExpenseToDelete(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        setShowDeleteConfirm(false);
         try {
-            await api.delete(`/expenses/${id}`);
+            await api.delete(`/expenses/${expenseToDelete}`);
             toast.success("Deleted successfully");
             fetchData();
         } catch (error) {
             toast.error("Failed to delete");
+        } finally {
+            setExpenseToDelete(null);
         }
     };
+
+    const minExpenseDate = new Date(selectedYear, selectedMonth, 1);
+    const maxExpenseDate = new Date(selectedYear, selectedMonth + 1, 0);
+
+    const formatYYYYMMDD = (date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    const minDateStr = formatYYYYMMDD(minExpenseDate);
+    const maxDateStr = formatYYYYMMDD(maxExpenseDate);
 
     return (
         <div className="p-8 pt-10">
@@ -991,8 +1034,8 @@ const PaymentLedger = () => {
                                     <CustomDatePicker
                                         required
                                         validationRule={DATE_RULES.EXPENSE}
-                                        minDate={`${getCurrentYear()}-01-01`}
-                                        maxDate={`${getCurrentYear()}-12-31`}
+                                        minDate={minDateStr}
+                                        maxDate={maxDateStr}
                                         className={`w-full bg-surface-secondary border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary ${formErrors.date ? 'border-red-500' : 'border-border'}`}
                                         value={formData.date}
                                         onChange={(e) => {
@@ -1069,6 +1112,18 @@ const PaymentLedger = () => {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirm Modal */}
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                title="Delete Expense"
+                message="Are you sure you want to permanently delete this expense? This action cannot be undone."
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                danger={true}
+                onCancel={() => { setShowDeleteConfirm(false); setExpenseToDelete(null); }}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 };

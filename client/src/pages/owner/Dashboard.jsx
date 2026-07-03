@@ -215,8 +215,12 @@ const Dashboard = () => {
                             <div onClick={() => navigate('/owner/requests')} className="cursor-pointer">
                                 <StatCard title="Pending Requests" value={stats?.pendingList?.length || 0} icon={<UserPlus size={22} />} accentClass="text-warning" />
                             </div>
-                            <StatCard title="Expiring Soon" value={stats?.stats?.expiringSoon || 0} icon={<AlertCircle size={22} />} accentClass="text-warning" />
-                            <StatCard title="Expired" value={stats?.stats?.expiredClients || 0} icon={<AlertTriangle size={22} />} accentClass="text-danger" />
+                            <div onClick={() => navigate('/owner/dues?tab=expiring')} className="cursor-pointer">
+                                <StatCard title="Expiring Soon" value={stats?.stats?.expiringSoon || 0} icon={<AlertCircle size={22} />} accentClass="text-warning" />
+                            </div>
+                            <div onClick={() => navigate('/owner/dues?tab=expired')} className="cursor-pointer">
+                                <StatCard title="Expired" value={stats?.stats?.expiredClients || 0} icon={<AlertTriangle size={22} />} accentClass="text-danger" />
+                            </div>
                         </>
                     )}
                 </div>
@@ -261,13 +265,13 @@ const Dashboard = () => {
                             <div>
                                 <ClientDashboardTable clients={stats?.expiringSoonList?.slice(0, 3) || []} onView={setViewClient} />
 
-                                {stats?.stats?.expiringSoon > 3 && (
+                                {stats?.expiringSoonList?.length > 0 && (
                                     <div className="p-4 border-t border-border">
                                         <button
                                             onClick={() => navigate('/owner/dues?tab=expiring')}
                                             className="w-full py-2 text-primary text-sm font-medium hover:bg-primary/10 rounded-lg border border-primary/20 transition-all"
                                         >
-                                            View All Expiring
+                                            View All Expiring Soon
                                         </button>
                                     </div>
                                 )}
@@ -286,10 +290,10 @@ const Dashboard = () => {
                             <div>
                                 <ClientDashboardTable clients={stats?.expiredList?.slice(0, 3) || []} onView={setViewClient} />
 
-                                {stats?.stats?.expiredClients > 3 && (
+                                {stats?.expiredList?.length > 0 && (
                                     <div className="p-4 border-t border-border">
                                         <button
-                                            onClick={() => navigate('/owner/expired')}
+                                            onClick={() => navigate('/owner/dues?tab=expired')}
                                             className="w-full py-2 text-alert text-sm font-medium hover:bg-alert/10 rounded-lg border border-alert/20 transition-all"
                                         >
                                             View All Expired
@@ -315,9 +319,13 @@ const Dashboard = () => {
                             showCancel
                             onCancel={() => closeAddModal(false)}
                             onDirtyChange={setIsFormDirty}
-                            onSuccess={() => {
+                            onSuccess={(client, actionType) => {
                                 closeAddModal(true);
-                                toast.success('Client added successfully');
+                                if (actionType === 'restore') {
+                                    toast.success('Client restored successfully');
+                                } else {
+                                    toast.success('Client added successfully');
+                                }
                                 fetchStats();
                             }}
                         />

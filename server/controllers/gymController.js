@@ -139,10 +139,11 @@ exports.getDashboardStats = async (req, res, next) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const totalClients = await Client.countDocuments({ isActive: true, 'membership.requestApproved': true });
+    const totalClients = await Client.countDocuments({ isActive: true, isDeleted: { $ne: true }, 'membership.requestApproved': true });
     
     const activeClients = await Client.countDocuments({ 
       isActive: true,
+      isDeleted: { $ne: true },
       'membership.requestApproved': true,
       memberships: { 
         $elemMatch: { 
@@ -154,6 +155,7 @@ exports.getDashboardStats = async (req, res, next) => {
 
     const expiringSoon = await Client.countDocuments({ 
       isActive: true,
+      isDeleted: { $ne: true },
       'membership.requestApproved': true,
       memberships: { 
         $elemMatch: { 
@@ -167,6 +169,7 @@ exports.getDashboardStats = async (req, res, next) => {
     // Fetch lists with highly efficient lean queries
     const expiringSoonList = await Client.find({ 
       isActive: true,
+      isDeleted: { $ne: true },
       'membership.requestApproved': true,
       memberships: { 
         $elemMatch: { 
@@ -175,7 +178,7 @@ exports.getDashboardStats = async (req, res, next) => {
       }
     }).limit(3).lean();
 
-    const clients = await Client.find({ isActive: true, 'membership.requestApproved': true }).lean();
+    const clients = await Client.find({ isActive: true, isDeleted: { $ne: true }, 'membership.requestApproved': true }).lean();
     
     const expiredClientsList = clients.filter(client => {
       const memberships = client.memberships || (client.membership?.startDate ? [client.membership] : []);
@@ -192,9 +195,9 @@ exports.getDashboardStats = async (req, res, next) => {
     const expiredClients = expiredClientsList.length;
     const expiredList = expiredClientsList.slice(0, 3);
 
-    const pendingList = await Client.find({ 'membership.requestApproved': false, isActive: true }).lean();
+    const pendingList = await Client.find({ 'membership.requestApproved': false, isActive: true, isDeleted: { $ne: true } }).lean();
 
-    const recentClients = await Client.find({ isActive: true, 'membership.requestApproved': true })
+    const recentClients = await Client.find({ isActive: true, isDeleted: { $ne: true }, 'membership.requestApproved': true })
       .sort({ createdAt: -1 })
       .limit(5)
       .lean();

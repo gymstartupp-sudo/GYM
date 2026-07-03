@@ -36,7 +36,22 @@ async function main() {
       throw new Error('Password confirmation does not match.');
     }
 
-    await mongoose.connect(process.env.MONGODB_URI);
+    let uri = process.env.MONGODB_URI;
+    if (uri && !uri.includes('/platform_db')) {
+      const url = require('url');
+      try {
+        const parsed = new url.URL(uri);
+        parsed.pathname = '/platform_db';
+        uri = parsed.toString();
+      } catch (e) {
+        if (uri.includes('?')) {
+          uri = uri.replace(/\/[^/?]*\?/, '/platform_db?');
+        } else {
+          uri = uri.endsWith('/') ? uri + 'platform_db' : uri + '/platform_db';
+        }
+      }
+    }
+    await mongoose.connect(uri);
 
     const query = isEmail(gymIdentifier)
       ? { gymEmail: gymIdentifier }

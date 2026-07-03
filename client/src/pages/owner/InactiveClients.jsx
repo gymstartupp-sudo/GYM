@@ -274,7 +274,7 @@ const InactiveClients = () => {
     if (!deleteClientId) return;
     try {
       await api.delete(`/client/${deleteClientId}`);
-      toast.success('Client deleted permanently');
+      toast.success('Client deleted successfully');
       setDeleteClientId(null);
       setDeleteClientName('');
       fetchClients();
@@ -567,7 +567,7 @@ const InactiveClients = () => {
           onCancel={() => { setDeleteClientId(null); setDeleteClientName(''); }}
           onConfirm={confirmDelete}
           title="Delete Client"
-          message={`Are you sure you want to PERMANENTLY delete ${deleteClientName}? This action cannot be undone.`}
+          message="Are you sure you want to delete this client? The client will be removed from the active client list but all historical records will be preserved. You can restore this client later from the Deleted Clients section."
           confirmLabel="Delete"
           danger
         />

@@ -92,7 +92,10 @@ const clientSchema = new mongoose.Schema({
   avatar: { type: String },
   hasPartialPayment: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
-  deactivatedAt: { type: Date, default: null }
+  deactivatedAt: { type: Date, default: null },
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null },
+  deletedBy: { type: mongoose.Schema.Types.ObjectId, default: null }
 }, { timestamps: true });
 
 clientSchema.index(

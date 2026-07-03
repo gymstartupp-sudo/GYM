@@ -36,9 +36,18 @@ router.route('/')
 // Adding a special public route just in case
 router.get('/public/:gymId', [param('gymId').isString().trim().notEmpty()], validate, async (req, res, next) => {
   try {
-    const Plan = require('../models/Plan');
-    const gymId = req.params.gymId;
-    const plans = await Plan.find({ gymId, isActive: true });
+    const Gym = require('../models/Gym');
+    const { getTenantConnection } = require('../utils/connectionManager');
+    const gymId = req.params.gymId.toUpperCase();
+
+    const gym = await Gym.findOne({ gymId });
+    if (!gym) {
+      return res.status(404).json({ success: false, message: 'Gym not found' });
+    }
+
+    const conn = await getTenantConnection(gym.dbName);
+    const TenantPlan = conn.model('Plan');
+    const plans = await TenantPlan.find({ gymId, isActive: true });
 
     res.status(200).json({ success: true, data: plans });
   } catch (err) {

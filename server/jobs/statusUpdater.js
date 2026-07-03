@@ -54,7 +54,7 @@ const runOverdueCheck = async () => {
           }
 
           // 2. Sync client payment statuses
-          const clients = await Client.find({ isActive: true, 'membership.requestApproved': true });
+          const clients = await Client.find({ isActive: true, isDeleted: { $ne: true }, 'membership.requestApproved': true });
           clientsChecked += clients.length;
 
           for (let client of clients) {

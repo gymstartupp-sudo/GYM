@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Building2, X } from 'lucide-react';
+import { LogOut, LayoutDashboard, Building2, X, Ticket } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
@@ -54,6 +54,16 @@ export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
             <Building2 size={20} />
           </span>
           <span className="leading-none">All Gyms</span>
+        </NavLink>
+        <NavLink
+          to="/admin/issues"
+          onClick={() => isMobile && onClose()}
+          className={({ isActive }) => `sidebar-nav-link ${isActive ? 'sidebar-nav-link-active' : ''}`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 shrink-0">
+            <Ticket size={20} />
+          </span>
+          <span className="leading-none">Support Tickets</span>
         </NavLink>
       </div>
 

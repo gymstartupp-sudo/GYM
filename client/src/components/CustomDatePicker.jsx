@@ -254,7 +254,14 @@ const CustomDatePicker = React.forwardRef(({
         className={`${className} pr-12`.trim()}
         {...rest}
       />
-      <div className="absolute right-0 top-0 h-full w-11 z-10">
+      <div
+        className="absolute right-0 top-0 h-full w-11 z-10 cursor-pointer"
+        onClick={() => {
+          if (!disabled && dateInputRef.current) {
+            try { dateInputRef.current.showPicker(); } catch {}
+          }
+        }}
+      >
         <span className="absolute inset-0 flex items-center justify-center text-text-secondary text-base pointer-events-none">📅</span>
         <input
           type="date"
@@ -264,7 +271,7 @@ const CustomDatePicker = React.forwardRef(({
           onChange={handleNativeDateChange}
           min={formatDateToYYYYMMDD(resolvedMin)}
           max={formatDateToYYYYMMDD(resolvedMax)}
-          className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+          className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
           tabIndex={-1}
         />
       </div>
