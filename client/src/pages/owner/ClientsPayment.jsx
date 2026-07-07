@@ -237,6 +237,33 @@ const Transactions = () => {
         }
     };
 
+    const getInvoicePeriod = (payment) => {
+        if (!payment.startDate) return '—';
+        const clientObj = clients.find(c => c._id === payment.clientId);
+        const relatedM = clientObj?.memberships?.find(m => 
+            (m.planId?._id || m.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+            new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
+        ) || (
+            (clientObj?.membership?.planId?._id || clientObj?.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+            new Date(clientObj?.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? clientObj.membership : null
+        );
+        const startStr = new Date(payment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-');
+        if (relatedM?.endDate) {
+            return `${startStr} to ${new Date(relatedM.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
+        }
+        const plan = plans.find(p => p._id === payment.planId);
+        const duration = plan?.durationMonths || 1;
+        try {
+            const endDateStr = calculateEndDate(payment.startDate, duration);
+            if (endDateStr) {
+                return `${startStr} to ${new Date(endDateStr).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        return `${startStr} to Expiry`;
+    };
+
     return (
         <div className="p-4 md:p-8 md:pt-10">
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
@@ -491,9 +518,7 @@ const Transactions = () => {
                                                     </p>
                                                 </td>
                                                 <td className="p-3 text-center align-top font-medium text-gray-700 whitespace-nowrap">
-                                                    {selectedPayment.startDate ? (
-                                                        `${new Date(selectedPayment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} to ${selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'Expiry'}`
-                                                    ) : '—'}
+                                                    {getInvoicePeriod(selectedPayment)}
                                                 </td>
                                                 <td className="p-3 text-right align-top font-black text-gray-900 text-sm">
                                                     ₹{(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}

@@ -30,6 +30,22 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
         return Math.max(0, total - getPaidAmount(p));
     };
 
+    const getInvoicePeriod = (payment) => {
+        if (!payment.startDate) return '—';
+        const relatedM = client.memberships?.find(m => 
+            (m.planId?._id || m.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+            new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
+        ) || (
+            (client.membership?.planId?._id || client.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+            new Date(client.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? client.membership : null
+        );
+        const startStr = new Date(payment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-');
+        if (relatedM?.endDate) {
+            return `${startStr} to ${new Date(relatedM.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
+        }
+        return `${startStr} to Expiry`;
+    };
+
     const isPaymentCleared = (payment) => {
         if (!payment || payment.status !== 'partial') return false;
         return client?.paymentHistory?.some(p =>
@@ -533,7 +549,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                     {selectedPayment.planName} Subscription
                                                     {selectedPayment.startDate && (
                                                         <span className="block text-[10px] text-text-muted font-normal mt-0.5">
-                                                            Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'Expiry'}
+                                                            Period: {getInvoicePeriod(selectedPayment)}
                                                         </span>
                                                     )}
                                                 </td>

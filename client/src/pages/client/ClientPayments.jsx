@@ -111,6 +111,33 @@ const ClientPayments = () => {
     }
   };
 
+  const getInvoicePeriod = (payment) => {
+    if (!payment.startDate) return '—';
+    const relatedM = profile.memberships?.find(m => 
+        (m.planId?._id || m.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+        new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
+    ) || (
+        (profile.membership?.planId?._id || profile.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+        new Date(profile.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? profile.membership : null
+    );
+    const startStr = new Date(payment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-');
+    if (relatedM?.endDate) {
+        return `${startStr} to ${new Date(relatedM.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
+    }
+    
+    // Fallback: calculate using calculateEndDate
+    try {
+      const duration = payment.planDurationMonths || 1;
+      const endDateStr = calculateEndDate(payment.startDate, duration);
+      if (endDateStr) {
+        return `${startStr} to ${new Date(endDateStr).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return `${startStr} to Expiry`;
+  };
+
   if (loading || !profile) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -311,7 +338,7 @@ const ClientPayments = () => {
                           {selectedPayment.planName} Subscription
                           {selectedPayment.startDate && (
                             <span className="block text-[10px] text-text-muted font-normal mt-0.5">
-                              Period: {new Date(selectedPayment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-')} to {selectedPayment.dueDate ? new Date(selectedPayment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'Expiry'}
+                              Period: {getInvoicePeriod(selectedPayment)}
                             </span>
                           )}
                         </td>
