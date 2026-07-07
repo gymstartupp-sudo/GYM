@@ -59,6 +59,14 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
   const [planSearchQuery, setPlanSearchQuery] = useState('');
   const [formError, setFormError] = useState('');
 
+  const [renewalForm, setRenewalForm] = useState({
+    startDate: new Date().toISOString().split('T')[0],
+    paymentMethod: 'upi',
+    paidAmount: '',
+    dueDate: ''
+  });
+  const [dateErrors, setDateErrors] = useState({});
+
   useEffect(() => {
     if (isOpen) {
       setFormError('');
@@ -68,14 +76,6 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
   useEffect(() => {
     setFormError('');
   }, [renewalForm, paymentType, selectedPlan]);
-
-  const [renewalForm, setRenewalForm] = useState({
-    startDate: new Date().toISOString().split('T')[0],
-    paymentMethod: 'upi',
-    paidAmount: '',
-    dueDate: ''
-  });
-  const [dateErrors, setDateErrors] = useState({});
 
   const allowPartialPayments = profile?.gym?.billingInfo?.allowPartialPayments !== false;
 
