@@ -20,9 +20,16 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
   const dynamicDaysLeft = calculateDaysLeft(currentPlan?.startDate, currentPlan?.endDate);
   const daysLeft = dynamicDaysLeft !== null ? dynamicDaysLeft : '-';
 
+  const [isDesktop, setIsDesktop] = React.useState(window.innerWidth >= 768);
+  React.useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group">
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-4 md:gap-2 items-center text-sm">
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_2fr] gap-4 md:gap-2 items-center text-sm">
 
         <div className="flex gap-3 items-center min-w-0">
           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
@@ -34,33 +41,33 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
           </div>
         </div>
 
-        <div className="flex items-center md:block">
+        <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Mobile: </span>
           <p className="text-text-primary truncate">{client?.personalInfo?.mobileNo || '-'}</p>
         </div>
 
-        <div className="flex items-center md:block">
+        <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Plan: </span>
           <p className="text-text-primary truncate">{currentPlan?.planName || 'No Active Plan'}</p>
         </div>
 
-        <div className="flex md:flex-col items-center md:items-start gap-2 md:gap-0">
+        <div className="flex md:flex-col items-center gap-2 md:gap-0 min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Duration: </span>
-          <div className="flex flex-col">
+          <div className="flex flex-col" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
             <p className="text-text-secondary text-xs text-nowrap">Start: {formatDisplayDate(currentPlan?.startDate)}</p>
             <p className="text-text-secondary text-xs text-nowrap">End: {formatDisplayDate(currentPlan?.endDate)}</p>
           </div>
         </div>
 
-        <div className="flex items-center md:block">
+        <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Days Left: </span>
           <p className="text-text-primary font-medium">{daysLeft}</p>
         </div>
 
         {!hideStatus && (
-          <div className="flex items-center md:block">
+          <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
             <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Status: </span>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 items-center">
               <span className={`${planStatusStyles[planStatus] || 'badge-danger'}`}>
                 {planStatus}
               </span>

@@ -24,9 +24,8 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
 
   return (
     <div
-      className={`${sidebarWidthClass} ${
-        isMobile ? `transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}` : ''
-      } h-screen bg-surface-secondary border-r border-border flex flex-col shrink-0 transition-[width,min-width] duration-300 ease-in-out`}
+      className={`${sidebarWidthClass} ${isMobile ? `transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}` : ''
+        } h-screen bg-surface-secondary border-r border-border flex flex-col shrink-0 transition-[width,min-width] duration-300 ease-in-out`}
     >
       <div className={`pt-6 pb-4 border-b border-border ${showLabels ? 'px-4' : 'px-2'}`}>
         <div className={`flex items-center ${showLabels ? 'justify-between' : 'flex-col gap-3'}`}>
@@ -67,8 +66,7 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
             onClick={() => isMobile && onClose()}
             title={!showLabels ? label : undefined}
             className={({ isActive }) =>
-              `sidebar-nav-link ${isActive ? 'sidebar-nav-link-active' : ''} ${
-                showLabels ? '' : 'sidebar-nav-link-collapsed'
+              `sidebar-nav-link ${isActive ? 'sidebar-nav-link-active' : ''} ${showLabels ? '' : 'sidebar-nav-link-collapsed'
               }`
             }
           >
@@ -81,7 +79,7 @@ const ClientSidebar = ({ isOpen, onClose, isMobile }) => {
       </nav>
 
       {/* Settings (pinned to bottom) */}
-      <div className={`border border-border/60 rounded-lg mb-3 mt-auto ${showLabels ? 'mx-3' : 'mx-auto'}`}>
+      <div className={`border border-border rounded-lg mb-3 mt-auto ${showLabels ? 'mx-3' : 'mx-auto'}`}>
         <NavLink
           to="/client/settings"
           onClick={() => isMobile && onClose()}
