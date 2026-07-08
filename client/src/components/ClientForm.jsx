@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import Button from './Button';
 import PasswordInput from './PasswordInput';
 import { useAuth } from '../context/AuthContext';
@@ -170,6 +171,7 @@ const selfStepTwoFields = ['planType', 'startDate', 'password', 'confirmPassword
 const ownerRequiredFields = ['name', 'gender', 'email', 'dob', 'mobileNo', 'address', 'city', 'state', 'pincode', 'emergencyContact', 'password', 'confirmPassword', 'planType', 'startDate'];
 
 const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, onDirtyChange }) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -858,13 +860,21 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-surface-secondary border border-border rounded-xl p-6 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 relative">
             <h2 className="text-xl font-bold text-text-primary mb-3 text-center">
-              {duplicateModal.type === 'active' ? 'Client Already Exists' : 'Client Previously Deleted'}
+              {isOwner 
+                ? (duplicateModal.type === 'active' ? 'Client Already Exists' : 'Client Previously Deleted')
+                : (duplicateModal.type === 'active' ? 'Account Already Exists' : 'Account Previously Deleted')
+              }
             </h2>
             
             <p className="text-sm text-text-secondary mb-5 text-center">
-              {duplicateModal.type === 'active'
-                ? 'A client with this phone number already exists.'
-                : 'A client with this phone number was previously deleted.'}
+              {isOwner 
+                ? (duplicateModal.type === 'active'
+                  ? 'A client with this phone number already exists.'
+                  : 'A client with this phone number was previously deleted.')
+                : (duplicateModal.type === 'active'
+                  ? 'An account with this phone number already exists.'
+                  : 'Your account with this phone number was previously deleted by the owner.')
+              }
             </p>
 
             <div className="bg-surface-divider/50 border border-border/50 rounded-xl p-4 mb-5 space-y-2">
@@ -892,7 +902,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
             {duplicateModal.type === 'deleted' && (
               <p className="text-sm text-text-primary font-semibold mb-5 text-center">
-                Would you like to restore this client instead of creating a new one?
+                {isOwner 
+                  ? 'Would you like to restore this client instead of creating a new one?'
+                  : 'Would you like to restore your account instead of registering a new one?'
+                }
               </p>
             )}
 
@@ -963,7 +976,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
                         } else {
                           await api.put(`/auth/client/${duplicateModal.client._id}/restore`, { gymId: values.gymId });
                         }
-                        toast.success('Client restored successfully.');
+                        toast.success(isOwner ? 'Client restored successfully.' : 'Account restored successfully.');
                         setDuplicateModal(null);
                         onCancel?.();
                         if (isOwner) {
@@ -972,12 +985,12 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
                           navigate('/login');
                         }
                       } catch (err) {
-                        toast.error('Failed to restore client.');
+                        toast.error(isOwner ? 'Failed to restore client.' : 'Failed to restore account.');
                       }
                     }
                   }}
                 >
-                  Restore Client
+                  {isOwner ? 'Restore Client' : 'Restore Account'}
                 </Button>
               )}
             </div>

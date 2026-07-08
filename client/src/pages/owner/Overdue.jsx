@@ -45,6 +45,14 @@ const Overdue = () => {
 
     return (
         <div className="p-8 pt-10">
+            <style>{`
+                @media (min-width: 768px) {
+                    .md-header-center-custom {
+                        justify-self: center !important;
+                        text-align: center !important;
+                    }
+                }
+            `}</style>
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                         <AlertOctagon className="text-alert" size={32} /> Payment Overdue
@@ -61,13 +69,13 @@ const Overdue = () => {
                 ) : (
                     <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
                         {/* List Header */}
-                        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+                        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
                             <div>Client Info</div>
-                            <div>Mobile</div>
-                            <div>Plan</div>
-                            <div>Duration</div>
-                            <div>Days Left</div>
-                            <div>Status</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Mobile</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Plan</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Duration</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Days Left</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Status</div>
                             <div className="text-right pd-pr-4">Actions</div>
                         </div>
 

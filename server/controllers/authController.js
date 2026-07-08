@@ -433,7 +433,43 @@ exports.publicRestoreClient = async (req, res, next) => {
     client.isDeleted = false;
     client.deletedAt = null;
     client.deletedBy = null;
+    client.isActive = true;
+    client.deactivatedAt = null;
     
+    const { membership, password } = req.body || {};
+    if (membership) {
+      const TenantPlan = conn.model('Plan');
+      let planName = membership.planType;
+      let planDurationMonths = 1;
+
+      if (membership.planType === 'Custom') {
+        planDurationMonths = membership.customMonths || 1;
+      } else {
+        const plan = await TenantPlan.findOne({ _id: membership.planId, isActive: true });
+        if (!plan) return res.status(400).json({ success: false, message: 'Selected plan not found' });
+        planName = plan.name;
+        planDurationMonths = plan.durationMonths;
+      }
+
+      client.membership = {
+        planId: membership.planType === 'Custom' ? null : membership.planId,
+        planName,
+        planDurationMonths,
+        durationMonths: planDurationMonths, // backward compat
+        customMonths: membership.planType === 'Custom' ? membership.customMonths : undefined,
+        startDate: membership.startDate,
+        status: 'pending',
+        requestApproved: false
+      };
+    } else if (client.membership) {
+      client.membership.requestApproved = false;
+      client.markModified('membership');
+    }
+
+    if (password) {
+      client.password = password;
+    }
+
     await client.save();
 
     res.status(200).json({ success: true, message: 'Client restored successfully', data: client });

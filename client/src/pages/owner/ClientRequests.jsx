@@ -157,14 +157,32 @@ const ClientRequests = () => {
                                             <X size={16} className="mr-1" /> REJECT
                                         </Button>
                                         <Button 
-                                            onClick={() => {
-                                                const plan = plans.find(p => p._id === req.membership?.planId);
-                                                setSelectedRequest(req);
-                                                setSelectedPlan(plan);
-                                                setShowPaymentModal(true);
+                                            onClick={async () => {
+                                                const isExistingActive = req.membership?.endDate && new Date(req.membership.endDate) >= new Date();
+                                                if (isExistingActive) {
+                                                    if (!window.confirm("This client has an active membership. Approve restoration directly without payment?")) return;
+                                                    setActionId(req._id);
+                                                    setActionType('approve');
+                                                    try {
+                                                        await api.put(`/client/${req._id}/approve`, {});
+                                                        toast.success("Client restored and approved directly!");
+                                                        fetchRequests();
+                                                    } catch (error) {
+                                                        toast.error(error.response?.data?.message || "Failed to approve client");
+                                                    } finally {
+                                                        setActionId(null);
+                                                        setActionType(null);
+                                                    }
+                                                } else {
+                                                    const plan = plans.find(p => p._id === req.membership?.planId);
+                                                    setSelectedRequest(req);
+                                                    setSelectedPlan(plan);
+                                                    setShowPaymentModal(true);
+                                                }
                                             }}
                                             className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
                                             disabled={actionId !== null}
+                                            isLoading={actionId === req._id && actionType === 'approve' && !showPaymentModal}
                                         >
                                             <Check size={16} className="mr-1" /> APPROVE
                                         </Button>

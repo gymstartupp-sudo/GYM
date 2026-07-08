@@ -436,3 +436,19 @@ input[type="password"]:not(.password-toggle-field)::-ms-reveal,
 input[type="password"]:not(.password-toggle-field)::-ms-clear {
   display: none;
 }
+
+/* Custom Table Alignment Helpers */
+@media (min-width: 768px) {
+  .md-cell-center {
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    justify-self: center !important;
+  }
+  .md-header-center {
+    text-align: center !important;
+    width: 100% !important;
+    justify-self: center !important;
+  }
+}
