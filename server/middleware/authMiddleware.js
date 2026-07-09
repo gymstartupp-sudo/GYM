@@ -40,13 +40,35 @@ const protect = async (req, res, next) => {
         }
         role = 'owner';
       } else if (decoded.role === 'superadmin') {
-        // Fast-path: Superadmin does not have gym-specific variables in authMiddleware
         user = { _id: decoded.id };
         role = 'superadmin';
+        
+        // Populate target gym details if viewing a gym context
+        const gymIdHeader = (req.headers && req.headers['x-gym-id']) || (req.query && req.query.gymId) || (req.body && req.body.gymId);
+        if (gymIdHeader) {
+          const mongoose = require('mongoose');
+          const Gym = mongoose.model('Gym');
+          const gym = await Gym.findOne({ gymId: gymIdHeader.trim().toUpperCase() }).select('gymId gymName').lean();
+          if (gym) {
+            user.gymId = gym.gymId;
+            user.gymName = gym.gymName;
+          }
+        }
       }
 
       if (!user) {
          return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
+      }
+
+      // Block write operations on gym-specific APIs for Super Admin
+      if (role === 'superadmin' && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+        const isAllowedAdminPath = req.originalUrl.startsWith('/api/admin') || 
+                                   req.originalUrl.startsWith('/api/issues') || 
+                                   req.originalUrl.startsWith('/api/trigger') || 
+                                   req.originalUrl.startsWith('/api/auth');
+        if (!isAllowedAdminPath) {
+          return res.status(403).json({ success: false, message: 'Super Admin is in read-only mode for gym data' });
+        }
       }
 
       req.user = user;
@@ -65,10 +87,15 @@ const protect = async (req, res, next) => {
 
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.userRole)) {
-      return res.status(403).json({ success: false, message: `User role ${req.userRole} is not authorized to access this route` });
+    // If user has direct role access, allow it
+    if (roles.includes(req.userRole)) {
+      return next();
     }
-    next();
+    // Allow superadmin to perform read-only GET requests on owner endpoints
+    if (req.userRole === 'superadmin' && req.method === 'GET' && roles.includes('owner')) {
+      return next();
+    }
+    return res.status(403).json({ success: false, message: `User role ${req.userRole} is not authorized to access this route` });
   };
 };
 

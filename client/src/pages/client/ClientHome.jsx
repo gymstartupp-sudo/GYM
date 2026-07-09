@@ -188,8 +188,7 @@ const ClientHome = () => {
               <p className="text-xs text-text-muted uppercase font-bold tracking-widest mb-2 flex items-center gap-1.5">
                 <MapPin size={14} className="text-primary" /> Location
               </p>
-              <p className="text-text-primary text-sm font-semibold line-clamp-2 leading-snug">{profile.gym.address || 'N/A'}</p>
-              {profile.gym.location && <p className="text-xs text-text-secondary mt-1">{profile.gym.location}</p>}
+              <p className="text-text-primary text-sm font-semibold line-clamp-2 leading-snug">{profile.gym.city || 'N/A'}</p>
             </div>
           </div>
         </div>

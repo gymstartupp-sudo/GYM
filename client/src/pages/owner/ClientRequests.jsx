@@ -7,6 +7,7 @@ import PaymentModal from '../../components/PaymentModal';
 import Pagination from '../../components/Pagination';
 
 const ClientRequests = () => {
+    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);
@@ -146,29 +147,33 @@ const ClientRequests = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3">
-                                        <Button 
-                                            variant="secondary" 
-                                            onClick={() => handleReject(req._id)}
-                                            className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10"
-                                            isLoading={actionId === req._id && actionType === 'reject'}
-                                            disabled={actionId !== null}
-                                        >
-                                            <X size={16} className="mr-1" /> REJECT
-                                        </Button>
-                                        <Button 
-                                            onClick={() => {
-                                                const plan = plans.find(p => p._id === req.membership?.planId);
-                                                setSelectedRequest(req);
-                                                setSelectedPlan(plan);
-                                                setShowPaymentModal(true);
-                                            }}
-                                            className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
-                                            disabled={actionId !== null}
-                                        >
-                                            <Check size={16} className="mr-1" /> APPROVE
-                                        </Button>
-                                    </div>
+                                    {!isReadOnly ? (
+                                        <div className="flex items-center gap-3">
+                                            <Button 
+                                                variant="secondary" 
+                                                onClick={() => handleReject(req._id)}
+                                                className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10"
+                                                isLoading={actionId === req._id && actionType === 'reject'}
+                                                disabled={actionId !== null}
+                                            >
+                                                <X size={16} className="mr-1" /> REJECT
+                                            </Button>
+                                            <Button 
+                                                onClick={() => {
+                                                    const plan = plans.find(p => p._id === req.membership?.planId);
+                                                    setSelectedRequest(req);
+                                                    setSelectedPlan(plan);
+                                                    setShowPaymentModal(true);
+                                                }}
+                                                className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
+                                                disabled={actionId !== null}
+                                            >
+                                                <Check size={16} className="mr-1" /> APPROVE
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <span className="text-text-muted text-xs italic">Read Only Mode</span>
+                                    )}
                                 </div>
                              </div>
                         ))}

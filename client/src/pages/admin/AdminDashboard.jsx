@@ -15,6 +15,7 @@ const AdminDashboard = () => {
 
     const [runningCheck, setRunningCheck] = useState(false);
     const [checkResults, setCheckResults] = useState(null);
+    const [runningReminders, setRunningReminders] = useState(false);
 
     const handleRunOverdueCheck = async () => {
         setRunningCheck(true);
@@ -27,6 +28,22 @@ const AdminDashboard = () => {
             toast.error(err.response?.data?.message || "Failed to execute overdue check");
         } finally {
             setRunningCheck(false);
+        }
+    };
+
+    const handleRunRemindersJob = async () => {
+        setRunningReminders(true);
+        try {
+            const res = await api.post('/trigger/reminders');
+            if (res.data.success) {
+                toast.success(res.data.message || 'Reminder job executed successfully!');
+            } else {
+                toast.error(res.data.message || 'Failed to execute reminder job.');
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Error triggering reminder job');
+        } finally {
+            setRunningReminders(false);
         }
     };
 
@@ -104,8 +121,8 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                {/* System Diagnostics / Overdue Manual Trigger */}
-                <div className="mt-12 max-w-xl">
+                {/* System Diagnostics & Manual Expiry Reminders */}
+                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
                     <div className="card border-border bg-surface-divider/80 p-6 rounded-2xl border">
                         <h2 className="text-lg font-bold text-text-primary mb-2">System Diagnostics</h2>
                         <p className="text-text-secondary text-xs mb-5">Manually run status updater overdue calculations. This runs identical backend business rules as the daily automated schedule.</p>
@@ -134,6 +151,20 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    <div className="card border-border bg-surface-divider/80 p-6 rounded-2xl border">
+                        <h2 className="text-lg font-bold text-text-primary mb-2">Manual Expiry Reminders</h2>
+                        <p className="text-text-secondary text-xs mb-5">Manually execute the daily WhatsApp expiry reminders job. This sends expiration warning alerts to clients via Twilio WhatsApp API.</p>
+                        
+                        <button
+                            type="button"
+                            onClick={handleRunRemindersJob}
+                            disabled={runningReminders}
+                            className="px-5 py-2.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-md shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {runningReminders ? 'Running Reminders Job...' : 'Run Expiry Reminders'}
+                        </button>
                     </div>
                 </div>
             </div>

@@ -47,7 +47,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = 
         onClick={() => setIsOpen(!isOpen)}
         tabIndex={0}
       >
-        <span className={selectedOption ? '' : 'text-slate-400'}>
+        <span className={selectedOption ? '' : 'text-text-muted'}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
