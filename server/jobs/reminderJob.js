@@ -32,7 +32,7 @@ const runReminders = async () => {
   console.log('--- Starting WhatsApp Expiry Reminders Job ---');
   try {
     const gyms = await Gym.find({ isActive: true });
-    
+
     for (const gym of gyms) {
       try {
         const conn = await getTenantConnection(gym.dbName);
@@ -236,8 +236,8 @@ const runReminders = async () => {
   }
 };
 
-// Run every day at 04:30 PM
-cron.schedule('41 14 * * *', async () => {
+// Run every day at 11:40 PM
+cron.schedule('40 23 * * *', async () => {
   console.log('Running daily automated reminderJob...');
   await runReminders();
 });

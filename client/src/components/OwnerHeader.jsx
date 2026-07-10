@@ -252,8 +252,7 @@ const ConfirmModal = ({ isOpen, title, message, cancelText = 'Cancel', confirmTe
 
 const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', ownerName = '', ownerPhone = '', isMobile = false }) => {
   const navigate = useNavigate();
-  const { user, logout, role } = useAuth();
-  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+  const { user, logout } = useAuth();
   const [showContactPanel, setShowContactPanel] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -734,31 +733,29 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', own
                     Manage RexFit Profile
                   </button>
 
-                  {/* Separator line & Logout Button */}
-                  {!isReadOnly && (
-                    <>
-                      <div className="w-full h-px my-5" style={{ background: 'var(--border-color)' }} />
-                      <button
-                        onClick={() => {
-                          setShowProfileDropdown(false);
-                          setShowLogoutModal(true);
-                        }}
-                        className="w-full py-3 rounded-xl font-bold text-sm text-center shadow-md transition-all duration-200"
-                        style={{
-                          background: '#FFBD07',
-                          color: '#111111',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#E5AA06';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#FFBD07';
-                        }}
-                      >
-                        Logout
-                      </button>
-                    </>
-                  )}
+                  {/* Separator line */}
+                  <div className="w-full h-px my-5" style={{ background: 'var(--border-color)' }} />
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      setShowLogoutModal(true);
+                    }}
+                    className="w-full py-3 rounded-xl font-bold text-sm text-center shadow-md transition-all duration-200"
+                    style={{
+                      background: '#FFBD07',
+                      color: '#111111',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#E5AA06';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#FFBD07';
+                    }}
+                  >
+                    Logout
+                  </button>
                 </div>
               </div>
             )}

@@ -106,7 +106,6 @@ const FilterBadge = ({ label, onClear }) => (
 const Clients = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const [clients, setClients] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -248,11 +247,9 @@ const Clients = () => {
             <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients</h1>
             <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and monitor all your gym members.</p>
           </div>
-          {!isReadOnly && (
-            <Button onClick={() => setShowAddModal(true)} className="gap-2 w-full sm:w-auto justify-center">
-              <Plus size={18} /> Add Client
-            </Button>
-          )}
+          <Button onClick={() => setShowAddModal(true)} className="gap-2 w-full sm:w-auto justify-center">
+            <Plus size={18} /> Add Client
+          </Button>
         </div>
 
         {/* ── Add Client Modal ── */}

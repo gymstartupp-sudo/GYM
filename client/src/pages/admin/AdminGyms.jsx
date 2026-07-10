@@ -77,6 +77,20 @@ const GymProfileModal = ({ gymId, onClose }) => {
           </div>
         ) : (
           <div className="p-6 space-y-6">
+            {/* Stats Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: 'Total Clients', value: stats.totalClients ?? 0, color: '#60A5FA' },
+                { label: 'Active Clients', value: stats.activeClients ?? 0, color: COLORS.success },
+                { label: 'Total Plans', value: stats.totalPlans ?? 0, color: COLORS.accent },
+                { label: 'Total Payments', value: stats.totalPayments ?? 0, color: '#A78BFA' },
+              ].map(s => (
+                <div key={s.label} className="rounded-xl p-3 text-center border" style={{ background: '#111', borderColor: COLORS.border }}>
+                  <p className="text-2xl font-black" style={{ color: s.color }}>{s.value}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: '#888' }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
 
             {/* Registration & Status */}
             <Section title="Registration">
@@ -407,14 +421,14 @@ const AdminGyms = () => {
                         <span className="flex items-center gap-1"><Eye size={11} />Profile</span>
                       </ActionBtn>
 
-                      {/* View Gym Dashboard read-only — yellow outline */}
+                      {/* View Clients — yellow outline */}
                       <ActionBtn
                         outline
                         color={COLORS.accent}
-                        title="View Gym Dashboard"
-                        onClick={() => navigate(`/admin/gyms/${gym.gymId}/view`)}
+                        title="View clients"
+                        onClick={() => navigate(`/admin/gyms/${gym.gymId}/clients`)}
                       >
-                        <span className="flex items-center gap-1"><Eye size={11} />View</span>
+                        <span className="flex items-center gap-1"><Users size={11} />Clients</span>
                       </ActionBtn>
 
                       {/* Deactivate/Activate */}
