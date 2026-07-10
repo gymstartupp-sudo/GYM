@@ -14,7 +14,6 @@ const noteSchema = new mongoose.Schema({
 const issueReportSchema = new mongoose.Schema({
   ticketId: {
     type: String,
-    unique: true,
     required: true
   },
   gymId: { type: String, required: true, trim: true },

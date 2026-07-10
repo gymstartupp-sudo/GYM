@@ -245,6 +245,65 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
         <div className="flex items-center gap-2">
           <ThemeToggle className="w-9 h-9" size={16} />
 
+          {/* Notification Bell */}
+          <button
+            id="client-notification-btn"
+            className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200"
+            style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}
+            title="Notifications"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--bg-hover)';
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-muted)';
+            }}
+          >
+            <Bell size={18} />
+            {notifCount > 0 && (
+              <span
+                className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                style={{ background: '#ef4444', color: '#fff' }}
+              >
+                {notifCount > 9 ? '9+' : notifCount}
+              </span>
+            )}
+          </button>
+
+
+
+          {/* Profile Avatar & Dropdown Container */}
+          <div className="relative" ref={profileRef}>
+            <button
+              id="client-profile-btn"
+              onClick={handleProfileClick}
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200 shadow-md"
+              style={{
+                background: showProfileDropdown ? 'var(--bg-hover)' : 'linear-gradient(135deg, #10B981, #059669)',
+                color: '#FFFFFF',
+                boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
+                border: showProfileDropdown ? '1px solid var(--border-color)' : 'none',
+              }}
+              title={`${clientName} — Profile Menu`}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.06)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(16,185,129,0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.35)';
+              }}
+            >
+              {clientAvatar}
+            </button>
+
+            {/* Chrome-style Dropdown Menu */}
+            {showProfileDropdown && (
+              <div
+                className="absolute right-0 top-12 w-[320px] rounded-2xl border shadow-2xl z-50 p-6 animate-in fade-in slide-in-from-top-2 duration-200"
           {/* Notification Bell & Dropdown */}
           <div className="relative" ref={notifRef}>
             <button
@@ -292,6 +351,14 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
                   background: 'var(--bg-elevated)',
                 }}
               >
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowProfileDropdown(false)}
+                  className="absolute top-4 right-4 p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors"
+                >
+                  <X size={18} />
+                </button>
+
                 <div className="flex justify-between items-center mb-3 pb-2 border-b" style={{ borderColor: 'var(--border-color)' }}>
                   <h3 className="font-bold text-sm text-text-primary">Notifications</h3>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>

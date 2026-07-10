@@ -51,6 +51,7 @@ const getBillUrl = (billPath) => {
 };
 
 const PaymentLedger = () => {
+    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const { user } = useAuth();
     const [payments, setPayments] = useState([]);
     const [expenses, setExpenses] = useState([]);
@@ -835,12 +836,14 @@ const PaymentLedger = () => {
                                     ))}
                                 </div>                      </div>
 
-                            <button
-                                onClick={() => handleOpenModal('add')}
-                                className="flex items-center gap-2 bg-primary hover:brightness-95 text-text-primary px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
-                            >
-                                <Plus size={16} /> Add Expense
-                            </button>
+                            {!isReadOnly && (
+                                <button
+                                    onClick={() => handleOpenModal('add')}
+                                    className="flex items-center gap-2 bg-primary hover:brightness-95 text-text-primary px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
+                                >
+                                    <Plus size={16} /> Add Expense
+                                </button>
+                            )}
                         </div>
                         <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
                             <table className="w-full text-left">
@@ -888,20 +891,24 @@ const PaymentLedger = () => {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleOpenModal('edit', exp); }}
-                                                        className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-text-primary rounded-lg transition-all"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit2 size={16} />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleDelete(exp._id); }}
-                                                        className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-text-primary rounded-lg transition-all"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
+                                                    {!isReadOnly && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleOpenModal('edit', exp); }}
+                                                            className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-text-primary rounded-lg transition-all"
+                                                            title="Edit"
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                    )}
+                                                    {!isReadOnly && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDelete(exp._id); }}
+                                                            className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-text-primary rounded-lg transition-all"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
