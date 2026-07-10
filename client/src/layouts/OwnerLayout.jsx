@@ -21,24 +21,11 @@ import {
 import api from '../utils/api';
 
 export default function OwnerLayout() {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem('owner_sidebar_collapsed') === 'true');
   const [gymProfile, setGymProfile] = useState(null);
-
-  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
-
-  useEffect(() => {
-    if (role === 'superadmin' && !sessionStorage.getItem('viewGymId')) {
-      window.location.href = '/admin/gyms';
-    }
-  }, [role]);
-
-  const handleExitReadOnly = () => {
-    sessionStorage.removeItem('viewGymId');
-    window.location.href = '/admin/gyms';
-  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -89,19 +76,7 @@ export default function OwnerLayout() {
   const showLabels = !isCollapsed || isMobile;
 
   return (
-    <div className="flex flex-col w-full h-screen bg-surface-primary overflow-hidden">
-      {isReadOnly && (
-        <div className="bg-yellow-500 text-black py-2.5 px-4 text-center font-bold text-sm flex items-center justify-center gap-4 z-50 shadow-md">
-          <span>⚠️ Viewing as Super Admin — Read Only Mode</span>
-          <button 
-            onClick={handleExitReadOnly}
-            className="bg-black text-white px-3.5 py-1.5 rounded-lg text-xs font-bold hover:bg-neutral-800 transition-colors shadow"
-          >
-            Exit View Mode
-          </button>
-        </div>
-      )}
-      <div className={`flex flex-1 overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
+    <div className={`flex h-screen bg-surface-primary ${isMobile ? 'flex-col' : 'flex-row'}`}>
       {/* Mobile header */}
       {isMobile && (
         <header className="h-[60px] bg-surface-secondary border-b border-border flex items-center justify-end px-5 z-40 shrink-0">
@@ -224,7 +199,6 @@ export default function OwnerLayout() {
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
-      </div>
       </div>
     </div>
   );

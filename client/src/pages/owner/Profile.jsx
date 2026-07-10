@@ -158,7 +158,6 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
 
 // ─── Main Profile Page ───────────────────────────────────────────────────────
 const Profile = () => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const navigate = useNavigate();
   const [profile, setProfile]     = useState(null);
   const [formState, setFormState] = useState(null);
@@ -169,7 +168,6 @@ const Profile = () => {
   const fileInputRef = React.useRef(null);
 
   const handleLogoClick = () => {
-    if (isReadOnly) return;
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -508,9 +506,9 @@ const Profile = () => {
             <div className="flex items-center gap-5">
             {/* Logo Preview */}
             <div 
-              onClick={isReadOnly ? undefined : handleLogoClick}
-              className={`relative w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 ${isReadOnly ? 'cursor-default' : 'cursor-pointer group'}`}
-              title={isReadOnly ? undefined : "Click to change logo"}
+              onClick={handleLogoClick}
+              className="relative w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 cursor-pointer group"
+              title="Click to change logo"
             >
               {formState.gym.gymLogo || formState.gym.billingInfo?.logo ? (
                 <img
@@ -520,22 +518,20 @@ const Profile = () => {
                       : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${formState.gym.gymLogo || formState.gym.billingInfo?.logo}`
                   }
                   alt="Gym Logo"
-                  className={`w-full h-full object-cover ${isReadOnly ? '' : 'transition-transform duration-200 group-hover:scale-105'}`}
+                  className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                 />
               ) : (
-                <div className={`w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl ${isReadOnly ? '' : 'transition-transform duration-200 group-hover:scale-105'}`}>
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl transition-transform duration-200 group-hover:scale-105">
                   {formState.gym.gymName?.charAt(0).toUpperCase() || 'G'}
                 </div>
               )}
               
               {/* Instagram-style Hover Overlay */}
-              {!isReadOnly && (
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-text-primary gap-1 select-none">
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-primary text-center px-1">
-                    Change Photo
-                  </span>
-                </div>
-              )}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-text-primary gap-1 select-none">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-primary text-center px-1">
+                  Change Photo
+                </span>
+              </div>
             </div>
             
             {/* Hidden Input for profile picture changes */}
@@ -553,15 +549,13 @@ const Profile = () => {
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
-            {!isReadOnly && (
-              isEditing ? (
-                <>
-                  <Button type="button" variant="secondary" onClick={cancelEditing} disabled={isSaving}>Cancel</Button>
-                  <Button type="button" onClick={saveAllProfile} isLoading={isSaving}>Save Changes</Button>
-                </>
-              ) : (
-                <Button type="button" onClick={() => setIsEditing(true)}>Edit Profile</Button>
-              )
+            {isEditing ? (
+              <>
+                <Button type="button" variant="secondary" onClick={cancelEditing} disabled={isSaving}>Cancel</Button>
+                <Button type="button" onClick={saveAllProfile} isLoading={isSaving}>Save Changes</Button>
+              </>
+            ) : (
+              <Button type="button" onClick={() => setIsEditing(true)}>Edit Profile</Button>
             )}
           </div>
         </div>

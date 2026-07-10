@@ -10,7 +10,6 @@ import ClientDetail from './ClientDetail';
 import Pagination from '../../components/Pagination';
 
 const Transactions = () => {
-    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const location = useLocation();
     const navigate = useNavigate();
     const [payments, setPayments] = useState([]);

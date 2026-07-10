@@ -292,14 +292,6 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
                   background: 'var(--bg-elevated)',
                 }}
               >
-                {/* Close Button */}
-                <button
-                  onClick={() => setShowProfileDropdown(false)}
-                  className="absolute top-4 right-4 p-1 rounded-lg text-text-muted hover:text-text-primary transition-colors"
-                >
-                  <X size={18} />
-                </button>
-
                 <div className="flex justify-between items-center mb-3 pb-2 border-b" style={{ borderColor: 'var(--border-color)' }}>
                   <h3 className="font-bold text-sm text-text-primary">Notifications</h3>
                   <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>

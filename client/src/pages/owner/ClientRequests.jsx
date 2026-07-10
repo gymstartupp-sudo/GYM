@@ -7,7 +7,6 @@ import PaymentModal from '../../components/PaymentModal';
 import Pagination from '../../components/Pagination';
 
 const ClientRequests = () => {
-    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);
@@ -191,6 +190,7 @@ const ClientRequests = () => {
                                     ) : (
                                         <span className="text-text-muted text-xs italic">Read Only Mode</span>
                                     )}
+
                                 </div>
                             </div>
                         ))}
