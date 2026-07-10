@@ -146,7 +146,6 @@ const ClientRequests = () => {
                                             </span>
                                         </div>
                                     </div>
-
                                     {!isReadOnly ? (
                                         <div className="flex items-center gap-3">
                                             <Button 
@@ -175,7 +174,7 @@ const ClientRequests = () => {
                                         <span className="text-text-muted text-xs italic">Read Only Mode</span>
                                     )}
                                 </div>
-                             </div>
+                            </div>
                         ))}
                         <Pagination
                             currentPage={currentPage}
