@@ -603,7 +603,7 @@ const GymRegister = () => {
 
             {/* Tagline */}
             <div>
-              <div className="flex items-center h-5 mb-1.5">
+              <div className="flex items-center h-5 mb-1.6">
                 <p className="text-xs text-slate-400 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
               </div>
               <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="35" />
