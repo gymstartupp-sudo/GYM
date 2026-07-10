@@ -60,6 +60,5 @@ const issueReportSchema = new mongoose.Schema({
 issueReportSchema.index({ gymId: 1, createdAt: -1 });
 issueReportSchema.index({ status: 1 });
 issueReportSchema.index({ severity: 1 });
-issueReportSchema.index({ ticketId: 1 });
 
 module.exports = mongoose.model('IssueReport', issueReportSchema, 'issueReports');
