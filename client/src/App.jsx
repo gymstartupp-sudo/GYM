@@ -1,5 +1,5 @@
-import React, { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
@@ -13,6 +13,7 @@ const ClientRegister = lazy(() => import('./pages/ClientRegister'));
 const RegistrationSuccess = lazy(() => import('./pages/RegistrationSuccess'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ManualTrigger = lazy(() => import('./pages/ManualTrigger'));
 
 // Owner - Lazy loaded for code splitting
 const OwnerLayout = lazy(() => import('./layouts/OwnerLayout'));
@@ -62,27 +63,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-// Redirect component for Super Admin viewing a Gym
-const GymViewRedirect = () => {
-  const { gymId } = useParams();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (gymId) {
-      sessionStorage.setItem('viewGymId', gymId.toUpperCase());
-      navigate('/owner/dashboard', { replace: true });
-    } else {
-      navigate('/admin/gyms', { replace: true });
-    }
-  }, [gymId, navigate]);
-
-  return (
-    <div className="flex h-screen items-center justify-center bg-surface-primary">
-      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  );
-};
-
 const AppContent = () => {
   const { theme } = useTheme();
 
@@ -99,9 +79,10 @@ const AppContent = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/registration-success" element={<RegistrationSuccess />} />
+              <Route path="/manual-trigger" element={<ManualTrigger />} />
               
               {/* Owner Routes */}
-              <Route path="/owner" element={<ProtectedRoute allowedRoles={['owner', 'superadmin']}><OwnerLayout /></ProtectedRoute>}>
+              <Route path="/owner" element={<ProtectedRoute allowedRoles={['owner']}><OwnerLayout /></ProtectedRoute>}>
                 <Route index element={<Navigate to="dashboard" replace />} />
                 <Route path="dashboard" element={<OwnerDashboard />} />
                 <Route path="clients" element={<OwnerClients />} />
@@ -122,7 +103,7 @@ const AppContent = () => {
               {/* Client Routes */}
               <Route path="/client" element={<ProtectedRoute allowedRoles={['client']}><ClientLayout /></ProtectedRoute>}>
                 <Route index element={<ClientHome />} />
-                <Route path="profile" element={<Navigate to="/client/settings?tab=profile" replace />} />
+                <Route path="profile" element={<ClientProfile />} />
                 <Route path="payments" element={<ClientPayments />} />
                 <Route path="plans" element={<ClientPlans />} />
                 <Route path="feedback" element={<ClientFeedback />} />
@@ -133,7 +114,6 @@ const AppContent = () => {
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/gyms" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminGyms /></ProtectedRoute>} />
-              <Route path="/admin/gyms/:gymId/view" element={<ProtectedRoute allowedRoles={['superadmin']}><GymViewRedirect /></ProtectedRoute>} />
               <Route path="/admin/gyms/:gymId/clients" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminClients /></ProtectedRoute>} />
               <Route path="/admin/issues" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminIssues /></ProtectedRoute>} />
 

@@ -68,7 +68,6 @@ const ClientDashboardTable = ({ clients, onView }) => (
 );
 
 const Dashboard = () => {
-    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -187,16 +186,14 @@ const Dashboard = () => {
                         <h1 className="page-heading text-2xl md:text-[36px]">Dashboard Overview</h1>
                         <p className="text-text-secondary mt-1 text-sm md:text-base">Here is what's happening in your Gym today.</p>
                     </div>
-                    {!isReadOnly && (
-                        <div className="flex gap-3 w-full sm:w-auto">
-                            <button onClick={() => setShowAddModal(true)} className="btn-primary flex-1 sm:flex-none text-sm md:text-base">
-                                + Add Client
-                            </button>
-                            <button onClick={() => setShowPaymentModal(true)} className="btn-success flex-1 sm:flex-none text-sm md:text-base">
-                                Record Payment
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex gap-3 w-full sm:w-auto">
+                        <button onClick={() => setShowAddModal(true)} className="btn-primary flex-1 sm:flex-none text-sm md:text-base">
+                            + Add Client
+                        </button>
+                        <button onClick={() => setShowPaymentModal(true)} className="btn-success flex-1 sm:flex-none text-sm md:text-base">
+                            Record Payment
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">

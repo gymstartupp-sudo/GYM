@@ -20,7 +20,12 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
   const dynamicDaysLeft = calculateDaysLeft(currentPlan?.startDate, currentPlan?.endDate);
   const daysLeft = dynamicDaysLeft !== null ? dynamicDaysLeft : '-';
 
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+  const [isDesktop, setIsDesktop] = React.useState(window.innerWidth >= 768);
+  React.useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group">
@@ -68,8 +73,8 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
               </span>
               {paymentStatus !== 'paid' && (
                 <span
-                  onClick={(e) => { e.stopPropagation(); if (!isReadOnly) onDuesClick?.(client); }}
-                  className={`transition-transform active:scale-95 ${paymentStatusStyles[paymentStatus]} ${isReadOnly ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                  onClick={(e) => { e.stopPropagation(); onDuesClick?.(client); }}
+                  className={`cursor-pointer transition-transform active:scale-95 ${paymentStatusStyles[paymentStatus]}`}
                 >
                   Dues
                 </span>
@@ -79,25 +84,25 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
         )}
 
         <div className={`flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
-          {!hideReminders && <ReminderTimeline client={client} onCircleClick={isReadOnly ? undefined : onReminderClick} />}
+          {!hideReminders && <ReminderTimeline client={client} onCircleClick={onReminderClick} />}
 
           <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border" title="View client">
             <Eye size={16} />
           </button>
 
-          {showReactivate && onReactivate && !isReadOnly && (
+          {showReactivate && onReactivate && (
             <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 text-xs">
               <RefreshCw size={14} /> Reactivate
             </Button>
           )}
 
-          {showRenew && onRenew && !isReadOnly && (
+          {showRenew && onRenew && (
             <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 text-xs">
               <RefreshCw size={14} /> Renew
             </Button>
           )}
 
-          {onDelete && !isReadOnly && (
+          {onDelete && (
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onDelete(client); }}
