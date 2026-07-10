@@ -1312,3 +1312,13 @@
     at NativeCollection.<computed> [as findOne] (D:\GYM\server\node_modules\mongoose\lib\drivers\node-mongodb-native\collection.js:246:33)
     at model.Query._findOne (D:\GYM\server\node_modules\mongoose\lib\query.js:2710:45)
     at model.Query.exec (D:\GYM\server\node_modules\mongoose\lib\query.js:4627:80)
+
+[2026-07-10T11:13:01.895Z] MongooseError: Operation `superAdmins.findOne()` buffering timed out after 10000ms
+    at Timeout.<anonymous> (D:\GYM!\GYM\server\node_modules\mongoose\lib\drivers\node-mongodb-native\collection.js:187:23)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+
+[2026-07-10T11:13:14.140Z] MongooseError: Operation `superAdmins.findOne()` buffering timed out after 10000ms
+    at Timeout.<anonymous> (D:\GYM!\GYM\server\node_modules\mongoose\lib\drivers\node-mongodb-native\collection.js:187:23)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
