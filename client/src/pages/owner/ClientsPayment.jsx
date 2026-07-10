@@ -266,17 +266,6 @@ const Transactions = () => {
     };
 
     return (
-        <div className="p-4 md:p-8 md:pt-10">
-                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients Payment</h1>
-                        <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
-                    </div>
-                    {!isReadOnly && (
-                        <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
-                            <Plus size={18} /> Record Payment
-                        </Button>
-                    )}
         <div className="p-4 md:p-8 md:pt-10 space-y-8">
             <style>{`
                 @media (min-width: 768px) {
@@ -298,9 +287,11 @@ const Transactions = () => {
                     <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients Payment</h1>
                     <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
                 </div>
-                <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
-                    <Plus size={18} /> Record Payment
-                </Button>
+                {!isReadOnly && (
+                    <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                        <Plus size={18} /> Record Payment
+                    </Button>
+                )}
             </div>
 
                 <div className="bg-surface-divider/80 rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
