@@ -7,6 +7,11 @@ const api = axios.create({
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token && token !== 'undefined') config.headers.Authorization = `Bearer ${token}`;
+  
+  const viewGymId = sessionStorage.getItem('viewGymId');
+  if (viewGymId) {
+    config.headers['x-gym-id'] = viewGymId;
+  }
   return config;
 });
 
