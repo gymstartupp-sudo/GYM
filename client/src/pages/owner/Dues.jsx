@@ -421,20 +421,6 @@ const Dues = () => {
 
     return (
         <div className="p-4 md:p-8 md:pt-10">
-            <style>{`
-                @media (min-width: 768px) {
-                    .text-center {
-                        text-align: center !important;
-                    }
-                    .justify-center {
-                        justify-content: center !important;
-                    }
-                    .mx-auto {
-                        margin-left: auto !important;
-                        margin-right: auto !important;
-                    }
-                }
-            `}</style>
                 <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
@@ -484,16 +470,16 @@ const Dues = () => {
                             <thead>
                                 <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
                                     <th className="p-4 font-bold">Client Info</th>
-                                    {(activeTab === 'expired' || activeTab === 'expiring') && <th className="p-4 font-bold text-center">Mobile</th>}
-                                    <th className="p-4 font-bold text-center">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Last Plan' : 'Plan'}</th>
+                                    {(activeTab === 'expired' || activeTab === 'expiring') && <th className="p-4 font-bold">Mobile</th>}
+                                    <th className="p-4 font-bold">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Last Plan' : 'Plan'}</th>
                                     {activeTab !== 'expired' && activeTab !== 'expiring' && (
                                         <>
-                                            <th className="p-4 font-bold text-center">Total Amount</th>
-                                            <th className="p-4 font-bold text-center">Paid Amount</th>
-                                            <th className="p-4 font-bold text-center">Balance</th>
+                                            <th className="p-4 font-bold text-right">Total Amount</th>
+                                            <th className="p-4 font-bold text-right">Paid Amount</th>
+                                            <th className="p-4 font-bold text-right">Balance</th>
                                         </>
                                     )}
-                                    <th className="p-4 font-bold text-center">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Ended On' : 'Due Date'}</th>
+                                    <th className="p-4 font-bold">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Ended On' : 'Due Date'}</th>
                                     {activeTab === 'expired' && <th className="p-4 font-bold text-center">Days Ago</th>}
                                     {activeTab === 'expiring' && <th className="p-4 font-bold text-center">Days Left</th>}
                                     <th className="p-4 font-bold text-right">Action</th>
@@ -504,20 +490,9 @@ const Dues = () => {
                                     [...Array(4)].map((_, i) => (
                                         <tr key={i} className="border-b border-border">
                                             <td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse"></div><div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div></div></td>
-                                            {(activeTab === 'expired' || activeTab === 'expiring') && (
-                                                <td className="p-4 text-center"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            )}
-                                            <td className="p-4 text-center"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            {activeTab !== 'expired' && activeTab !== 'expiring' && (
-                                                <>
-                                                    <td className="p-4 text-center"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                                    <td className="p-4 text-center"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                                    <td className="p-4 text-center"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                                </>
-                                            )}
-                                            <td className="p-4 text-center"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            {activeTab === 'expired' && <td className="p-4 text-center"><div className="h-4 w-10 bg-surface-divider rounded animate-pulse mx-auto"></div></td>}
-                                            {activeTab === 'expiring' && <td className="p-4 text-center"><div className="h-4 w-10 bg-surface-divider rounded animate-pulse mx-auto"></div></td>}
+                                            <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
+                                            {activeTab !== 'expired' && activeTab !== 'expiring' && <><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td></>}
+                                            <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
                                             <td className="p-4 text-right"><div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div></td>
                                         </tr>
                                     ))
@@ -539,11 +514,11 @@ const Dues = () => {
                                                 </div>
                                             </td>
                                             {(activeTab === 'expired' || activeTab === 'expiring') && (
-                                                <td className="p-4 text-text-secondary text-sm font-medium text-center">
+                                                <td className="p-4 text-text-secondary text-sm font-medium">
                                                     {due.mobile}
                                                 </td>
                                             )}
-                                            <td className="p-4 text-text-secondary text-sm font-medium text-center">
+                                            <td className="p-4 text-text-secondary text-sm font-medium">
                                                 <span className="block">{due.planName}</span>
                                                 {due.startDate && (() => {
                                                     const period = getBillingPeriod(due);
@@ -556,20 +531,20 @@ const Dues = () => {
                                             </td>
                                             {activeTab !== 'expired' && activeTab !== 'expiring' && (
                                                 <>
-                                                    <td className="p-4 text-center text-text-secondary font-bold text-sm">
+                                                    <td className="p-4 text-right text-text-secondary font-bold text-sm">
                                                         ₹{due.finalPrice}
                                                     </td>
-                                                    <td className="p-4 text-center text-emerald-400 font-bold text-sm">
+                                                    <td className="p-4 text-right text-emerald-400 font-bold text-sm">
                                                         ₹{due.totalPaid}
                                                     </td>
-                                                    <td className="p-4 text-center text-rose-500 font-black text-sm">
+                                                    <td className="p-4 text-right text-rose-500 font-black text-sm">
                                                         ₹{due.balance}
                                                     </td>
                                                 </>
                                             )}
-                                            <td className="p-4 text-text-secondary text-xs text-center">
+                                            <td className="p-4 text-text-secondary text-xs">
                                                 {(activeTab === 'expired' || activeTab === 'expiring') ? (
-                                                    <div className="flex flex-col gap-0.5 items-center">
+                                                    <div className="flex flex-col gap-0.5">
                                                         <span className="whitespace-nowrap">Start: {due.startDate ? new Date(due.startDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
                                                         <span className="whitespace-nowrap">End: {due.endDate ? new Date(due.endDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
                                                     </div>

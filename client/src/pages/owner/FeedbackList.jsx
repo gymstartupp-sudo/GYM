@@ -105,20 +105,6 @@ const FeedbackList = () => {
 
   return (
     <div className="p-4 md:p-8 md:pt-10 space-y-8">
-      <style>{`
-        @media (min-width: 768px) {
-          .md-center-feedback-header {
-            text-align: center !important;
-          }
-          .md-center-feedback-cell {
-            text-align: center !important;
-          }
-          .md-center-feedback-flex {
-            display: flex !important;
-            justify-content: center !important;
-          }
-        }
-      `}</style>
       {/* Page Header */}
       <div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
@@ -148,9 +134,9 @@ const FeedbackList = () => {
               <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
                 <tr>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Client Info</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary md-center-feedback-header">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary md-center-feedback-header">Subject</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary md-center-feedback-header">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Subject</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Action</th>
                 </tr>
               </thead>
@@ -171,20 +157,18 @@ const FeedbackList = () => {
                     </td>
 
                     {/* Date */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary md-center-feedback-cell">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                       {formatDate(item.createdAt)}
                     </td>
 
                     {/* Subject */}
-                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate md-center-feedback-cell max-w-xs md:max-w-md">
+                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md">
                       {item.subject || <span className="text-text-muted italic">No Subject</span>}
                     </td>
 
                     {/* Status */}
-                    <td className="px-6 py-4 whitespace-nowrap md-center-feedback-cell">
-                      <div className="flex md-center-feedback-flex justify-center">
-                        {getStatusBadge(item.status)}
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {getStatusBadge(item.status)}
                     </td>
 
                     {/* Action */}

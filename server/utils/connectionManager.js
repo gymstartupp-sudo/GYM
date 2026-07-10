@@ -28,25 +28,18 @@ const getTenantConnection = async (dbName) => {
     tenantConnections.delete(dbName);
   }
 
-  const uri = getTenantDbUri(dbName);
-  const conn = mongoose.createConnection(uri);
-
-  await new Promise((resolve, reject) => {
-    conn.once('open', resolve);
-    conn.once('error', reject);
-  });
-
+  const conn = mongoose.connection.useDb(dbName, { useCache: true });
   tenantConnections.set(dbName, conn);
 
-  // Pre-register all schemas on this connection
+  // Pre-register all schemas on this connection using safe model check
   // Note: Import the files dynamically to avoid circular dependency
-  conn.model('Client', require('../models/Client').schema);
-  const PlanModel = conn.model('Plan', require('../models/Plan').schema);
-  conn.model('Payment', require('../models/Payment').schema);
-  conn.model('Expense', require('../models/Expense').schema);
-  conn.model('Feedback', require('../models/Feedback').schema);
-  conn.model('Counter', require('../models/Counter').schema);
-  conn.model('Setting', require('../models/Setting').schema);
+  const Client = conn.models.Client || conn.model('Client', require('../models/Client').schema);
+  const PlanModel = conn.models.Plan || conn.model('Plan', require('../models/Plan').schema);
+  const Payment = conn.models.Payment || conn.model('Payment', require('../models/Payment').schema);
+  const Expense = conn.models.Expense || conn.model('Expense', require('../models/Expense').schema);
+  const Feedback = conn.models.Feedback || conn.model('Feedback', require('../models/Feedback').schema);
+  const Counter = conn.models.Counter || conn.model('Counter', require('../models/Counter').schema);
+  const Setting = conn.models.Setting || conn.model('Setting', require('../models/Setting').schema);
 
   // Migration: Populate normalizedName and deactivate duplicate active plans to avoid unique index build failures
   try {

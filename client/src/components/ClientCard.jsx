@@ -20,16 +20,11 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
   const dynamicDaysLeft = calculateDaysLeft(currentPlan?.startDate, currentPlan?.endDate);
   const daysLeft = dynamicDaysLeft !== null ? dynamicDaysLeft : '-';
 
-  const [isDesktop, setIsDesktop] = React.useState(window.innerWidth >= 768);
-  React.useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
 
   return (
     <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group">
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_2fr] gap-4 md:gap-2 items-center text-sm">
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-4 md:gap-2 items-center text-sm">
 
         <div className="flex gap-3 items-center min-w-0">
           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
@@ -41,40 +36,40 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
           </div>
         </div>
 
-        <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
+        <div className="flex items-center md:block">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Mobile: </span>
           <p className="text-text-primary truncate">{client?.personalInfo?.mobileNo || '-'}</p>
         </div>
 
-        <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
+        <div className="flex items-center md:block">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Plan: </span>
           <p className="text-text-primary truncate">{currentPlan?.planName || 'No Active Plan'}</p>
         </div>
 
-        <div className="flex md:flex-col items-center gap-2 md:gap-0 min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
+        <div className="flex md:flex-col items-center md:items-start gap-2 md:gap-0">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Duration: </span>
-          <div className="flex flex-col" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
+          <div className="flex flex-col">
             <p className="text-text-secondary text-xs text-nowrap">Start: {formatDisplayDate(currentPlan?.startDate)}</p>
             <p className="text-text-secondary text-xs text-nowrap">End: {formatDisplayDate(currentPlan?.endDate)}</p>
           </div>
         </div>
 
-        <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
+        <div className="flex items-center md:block">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Days Left: </span>
           <p className="text-text-primary font-medium">{daysLeft}</p>
         </div>
 
         {!hideStatus && (
-          <div className="flex items-center min-w-0" style={isDesktop ? { justifySelf: 'center', textAlign: 'center', alignItems: 'center' } : {}}>
+          <div className="flex items-center md:block">
             <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Status: </span>
-            <div className="flex flex-col gap-1 items-center">
+            <div className="flex flex-col gap-1">
               <span className={`${planStatusStyles[planStatus] || 'badge-danger'}`}>
                 {planStatus}
               </span>
               {paymentStatus !== 'paid' && (
                 <span
-                  onClick={(e) => { e.stopPropagation(); onDuesClick?.(client); }}
-                  className={`cursor-pointer transition-transform active:scale-95 ${paymentStatusStyles[paymentStatus]}`}
+                  onClick={(e) => { e.stopPropagation(); if (!isReadOnly) onDuesClick?.(client); }}
+                  className={`transition-transform active:scale-95 ${paymentStatusStyles[paymentStatus]} ${isReadOnly ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                 >
                   Dues
                 </span>
@@ -84,25 +79,25 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
         )}
 
         <div className={`flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
-          {!hideReminders && <ReminderTimeline client={client} onCircleClick={onReminderClick} />}
+          {!hideReminders && <ReminderTimeline client={client} onCircleClick={isReadOnly ? undefined : onReminderClick} />}
 
           <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border" title="View client">
             <Eye size={16} />
           </button>
 
-          {showReactivate && onReactivate && (
+          {showReactivate && onReactivate && !isReadOnly && (
             <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 text-xs">
               <RefreshCw size={14} /> Reactivate
             </Button>
           )}
 
-          {showRenew && onRenew && (
+          {showRenew && onRenew && !isReadOnly && (
             <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 text-xs">
               <RefreshCw size={14} /> Renew
             </Button>
           )}
 
-          {onDelete && (
+          {onDelete && !isReadOnly && (
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onDelete(client); }}

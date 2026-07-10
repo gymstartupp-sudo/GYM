@@ -7,6 +7,7 @@ import PaymentModal from '../../components/PaymentModal';
 import Pagination from '../../components/Pagination';
 
 const ClientRequests = () => {
+    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);
@@ -146,47 +147,33 @@ const ClientRequests = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3">
-                                        <Button 
-                                            variant="secondary" 
-                                            onClick={() => handleReject(req._id)}
-                                            className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10"
-                                            isLoading={actionId === req._id && actionType === 'reject'}
-                                            disabled={actionId !== null}
-                                        >
-                                            <X size={16} className="mr-1" /> REJECT
-                                        </Button>
-                                        <Button 
-                                            onClick={async () => {
-                                                const isExistingActive = req.membership?.endDate && new Date(req.membership.endDate) >= new Date();
-                                                if (isExistingActive) {
-                                                    if (!window.confirm("This client has an active membership. Approve restoration directly without payment?")) return;
-                                                    setActionId(req._id);
-                                                    setActionType('approve');
-                                                    try {
-                                                        await api.put(`/client/${req._id}/approve`, {});
-                                                        toast.success("Client restored and approved directly!");
-                                                        fetchRequests();
-                                                    } catch (error) {
-                                                        toast.error(error.response?.data?.message || "Failed to approve client");
-                                                    } finally {
-                                                        setActionId(null);
-                                                        setActionType(null);
-                                                    }
-                                                } else {
+                                    {!isReadOnly ? (
+                                        <div className="flex items-center gap-3">
+                                            <Button 
+                                                variant="secondary" 
+                                                onClick={() => handleReject(req._id)}
+                                                className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10"
+                                                isLoading={actionId === req._id && actionType === 'reject'}
+                                                disabled={actionId !== null}
+                                            >
+                                                <X size={16} className="mr-1" /> REJECT
+                                            </Button>
+                                            <Button 
+                                                onClick={() => {
                                                     const plan = plans.find(p => p._id === req.membership?.planId);
                                                     setSelectedRequest(req);
                                                     setSelectedPlan(plan);
                                                     setShowPaymentModal(true);
-                                                }
-                                            }}
-                                            className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
-                                            disabled={actionId !== null}
-                                            isLoading={actionId === req._id && actionType === 'approve' && !showPaymentModal}
-                                        >
-                                            <Check size={16} className="mr-1" /> APPROVE
-                                        </Button>
-                                    </div>
+                                                }}
+                                                className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
+                                                disabled={actionId !== null}
+                                            >
+                                                <Check size={16} className="mr-1" /> APPROVE
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <span className="text-text-muted text-xs italic">Read Only Mode</span>
+                                    )}
                                 </div>
                              </div>
                         ))}

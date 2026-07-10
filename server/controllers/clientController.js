@@ -535,30 +535,6 @@ exports.approveClient = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Client is already approved' });
     }
 
-    const isExistingActive = client.membership && client.membership.endDate && new Date(client.membership.endDate) >= new Date();
-    if (isExistingActive) {
-      client.gymName = req.user.gymName;
-      client.isDeleted = false;
-      client.deletedAt = null;
-      client.deletedBy = null;
-      client.isActive = true;
-      client.deactivatedAt = null;
-      client.membership.requestApproved = true;
-
-      await client.save();
-
-      // Sync client status using syncClientStatus utility
-      const { syncClientStatus } = require('../utils/syncStatus');
-      await syncClientStatus(client._id);
-
-      // Fetch the updated client doc to return enriched with balances
-      const updatedClient = await Client.findById(client._id);
-      const payments = await Payment.find({ clientId: client._id.toString() }).lean();
-      const enriched = calculateBalances(updatedClient, payments);
-
-      return res.status(200).json({ success: true, data: enriched });
-    }
-
     let planName = client.membership.planName;
     let planDurationMonths = client.membership.planDurationMonths || 1;
     let planPrice = 0;
