@@ -5,58 +5,6 @@ import Button from '../../components/Button';
 import ConfirmModal from '../../components/ConfirmModal';
 import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react';
 
-const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '', disabled = false }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = React.useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const selectedOption = options.find(o => String(o.value) === String(value));
-
-  return (
-    <div className="relative" ref={containerRef}>
-      <div
-        className={`${className} flex justify-between items-center ${errorClassName} ${
-          disabled 
-            ? 'opacity-50 cursor-not-allowed bg-surface-divider' 
-            : 'cursor-pointer'
-        } ${isOpen && !disabled ? 'border-primary ring-1 ring-primary/50' : ''}`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        tabIndex={disabled ? -1 : 0}
-      >
-        <span className={selectedOption ? '' : 'text-text-muted'}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-slate-500 transition-transform ${isOpen && !disabled ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
-      </div>
-      {isOpen && !disabled && (
-        <ul className="absolute z-50 w-full mt-1 bg-surface-card border border-border rounded-lg shadow-xl max-h-60 overflow-auto">
-          {options.map((option) => (
-            <li
-              key={option.value}
-              className={`px-4 py-2.5 cursor-pointer transition-colors border border-transparent rounded-md text-text-primary hover:bg-surface-hover hover:text-primary hover:border-primary ${String(value) === String(option.value) ? 'font-medium bg-surface-hover/50' : ''}`}
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-            >
-              {option.label}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
-
 // ─── Plan Detail Modal ──────────────────────────────────────────────────────
 const PlanDetailModal = ({ plan, onClose }) => {
   if (!plan) return null;
@@ -101,29 +49,25 @@ const PlanDetailModal = ({ plan, onClose }) => {
 };
 
 // ─── Plan Card ──────────────────────────────────────────────────────────────
-const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
-  return (
+const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => (
   <div className="card relative flex flex-col group border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-primary/10 hover:shadow-xl">
     {/* Hover actions */}
-    {!isReadOnly && (
-      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <button
-          onClick={() => onEdit(plan)}
-          title="Edit plan"
-          className="text-blue-400 hover:text-blue-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
-        >
-          <Edit2 size={14} />
-        </button>
-        <button
-          onClick={() => onDelete(plan._id)}
-          title="Delete plan"
-          className="text-red-400 hover:text-red-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
-        >
-          <Trash2 size={14} />
-        </button>
-      </div>
-    )}
+    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <button
+        onClick={() => onEdit(plan)}
+        title="Edit plan"
+        className="text-blue-400 hover:text-blue-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
+      >
+        <Edit2 size={14} />
+      </button>
+      <button
+        onClick={() => onDelete(plan._id)}
+        title="Delete plan"
+        className="text-red-400 hover:text-red-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
+      >
+        <Trash2 size={14} />
+      </button>
+    </div>
 
     {/* Header info */}
     <div className="flex items-center gap-2 mb-4">
@@ -149,8 +93,7 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => {
       <Eye size={15} /> View Details
     </button>
   </div>
-  );
-};
+);
 
 // ─── Create / Edit Modal ────────────────────────────────────────────────────
 const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
@@ -238,13 +181,14 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
     }
   };
 
-  const handleStandardSelect = (value) => {
+  const handleStandardSelect = (e) => {
     if (editingPlan?.isAssigned) return;
-    setStandardType(value);
+    const type = e.target.value;
+    setStandardType(type);
     let name = '';
     let duration = '';
 
-    switch (value) {
+    switch (type) {
       case 'Monthly': name = 'Monthly'; duration = 1; break;
       case 'Quarterly': name = 'Quarterly'; duration = 3; break;
       case 'Half-Yearly': name = 'Half-Yearly'; duration = 6; break;
@@ -388,19 +332,19 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
           {!isCustom ? (
             <div>
               <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Select Standard Plan *</label>
-              <CustomSelect
-                value={standardType}
-                onChange={handleStandardSelect}
+              <select 
+                value={standardType} 
+                onChange={handleStandardSelect} 
+                required={!isCustom}
                 disabled={editingPlan?.isAssigned}
-                options={[
-                  { label: 'Monthly (1 Month)', value: 'Monthly' },
-                  { label: 'Quarterly (3 Months)', value: 'Quarterly' },
-                  { label: 'Half-Yearly (6 Months)', value: 'Half-Yearly' },
-                  { label: 'Yearly (12 Months)', value: 'Yearly' }
-                ]}
-                placeholder="-- Choose Plan --"
-                className="input-field"
-              />
+                className={`input-field appearance-none cursor-pointer ${editingPlan?.isAssigned ? 'opacity-50 cursor-not-allowed bg-surface-divider' : ''}`}
+              >
+                <option value="">-- Choose Plan --</option>
+                <option value="Monthly">Monthly (1 Month)</option>
+                <option value="Quarterly">Quarterly (3 Months)</option>
+                <option value="Half-Yearly">Half-Yearly (6 Months)</option>
+                <option value="Yearly">Yearly (12 Months)</option>
+              </select>
             </div>
           ) : (
             <div>
@@ -509,7 +453,6 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
 
 // ─── Main Plans Page ────────────────────────────────────────────────────────
 const Plans = () => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -558,11 +501,9 @@ const Plans = () => {
             <h1 className="text-3xl font-bold text-text-primary tracking-tight">Gym Plans</h1>
             <p className="text-text-secondary mt-1">Manage your membership packages.</p>
           </div>
-          {!isReadOnly && (
-            <Button onClick={handleCreateNew} className="gap-2">
-              <Plus size={18} /> Create Plan
-            </Button>
-          )}
+          <Button onClick={handleCreateNew} className="gap-2">
+            <Plus size={18} /> Create Plan
+          </Button>
         </div>
 
         {loading ? (

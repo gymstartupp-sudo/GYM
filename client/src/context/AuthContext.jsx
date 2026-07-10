@@ -35,7 +35,6 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
-    sessionStorage.removeItem('viewGymId');
     setUser(null);
     setRole(null);
   }, []);

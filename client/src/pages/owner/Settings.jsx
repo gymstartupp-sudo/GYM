@@ -10,7 +10,6 @@ import LogoutModal from '../../components/LogoutModal';
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
@@ -227,10 +226,10 @@ const Settings = () => {
           </div>
           <button
             type="button"
-            disabled={isToggling || isReadOnly}
+            disabled={isToggling}
             onClick={handleTogglePartialPayment}
             className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-900 cursor-pointer ${(gym.billingInfo?.allowPartialPayments !== false) ? 'bg-primary' : 'bg-surface-hover'
-              } ${(isToggling || isReadOnly) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <span
               className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${(gym.billingInfo?.allowPartialPayments !== false) ? 'translate-x-5' : 'translate-x-0'
@@ -264,23 +263,20 @@ const Settings = () => {
                         type="number"
                         min="1"
                         max="365"
-                        disabled={isReadOnly}
-                        className={`w-20 bg-surface-primary border border-border rounded-lg px-2.5 py-1.5 text-center text-sm text-text-primary font-bold focus:border-primary outline-none ${isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        className="w-20 bg-surface-primary border border-border rounded-lg px-2.5 py-1.5 text-center text-sm text-text-primary font-bold focus:border-primary outline-none"
                         value={p.partialPaymentDueDays ?? 15}
                         onChange={(e) => {
                           const val = e.target.value === '' ? '' : Math.max(1, Number(e.target.value));
                           setPlans(prev => prev.map(item => item._id === p._id ? { ...item, partialPaymentDueDays: val } : item));
                         }}
                       />
-                      {!isReadOnly && (
-                        <button
-                          type="button"
-                          onClick={() => handleSavePlanDueDays(p._id, p.partialPaymentDueDays)}
-                          className="px-3.5 py-1.5 bg-primary text-black text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
-                        >
-                          Save
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleSavePlanDueDays(p._id, p.partialPaymentDueDays)}
+                        className="px-3.5 py-1.5 bg-primary text-black text-xs font-bold rounded-lg hover:opacity-90 transition-opacity"
+                      >
+                        Save
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -291,130 +287,126 @@ const Settings = () => {
       </div>
 
       {/* 2. Security Section */}
-      {!isReadOnly && (
-        <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8 shadow-xl">
-          <div className="border-b border-border pb-4">
-            <h2 className="text-xl font-semibold text-text-primary">Security & Password</h2>
-          </div>
-          <form onSubmit={handlePasswordChange} className="space-y-6 max-w-xl">
-            {/* Current Password */}
-            <div className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">Current Password</span>
-              <div className="relative">
-                <input
-                  type={showCurrent ? 'text' : 'password'}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
-                  className="input-field password-toggle-field w-full"
-                  disabled={isUpdating}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrent(!showCurrent)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-                >
-                  {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {/* New Password */}
-            <div className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">New Password</span>
-              <div className="relative">
-                <input
-                  type={showNew ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  className="input-field password-toggle-field w-full"
-                  disabled={isUpdating}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-                >
-                  {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              <p className="text-[10px] text-text-muted mt-1">
-                Password must be at least 6 characters, and contain uppercase, lowercase, and a number.
-              </p>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="space-y-1 block group">
-              <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">Confirm New Password</span>
-              <div className="relative">
-                <input
-                  type={showConfirm ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  className="input-field password-toggle-field w-full"
-                  disabled={isUpdating}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-                >
-                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <Button type="submit" isLoading={isUpdating}>
-                Update Password
-              </Button>
-            </div>
-          </form>
+      <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8 shadow-xl">
+        <div className="border-b border-border pb-4">
+          <h2 className="text-xl font-semibold text-text-primary">Security & Password</h2>
         </div>
-      )}
+        <form onSubmit={handlePasswordChange} className="space-y-6 max-w-xl">
+          {/* Current Password */}
+          <div className="space-y-1 block group">
+            <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">Current Password</span>
+            <div className="relative">
+              <input
+                type={showCurrent ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                className="input-field password-toggle-field w-full"
+                disabled={isUpdating}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrent(!showCurrent)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              >
+                {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* New Password */}
+          <div className="space-y-1 block group">
+            <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">New Password</span>
+            <div className="relative">
+              <input
+                type={showNew ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                className="input-field password-toggle-field w-full"
+                disabled={isUpdating}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              >
+                {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            <p className="text-[10px] text-text-muted mt-1">
+              Password must be at least 6 characters, and contain uppercase, lowercase, and a number.
+            </p>
+          </div>
+
+          {/* Confirm Password */}
+          <div className="space-y-1 block group">
+            <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">Confirm New Password</span>
+            <div className="relative">
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                className="input-field password-toggle-field w-full"
+                disabled={isUpdating}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              >
+                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button type="submit" isLoading={isUpdating}>
+              Update Password
+            </Button>
+          </div>
+        </form>
+      </div>
 
       {/* Account Actions */}
-      {!isReadOnly && (
-        <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8 shadow-xl">
-          <div className="border-b border-border pb-4">
-            <h2 className="text-xl font-semibold text-text-primary">Account Actions</h2>
-            <p className="text-sm text-text-muted mt-1">Manage your session and account access.</p>
-          </div>
-          <div className="flex items-center justify-between p-4 bg-surface-divider/50 border border-border/60 rounded-xl">
-            <div className="space-y-1 pr-4">
-              <span className="text-sm font-bold text-text-primary block">Sign Out</span>
-              <span className="text-xs text-text-secondary">Securely logout from your account and end the current session.</span>
-            </div>
-            <button
-              id="owner-settings-logout-btn"
-              type="button"
-              onClick={() => setShowLogoutModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border"
-              style={{
-                color: '#ef4444',
-                borderColor: 'rgba(239,68,68,0.3)',
-                background: 'rgba(239,68,68,0.06)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
-                e.currentTarget.style.borderColor = 'rgba(239,68,68,0.5)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
-                e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
-              }}
-            >
-              <LogOut size={16} />
-              Logout
-            </button>
-          </div>
+      <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8 shadow-xl">
+        <div className="border-b border-border pb-4">
+          <h2 className="text-xl font-semibold text-text-primary">Account Actions</h2>
+          <p className="text-sm text-text-muted mt-1">Manage your session and account access.</p>
         </div>
-      )}
+        <div className="flex items-center justify-between p-4 bg-surface-divider/50 border border-border/60 rounded-xl">
+          <div className="space-y-1 pr-4">
+            <span className="text-sm font-bold text-text-primary block">Sign Out</span>
+            <span className="text-xs text-text-secondary">Securely logout from your account and end the current session.</span>
+          </div>
+          <button
+            id="owner-settings-logout-btn"
+            type="button"
+            onClick={() => setShowLogoutModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border"
+            style={{
+              color: '#ef4444',
+              borderColor: 'rgba(239,68,68,0.3)',
+              background: 'rgba(239,68,68,0.06)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
+              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(239,68,68,0.06)';
+              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+            }}
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
+      </div>
 
       {/* Logout Confirmation Modal */}
       <LogoutModal

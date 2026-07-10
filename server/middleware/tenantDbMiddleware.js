@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const tenantDbMiddleware = async (req, res, next) => {
   try {
     let dbName = null;
-    let gymId = (req.headers && req.headers['x-gym-id']) || (req.query && req.query.gymId) || (req.body && req.body.gymId) || (req.params && req.params.gymId);
+    let gymId = (req.query && req.query.gymId) || (req.body && req.body.gymId) || (req.params && req.params.gymId);
 
     // Try to extract dbName or gymId from Bearer token
     if (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -40,13 +40,13 @@ const tenantDbMiddleware = async (req, res, next) => {
       req.tenantDb = conn;
 
       const models = {
-        Client: conn.models.Client || conn.model('Client', require('../models/Client').schema),
-        Plan: conn.models.Plan || conn.model('Plan', require('../models/Plan').schema),
-        Payment: conn.models.Payment || conn.model('Payment', require('../models/Payment').schema),
-        Expense: conn.models.Expense || conn.model('Expense', require('../models/Expense').schema),
-        Feedback: conn.models.Feedback || conn.model('Feedback', require('../models/Feedback').schema),
-        Counter: conn.models.Counter || conn.model('Counter', require('../models/Counter').schema),
-        Setting: conn.models.Setting || conn.model('Setting', require('../models/Setting').schema)
+        Client: conn.model('Client'),
+        Plan: conn.model('Plan'),
+        Payment: conn.model('Payment'),
+        Expense: conn.model('Expense'),
+        Feedback: conn.model('Feedback'),
+        Counter: conn.model('Counter'),
+        Setting: conn.model('Setting')
       };
 
       req.tenantModels = models;

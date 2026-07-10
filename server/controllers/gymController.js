@@ -9,13 +9,8 @@ const Expense = require('../models/Expense');
 // @access  Private (Owner)
 exports.getGymProfile = async (req, res, next) => {
   try {
-    let gym;
-    if (req.userRole === 'superadmin' && req.user.gymId) {
-      gym = await Gym.findOne({ gymId: req.user.gymId }).select('-password');
-    } else {
-      const gymStrId = req.user._id.toString();
-      gym = await Gym.findById(gymStrId).select('-password');
-    }
+    const gymStrId = req.user._id.toString();
+    const gym = await Gym.findById(gymStrId).select('-password');
     if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
 
     const owner = gym.owner ? {
