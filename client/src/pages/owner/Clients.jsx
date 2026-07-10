@@ -233,6 +233,14 @@ const Clients = () => {
 
   return (
     <div className="p-4 md:p-8 md:pt-10">
+      <style>{`
+        @media (min-width: 768px) {
+          .md-header-center-custom {
+            justify-self: center !important;
+            text-align: center !important;
+          }
+        }
+      `}</style>
 
         {/* ── Page Header ── */}
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
@@ -367,19 +375,25 @@ const Clients = () => {
         {/* ── Client list ── */}
         {loading ? (
           <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
-            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider">
-              <div>Client Info</div><div>Mobile No</div><div>Plan</div><div>Duration</div><div>Days Left</div><div>Status</div><div className="text-right">Actions</div>
+            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider">
+              <div>Client Info</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Mobile No</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Plan</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Duration</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Days Left</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Status</div>
+              <div className="text-right">Actions</div>
             </div>
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-border/50">
                 <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
-                <div className="flex-1 grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 items-center">
+                <div className="flex-1 grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_2fr] gap-2 items-center">
                   <div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div>
-                  <div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div>
-                  <div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div>
-                  <div className="h-4 w-28 bg-surface-divider rounded animate-pulse"></div>
-                  <div className="h-4 w-10 bg-surface-divider rounded animate-pulse"></div>
-                  <div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse"></div>
+                  <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                  <div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                  <div className="h-4 w-28 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                  <div className="h-4 w-10 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                  <div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div>
                   <div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
                 </div>
               </div>
@@ -394,13 +408,13 @@ const Clients = () => {
         ) : (
           <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
             {/* Table header */}
-            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
               <div>Client Info</div>
-              <div>Mobile No</div>
-              <div>Plan</div>
-              <div>Duration</div>
-              <div>Days Left</div>
-              <div>Status</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Mobile No</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Plan</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Duration</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Days Left</div>
+              <div style={{ justifySelf: 'center', textAlign: 'center' }}>Status</div>
               <div className="text-right">Actions</div>
             </div>
             <div className="flex flex-col">

@@ -438,7 +438,7 @@ async function seed() {
         const payment = await PaymentModel.create({
           paymentId,
           gymId: gym.gymId,
-          clientId: clientId,
+          clientId: client._id.toString(),
           clientName: fullName,
           planId: plan._id,
           planName: plan.name,
@@ -453,7 +453,7 @@ async function seed() {
           startDate,
           dueDate: paymentStatus !== 'paid' ? addDays(startDate, 15) : null,
           isPlanActivated: true,
-          idempotencyKey: `seed-${gym.gymId}-${clientId}-${paymentId}`,
+          idempotencyKey: `seed-${gym.gymId}-${client._id.toString()}-${paymentId}`,
         });
 
         // Link payment to client

@@ -277,7 +277,31 @@ const Transactions = () => {
                             <Plus size={18} /> Record Payment
                         </Button>
                     )}
+        <div className="p-4 md:p-8 md:pt-10 space-y-8">
+            <style>{`
+                @media (min-width: 768px) {
+                    .text-center {
+                        text-align: center !important;
+                    }
+                    .justify-center {
+                        justify-content: center !important;
+                    }
+                    .mx-auto {
+                        margin-left: auto !important;
+                        margin-right: auto !important;
+                    }
+                }
+            `}</style>
+            
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients Payment</h1>
+                    <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
                 </div>
+                <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                    <Plus size={18} /> Record Payment
+                </Button>
+            </div>
 
                 <div className="bg-surface-divider/80 rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
                     <div className="overflow-x-auto">
@@ -286,12 +310,12 @@ const Transactions = () => {
                                 <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
                                     <th className="p-5">Receipt Info</th>
                                     <th className="p-5">Client Info</th>
-                                    <th className="p-5">Plan</th>
-                                    <th className="p-5">Mode</th>
-                                    <th className="p-5 text-right">Plan Amount</th>
-                                    <th className="p-5 text-right">Paid Now</th>
-                                    <th className="p-5 text-right">Total Paid</th>
-                                    <th className="p-5 text-right">Remaining Balance</th>
+                                    <th className="p-5 text-center">Plan</th>
+                                    <th className="p-5 text-center">Mode</th>
+                                    <th className="p-5 text-center">Plan Amount</th>
+                                    <th className="p-5 text-center">Paid Now</th>
+                                    <th className="p-5 text-center">Total Paid</th>
+                                    <th className="p-5 text-center">Remaining Balance</th>
                                     <th className="p-5 text-center">Status</th>
                                     <th className="p-5 text-center">Bill</th>
                                     <th className="p-5 text-center">Actions</th>
@@ -303,18 +327,19 @@ const Transactions = () => {
                                         <tr key={i} className="border-b border-border/50">
                                             <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-20 bg-surface-divider rounded animate-pulse"></div></td>
                                             <td className="p-5"><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-12 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="flex gap-2 justify-center"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div></td>
+                                            <td className="p-5 text-center"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="h-4 w-12 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse mx-auto"></div></td>
+                                            <td className="p-5 text-center"><div className="flex gap-2 justify-center"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div></td>
                                         </tr>
                                     ))
                                 ) : payments.length === 0 ? (
-                                    <tr><td colSpan="10" className="text-center py-20 text-text-muted">No payment records found.</td></tr>
+                                    <tr><td colSpan="11" className="text-center py-20 text-text-muted">No payment records found.</td></tr>
                                 ) : (
                                     paginatedPayments.map(payment => (
                                         <tr key={payment._id} className="hover:bg-surface-divider/80 transition-all group">
@@ -326,7 +351,7 @@ const Transactions = () => {
                                                 <p className="font-bold text-text-primary text-sm">{payment.clientName}</p>
                                                 <p className="text-[10px] font-black text-primary uppercase tracking-tighter">{getClientDisplayId(payment.clientId)}</p>
                                             </td>
-                                            <td className="p-5">
+                                            <td className="p-5 text-center">
                                                 <span className="text-text-secondary text-xs font-medium block">{payment.planName}</span>
                                                 {payment.startDate && (() => {
                                                     const period = getBillingPeriod(payment);
@@ -337,15 +362,15 @@ const Transactions = () => {
                                                     ) : null;
                                                 })()}
                                             </td>
-                                            <td className="p-5">
+                                            <td className="p-5 text-center">
                                                 <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${payment.paymentMethod === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
                                                     {payment.paymentMethod || payment.mode || 'cash'}
                                                 </span>
                                             </td>
-                                            <td className="p-5 text-right text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
-                                            <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
-                                            <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
-                                            <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
+                                            <td className="p-5 text-center text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
+                                            <td className="p-5 text-center text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
+                                            <td className="p-5 text-center text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
+                                            <td className="p-5 text-center text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
                                             <td className="p-5 text-center">
                                                 {getStatusBadge(payment)}
                                                 {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
@@ -357,13 +382,13 @@ const Transactions = () => {
                                             <td className="p-5 text-center">
                                                 <button
                                                     onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
-                                                    className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
+                                                    className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all mx-auto block"
                                                     title="View Bill"
                                                 >
                                                     <FileText size={18} />
                                                 </button>
                                             </td>
-                                            <td className="p-5">
+                                            <td className="p-5 text-center">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => {
@@ -375,7 +400,6 @@ const Transactions = () => {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
- 
                                                 </div>
                                             </td>
                                         </tr>

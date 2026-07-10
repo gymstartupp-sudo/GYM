@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
+import ConfirmModal from '../../components/ConfirmModal';
 import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react';
 
 const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '', disabled = false }) => {
@@ -514,6 +515,7 @@ const Plans = () => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [detailPlan, setDetailPlan] = useState(null);
+  const [deletePlanId, setDeletePlanId] = useState(null);
 
   const fetchPlans = async () => {
     try {
@@ -532,15 +534,20 @@ const Plans = () => {
   const handleCreateNew = () => { setEditingPlan(null); setShowFormModal(true); };
   const handleFormSuccess = () => { setShowFormModal(false); setEditingPlan(null); fetchPlans(); };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to deactivate this plan?')) {
-      try {
-        await api.delete(`/plan/${id}`);
-        toast.success('Plan removed');
-        fetchPlans();
-      } catch {
-        toast.error('Failed to remove plan');
-      }
+  const handleDelete = (id) => {
+    setDeletePlanId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletePlanId) return;
+    try {
+      await api.delete(`/plan/${deletePlanId}`);
+      toast.success('Plan removed');
+      fetchPlans();
+    } catch {
+      toast.error('Failed to remove plan');
+    } finally {
+      setDeletePlanId(null);
     }
   };
 
@@ -596,6 +603,16 @@ const Plans = () => {
           onClose={() => setDetailPlan(null)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deletePlanId}
+        onCancel={() => setDeletePlanId(null)}
+        onConfirm={confirmDelete}
+        title="Deactivate Plan"
+        message={`Are you sure you want to deactivate the plan "${plans.find(p => p._id === deletePlanId)?.name || ''}"?`}
+        confirmLabel="Deactivate"
+        danger
+      />
     </div>
   );
 };

@@ -91,6 +91,14 @@ const Expired = () => {
 
     return (
         <div className="p-8 pt-10">
+            <style>{`
+                @media (min-width: 768px) {
+                    .md-header-center-custom {
+                        justify-self: center !important;
+                        text-align: center !important;
+                    }
+                }
+            `}</style>
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                         <History className="text-text-secondary" size={32} /> Expired Memberships
@@ -109,13 +117,13 @@ const Expired = () => {
                 ) : (
                     <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {/* List Header */}
-                        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-hover/50 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+                        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-hover/50 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
                             <div>Client Info</div>
-                            <div>Mobile</div>
-                            <div>Last Plan</div>
-                            <div>Ended On</div>
-                            <div>Days Ago</div>
-                            <div>Status</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Mobile</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Last Plan</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Ended On</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Days Ago</div>
+                            <div style={{ justifySelf: 'center', textAlign: 'center' }}>Status</div>
                             <div className="text-right pr-4">Actions</div>
                         </div>
 
