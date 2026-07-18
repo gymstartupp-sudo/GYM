@@ -524,7 +524,7 @@ const Transactions = () => {
                                                     {getInvoicePeriod(selectedPayment)}
                                                 </td>
                                                 <td className="p-3 text-right align-top font-black text-gray-900 text-sm">
-                                                    ₹{(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}
+                                                    ₹{Number(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -546,20 +546,20 @@ const Transactions = () => {
                                 <div className="space-y-1 text-xs">
                                     <div className="flex justify-between py-0.5">
                                         <span className="text-gray-500 font-medium">Plan Amount</span>
-                                        <span className="font-bold text-gray-900">₹{(selectedPayment.invoiceAmount || selectedPayment.amount || 0).toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900">₹{Number(selectedPayment.invoiceAmount || selectedPayment.amount || 0).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between py-0.5">
                                         <span className="text-gray-500 font-medium">Paid Now</span>
-                                        <span className="font-bold text-blue-600">₹{(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}</span>
+                                        <span className="font-bold text-blue-600">₹{Number(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between py-0.5">
                                         <span className="text-gray-500 font-medium">Total Paid</span>
-                                        <span className="font-bold text-emerald-600">₹{(selectedPayment.totalPaid || selectedPayment.paidAmount || 0).toFixed(2)}</span>
+                                        <span className="font-bold text-emerald-600">₹{Number(selectedPayment.totalPaid || selectedPayment.paidAmount || 0).toFixed(2)}</span>
                                     </div>
                                     <div className="border-t border-gray-200 my-1"></div>
                                     <div className="flex justify-between py-1 items-baseline">
                                         <span className="text-gray-900 font-black text-sm">Balance Due</span>
-                                        <span className="font-black text-rose-600 text-sm">₹{(selectedPayment.remainingBalance !== undefined ? selectedPayment.remainingBalance : (selectedPayment.amount - (selectedPayment.paidAmount || 0))).toFixed(2)}</span>
+                                        <span className="font-black text-rose-600 text-sm">₹{Number(selectedPayment.remainingBalance !== undefined && selectedPayment.remainingBalance !== null ? selectedPayment.remainingBalance : (selectedPayment.amount - (selectedPayment.paidAmount || 0))).toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>

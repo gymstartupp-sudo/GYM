@@ -39,9 +39,9 @@ const protect = async (req, res, next) => {
           }
         }
         role = 'owner';
-      } else if (decoded.role === 'superadmin') {
+      } else if (decoded.role === 'superadmin' || decoded.role === 'developer') {
         user = { _id: decoded.id };
-        role = 'superadmin';
+        role = decoded.role;
         
         // Populate target gym details if viewing a gym context
         const gymIdHeader = (req.headers && req.headers['x-gym-id']) || (req.query && req.query.gymId) || (req.body && req.body.gymId);
@@ -60,14 +60,14 @@ const protect = async (req, res, next) => {
          return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
       }
 
-      // Block write operations on gym-specific APIs for Super Admin
-      if (role === 'superadmin' && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+      // Block write operations on gym-specific APIs for Super Admin / Developer
+      if ((role === 'superadmin' || role === 'developer') && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
         const isAllowedAdminPath = req.originalUrl.startsWith('/api/admin') || 
                                    req.originalUrl.startsWith('/api/issues') || 
                                    req.originalUrl.startsWith('/api/trigger') || 
                                    req.originalUrl.startsWith('/api/auth');
         if (!isAllowedAdminPath) {
-          return res.status(403).json({ success: false, message: 'Super Admin is in read-only mode for gym data' });
+          return res.status(403).json({ success: false, message: 'Super Admin / Developer is in read-only mode for gym data' });
         }
       }
 

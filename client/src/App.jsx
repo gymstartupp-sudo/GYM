@@ -46,6 +46,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminGyms = lazy(() => import('./pages/admin/AdminGyms'));
 const AdminClients = lazy(() => import('./pages/admin/AdminClients'));
 const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
+const AdminReminderTesting = lazy(() => import('./pages/admin/AdminReminderTesting'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -131,11 +132,12 @@ const AppContent = () => {
               <Route path="/client/renew/:clientId" element={<RenewalRedirect />} />
               
               {/* Admin Routes */}
-              <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/admin/gyms" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminGyms /></ProtectedRoute>} />
-              <Route path="/admin/gyms/:gymId/view" element={<ProtectedRoute allowedRoles={['superadmin']}><GymViewRedirect /></ProtectedRoute>} />
-              <Route path="/admin/gyms/:gymId/clients" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminClients /></ProtectedRoute>} />
-              <Route path="/admin/issues" element={<ProtectedRoute allowedRoles={['superadmin']}><AdminIssues /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/gyms" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminGyms /></ProtectedRoute>} />
+              <Route path="/admin/gyms/:gymId/view" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><GymViewRedirect /></ProtectedRoute>} />
+              <Route path="/admin/gyms/:gymId/clients" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminClients /></ProtectedRoute>} />
+              <Route path="/admin/issues" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminIssues /></ProtectedRoute>} />
+              <Route path="/admin/reminder-testing" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminReminderTesting /></ProtectedRoute>} />
 
             </Routes>
         </Suspense>

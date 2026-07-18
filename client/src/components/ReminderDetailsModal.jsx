@@ -145,198 +145,200 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
               <div className="relative pl-5">
                 <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-border" />
 
-              {/* Step 1: Partial Payment Created */}
-              <div className="relative flex items-start gap-3 mb-5">
-                <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
-                  <Check size={9} strokeWidth={3} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-text-primary">Partial Payment Created</p>
-                    <span className="text-xs text-text-secondary font-medium">{formatDate(duesStartDate)}</span>
+                {/* Step 1: Partial Payment Created */}
+                <div className="relative flex items-start gap-3 mb-5">
+                  <div className="relative z-10 w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30 shrink-0">
+                    <Check size={9} strokeWidth={3} />
                   </div>
-                  <p className="text-xs text-text-muted mt-1">
-                    {hasDues ? (
-                      <>Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> | Remaining: <span className="text-primary font-bold">₹{duesBalance}</span> | Due: <span className="text-amber-500 font-medium">{formatDate(duesDueDate)}</span></>
-                    ) : (
-                      <>Originally Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> | Due: <span className="text-amber-500 font-medium">{formatDate(duesDueDate)}</span></>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 2: Overdue Reminder 1 (3 days before due date) */}
-              <div className="relative flex items-start gap-3 mb-5">
-                <div className="relative z-10 shrink-0">
-                  {getStepStatus(client.overdueReminders?.reminder1) === 'sent' ? (
-                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
-                      <Check size={9} strokeWidth={3} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-text-primary">Partial Payment Created</p>
+                      <span className="text-xs text-text-secondary font-medium">{formatDate(duesStartDate)}</span>
                     </div>
-                  ) : getStepStatus(client.overdueReminders?.reminder1) === 'failed' ? (
-                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
-                      <AlertTriangle size={9} strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
-                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-text-primary">Overdue Reminder 1</p>
-                    <StatusBadge status={getStepStatus(client.overdueReminders?.reminder1)} />
-                  </div>
-                  {getStepStatus(client.overdueReminders?.reminder1) === 'sent' && (
                     <p className="text-xs text-text-muted mt-1">
-                      {formatDate(client.overdueReminders.reminder1.sentAt)} {fmt(client.overdueReminders.reminder1.sentAt)?.time}
+                      {hasDues ? (
+                        <>Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> | Remaining: <span className="text-primary font-bold">₹{duesBalance}</span> | Due: <span className="text-amber-500 font-medium">{formatDate(duesDueDate)}</span></>
+                      ) : (
+                        <>Originally Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> | Due: <span className="text-amber-500 font-medium">{formatDate(duesDueDate)}</span></>
+                      )}
                     </p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder1) === 'failed' && (
-                    <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder1.error || 'Delivery failed'}</p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder1) === 'skipped' && (
-                    <p className="text-xs text-text-muted mt-1 italic">Not required (Dues were cleared)</p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder1) === 'none' && (
-                    <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered 3 days before due date)</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Step 3: Overdue Reminder 2 (on due date) */}
-              <div className="relative flex items-start gap-3 mb-5">
-                <div className="relative z-10 shrink-0">
-                  {getStepStatus(client.overdueReminders?.reminder2) === 'sent' ? (
-                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
-                      <Check size={9} strokeWidth={3} />
-                    </div>
-                  ) : getStepStatus(client.overdueReminders?.reminder2) === 'failed' ? (
-                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
-                      <AlertTriangle size={9} strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
-                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-text-primary">Overdue Reminder 2</p>
-                    <StatusBadge status={getStepStatus(client.overdueReminders?.reminder2)} />
                   </div>
-                  {getStepStatus(client.overdueReminders?.reminder2) === 'sent' && (
-                    <p className="text-xs text-text-muted mt-1">
-                      {formatDate(client.overdueReminders.reminder2.sentAt)} {fmt(client.overdueReminders.reminder2.sentAt)?.time}
-                    </p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder2) === 'failed' && (
-                    <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder2.error || 'Delivery failed'}</p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder2) === 'skipped' && (
-                    <p className="text-xs text-text-muted mt-1 italic">Not required (Dues were cleared)</p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder2) === 'none' && (
-                    <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered on due date)</p>
-                  )}
                 </div>
-              </div>
 
-              {/* Step 4: Overdue Reminder 3 (3 days after due date) */}
-              <div className="relative flex items-start gap-3 mb-5">
-                <div className="relative z-10 shrink-0">
-                  {getStepStatus(client.overdueReminders?.reminder3) === 'sent' ? (
-                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
-                      <Check size={9} strokeWidth={3} />
-                    </div>
-                  ) : getStepStatus(client.overdueReminders?.reminder3) === 'failed' ? (
-                    <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
-                      <AlertTriangle size={9} strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
-                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-text-primary">Overdue Reminder 3</p>
-                    <StatusBadge status={getStepStatus(client.overdueReminders?.reminder3)} />
-                  </div>
-                  {getStepStatus(client.overdueReminders?.reminder3) === 'sent' && (
-                    <p className="text-xs text-text-muted mt-1">
-                      {formatDate(client.overdueReminders.reminder3.sentAt)} {fmt(client.overdueReminders.reminder3.sentAt)?.time}
-                    </p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder3) === 'failed' && (
-                    <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder3.error || 'Delivery failed'}</p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder3) === 'skipped' && (
-                    <p className="text-xs text-text-muted mt-1 italic">Not required (Dues were cleared)</p>
-                  )}
-                  {getStepStatus(client.overdueReminders?.reminder3) === 'none' && (
-                    <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered 3 days after due date)</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Step 5: Dues Payment Status */}
-              <div className="relative flex items-start gap-3">
-                <div className="relative z-10 shrink-0">
-                  {client.overdueReminders?.workflowCompleted ? (
-                    <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
-                      <Check size={9} strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
-                      <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-text-primary">
-                      {client.overdueReminders?.workflowCompleted ? 'Dues Cleared' : 'Dues Outstanding'}
-                    </p>
-                    {client.overdueReminders?.workflowCompleted ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/20">
-                        Paid
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
-                        Unpaid
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-text-muted mt-1">
-                    {client.overdueReminders?.workflowCompleted 
-                      ? 'The pending balance was paid in full.' 
-                      : `Remaining balance of ₹${duesBalance} is still outstanding.`}
-                  </p>
-                </div>
-              </div>
-
-              {/* Manual Reminders Section */}
-              {client.overdueReminders?.manualReminders?.length > 0 && (
-                <div className="mt-6 border-t border-border pt-4">
-                  <h4 className="text-[10px] font-black uppercase text-text-muted mb-3 tracking-widest">Manual Reminders History</h4>
-                  <div className="space-y-2">
-                    {client.overdueReminders.manualReminders.map((r, i) => (
-                      <div key={i} className="flex justify-between items-center bg-surface-divider/40 p-2.5 rounded-lg border border-border/50 text-xs">
-                        <div className="flex items-center gap-2">
-                          <StatusBadge status={r.status} />
-                          {r.error && <span className="text-[10px] text-red-400 font-medium ml-1">{r.error}</span>}
-                        </div>
-                        <span className="text-text-muted">{formatDate(r.sentAt)} {fmt(r.sentAt)?.time}</span>
+                {/* Step 2: Overdue Reminder 1 (3 days before due date) */}
+                <div className="relative flex items-start gap-3 mb-5">
+                  <div className="relative z-10 shrink-0">
+                    {getStepStatus(client.overdueReminders?.reminder1) === 'sent' ? (
+                      <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                        <Check size={9} strokeWidth={3} />
                       </div>
-                    ))}
+                    ) : getStepStatus(client.overdueReminders?.reminder1) === 'failed' ? (
+                      <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                        <AlertTriangle size={9} strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                        <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-text-primary">Overdue Reminder 1</p>
+                      <StatusBadge status={getStepStatus(client.overdueReminders?.reminder1)} />
+                    </div>
+                    {getStepStatus(client.overdueReminders?.reminder1) === 'sent' && (
+                      <p className="text-xs text-text-muted mt-1">
+                        {formatDate(client.overdueReminders.reminder1.sentAt)} {fmt(client.overdueReminders.reminder1.sentAt)?.time}
+                      </p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder1) === 'failed' && (
+                      <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder1.error || 'Delivery failed'}</p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder1) === 'skipped' && (
+                      <p className="text-xs text-text-muted mt-1 italic">Not required (Dues were cleared)</p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder1) === 'none' && (
+                      <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered 3 days before due date)</p>
+                    )}
                   </div>
                 </div>
-              )}
+
+                {/* Step 3: Overdue Reminder 2 (on due date) */}
+                <div className="relative flex items-start gap-3 mb-5">
+                  <div className="relative z-10 shrink-0">
+                    {getStepStatus(client.overdueReminders?.reminder2) === 'sent' ? (
+                      <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                        <Check size={9} strokeWidth={3} />
+                      </div>
+                    ) : getStepStatus(client.overdueReminders?.reminder2) === 'failed' ? (
+                      <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                        <AlertTriangle size={9} strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                        <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-text-primary">Overdue Reminder 2</p>
+                      <StatusBadge status={getStepStatus(client.overdueReminders?.reminder2)} />
+                    </div>
+                    {getStepStatus(client.overdueReminders?.reminder2) === 'sent' && (
+                      <p className="text-xs text-text-muted mt-1">
+                        {formatDate(client.overdueReminders.reminder2.sentAt)} {fmt(client.overdueReminders.reminder2.sentAt)?.time}
+                      </p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder2) === 'failed' && (
+                      <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder2.error || 'Delivery failed'}</p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder2) === 'skipped' && (
+                      <p className="text-xs text-text-muted mt-1 italic">Not required (Dues were cleared)</p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder2) === 'none' && (
+                      <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered on due date)</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Step 4: Overdue Reminder 3 (3 days after due date) */}
+                <div className="relative flex items-start gap-3 mb-5">
+                  <div className="relative z-10 shrink-0">
+                    {getStepStatus(client.overdueReminders?.reminder3) === 'sent' ? (
+                      <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                        <Check size={9} strokeWidth={3} />
+                      </div>
+                    ) : getStepStatus(client.overdueReminders?.reminder3) === 'failed' ? (
+                      <div className="w-4 h-4 rounded-full bg-danger/20 text-danger flex items-center justify-center border border-danger/30">
+                        <AlertTriangle size={9} strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                        <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-text-primary">Overdue Reminder 3</p>
+                      <StatusBadge status={getStepStatus(client.overdueReminders?.reminder3)} />
+                    </div>
+                    {getStepStatus(client.overdueReminders?.reminder3) === 'sent' && (
+                      <p className="text-xs text-text-muted mt-1">
+                        {formatDate(client.overdueReminders.reminder3.sentAt)} {fmt(client.overdueReminders.reminder3.sentAt)?.time}
+                      </p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder3) === 'failed' && (
+                      <p className="text-xs text-danger mt-1">{client.overdueReminders.reminder3.error || 'Delivery failed'}</p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder3) === 'skipped' && (
+                      <p className="text-xs text-text-muted mt-1 italic">Not required (Dues were cleared)</p>
+                    )}
+                    {getStepStatus(client.overdueReminders?.reminder3) === 'none' && (
+                      <p className="text-xs text-text-muted mt-1 italic">Pending (Triggered 3 days after due date)</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Step 5: Dues Payment Status */}
+                <div className="relative flex items-start gap-3">
+                  <div className="relative z-10 shrink-0">
+                    {client.overdueReminders?.workflowCompleted ? (
+                      <div className="w-4 h-4 rounded-full bg-success/20 text-success flex items-center justify-center border border-success/30">
+                        <Check size={9} strokeWidth={3} />
+                      </div>
+                    ) : (
+                      <div className="w-4 h-4 rounded-full border-2 border-text-muted/30 flex items-center justify-center bg-surface-divider">
+                        <div className="w-1.5 h-1.5 rounded-full bg-text-muted/30" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-text-primary">
+                        {client.overdueReminders?.workflowCompleted ? 'Dues Cleared' : 'Dues Outstanding'}
+                      </p>
+                      {client.overdueReminders?.workflowCompleted ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/15 text-success border border-success/20">
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                          Unpaid
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-text-muted mt-1">
+                      {client.overdueReminders?.workflowCompleted
+                        ? 'The pending balance was paid in full.'
+                        : `Remaining balance of ₹${duesBalance} is still outstanding.`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Manual Reminders Section */}
+                {client.overdueReminders?.manualReminders?.filter(r => r.executionSource === 'Manual Reminder').length > 0 && (
+                  <div className="mt-6 border-t border-border pt-4">
+                    <h4 className="text-[10px] font-black uppercase text-text-muted mb-3 tracking-widest">Manual Reminders History</h4>
+                    <div className="space-y-2">
+                      {client.overdueReminders.manualReminders
+                        .filter(r => r.executionSource === 'Manual Reminder')
+                        .map((r, i) => (
+                          <div key={i} className="flex justify-between items-center bg-surface-divider/40 p-2.5 rounded-lg border border-border/50 text-xs">
+                            <div className="flex items-center gap-2">
+                              <StatusBadge status={r.status} />
+                              {r.error && <span className="text-[10px] text-red-400 font-medium ml-1">{r.error}</span>}
+                            </div>
+                            <span className="text-text-muted">{formatDate(r.sentAt)} {fmt(r.sentAt)?.time}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
           )}
 
           {/* Standard Membership Expiry Timeline */}
@@ -459,9 +461,9 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
                   )}
                 </div>
               </div>
-              </div>
             </div>
           </div>
+        </div>
       </div>
     </div>,
     document.body
