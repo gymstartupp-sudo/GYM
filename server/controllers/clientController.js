@@ -4,7 +4,7 @@ const Payment = require('../models/Payment');
 const { generateClientId, generatePaymentId } = require('../utils/generateId');
 const Plan = require('../models/Plan');
 const { buildMembershipWindow } = require('../utils/membership');
-const sendWhatsApp = require('../utils/sendWhatsApp');
+const metaWhatsAppService = require('../services/metaWhatsAppService');
 
 // @desc    Get all clients for gym
 // @route   GET /api/client
@@ -757,7 +757,17 @@ Please clear the pending balance as soon as possible to continue your membership
 
 Thank you.`;
 
-    const result = await sendWhatsApp({ phone, message });
+    const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${client.clientId}?balance=true`;
+    const result = await metaWhatsAppService.sendDueReminder({
+      phone,
+      clientName,
+      pendingAmount: balance,
+      dueDate,
+      renewalLink: paymentLink,
+      clientId: client.clientId,
+      gymId: gym?.gymId,
+      stage: 3
+    });
 
     // Initialize overdueReminders if needed
     if (!client.overdueReminders) {
@@ -773,11 +783,18 @@ Thank you.`;
       client.overdueReminders.manualReminders = [];
     }
 
+    const templateName = process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder';
+
     if (result && result.success) {
       client.overdueReminders.manualReminders.push({
         sentAt: new Date(),
         status: 'sent',
-        error: null
+        error: null,
+        reminderType: 'Due Reminder 3',
+        templateName,
+        executionSource: 'Manual Reminder',
+        messageId: result.messageId,
+        sentBy: 'Gym Owner'
       });
       await client.save();
       res.status(200).json({ success: true, message: 'Reminder sent successfully' });
@@ -785,7 +802,12 @@ Thank you.`;
       client.overdueReminders.manualReminders.push({
         sentAt: new Date(),
         status: 'failed',
-        error: result?.error || 'Unknown error'
+        error: result?.error || 'Unknown error',
+        reminderType: 'Due Reminder 3',
+        templateName,
+        executionSource: 'Manual Reminder',
+        messageId: null,
+        sentBy: 'Gym Owner'
       });
       await client.save();
       res.status(500).json({ success: false, message: 'Failed to send reminder', error: result?.error });

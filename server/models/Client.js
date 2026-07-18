@@ -83,7 +83,12 @@ const clientSchema = new mongoose.Schema({
     manualReminders: [{
       sentAt: { type: Date },
       status: { type: String, enum: ['sent', 'failed'] },
-      error: { type: String, default: null }
+      error: { type: String, default: null },
+      reminderType: { type: String },
+      templateName: { type: String },
+      executionSource: { type: String, enum: ['Automatic Cron', 'Manual Trigger', 'Manual Reminder'] },
+      messageId: { type: String },
+      sentBy: { type: String }
     }],
     workflowCompleted: { type: Boolean, default: false },
     duesClearedAt: { type: Date, default: null }

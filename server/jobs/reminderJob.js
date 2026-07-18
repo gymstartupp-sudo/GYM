@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const Client = require('../models/Client');
 const Gym = require('../models/Gym');
-const sendWhatsApp = require('../utils/sendWhatsApp');
+const metaWhatsAppService = require('../services/metaWhatsAppService');
 const { syncClientStatus } = require('../utils/syncStatus');
 const { getTenantConnection } = require('../utils/connectionManager');
 const { runWithTenantContext } = require('../utils/tenantContext');
@@ -27,9 +27,82 @@ const getValidWhatsAppNumber = (client) => {
   return null;
 };
 
+const sendSecondaryDueReminder = async (updatedClient, formattedWhatsApp, gymId, executionSource) => {
+  const activeMembership = [...(updatedClient.memberships || [])]
+    .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+    .find(m => (m.finalPrice - m.totalPaid) > 0);
+
+  if (!activeMembership || !activeMembership.dueDate) return;
+
+  const remainingBalance = (activeMembership.finalPrice || 0) - (activeMembership.totalPaid || 0);
+  if (remainingBalance <= 0) return;
+
+  const dueDateString = new Date(activeMembership.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-');
+  const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
+
+  const dueResult = await metaWhatsAppService.sendDueReminder({
+    phone: formattedWhatsApp,
+    clientName: updatedClient.personalInfo.name,
+    pendingAmount: remainingBalance,
+    dueDate: dueDateString,
+    renewalLink: paymentLink,
+    clientId: updatedClient.clientId,
+    gymId: gymId,
+    stage: 3
+  });
+
+  if (!updatedClient.overdueReminders) {
+    updatedClient.overdueReminders = {};
+  }
+  if (!updatedClient.overdueReminders.manualReminders) {
+    updatedClient.overdueReminders.manualReminders = [];
+  }
+
+  if (dueResult && dueResult.success) {
+    updatedClient.overdueReminders.manualReminders.push({
+      sentAt: new Date(),
+      status: 'sent',
+      error: null,
+      reminderType: 'Due Reminder 3',
+      templateName: process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder',
+      executionSource: executionSource || 'Automatic Cron',
+      messageId: dueResult.messageId
+    });
+    if (!updatedClient.overdueReminders.reminder3) {
+      updatedClient.overdueReminders.reminder3 = {};
+    }
+    updatedClient.overdueReminders.reminder3.status = 'sent';
+    updatedClient.overdueReminders.reminder3.sentAt = new Date();
+    updatedClient.overdueReminders.reminder3.error = null;
+  } else {
+    updatedClient.overdueReminders.manualReminders.push({
+      sentAt: new Date(),
+      status: 'failed',
+      error: dueResult ? dueResult.error : 'Meta send error',
+      reminderType: 'Due Reminder 3',
+      templateName: process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder',
+      executionSource: executionSource || 'Automatic Cron',
+      messageId: null
+    });
+  }
+  await updatedClient.save();
+};
+
 // Reusable function to run the reminder checks
-const runReminders = async () => {
+const runReminders = async (options = {}) => {
   console.log('--- Starting WhatsApp Expiry Reminders Job ---');
+  const startTime = Date.now();
+  const stats = {
+    executionTime: new Date().toISOString(),
+    cronName: 'Membership Expiry Reminders',
+    processedClients: 0,
+    successfulMessages: 0,
+    failedMessages: 0,
+    skippedClients: 0,
+    errors: [],
+    durationMs: 0
+  };
+
   try {
     const gyms = await Gym.find({ isActive: true });
 
@@ -100,8 +173,10 @@ const runReminders = async () => {
 
             // Log Info placeholders
             let reminderType = 'None';
-            let twilioStatus = 'Skipped';
+            let twilioStatus = 'Skipped'; // Keep name to match existing state logic
             let failureReason = '';
+            let templateName = '';
+            let messageId = null;
 
             let remainingBalance = 0;
             if (updatedClient.paymentStatus === 'partial' || updatedClient.paymentStatus === 'overdue') {
@@ -119,6 +194,8 @@ const runReminders = async () => {
 
             if (daysLeft === 3) {
               reminderType = 'Expiring Soon';
+              templateName = process.env.META_TEMPLATE_EXPIRING_SOON || 'membership_expiring_soon';
+              stats.processedClients++;
               if (!cleanMobile) {
                 twilioStatus = 'Failed';
                 failureReason = 'Invalid/Dummy WhatsApp number';
@@ -128,22 +205,48 @@ const runReminders = async () => {
                 updatedClient.expiryReminderError = failureReason;
                 updatedClient.membership.expiryReminderSentAt = new Date();
                 updatedClient.expiryReminderSentAt = new Date();
+
+                // Save failed log to history
+                if (!updatedClient.overdueReminders) updatedClient.overdueReminders = {};
+                if (!updatedClient.overdueReminders.manualReminders) updatedClient.overdueReminders.manualReminders = [];
+                updatedClient.overdueReminders.manualReminders.push({
+                  sentAt: new Date(),
+                  status: 'failed',
+                  error: failureReason,
+                  reminderType,
+                  templateName,
+                  executionSource: options.executionSource || 'Automatic Cron',
+                  messageId: null
+                });
+
                 await updatedClient.save();
+                stats.failedMessages++;
+                stats.errors.push({ client: updatedClient.personalInfo.name, reminderType, error: failureReason });
               } else {
                 // Check duplicate flag
                 const isSent = updatedClient.membership.expiryReminderSent || updatedClient.expiryReminderSent;
                 if (isSent) {
                   twilioStatus = 'Skipped';
                   failureReason = 'Reminder already sent today (Duplicate Prevention)';
+                  stats.skippedClients++;
                 } else {
                   // Send Expiring Soon Reminder
-                  const msg = remainingBalance > 0
-                    ? `Hello ${updatedClient.personalInfo.name},\nYour membership will expire in 3 days.\nYou currently have a pending balance of ₹${remainingBalance}.\nPlease clear the pending balance and renew your membership before expiry.\nGym: ${updatedClient.gymName}`
-                    : `Dear ${updatedClient.personalInfo.name}, your membership plan is expiring soon. Please renew your plan. Gym Name: ${updatedClient.gymName}. Days Left: ${daysLeft}.`;
+                  const expiryDateString = updatedClient.membership.endDate
+                    ? new Date(updatedClient.membership.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')
+                    : 'N/A';
 
-                  const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
+                  const result = await metaWhatsAppService.sendExpiringSoonReminder({
+                    phone: formattedWhatsApp,
+                    clientName: updatedClient.personalInfo.name,
+                    gymName: updatedClient.gymName,
+                    expiryDate: expiryDateString,
+                    daysLeft: daysLeft,
+                    clientId: updatedClient.clientId,
+                    gymId: gym.gymId
+                  });
                   if (result && result.success) {
                     twilioStatus = 'Success';
+                    messageId = result.messageId;
                     updatedClient.membership.expiryReminderSent = true;
                     updatedClient.expiryReminderSent = true;
                     updatedClient.membership.expiryReminderStatus = 'sent';
@@ -152,65 +255,168 @@ const runReminders = async () => {
                     updatedClient.expiryReminderError = null;
                     updatedClient.membership.expiryReminderSentAt = new Date();
                     updatedClient.expiryReminderSentAt = new Date();
+
+                    // Save sent log to history
+                    if (!updatedClient.overdueReminders) updatedClient.overdueReminders = {};
+                    if (!updatedClient.overdueReminders.manualReminders) updatedClient.overdueReminders.manualReminders = [];
+                    updatedClient.overdueReminders.manualReminders.push({
+                      sentAt: new Date(),
+                      status: 'sent',
+                      error: null,
+                      reminderType,
+                      templateName,
+                      executionSource: options.executionSource || 'Automatic Cron',
+                      messageId
+                    });
+
                     await updatedClient.save();
+                    stats.successfulMessages++;
+
+                    // Send secondary due reminder if client has outstanding balance
+                    if (remainingBalance > 0) {
+                      await sendSecondaryDueReminder(updatedClient, formattedWhatsApp, gym.gymId, options.executionSource);
+                    }
                   } else {
                     twilioStatus = 'Failed';
-                    failureReason = result ? result.error : 'Twilio send error';
+                    failureReason = result ? result.error : 'Meta send error';
                     updatedClient.membership.expiryReminderStatus = 'failed';
                     updatedClient.expiryReminderStatus = 'failed';
                     updatedClient.membership.expiryReminderError = failureReason;
                     updatedClient.expiryReminderError = failureReason;
                     updatedClient.membership.expiryReminderSentAt = new Date();
                     updatedClient.expiryReminderSentAt = new Date();
+
+                    // Save failed log to history
+                    if (!updatedClient.overdueReminders) updatedClient.overdueReminders = {};
+                    if (!updatedClient.overdueReminders.manualReminders) updatedClient.overdueReminders.manualReminders = [];
+                    updatedClient.overdueReminders.manualReminders.push({
+                      sentAt: new Date(),
+                      status: 'failed',
+                      error: failureReason,
+                      reminderType,
+                      templateName,
+                      executionSource: options.executionSource || 'Automatic Cron',
+                      messageId: null
+                    });
+
                     await updatedClient.save();
+                    stats.failedMessages++;
+                    stats.errors.push({ client: updatedClient.personalInfo.name, reminderType, error: failureReason });
                   }
                 }
               }
             } else if (daysLeft <= -1) {
               reminderType = 'Expired';
+              templateName = process.env.META_TEMPLATE_EXPIRED || 'membership_expired';
+              stats.processedClients++;
               if (!cleanMobile) {
                 twilioStatus = 'Failed';
                 failureReason = 'Invalid/Dummy WhatsApp number';
                 updatedClient.membership.expiredReminderStatus = 'failed';
                 updatedClient.expiredReminderStatus = 'failed';
                 updatedClient.membership.expiredReminderError = failureReason;
-                updatedClient.expiredReminderError = failureReason;
+                updatedClient.expiryReminderError = failureReason;
+
+                // Save failed log to history
+                if (!updatedClient.overdueReminders) updatedClient.overdueReminders = {};
+                if (!updatedClient.overdueReminders.manualReminders) updatedClient.overdueReminders.manualReminders = [];
+                updatedClient.overdueReminders.manualReminders.push({
+                  sentAt: new Date(),
+                  status: 'failed',
+                  error: failureReason,
+                  reminderType,
+                  templateName,
+                  executionSource: options.executionSource || 'Automatic Cron',
+                  messageId: null
+                });
+
                 await updatedClient.save();
+                stats.failedMessages++;
+                stats.errors.push({ client: updatedClient.personalInfo.name, reminderType, error: failureReason });
               } else {
                 // Check duplicate flag
                 const isSent = updatedClient.membership.expiredReminderSent || updatedClient.expiredReminderSent;
                 if (isSent) {
                   twilioStatus = 'Skipped';
                   failureReason = 'Reminder already sent today (Duplicate Prevention)';
+                  stats.skippedClients++;
                 } else {
                   // Send Expired Reminder
                   const renewalLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}`;
                   const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
-                  const msg = remainingBalance > 0
-                    ? `Hello ${updatedClient.personalInfo.name},\nYour membership has expired.\nYou still have an outstanding balance of ₹${remainingBalance}.\nPlease clear the pending amount and renew your membership.\nPay Pending Balance: ${paymentLink}\nGym: ${updatedClient.gymName}`
-                    : `Dear ${updatedClient.personalInfo.name},\n\nYour membership has expired.\n\nPlease renew your membership using the link below.\n\nRenew Membership:\n${renewalLink}\n\nRegards,\n${updatedClient.gymName}`;
+                  const finalRenewalLink = remainingBalance > 0 ? paymentLink : renewalLink;
+                  const expiryDateString = updatedClient.membership.endDate
+                    ? new Date(updatedClient.membership.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')
+                    : 'N/A';
 
-                  const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
+                  const result = await metaWhatsAppService.sendExpiredReminder({
+                    phone: formattedWhatsApp,
+                    clientName: updatedClient.personalInfo.name,
+                    gymName: updatedClient.gymName,
+                    expiryDate: expiryDateString,
+                    renewalLink: finalRenewalLink,
+                    clientId: updatedClient.clientId,
+                    gymId: gym.gymId
+                  });
                   if (result && result.success) {
                     twilioStatus = 'Success';
+                    messageId = result.messageId;
                     updatedClient.membership.expiredReminderSent = true;
                     updatedClient.expiredReminderSent = true;
                     updatedClient.membership.expiredReminderStatus = 'sent';
                     updatedClient.expiredReminderStatus = 'sent';
                     updatedClient.membership.expiredReminderError = null;
                     updatedClient.expiredReminderError = null;
+
+                    // Save sent log to history
+                    if (!updatedClient.overdueReminders) updatedClient.overdueReminders = {};
+                    if (!updatedClient.overdueReminders.manualReminders) updatedClient.overdueReminders.manualReminders = [];
+                    updatedClient.overdueReminders.manualReminders.push({
+                      sentAt: new Date(),
+                      status: 'sent',
+                      error: null,
+                      reminderType,
+                      templateName,
+                      executionSource: options.executionSource || 'Automatic Cron',
+                      messageId
+                    });
+
                     await updatedClient.save();
+                    stats.successfulMessages++;
+
+                    // Send secondary due reminder if client has outstanding balance
+                    if (remainingBalance > 0) {
+                      await sendSecondaryDueReminder(updatedClient, formattedWhatsApp, gym.gymId, options.executionSource);
+                    }
                   } else {
                     twilioStatus = 'Failed';
-                    failureReason = result ? result.error : 'Twilio send error';
+                    failureReason = result ? result.error : 'Meta send error';
                     updatedClient.membership.expiredReminderStatus = 'failed';
                     updatedClient.expiredReminderStatus = 'failed';
                     updatedClient.membership.expiredReminderError = failureReason;
                     updatedClient.expiredReminderError = failureReason;
+
+                    // Save failed log to history
+                    if (!updatedClient.overdueReminders) updatedClient.overdueReminders = {};
+                    if (!updatedClient.overdueReminders.manualReminders) updatedClient.overdueReminders.manualReminders = [];
+                    updatedClient.overdueReminders.manualReminders.push({
+                      sentAt: new Date(),
+                      status: 'failed',
+                      error: failureReason,
+                      reminderType,
+                      templateName,
+                      executionSource: options.executionSource || 'Automatic Cron',
+                      messageId: null
+                    });
+
                     await updatedClient.save();
+                    stats.failedMessages++;
+                    stats.errors.push({ client: updatedClient.personalInfo.name, reminderType, error: failureReason });
                   }
                 }
               }
+            } else {
+              stats.skippedClients++;
             }
 
             // 4. Output detailed terminal logs
@@ -220,24 +426,29 @@ const runReminders = async () => {
 - WhatsApp Number : ${formattedWhatsApp || 'Invalid (' + (updatedClient.personalInfo?.mobileNo || 'N/A') + ')'}
 - daysLeft        : ${daysLeft}
 - Reminder Type   : ${reminderType}
-- Twilio Status   : ${twilioStatus}
+- Meta Status     : ${twilioStatus}
 - Failure Reason  : ${failureReason || 'N/A'}
 --------------------------------------------------`);
           }
         });
       } catch (gymErr) {
         console.error(`Error in runReminders for gym ${gym.gymId} (${gym.dbName}):`, gymErr);
+        stats.errors.push({ client: 'N/A', reminderType: 'Gym Initialization', error: gymErr.message });
       }
     }
 
     console.log('--- WhatsApp Expiry Reminders Job Completed ---');
   } catch (err) {
     console.error('Error in runReminders job:', err);
+    stats.errors.push({ client: 'N/A', reminderType: 'Global Execution', error: err.message });
   }
+
+  stats.durationMs = Date.now() - startTime;
+  return stats;
 };
 
 // Run every day at 11:40 PM
-cron.schedule('40 23 * * *', async () => {
+cron.schedule('02 16 * * *', async () => {
   console.log('Running daily automated reminderJob...');
   await runReminders();
 });

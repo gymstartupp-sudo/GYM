@@ -1,17 +1,29 @@
 const cron = require('node-cron');
 const Client = require('../models/Client');
 const Gym = require('../models/Gym');
-const sendWhatsApp = require('../utils/sendWhatsApp');
+const metaWhatsAppService = require('../services/metaWhatsAppService');
 const { syncClientStatus } = require('../utils/syncStatus');
 const { getTenantConnection } = require('../utils/connectionManager');
 const { runWithTenantContext } = require('../utils/tenantContext');
 
 // Reusable function to run the overdue reminder checks
-const runOverdueReminders = async () => {
+const runOverdueReminders = async (options = {}) => {
   console.log('--- Starting WhatsApp Overdue Reminders Job ---');
+  const startTime = Date.now();
+  const stats = {
+    executionTime: new Date().toISOString(),
+    cronName: 'Payment Overdue Reminders',
+    processedClients: 0,
+    successfulMessages: 0,
+    failedMessages: 0,
+    skippedClients: 0,
+    errors: [],
+    durationMs: 0
+  };
+
   try {
     const gyms = await Gym.find({ isActive: true });
-    
+
     for (const gym of gyms) {
       try {
         const conn = await getTenantConnection(gym.dbName);
@@ -41,6 +53,7 @@ const runOverdueReminders = async () => {
           for (let client of clients) {
             // Skip if workflow is completed or if they are paid
             if (client.overdueReminders?.workflowCompleted) {
+              stats.skippedClients++;
               continue;
             }
 
@@ -49,6 +62,7 @@ const runOverdueReminders = async () => {
             const updatedClient = await Client.findById(client._id);
 
             if (!updatedClient || updatedClient.overdueReminders?.workflowCompleted) {
+              stats.skippedClients++;
               continue;
             }
 
@@ -62,6 +76,7 @@ const runOverdueReminders = async () => {
               });
 
             if (!m || !m.dueDate) {
+              stats.skippedClients++;
               continue;
             }
 
@@ -73,6 +88,7 @@ const runOverdueReminders = async () => {
               }
               updatedClient.overdueReminders.workflowCompleted = true;
               await updatedClient.save();
+              stats.skippedClients++;
               continue;
             }
 
@@ -108,32 +124,33 @@ const runOverdueReminders = async () => {
             let clientTwilioStatus = 'Skipped';
             let clientFailureReason = '';
 
-            if (daysUntilDue <= 3 && daysUntilDue > 0 && (!updatedClient.overdueReminders?.reminder1?.status || updatedClient.overdueReminders.reminder1.status === 'none')) {
+            const isNotSent = (rem) => !rem?.status || rem.status === 'none' || rem.status === 'failed';
+
+            if (daysUntilDue <= 3 && daysUntilDue > 0 && isNotSent(updatedClient.overdueReminders?.reminder1)) {
               reminderToTrigger = 1;
               reminderKey = 'reminder1';
-            } else if (daysUntilDue <= 0 && daysUntilDue > -3 && (!updatedClient.overdueReminders?.reminder2?.status || updatedClient.overdueReminders.reminder2.status === 'none')) {
+            } else if (daysUntilDue <= 0 && daysUntilDue > -3 && isNotSent(updatedClient.overdueReminders?.reminder2)) {
               reminderToTrigger = 2;
               reminderKey = 'reminder2';
-            } else if (daysUntilDue <= -3 && (!updatedClient.overdueReminders?.reminder3?.status || updatedClient.overdueReminders.reminder3.status === 'none')) {
+            } else if (daysUntilDue <= -3 && isNotSent(updatedClient.overdueReminders?.reminder3)) {
               reminderToTrigger = 3;
               reminderKey = 'reminder3';
             }
 
             if (reminderToTrigger) {
+              stats.processedClients++;
               let twilioStatus = 'Skipped';
               let failureReason = '';
+              const remTypeMap = { 1: 'Due Reminder 1', 2: 'Due Reminder 2', 3: 'Due Reminder 3' };
+              const tempNameMap = {
+                1: process.env.META_TEMPLATE_DUE_FIRST || 'due_first_reminder',
+                2: process.env.META_TEMPLATE_DUE_SECOND || 'due_second_reminder',
+                3: process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder'
+              };
+              const reminderType = remTypeMap[reminderToTrigger];
+              const templateName = tempNameMap[reminderToTrigger];
 
               const dueDateString = new Date(m.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-');
-
-              let msg = '';
-              if (reminderToTrigger === 1) {
-                msg = `Dear ${updatedClient.personalInfo.name},\n\nThis is a friendly reminder that your pending membership balance of ₹${balance} is due on ${dueDateString}.\n\nPlan: ${m.planName}\nGym: ${updatedClient.gymName}\n\nPlease clear the dues on or before the due date.`;
-              } else if (reminderToTrigger === 2) {
-                msg = `Dear ${updatedClient.personalInfo.name},\n\nYour pending membership balance of ₹${balance} is due today.\n\nPlan: ${m.planName}\nGym: ${updatedClient.gymName}\n\nPlease clear the payment today.`;
-              } else if (reminderToTrigger === 3) {
-                const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
-                msg = `Dear ${updatedClient.personalInfo.name},\n\nYour pending membership balance of ₹${balance} is overdue (Due Date: ${dueDateString}).\n\nPlan: ${m.planName}\nGym: ${updatedClient.gymName}\n\nPlease clear the dues immediately.\nPay Pending Balance: ${paymentLink}`;
-              }
 
               if (!updatedClient.overdueReminders) {
                 updatedClient.overdueReminders = {
@@ -153,9 +170,33 @@ const runOverdueReminders = async () => {
                   sentAt: new Date(),
                   error: failureReason
                 };
+
+                // Log failed history
+                updatedClient.overdueReminders.manualReminders.push({
+                  sentAt: new Date(),
+                  status: 'failed',
+                  error: failureReason,
+                  reminderType,
+                  templateName,
+                  executionSource: options.executionSource || 'Automatic Cron',
+                  messageId: null
+                });
+
                 await updatedClient.save();
+                stats.failedMessages++;
+                stats.errors.push({ client: updatedClient.personalInfo.name, reminderType, error: failureReason });
               } else {
-                const result = await sendWhatsApp({ phone: formattedWhatsApp, message: msg });
+                const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
+                const result = await metaWhatsAppService.sendDueReminder({
+                  phone: formattedWhatsApp,
+                  clientName: updatedClient.personalInfo.name,
+                  pendingAmount: balance,
+                  dueDate: dueDateString,
+                  renewalLink: paymentLink,
+                  clientId: updatedClient.clientId,
+                  gymId: gym.gymId,
+                  stage: reminderToTrigger
+                });
                 if (result && result.success) {
                   twilioStatus = 'sent';
                   updatedClient.overdueReminders[reminderKey] = {
@@ -163,22 +204,51 @@ const runOverdueReminders = async () => {
                     sentAt: new Date(),
                     error: null
                   };
+
+                  // Log success history
+                  updatedClient.overdueReminders.manualReminders.push({
+                    sentAt: new Date(),
+                    status: 'sent',
+                    error: null,
+                    reminderType,
+                    templateName,
+                    executionSource: options.executionSource || 'Automatic Cron',
+                    messageId: result.messageId
+                  });
+
                   await updatedClient.save();
+                  stats.successfulMessages++;
                 } else {
                   twilioStatus = 'failed';
-                  failureReason = result ? result.error : 'Twilio send error';
+                  failureReason = result ? result.error : 'Meta send error';
                   updatedClient.overdueReminders[reminderKey] = {
                     status: 'failed',
                     sentAt: new Date(),
                     error: failureReason
                   };
+
+                  // Log failed history
+                  updatedClient.overdueReminders.manualReminders.push({
+                    sentAt: new Date(),
+                    status: 'failed',
+                    error: failureReason,
+                    reminderType,
+                    templateName,
+                    executionSource: options.executionSource || 'Automatic Cron',
+                    messageId: null
+                  });
+
                   await updatedClient.save();
+                  stats.failedMessages++;
+                  stats.errors.push({ client: updatedClient.personalInfo.name, reminderType, error: failureReason });
                 }
               }
 
               // Store status to print outside
               clientTwilioStatus = twilioStatus;
               clientFailureReason = failureReason;
+            } else {
+              stats.skippedClients++;
             }
 
             console.log(`[OVERDUE CLIENT PROCESSED]
@@ -192,16 +262,21 @@ const runOverdueReminders = async () => {
         });
       } catch (gymErr) {
         console.error(`Error in runOverdueReminders for gym ${gym.gymId} (${gym.dbName}):`, gymErr);
+        stats.errors.push({ client: 'N/A', reminderType: 'Gym Initialization', error: gymErr.message });
       }
     }
     console.log('--- WhatsApp Overdue Reminders Job Completed ---');
   } catch (err) {
     console.error('Error in runOverdueReminders job:', err);
+    stats.errors.push({ client: 'N/A', reminderType: 'Global Execution', error: err.message });
   }
+
+  stats.durationMs = Date.now() - startTime;
+  return stats;
 };
 
 // Run every day at 04:30 PM
-cron.schedule('41 14 * * *', async () => {
+cron.schedule('46 01 * * *', async () => {
   console.log('Running daily automated overdueReminderJob...');
   await runOverdueReminders();
 });

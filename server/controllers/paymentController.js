@@ -2,7 +2,7 @@ const Payment = require('../models/Payment');
 const Client = require('../models/Client');
 const Gym = require('../models/Gym');
 const { generatePaymentId } = require('../utils/generateId');
-const sendWhatsApp = require('../utils/sendWhatsApp');
+
 const { buildMembershipWindow } = require('../utils/membership');
 const { syncClientStatus } = require('../utils/syncStatus');
 const Razorpay = require('razorpay');
@@ -297,18 +297,7 @@ exports.recordPayment = async (req, res, next) => {
     client.paymentHistory.push(payment._id);
     await client.save();
 
-    // FIX: Send Bill via WhatsApp — only mark as sent AFTER successful delivery
-    const billMessage = `Hello ${client.personalInfo.name}, your payment of ₹${safePaidAmount} for ${activatedPlan.planName} is received. Receipt No: ${paymentId}. Regards, ${gym.billingInfo?.regards || gym.gymName}`;
-    try {
-      const whatsappResult = await sendWhatsApp({ phone: client.personalInfo.mobileNo, message: billMessage });
-      if (whatsappResult && whatsappResult.success) {
-        payment.billSentViaWhatsApp = true;
-        await payment.save();
-      }
-    } catch (whatsappErr) {
-      console.error('WhatsApp bill send failed:', whatsappErr);
-      // Payment is still valid — just bill wasn't sent
-    }
+
 
     await syncClientStatus(client._id);
 

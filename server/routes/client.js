@@ -44,14 +44,14 @@ router.put('/profile', protect, authorize('client'), clientProfileValidation, va
 router.put('/change-password', protect, authorize('client'), changePasswordValidation, validate, clientController.changeClientPassword);
 
 router.route('/')
-  .get(protect, authorize('owner', 'superadmin'), getClientsQueryValidation, validate, clientController.getClients)
+  .get(protect, authorize('owner', 'superadmin', 'developer'), getClientsQueryValidation, validate, clientController.getClients)
   .post(protect, authorize('owner'), addClientValidation, validate, clientController.addClient);
 
-router.get('/inactive', protect, authorize('owner', 'superadmin'), getClientsQueryValidation, validate, clientController.getInactiveClients);
-router.get('/deleted', protect, authorize('owner', 'superadmin'), clientController.getDeletedClients);
+router.get('/inactive', protect, authorize('owner', 'superadmin', 'developer'), getClientsQueryValidation, validate, clientController.getInactiveClients);
+router.get('/deleted', protect, authorize('owner', 'superadmin', 'developer'), clientController.getDeletedClients);
 
 router.route('/:id')
-  .get(protect, authorize('owner', 'superadmin'), [mongoIdValidation('id', 'param')], validate, clientController.getClientById)
+  .get(protect, authorize('owner', 'superadmin', 'developer'), [mongoIdValidation('id', 'param')], validate, clientController.getClientById)
   .delete(protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.deleteClient);
 
 router.put('/:id/restore', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.restoreClient);
