@@ -87,9 +87,9 @@ const testWorkflows = async () => {
       // ---------------------------------------------------------
       // TEST 2: Expired 1 day ago
       // ---------------------------------------------------------
-      console.log('\n--- TEST 2: Expired 1 Day Ago (Expired Reminder) ---');
+      console.log('\n--- TEST 2: Expired Today (Expired Reminder) ---');
       let endDate2 = new Date(today);
-      endDate2.setDate(today.getDate() - 1);
+      endDate2.setDate(today.getDate());
       
       const c2 = await Client.findById(client._id);
       c2.membership.endDate = endDate2;

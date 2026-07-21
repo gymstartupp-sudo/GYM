@@ -19,11 +19,13 @@ router.get('/gym/:id/profile', adminController.getGymProfile);
 router.put('/gym/:id/status', adminController.toggleGymStatus);
 router.delete('/gym/:id', adminController.deleteGym);
 router.post('/overdue-check', adminController.triggerOverdueCheck);
+router.post('/bulk-import', adminController.bulkImportClients);
 
 // Reminder Testing Developer Tools Routes
 router.get('/reminder-test/clients', devEnvGuard, adminController.getReminderTestClients);
 router.post('/reminder-test/send', devEnvGuard, adminController.sendTestReminder);
 router.post('/reminder-test/run-cron', devEnvGuard, adminController.runTestCron);
 router.get('/reminder-test/history', devEnvGuard, adminController.getReminderHistory);
+router.post('/reminder-test/clear-history', devEnvGuard, adminController.clearReminderHistory);
 
 module.exports = router;

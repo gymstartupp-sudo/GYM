@@ -40,11 +40,6 @@ const ReminderTimeline = ({ client, mode = 'membership', onCircleClick }) => {
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-surface-elevated border border-border rounded-lg shadow-xl text-xs whitespace-nowrap opacity-0 group-hover/circle:opacity-100 pointer-events-none transition-opacity z-50">
             <p className="font-semibold text-text-primary">{item.label} Reminder</p>
             <p className="text-success font-medium">Status: Sent</p>
-            {sentAt && (
-              <p className="text-text-muted">
-                Sent: {new Date(sentAt).toLocaleDateString('en-GB').replace(/\//g, '-')} {new Date(sentAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true })}
-              </p>
-            )}
           </div>
         </div>
       );

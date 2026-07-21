@@ -470,11 +470,16 @@ exports.updatePayment = async (req, res, next) => {
       client.paymentHistory.push(newTransaction._id);
 
       if (client.memberships && Array.isArray(client.memberships)) {
-        const mIdx = client.memberships.findIndex(m =>
-          m.planId && payment.planId &&
-          m.planId.toString() === payment.planId.toString() &&
-          new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
-        );
+        const mIdx = client.memberships.findIndex(m => {
+          const mPlanId = m.planId ? m.planId.toString() : null;
+          const pPlanId = payment.planId ? payment.planId.toString() : null;
+          if (mPlanId !== pPlanId) return false;
+
+          if (m.startDate && payment.startDate) {
+            return new Date(m.startDate).setHours(0, 0, 0, 0) === new Date(payment.startDate).setHours(0, 0, 0, 0);
+          }
+          return !m.startDate && !payment.startDate;
+        });
 
         if (mIdx !== -1) {
           client.memberships[mIdx].totalPaid = currentTotalPaid;

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AdminSidebar } from '../../components/AdminSidebar';
-import { Menu, Play, RefreshCw, Send, AlertTriangle, CheckCircle, Info, Calendar, Clock, User, ShieldAlert } from 'lucide-react';
+import { Menu, Play, RefreshCw, Send, AlertTriangle, CheckCircle, Info, Calendar, Clock, User, ShieldAlert, ChevronDown, Search } from 'lucide-react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
@@ -9,7 +9,7 @@ const AdminReminderTesting = () => {
   const [gyms, setGyms] = useState([]);
   const [selectedGym, setSelectedGym] = useState('');
   const [clients, setClients] = useState([]);
-  const [selectedClient, setSelectedClient] = useState('');
+  const [selectedClient, setSelectedClient] = useState('all');
   const [history, setHistory] = useState([]);
   
   const [loadingGyms, setLoadingGyms] = useState(true);
@@ -25,7 +25,21 @@ const AdminReminderTesting = () => {
   const [lastResult, setLastResult] = useState(null);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [sourceFilter, setSourceFilter] = useState('all');
+  const [clearingHistory, setClearingHistory] = useState(false);
+
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsClientDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,6 +53,28 @@ const AdminReminderTesting = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Helper functions for client multi-select dropdown
+  const getClientDisplayLabel = () => {
+    if (!selectedGym) return '-- Select Gym First --';
+    if (loadingClients) return 'Loading clients...';
+    if (selectedClient === 'all' || !Array.isArray(selectedClient) || selectedClient.length === 0) {
+      return 'All Clients';
+    }
+    const selectedObjs = clients.filter(c => selectedClient.includes(c._id));
+    if (selectedObjs.length === 0) return 'All Clients';
+    if (selectedObjs.length === 1) {
+      return `${selectedObjs[0].clientId || ''} - ${selectedObjs[0].personalInfo?.name || ''}`;
+    }
+    return `${selectedObjs.length} clients selected`;
+  };
+
+  const filteredClients = clients.filter(client => {
+    const searchLower = clientSearchQuery.toLowerCase();
+    const nameMatch = client.personalInfo?.name?.toLowerCase().includes(searchLower);
+    const idMatch = client.clientId?.toLowerCase().includes(searchLower);
+    return nameMatch || idMatch;
+  });
 
   // Fetch gyms on mount
   useEffect(() => {
@@ -69,6 +105,7 @@ const AdminReminderTesting = () => {
       try {
         const res = await api.get(`/admin/reminder-test/clients?gymId=${selectedGym}`);
         setClients(res.data.data || []);
+        setSelectedClient('all');
       } catch (err) {
         toast.error('Failed to load clients for selected gym');
       } finally {
@@ -146,7 +183,11 @@ const AdminReminderTesting = () => {
     setRunningCron(cronName);
     setLastResult(null);
     try {
-      const res = await api.post('/admin/reminder-test/run-cron', { cronName });
+      const res = await api.post('/admin/reminder-test/run-cron', { 
+        cronName,
+        gymId: selectedGym,
+        clientId: selectedClient
+      });
       toast.success('Cron job completed!');
       
       // Update result panel
@@ -176,18 +217,31 @@ const AdminReminderTesting = () => {
     }
   };
 
+  const handleClearHistory = async () => {
+    if (!selectedGym) {
+      toast.warn('Please select a Gym first');
+      return;
+    }
+    if (!window.confirm('Are you sure you want to clear the reminder logs and reset testing state?')) {
+      return;
+    }
+    setClearingHistory(true);
+    try {
+      await api.post('/admin/reminder-test/clear-history', { gymId: selectedGym });
+      toast.success('Reminder history logs cleared and testing state reset successfully!');
+      fetchHistory();
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to clear logs');
+    } finally {
+      setClearingHistory(false);
+    }
+  };
+
   // Filtered History
   const filteredHistory = history.filter(item => {
-    const matchesSearch = item.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.reminderType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.templateName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSource = sourceFilter === 'all' || 
-                          (sourceFilter === 'cron' && item.executionSource === 'Automatic Cron') ||
-                          (sourceFilter === 'trigger' && item.executionSource === 'Manual Trigger') ||
-                          (sourceFilter === 'manual' && item.executionSource === 'Manual Reminder');
-    
-    return matchesSearch && matchesSource;
+    return item.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           item.reminderType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           item.templateName.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -215,14 +269,23 @@ const AdminReminderTesting = () => {
           </div>
           
           {selectedGym && (
-            <button
-              onClick={fetchHistory}
-              disabled={loadingHistory}
-              className="flex items-center gap-2 px-3 py-1.5 bg-surface-secondary border border-border hover:bg-surface-divider text-text-secondary text-xs rounded-lg transition-all"
-            >
-              <RefreshCw size={14} className={loadingHistory ? 'animate-spin' : ''} />
-              Reload Logs
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleClearHistory}
+                disabled={loadingHistory || clearingHistory}
+                className="flex items-center gap-2 px-3 py-1.5 bg-danger/10 hover:bg-danger hover:text-text-primary text-danger border border-danger/20 text-xs font-bold rounded-lg transition-all"
+              >
+                Clear Logs
+              </button>
+              <button
+                onClick={fetchHistory}
+                disabled={loadingHistory}
+                className="flex items-center gap-2 px-3 py-1.5 bg-surface-secondary border border-border hover:bg-surface-divider text-text-secondary text-xs rounded-lg transition-all"
+              >
+                <RefreshCw size={14} className={loadingHistory ? 'animate-spin' : ''} />
+                Reload Logs
+              </button>
+            </div>
           )}
         </div>
 
@@ -259,115 +322,104 @@ const AdminReminderTesting = () => {
                     ))}
                   </select>
                 </div>
-                <div>
+                 <div>
+                 <div className="relative" ref={dropdownRef}>
                   <label className="block text-xs font-bold text-text-secondary mb-1">Target Client</label>
-                  <select
-                    value={selectedClient}
-                    onChange={(e) => setSelectedClient(e.target.value)}
+                  <button
+                    type="button"
                     disabled={!selectedGym || loadingClients}
-                    className="w-full bg-surface-primary border border-border rounded-lg text-xs py-2 px-3 focus:outline-none focus:border-primary text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+                    className="w-full bg-surface-primary border border-border rounded-lg text-xs py-2 px-3 focus:outline-none focus:border-primary text-text-primary disabled:opacity-50 disabled:cursor-not-allowed flex justify-between items-center text-left"
                   >
-                    <option value="">
-                      {loadingClients ? 'Loading clients...' : '-- Select Client --'}
-                    </option>
-                    {clients.map(client => (
-                      <option key={client._id} value={client._id}>
-                        {client.personalInfo?.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <span className="truncate">{getClientDisplayLabel()}</span>
+                    <ChevronDown size={14} className="text-text-muted shrink-0 ml-1" />
+                  </button>
+
+                  {isClientDropdownOpen && selectedGym && !loadingClients && (
+                    <div className="absolute right-0 left-0 mt-1.5 bg-surface-primary border border-border rounded-xl shadow-xl z-30 p-3 space-y-2 flex flex-col max-h-72">
+                      <div className="relative shrink-0">
+                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                          <Search size={12} className="text-text-muted" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Search clients..."
+                          value={clientSearchQuery}
+                          onChange={(e) => setClientSearchQuery(e.target.value)}
+                          className="w-full bg-surface-secondary border border-border rounded-lg text-xs pl-8 pr-3 py-1.5 focus:outline-none focus:border-primary text-text-primary"
+                        />
+                      </div>
+
+                      <div className="overflow-y-auto divide-y divide-border/30 flex-1 custom-scrollbar text-xs">
+                        {/* Option: All Clients */}
+                        <label className="flex items-center gap-2.5 py-2 px-1 hover:bg-surface-divider/40 rounded cursor-pointer font-bold text-text-primary">
+                          <input
+                            type="checkbox"
+                            checked={selectedClient === 'all' || !Array.isArray(selectedClient) || selectedClient.length === 0}
+                            onChange={() => {
+                              setSelectedClient('all');
+                            }}
+                            className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 bg-surface-primary"
+                          />
+                          All Clients
+                        </label>
+
+                        {/* Options: Individual Clients */}
+                        {filteredClients.length > 0 ? (
+                          filteredClients.map(client => {
+                            const isChecked = Array.isArray(selectedClient) && selectedClient.includes(client._id);
+                            return (
+                              <label key={client._id} className="flex items-center gap-2.5 py-2 px-1 hover:bg-surface-divider/40 rounded cursor-pointer text-text-secondary">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked && selectedClient !== 'all'}
+                                  onChange={() => {
+                                    let nextSelected = Array.isArray(selectedClient) ? [...selectedClient] : [];
+                                    if (isChecked) {
+                                      nextSelected = nextSelected.filter(id => id !== client._id);
+                                    } else {
+                                      nextSelected.push(client._id);
+                                    }
+                                    if (nextSelected.length === 0) {
+                                      setSelectedClient('all');
+                                    } else {
+                                      setSelectedClient(nextSelected);
+                                    }
+                                  }}
+                                  className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 bg-surface-primary"
+                                />
+                                <span className="font-mono text-[9px] bg-surface-divider px-1.5 py-0.5 rounded text-text-primary font-bold tracking-wider shrink-0">
+                                  {client.clientId || 'N/A'}
+                                </span>
+                                <span className="truncate">{client.personalInfo?.name}</span>
+                              </label>
+                            );
+                          })
+                        ) : (
+                          <div className="text-center py-4 text-[11px] text-text-muted">No clients match search</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div></div>
               </div>
             </div>
 
-            {/* Manual Triggers Card */}
+            {/* Reminder Automation Simulator Card */}
             <div className="card p-6 bg-surface-secondary border border-border rounded-2xl">
-              <h2 className="text-sm font-black uppercase text-text-muted tracking-wider mb-4">Manual Message Triggers</h2>
-              
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-xs font-bold text-text-secondary mb-2">Membership Expiry Reminders</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Button
-                      onClick={() => handleSendReminder('expiring_soon')}
-                      disabled={!selectedClient || !!sendingType}
-                      loading={sendingType === 'expiring_soon'}
-                      className="px-4 py-2.5 bg-primary text-xs font-semibold rounded-lg hover:opacity-90 flex items-center justify-center gap-2"
-                    >
-                      <Send size={14} />
-                      Send Expiring Soon Reminder
-                    </Button>
-                    <Button
-                      onClick={() => handleSendReminder('expired')}
-                      disabled={!selectedClient || !!sendingType}
-                      loading={sendingType === 'expired'}
-                      className="px-4 py-2.5 bg-primary text-xs font-semibold rounded-lg hover:opacity-90 flex items-center justify-center gap-2"
-                    >
-                      <Send size={14} />
-                      Send Expired Reminder
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border-t border-border pt-4">
-                  <h3 className="text-xs font-bold text-text-secondary mb-2">Dues Payment Reminders</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <Button
-                      onClick={() => handleSendReminder('due_1')}
-                      disabled={!selectedClient || !!sendingType}
-                      loading={sendingType === 'due_1'}
-                      className="px-3 py-2.5 bg-primary text-xs font-semibold rounded-lg hover:opacity-90 flex items-center justify-center gap-2"
-                    >
-                      <Send size={14} />
-                      Send Due Stage 1
-                    </Button>
-                    <Button
-                      onClick={() => handleSendReminder('due_2')}
-                      disabled={!selectedClient || !!sendingType}
-                      loading={sendingType === 'due_2'}
-                      className="px-3 py-2.5 bg-primary text-xs font-semibold rounded-lg hover:opacity-90 flex items-center justify-center gap-2"
-                    >
-                      <Send size={14} />
-                      Send Due Stage 2
-                    </Button>
-                    <Button
-                      onClick={() => handleSendReminder('due_3')}
-                      disabled={!selectedClient || !!sendingType}
-                      loading={sendingType === 'due_3'}
-                      className="px-3 py-2.5 bg-primary text-xs font-semibold rounded-lg hover:opacity-90 flex items-center justify-center gap-2"
-                    >
-                      <Send size={14} />
-                      Send Due Stage 3
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Cron Triggers Card */}
-            <div className="card p-6 bg-surface-secondary border border-border rounded-2xl">
-              <h2 className="text-sm font-black uppercase text-text-muted tracking-wider mb-4">Cron Jobs Simulator</h2>
-              <p className="text-text-secondary text-xs mb-4">
-                Trigger full automated batch schedules for active clients context rules. Runs exactly same logic pipelines.
+              <h2 className="text-sm font-black uppercase text-text-muted tracking-wider mb-2">Reminder Automation Simulator</h2>
+              <p className="text-text-secondary text-xs mb-6">
+                Trigger full WhatsApp reminder checks for the selected gym and target client context. This executes both the Membership Expiry Reminders and Dues Overdue Reminders jobs in sequence.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex justify-start">
                 <Button
-                  onClick={() => handleRunCron('membership')}
+                  onClick={() => handleRunCron('all')}
                   disabled={!selectedGym || !!runningCron}
-                  loading={runningCron === 'membership'}
-                  className="px-4 py-3 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
+                  loading={!!runningCron}
+                  className="px-6 py-3 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-md shadow-primary/10 flex items-center justify-center gap-2"
                 >
                   <Play size={14} />
-                  Run Expiry Cron Job
-                </Button>
-                <Button
-                  onClick={() => handleRunCron('overdue')}
-                  disabled={!selectedGym || !!runningCron}
-                  loading={runningCron === 'overdue'}
-                  className="px-4 py-3 border border-primary text-primary text-xs font-bold rounded-lg hover:bg-primary/10 transition-all flex items-center justify-center gap-2"
-                >
-                  <Play size={14} />
-                  Run Overdue Cron Job
+                  {runningCron ? 'Running Message Automation...' : 'Run Message Automation'}
                 </Button>
               </div>
             </div>
@@ -504,17 +556,6 @@ const AdminReminderTesting = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="bg-surface-primary border border-border text-xs rounded-lg px-3 py-1.5 text-text-primary focus:outline-none focus:border-primary w-48"
                 />
-                
-                <select
-                  value={sourceFilter}
-                  onChange={(e) => setSourceFilter(e.target.value)}
-                  className="bg-surface-primary border border-border text-xs rounded-lg px-2 py-1.5 text-text-primary focus:outline-none focus:border-primary"
-                >
-                  <option value="all">All Sources</option>
-                  <option value="cron">Automatic Cron</option>
-                  <option value="trigger">Manual Trigger</option>
-                  <option value="manual">Manual Reminder</option>
-                </select>
               </div>
             </div>
 
