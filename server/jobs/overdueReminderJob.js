@@ -22,7 +22,13 @@ const runOverdueReminders = async (options = {}) => {
   };
 
   try {
-    const gyms = await Gym.find({ isActive: true });
+    let gyms = [];
+    if (options.gymId) {
+      const gym = await Gym.findOne({ gymId: options.gymId.toUpperCase() });
+      if (gym) gyms = [gym];
+    } else {
+      gyms = await Gym.find({ isActive: true });
+    }
 
     for (const gym of gyms) {
       try {
@@ -41,13 +47,29 @@ const runOverdueReminders = async (options = {}) => {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
 
-          // Fetch all active clients who have partial or overdue paymentStatus
-          const clients = await Client.find({
+          // Fetch active partial/overdue clients, potentially filtering by clientId
+          const query = {
             isActive: true,
             'membership.requestApproved': true,
             paymentStatus: { $in: ['partial', 'overdue'] }
-          });
-
+          };
+          if (options.clientId && options.clientId !== 'all' && options.clientId !== 'ALL') {
+            const clientIdsArray = Array.isArray(options.clientId) ? options.clientId : [options.clientId];
+            if (clientIdsArray.length > 0 && !clientIdsArray.includes('all') && !clientIdsArray.includes('ALL')) {
+              const mongoose = require('mongoose');
+              const orConditions = [];
+              clientIdsArray.forEach(id => {
+                if (mongoose.Types.ObjectId.isValid(id)) {
+                  orConditions.push({ _id: id });
+                }
+                orConditions.push({ clientId: id });
+              });
+              if (orConditions.length > 0) {
+                query.$or = orConditions;
+              }
+            }
+          }
+          const clients = await Client.find(query);
           console.log(`[Gym: ${gym.gymId}] Found ${clients.length} partial/overdue clients to process.`);
 
           for (let client of clients) {

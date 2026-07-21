@@ -48,7 +48,33 @@ const generateGymId = async () => {
 };
 
 const generateClientId = async (gymIdStr) => {
-  const sequence = await getNextSequenceValue(`clientId:${gymIdStr}`);
+  const counterName = `clientId:${gymIdStr}`;
+  let sequence = await getNextSequenceValue(counterName);
+
+  // Sync/Correction: check highest existing clientId for this gym to avoid collisions
+  const lastClient = await Client.findOne({
+    gymId: gymIdStr,
+    clientId: new RegExp('^CL-')
+  }).sort({ clientId: -1 });
+
+  let lastCount = 0;
+  if (lastClient && lastClient.clientId) {
+    const parts = lastClient.clientId.split('-');
+    const lastNum = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(lastNum)) {
+      lastCount = lastNum;
+    }
+  }
+
+  if (sequence <= lastCount) {
+    const correctedCounter = await Counter.findOneAndUpdate(
+      { name: counterName },
+      { $set: { value: lastCount + 1 } },
+      { new: true, upsert: true }
+    );
+    sequence = correctedCounter.value;
+  }
+
   return `CL-${String(sequence).padStart(2, '0')}`;
 };
 

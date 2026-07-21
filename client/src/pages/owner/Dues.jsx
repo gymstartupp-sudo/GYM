@@ -115,7 +115,7 @@ const Dues = () => {
 
                     // Calculate flags
                     const isExpired = endDate && endDate < today;
-                    const isOverdue = dueDate && dueDate < today;
+                    const isOverdue = (dueDate && dueDate < today) || (isExpired && balance > 0);
                     const isPending = !isOverdue && !isExpired;
 
                     dues.push({

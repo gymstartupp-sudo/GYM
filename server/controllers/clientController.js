@@ -22,10 +22,16 @@ const calculateBalances = (clientDoc, preFetchedPayments = []) => {
   if (client.memberships && Array.isArray(client.memberships)) {
     client.memberships = client.memberships.map(m => {
       // Find all payments belonging to this membership period
-      const relatedPayments = clientPayments.filter(p => 
-        p.planId?.toString() === m.planId?.toString() &&
-        new Date(p.startDate).getTime() === new Date(m.startDate).getTime()
-      );
+      const relatedPayments = clientPayments.filter(p => {
+        const mPlanId = m.planId ? m.planId.toString() : null;
+        const pPlanId = p.planId ? p.planId.toString() : null;
+        if (mPlanId !== pPlanId) return false;
+
+        if (p.startDate && m.startDate) {
+          return new Date(p.startDate).setHours(0, 0, 0, 0) === new Date(m.startDate).setHours(0, 0, 0, 0);
+        }
+        return !p.startDate && !m.startDate;
+      });
 
       const totalPaid = relatedPayments.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
       const finalPrice = m.finalPrice || (relatedPayments.length > 0 ? relatedPayments[0].amount : 0);

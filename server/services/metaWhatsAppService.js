@@ -160,47 +160,98 @@ const sendExpiringSoonReminder = async ({ phone, clientName, gymName, expiryDate
  */
 const sendExpiredReminder = async ({ phone, clientName, gymName, expiryDate, renewalLink, clientId, gymId }) => {
   const templateName = process.env.META_TEMPLATE_EXPIRED || 'membership_expired';
-  const isButton = process.env.META_EXPIRED_LINK_AS_BUTTON === 'true';
 
-  let components;
-  if (isButton) {
-    components = [
-      {
-        type: 'body',
-        parameters: [
-          { type: 'text', text: String(clientName) },
-          { type: 'text', text: String(gymName) },
-          { type: 'text', text: String(expiryDate) }
-        ]
-      },
-      {
-        type: 'button',
-        sub_type: 'url',
-        index: '0',
-        parameters: [
-          { type: 'text', text: String(renewalLink) }
-        ]
-      }
-    ];
-  } else {
-    components = [
-      {
-        type: 'body',
-        parameters: [
-          { type: 'text', text: String(clientName) },
-          { type: 'text', text: String(gymName) },
-          { type: 'text', text: String(expiryDate) },
-          { type: 'text', text: String(renewalLink) }
-        ]
-      }
-    ];
-  }
+  const components = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: String(clientName) },
+        { type: 'text', text: String(gymName) },
+        { type: 'text', text: String(expiryDate) }
+      ]
+    },
+    {
+      type: 'button',
+      sub_type: 'url',
+      index: '0',
+      parameters: [
+        { type: 'text', text: String(renewalLink) }
+      ]
+    }
+  ];
 
   return sendMetaWhatsApp({
     to: phone,
     templateName,
     components,
     reminderType: 'Expired',
+    clientId,
+    gymId
+  });
+};
+
+/**
+ * 2a. Expiring Soon Pending Reminder
+ * Variables: Client Name, Gym Name, Expiry Date, Days Left, Pending Amount
+ */
+const sendExpiringSoonPendingReminder = async ({ phone, clientName, gymName, expiryDate, daysLeft, pendingAmount, clientId, gymId }) => {
+  const templateName = process.env.META_TEMPLATE_EXPIRING_SOON_PENDING || 'membership_expiring_soon_pending';
+
+  const components = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: String(clientName) },
+        { type: 'text', text: String(gymName) },
+        { type: 'text', text: String(expiryDate) },
+        { type: 'text', text: String(daysLeft) },
+        { type: 'text', text: String(pendingAmount) }
+      ]
+    }
+  ];
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Expiring Soon Pending',
+    clientId,
+    gymId
+  });
+};
+
+/**
+ * 2b. Expired Pending Reminder
+ * Variables: Client Name, Gym Name, Expiry Date, Pending Amount, Renewal Link
+ */
+const sendExpiredPendingReminder = async ({ phone, clientName, gymName, expiryDate, pendingAmount, renewalLink, clientId, gymId }) => {
+  const templateName = process.env.META_TEMPLATE_EXPIRED_PENDING || 'membership_expired_pending';
+
+  const components = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: String(clientName) },
+        { type: 'text', text: String(gymName) },
+        { type: 'text', text: String(expiryDate) },
+        { type: 'text', text: String(pendingAmount) }
+      ]
+    },
+    {
+      type: 'button',
+      sub_type: 'url',
+      index: '0',
+      parameters: [
+        { type: 'text', text: String(renewalLink) }
+      ]
+    }
+  ];
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Expired Pending',
     clientId,
     gymId
   });
@@ -320,7 +371,9 @@ const sendDueReminder = async ({ phone, clientName, pendingAmount, dueDate, rene
 
 module.exports = {
   sendExpiringSoonReminder,
+  sendExpiringSoonPendingReminder,
   sendExpiredReminder,
+  sendExpiredPendingReminder,
   sendDueFirstReminder,
   sendDueSecondReminder,
   sendDueThirdReminder,
