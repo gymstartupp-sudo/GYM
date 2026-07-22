@@ -91,7 +91,44 @@ const uploadBillToCloudinary = async (filePath) => {
   }
 };
 
+const uploadPDFToCloudinary = async (filePath) => {
+  if (!filePath) {
+    throw new Error('File path is required for Cloudinary upload');
+  }
+
+  try {
+    // Check if file exists locally
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Local file not found at: ${filePath}`);
+    }
+
+    // Upload to Cloudinary under folder "gym_bills"
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: 'gym_bills',
+      allowed_formats: ['pdf'],
+      resource_type: 'image'
+    });
+
+    // Clean up local temp file asynchronously
+    fs.unlink(filePath, (err) => {
+      if (err) console.error(`Failed to delete local temp file at ${filePath}:`, err);
+    });
+
+    return result.secure_url;
+  } catch (error) {
+    // Ensure we attempt to clean up local file even if upload fails
+    if (fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) console.error(`Failed to delete local temp file on upload error at ${filePath}:`, err);
+      });
+    }
+    console.error('Cloudinary PDF upload error:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   uploadLogoToCloudinary,
-  uploadBillToCloudinary
+  uploadBillToCloudinary,
+  uploadPDFToCloudinary
 };

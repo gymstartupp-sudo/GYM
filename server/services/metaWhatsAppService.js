@@ -41,6 +41,20 @@ const postRequest = (url, headers, body) => {
 };
 
 /**
+ * Helper to extract the dynamic parameter suffix from a full URL,
+ * since Meta dynamic URL buttons do not accept protocol/domain in parameters.
+ */
+const getButtonParam = (urlOrSuffix) => {
+  if (!urlOrSuffix) return '';
+  const searchStr = '/client/renew/';
+  const index = urlOrSuffix.indexOf(searchStr);
+  if (index !== -1) {
+    return urlOrSuffix.substring(index + searchStr.length);
+  }
+  return urlOrSuffix;
+};
+
+/**
  * Common sender function to post template message payload to Meta Graph API.
  */
 const sendMetaWhatsApp = async ({ to, templateName, components, reminderType, clientId, gymId }) => {
@@ -159,7 +173,8 @@ const sendExpiringSoonReminder = async ({ phone, clientName, gymName, expiryDate
  * Variables: Client Name, Gym Name, Expiry Date, Renewal Link
  */
 const sendExpiredReminder = async ({ phone, clientName, gymName, expiryDate, renewalLink, clientId, gymId }) => {
-  const templateName = process.env.META_TEMPLATE_EXPIRED || 'membership_expired';
+  const templateName = process.env.META_TEMPLATE_EXPIRED || 'memberships_expired';
+  const isDynamic = process.env.META_EXPIRED_LINK_AS_BUTTON_DYNAMIC === 'true';
 
   const components = [
     {
@@ -169,16 +184,19 @@ const sendExpiredReminder = async ({ phone, clientName, gymName, expiryDate, ren
         { type: 'text', text: String(gymName) },
         { type: 'text', text: String(expiryDate) }
       ]
-    },
-    {
+    }
+  ];
+
+  if (isDynamic) {
+    components.push({
       type: 'button',
       sub_type: 'url',
       index: '0',
       parameters: [
-        { type: 'text', text: String(renewalLink) }
+        { type: 'text', text: getButtonParam(renewalLink) }
       ]
-    }
-  ];
+    });
+  }
 
   return sendMetaWhatsApp({
     to: phone,
@@ -226,6 +244,7 @@ const sendExpiringSoonPendingReminder = async ({ phone, clientName, gymName, exp
  */
 const sendExpiredPendingReminder = async ({ phone, clientName, gymName, expiryDate, pendingAmount, renewalLink, clientId, gymId }) => {
   const templateName = process.env.META_TEMPLATE_EXPIRED_PENDING || 'membership_expired_pending';
+  const isDynamic = process.env.META_EXPIRED_PENDING_LINK_AS_BUTTON_DYNAMIC === 'true';
 
   const components = [
     {
@@ -236,16 +255,19 @@ const sendExpiredPendingReminder = async ({ phone, clientName, gymName, expiryDa
         { type: 'text', text: String(expiryDate) },
         { type: 'text', text: String(pendingAmount) }
       ]
-    },
-    {
+    }
+  ];
+
+  if (isDynamic) {
+    components.push({
       type: 'button',
       sub_type: 'url',
       index: '0',
       parameters: [
-        { type: 'text', text: String(renewalLink) }
+        { type: 'text', text: getButtonParam(renewalLink) }
       ]
-    }
-  ];
+    });
+  }
 
   return sendMetaWhatsApp({
     to: phone,
@@ -278,7 +300,7 @@ const buildDueComponents = (clientName, pendingAmount, dueDate, renewalLink, sta
           sub_type: 'url',
           index: '0',
           parameters: [
-            { type: 'text', text: String(renewalLink) }
+            { type: 'text', text: getButtonParam(renewalLink) }
           ]
         }
       ];
@@ -369,6 +391,42 @@ const sendDueReminder = async ({ phone, clientName, pendingAmount, dueDate, rene
   }
 };
 
+const sendPaymentReceived = async ({ phone, clientName, gymName, amount, pdfUrl, paymentId, clientId, gymId }) => {
+  const templateName = process.env.META_TEMPLATE_PAYMENT_RECEIVED || 'payment_received';
+
+  const components = [
+    {
+      type: 'header',
+      parameters: [
+        {
+          type: 'document',
+          document: {
+            link: pdfUrl,
+            filename: `${paymentId || 'receipt'}.pdf`
+          }
+        }
+      ]
+    },
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: String(clientName) },
+        { type: 'text', text: String(gymName) },
+        { type: 'text', text: String(amount) }
+      ]
+    }
+  ];
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Payment Received',
+    clientId,
+    gymId
+  });
+};
+
 module.exports = {
   sendExpiringSoonReminder,
   sendExpiringSoonPendingReminder,
@@ -377,5 +435,6 @@ module.exports = {
   sendDueFirstReminder,
   sendDueSecondReminder,
   sendDueThirdReminder,
-  sendDueReminder
+  sendDueReminder,
+  sendPaymentReceived
 };
