@@ -301,6 +301,14 @@ exports.recordPayment = async (req, res, next) => {
 
     await syncClientStatus(client._id);
 
+    // Trigger WhatsApp notification with bill PDF in the background
+    if (gym && gym.dbName) {
+      const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+      sendPaymentNotification(payment._id, client._id, gym.gymId, gym.dbName).catch(err => {
+        console.error('Error triggering payment notification: ', err);
+      });
+    }
+
     res.status(201).json({ success: true, data: payment });
   } catch (err) {
     next(err);
@@ -505,6 +513,14 @@ exports.updatePayment = async (req, res, next) => {
     }
 
     await syncClientStatus(payment.clientId);
+
+    // Trigger WhatsApp notification with bill PDF in the background
+    if (gym && gym.dbName) {
+      const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+      sendPaymentNotification(newTransaction._id, payment.clientId, gym.gymId, gym.dbName).catch(err => {
+        console.error('Error triggering payment notification: ', err);
+      });
+    }
 
     res.status(200).json({ success: true, data: newTransaction });
   } catch (err) {

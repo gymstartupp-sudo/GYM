@@ -146,7 +146,7 @@ const runOverdueReminders = async (options = {}) => {
             let clientTwilioStatus = 'Skipped';
             let clientFailureReason = '';
 
-            const isNotSent = (rem) => !rem?.status || rem.status === 'none' || rem.status === 'failed';
+            const isNotSent = (rem) => !rem?.status || rem.status === 'none' || rem.status === 'failed' || rem.status === 'pending';
 
             if (daysUntilDue <= 3 && daysUntilDue > 0 && isNotSent(updatedClient.overdueReminders?.reminder1)) {
               reminderToTrigger = 1;
@@ -298,7 +298,7 @@ const runOverdueReminders = async (options = {}) => {
 };
 
 // Run every day at 04:30 PM
-cron.schedule('46 01 * * *', async () => {
+cron.schedule('32 17 * * *', async () => {
   console.log('Running daily automated overdueReminderJob...');
   await runOverdueReminders();
 });

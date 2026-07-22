@@ -41,17 +41,27 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   // Retrieve memberships details for dues
   const membershipsWithDues = client.memberships?.filter(m => (m.finalPrice - m.totalPaid) > 0) || [];
   const hasDues = membershipsWithDues.length > 0 || client.paymentStatus === 'partial' || client.paymentStatus === 'overdue';
-  const hasPaymentHistory = client?.hasPartialPayment === true || hasDues;
+
+  const hasRemindersHistory = 
+    (client.overdueReminders?.manualReminders && client.overdueReminders.manualReminders.length > 0) ||
+    (client.overdueReminders?.reminder1?.status && client.overdueReminders.reminder1.status !== 'none') ||
+    (client.overdueReminders?.reminder2?.status && client.overdueReminders.reminder2.status !== 'none') ||
+    (client.overdueReminders?.reminder3?.status && client.overdueReminders.reminder3.status !== 'none');
+
+  const hasPaymentHistory = client?.hasPartialPayment === true || hasDues || hasRemindersHistory;
 
   const outstandingMembership = [...(client.memberships || [])]
     .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
     .find(m => (m.finalPrice - m.totalPaid) > 0);
 
-  const duesPlanName = outstandingMembership?.planName || planName;
-  const duesStartDate = outstandingMembership?.startDate || startDate;
-  const duesDueDate = outstandingMembership?.dueDate;
-  const duesFinalPrice = outstandingMembership?.finalPrice || 0;
-  const duesTotalPaid = outstandingMembership?.totalPaid || 0;
+  const latestMembership = [...(client.memberships || [])]
+    .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0];
+
+  const duesPlanName = outstandingMembership?.planName || latestMembership?.planName || planName;
+  const duesStartDate = outstandingMembership?.startDate || latestMembership?.startDate || startDate;
+  const duesDueDate = outstandingMembership?.dueDate || latestMembership?.dueDate;
+  const duesFinalPrice = outstandingMembership?.finalPrice || latestMembership?.finalPrice || 0;
+  const duesTotalPaid = outstandingMembership?.totalPaid || latestMembership?.totalPaid || 0;
   const duesBalance = duesFinalPrice - duesTotalPaid;
 
   const today = new Date();
@@ -159,7 +169,7 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
                       {hasDues ? (
                         <>Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> | Remaining: <span className="text-primary font-bold">₹{duesBalance}</span> | Due: <span className="text-amber-500 font-medium">{formatDate(duesDueDate)}</span></>
                       ) : (
-                        <>Originally Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> | Due: <span className="text-amber-500 font-medium">{formatDate(duesDueDate)}</span></>
+                        <>Plan Price: <span className="text-primary font-bold">₹{duesFinalPrice}</span> | Total Paid: <span className="text-emerald-500 font-bold">₹{duesTotalPaid}</span> (Dues Cleared)</>
                       )}
                     </p>
                   </div>
@@ -312,7 +322,7 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
                     </div>
                     <p className="text-xs text-text-muted mt-1">
                       {client.overdueReminders?.workflowCompleted
-                        ? 'The pending balance was paid in full.'
+                        ? `The pending balance was paid in full${client.overdueReminders.duesClearedAt ? ' on ' + formatDate(client.overdueReminders.duesClearedAt) : ''}.`
                         : `Remaining balance of ₹${duesBalance} is still outstanding.`}
                     </p>
                   </div>

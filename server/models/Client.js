@@ -22,8 +22,8 @@ const clientSchema = new mongoose.Schema({
   whatsappNumber: { type: String },
   expiryReminderSent: { type: Boolean, default: false },
   expiredReminderSent: { type: Boolean, default: false },
-  expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
-  expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+  expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed', 'pending'], default: 'none' },
+  expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed', 'pending'], default: 'none' },
   expiryReminderError: { type: String, default: null },
   expiredReminderError: { type: String, default: null },
   expiryReminderSentAt: { type: Date, default: null },
@@ -57,8 +57,8 @@ const clientSchema = new mongoose.Schema({
     requestApproved: { type: Boolean, default: false },
     expiryReminderSent: { type: Boolean, default: false },
     expiredReminderSent: { type: Boolean, default: false },
-    expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
-    expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+    expiryReminderStatus: { type: String, enum: ['none', 'sent', 'failed', 'pending'], default: 'none' },
+    expiredReminderStatus: { type: String, enum: ['none', 'sent', 'failed', 'pending'], default: 'none' },
     expiryReminderError: { type: String, default: null },
     expiredReminderError: { type: String, default: null },
     expiryReminderSentAt: { type: Date, default: null },
@@ -66,17 +66,17 @@ const clientSchema = new mongoose.Schema({
   },
   overdueReminders: {
     reminder1: {
-      status: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+      status: { type: String, enum: ['none', 'sent', 'failed', 'pending'], default: 'none' },
       sentAt: { type: Date, default: null },
       error: { type: String, default: null }
     },
     reminder2: {
-      status: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+      status: { type: String, enum: ['none', 'sent', 'failed', 'pending'], default: 'none' },
       sentAt: { type: Date, default: null },
       error: { type: String, default: null }
     },
     reminder3: {
-      status: { type: String, enum: ['none', 'sent', 'failed'], default: 'none' },
+      status: { type: String, enum: ['none', 'sent', 'failed', 'pending'], default: 'none' },
       sentAt: { type: Date, default: null },
       error: { type: String, default: null }
     },
