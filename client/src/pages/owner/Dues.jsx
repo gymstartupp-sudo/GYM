@@ -37,9 +37,9 @@ const Dues = () => {
     const [reminderModalTab, setReminderModalTab] = useState('both');
     const [sendingReminder, setSendingReminder] = useState(null);
 
-    const fetchData = async () => {
+    const fetchData = async (showLoading = true) => {
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             const [clientsRes, plansRes, paymentsRes, expiredRes] = await Promise.all([
                 api.get('/client'),
                 api.get('/plan'),
@@ -53,7 +53,7 @@ const Dues = () => {
         } catch (e) {
             toast.error("Failed to load dues data");
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     };
 
@@ -70,7 +70,13 @@ const Dues = () => {
     };
 
     useEffect(() => {
-        fetchData();
+        fetchData(true);
+
+        const interval = setInterval(() => {
+            fetchData(false);
+        }, 10000); // Poll every 10 seconds
+
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -366,7 +372,7 @@ const Dues = () => {
             }
 
             setShowModal(false);
-            fetchData();
+            await fetchData(false);
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to process payment");
             throw error;
@@ -412,6 +418,7 @@ const Dues = () => {
         try {
             await api.post(`/client/${clientId}/send-reminder`);
             toast.success('Reminder sent successfully');
+            await fetchData(false);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to send reminder');
         } finally {
@@ -566,7 +573,8 @@ const Dues = () => {
                                                 <div className="flex items-center justify-end gap-2">
                                                     {activeTab === 'overdue' && (
                                                         <button
-                                                            onClick={() => handleSendReminder(due)}
+                                                            type="button"
+                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSendReminder(due); }}
                                                             disabled={sendingReminder === due.clientId}
                                                             className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border disabled:opacity-50"
                                                             title="Send WhatsApp reminder"

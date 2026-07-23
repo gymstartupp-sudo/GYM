@@ -56,6 +56,14 @@ const sendPaymentNotification = async (paymentId, clientId, gymId, dbName) => {
       console.error(`[WHATSAPP NOTIFICATION ERROR] Payment ${paymentId} not found in database.`);
       return;
     }
+
+    // Guard: Do not send WhatsApp for failed, pending, or cancelled payments
+    const paymentStatus = payment.status ? payment.status.toLowerCase() : '';
+    if (paymentStatus === 'failed' || paymentStatus === 'pending' || paymentStatus === 'cancelled') {
+      console.log(`[WHATSAPP NOTIFICATION INFO] Payment ${paymentId} status is "${paymentStatus}". Skipping WhatsApp notification.`);
+      return;
+    }
+
     if (!client) {
       console.error(`[WHATSAPP NOTIFICATION ERROR] Client associated with payment ${paymentId} not found.`);
       return;
@@ -73,7 +81,8 @@ const sendPaymentNotification = async (paymentId, clientId, gymId, dbName) => {
     }
     const formattedWhatsApp = `+91${cleanMobile}`;
 
-    // 4. Generate PDF Bill
+    // 4. Always generate a fresh PDF Bill to ensure the latest layout/styles are sent
+    let pdfUrl = '';
     let pdfLocalPath;
     try {
       pdfLocalPath = await generatePaymentPDF(payment, client, gym);
@@ -83,13 +92,12 @@ const sendPaymentNotification = async (paymentId, clientId, gymId, dbName) => {
       return;
     }
 
-    // 5. Upload PDF to Cloudinary
-    let pdfUrl = '';
     const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && 
                                    !process.env.CLOUDINARY_CLOUD_NAME.includes('your_cloud_name') &&
                                    process.env.CLOUDINARY_API_KEY && 
                                    !process.env.CLOUDINARY_API_KEY.includes('your_api_key');
 
+    // 5. Upload PDF to Cloudinary if configured
     if (isCloudinaryConfigured) {
       try {
         pdfUrl = await uploadPDFToCloudinary(pdfLocalPath);
@@ -102,13 +110,9 @@ const sendPaymentNotification = async (paymentId, clientId, gymId, dbName) => {
         }
       }
     } else {
-      console.warn(`[WHATSAPP NOTIFICATION WARNING] Cloudinary credentials are not configured or are placeholders. Using sample PDF fallback.`);
-      // Delete temporary file to avoid leaks since we aren't uploading it
-      if (fs.existsSync(pdfLocalPath)) {
-        fs.unlinkSync(pdfLocalPath);
-      }
-      // Fallback PDF link
-      pdfUrl = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+      console.warn(`[WHATSAPP NOTIFICATION WARNING] Cloudinary credentials are not configured. Using relative path URL.`);
+      const path = require('path');
+      pdfUrl = `/uploads/${path.basename(pdfLocalPath)}`;
     }
 
     if (!pdfUrl) {
@@ -116,33 +120,97 @@ const sendPaymentNotification = async (paymentId, clientId, gymId, dbName) => {
       return;
     }
 
-    // 6. Send Meta WhatsApp Message
+    // 6. Send Meta WhatsApp Message (Two-Step Flow)
     const amountVal = payment.paidNow || payment.paidAmount || 0;
-    const result = await metaWhatsAppService.sendPaymentReceived({
+    const clientName = client.personalInfo?.name || payment.clientName || 'Client';
+
+    const getAbsolutePdfUrl = (url) => {
+      if (!url) return '';
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+      return `${backendUrl}${url}`;
+    };
+
+    const metaPdfUrl = getAbsolutePdfUrl(pdfUrl);
+
+    // Step 1: Send payment_received template
+    const templateResult = await metaWhatsAppService.sendPaymentReceivedTemplate({
       phone: formattedWhatsApp,
-      clientName: client.personalInfo?.name || payment.clientName || 'Client',
+      clientName,
       gymName: gym.gymName,
       amount: String(amountVal),
-      pdfUrl,
+      pdfUrl: metaPdfUrl,
       paymentId: payment.paymentId,
       clientId: client._id,
       gymId: gym.gymId
     });
 
-    if (result && result.success) {
-      console.log(`[WHATSAPP NOTIFICATION SUCCESS] Message sent. ID: ${result.messageId}`);
-      
-      // Update Payment record
+    if (!templateResult.success) {
+      console.log(`Payment Successful
+
+↓
+
+Invoice Generated
+
+↓
+
+WhatsApp Sending Failed
+
+Reason: Template Send Failed - ${templateResult.error || 'Unknown error'}`);
+
+      // Save failure in database
       await runWithTenantContext({ tenantDb: conn, models: { Payment: PaymentModel } }, async () => {
         await PaymentModel.updateOne(
           { _id: payment._id },
-          { $set: { billSentViaWhatsApp: true } }
+          {
+            $set: {
+              invoiceSentOn: new Date(),
+              invoiceWhatsAppStatus: 'failed',
+              invoicePDFUrl: pdfUrl,
+              invoiceError: templateResult.error || 'Template Send Failed'
+            }
+          }
         );
       });
-      console.log(`[WHATSAPP NOTIFICATION] Payment record updated: billSentViaWhatsApp = true`);
-    } else {
-      console.error(`[WHATSAPP NOTIFICATION ERROR] Meta API failed: ${result?.error || 'Unknown error'}`);
+      return;
     }
+
+    console.log(`Payment Successful
+
+↓
+
+Invoice Generated
+
+↓
+
+WhatsApp Template Sent
+
+↓
+
+Invoice PDF Sent
+
+↓
+
+Completed`);
+
+    // Update Payment record in database with success status
+    await runWithTenantContext({ tenantDb: conn, models: { Payment: PaymentModel } }, async () => {
+      await PaymentModel.updateOne(
+        { _id: payment._id },
+        {
+          $set: {
+            invoiceSentOn: new Date(),
+            invoiceWhatsAppStatus: 'sent',
+            invoiceMessageId: templateResult.messageId,
+            invoicePDFUrl: pdfUrl,
+            invoiceError: null,
+            billSentViaWhatsApp: true
+          }
+        }
+      );
+    });
   } catch (err) {
     console.error(`[WHATSAPP NOTIFICATION CRITICAL ERROR] Workflow crash: ${err.message}`, err);
   }
