@@ -907,6 +907,7 @@ exports.bulkImportClients = async (req, res, next) => {
     const TenantClient = conn.model('Client');
     const TenantPlan = conn.model('Plan');
     const TenantPayment = conn.model('Payment');
+    const TenantCounter = conn.model('Counter');
 
     let rowsProcessed = clients.length;
     let importedSuccessfully = 0;
@@ -1010,7 +1011,7 @@ exports.bulkImportClients = async (req, res, next) => {
       };
     };
 
-    await runWithTenantContext({ tenantDb: conn, models: { Client: TenantClient, Plan: TenantPlan, Payment: TenantPayment } }, async () => {
+    await runWithTenantContext({ tenantDb: conn, models: { Client: TenantClient, Plan: TenantPlan, Payment: TenantPayment, Counter: TenantCounter } }, async () => {
       for (let i = 0; i < clients.length; i++) {
         const row = clients[i];
         const rowNum = i + 2;

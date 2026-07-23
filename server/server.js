@@ -119,6 +119,9 @@ require('./jobs/overdueReminderJob');
 // Health Check
 app.get("/", (req, res) => res.send("API running"));
 
+// Webhook Route (bypass tenant middleware)
+app.use('/api/webhook', require('./routes/webhook'));
+
 // Global Tenant DB Middleware
 const { tenantDbMiddleware } = require('./middleware/tenantDbMiddleware');
 app.use(tenantDbMiddleware);

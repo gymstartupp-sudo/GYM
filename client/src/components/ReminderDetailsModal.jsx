@@ -59,7 +59,7 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   const endDateNorm = endDate ? (() => { const d = new Date(endDate); d.setHours(0, 0, 0, 0); return d; })() : null;
   const startDateNorm = startDate ? (() => { const d = new Date(startDate); d.setHours(0, 0, 0, 0); return d; })() : null;
   const isMembershipExpired = endDateNorm ? today > endDateNorm : false;
-  const isMembershipActive = startDateNorm ? today >= startDateNorm && !isMembershipExpired : false;
+  const isMembershipActive = startDateNorm ? today >= startDateNorm : false;
 
   const getStepStatus = (stepObj) => {
     if (stepObj?.status && stepObj.status !== 'none') return stepObj.status;

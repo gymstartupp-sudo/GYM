@@ -41,6 +41,20 @@ const postRequest = (url, headers, body) => {
 };
 
 /**
+ * Helper to extract the dynamic parameter suffix from a full URL,
+ * since Meta dynamic URL buttons do not accept protocol/domain in parameters.
+ */
+const getButtonParam = (urlOrSuffix) => {
+  if (!urlOrSuffix) return '';
+  const searchStr = '/client/renew/';
+  const index = urlOrSuffix.indexOf(searchStr);
+  if (index !== -1) {
+    return urlOrSuffix.substring(index + searchStr.length);
+  }
+  return urlOrSuffix;
+};
+
+/**
  * Common sender function to post template message payload to Meta Graph API.
  */
 const sendMetaWhatsApp = async ({ to, templateName, components, reminderType, clientId, gymId }) => {
@@ -159,7 +173,8 @@ const sendExpiringSoonReminder = async ({ phone, clientName, gymName, expiryDate
  * Variables: Client Name, Gym Name, Expiry Date, Renewal Link
  */
 const sendExpiredReminder = async ({ phone, clientName, gymName, expiryDate, renewalLink, clientId, gymId }) => {
-  const templateName = process.env.META_TEMPLATE_EXPIRED || 'membership_expired';
+  const templateName = process.env.META_TEMPLATE_EXPIRED || 'memberships_expired';
+  const isDynamic = process.env.META_EXPIRED_LINK_AS_BUTTON_DYNAMIC === 'true';
 
   const components = [
     {
@@ -169,16 +184,19 @@ const sendExpiredReminder = async ({ phone, clientName, gymName, expiryDate, ren
         { type: 'text', text: String(gymName) },
         { type: 'text', text: String(expiryDate) }
       ]
-    },
-    {
+    }
+  ];
+
+  if (isDynamic) {
+    components.push({
       type: 'button',
       sub_type: 'url',
       index: '0',
       parameters: [
-        { type: 'text', text: String(renewalLink) }
+        { type: 'text', text: getButtonParam(renewalLink) }
       ]
-    }
-  ];
+    });
+  }
 
   return sendMetaWhatsApp({
     to: phone,
@@ -226,6 +244,7 @@ const sendExpiringSoonPendingReminder = async ({ phone, clientName, gymName, exp
  */
 const sendExpiredPendingReminder = async ({ phone, clientName, gymName, expiryDate, pendingAmount, renewalLink, clientId, gymId }) => {
   const templateName = process.env.META_TEMPLATE_EXPIRED_PENDING || 'membership_expired_pending';
+  const isDynamic = process.env.META_EXPIRED_PENDING_LINK_AS_BUTTON_DYNAMIC === 'true';
 
   const components = [
     {
@@ -236,16 +255,19 @@ const sendExpiredPendingReminder = async ({ phone, clientName, gymName, expiryDa
         { type: 'text', text: String(expiryDate) },
         { type: 'text', text: String(pendingAmount) }
       ]
-    },
-    {
+    }
+  ];
+
+  if (isDynamic) {
+    components.push({
       type: 'button',
       sub_type: 'url',
       index: '0',
       parameters: [
-        { type: 'text', text: String(renewalLink) }
+        { type: 'text', text: getButtonParam(renewalLink) }
       ]
-    }
-  ];
+    });
+  }
 
   return sendMetaWhatsApp({
     to: phone,
@@ -278,7 +300,7 @@ const buildDueComponents = (clientName, pendingAmount, dueDate, renewalLink, sta
           sub_type: 'url',
           index: '0',
           parameters: [
-            { type: 'text', text: String(renewalLink) }
+            { type: 'text', text: getButtonParam(renewalLink) }
           ]
         }
       ];
@@ -369,6 +391,150 @@ const sendDueReminder = async ({ phone, clientName, pendingAmount, dueDate, rene
   }
 };
 
+const sendPaymentReceived = async ({ phone, clientName, gymName, amount, pdfUrl, paymentId, clientId, gymId }) => {
+  const templateName = process.env.META_TEMPLATE_PAYMENT_RECEIVED || 'payment_received';
+
+  const components = [
+    {
+      type: 'header',
+      parameters: [
+        {
+          type: 'document',
+          document: {
+            link: pdfUrl,
+            filename: `${paymentId || 'receipt'}.pdf`
+          }
+        }
+      ]
+    },
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: String(clientName) },
+        { type: 'text', text: String(gymName) },
+        { type: 'text', text: String(amount) }
+      ]
+    }
+  ];
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Payment Received',
+    clientId,
+    gymId
+  });
+};const sendPaymentReceivedTemplate = async ({ phone, clientName, gymName, amount, pdfUrl, paymentId, clientId, gymId }) => {
+  const templateName = process.env.META_TEMPLATE_PAYMENT_RECEIVED || 'payment_received';
+
+  const components = [
+    {
+      type: 'header',
+      parameters: [
+        {
+          type: 'document',
+          document: {
+            link: pdfUrl,
+            filename: `${paymentId || 'receipt'}.pdf`
+          }
+        }
+      ]
+    },
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', parameter_name: 'customer_name', text: String(clientName) },
+        { type: 'text', parameter_name: 'gym_name', text: String(gymName) },
+        { type: 'text', parameter_name: 'amount', text: String(amount) }
+      ]
+    }
+  ];
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Payment Received Template',
+    clientId,
+    gymId
+  });
+};
+const sendWhatsAppDocument = async ({ phone, pdfUrl, filename, caption, clientId, gymId }) => {
+  const token = process.env.META_ACCESS_TOKEN;
+  const phoneId = process.env.META_PHONE_NUMBER_ID;
+
+  if (!token || !phoneId) {
+    const mockId = `wamid.MOCK_DOC_${Math.random().toString(36).substring(2, 15)}`;
+    const mockSentTime = new Date().toISOString();
+    console.log(`[META DOCUMENT MOCK]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Message ID    : ${mockId}
+- Sent Time     : ${mockSentTime}
+- Status        : MockSent
+- Details       : To: ${phone}, URL: ${pdfUrl}, Caption: ${caption}`);
+    return { success: true, messageId: mockId, status: 'sent' };
+  }
+
+  let cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.length === 10) {
+    cleanPhone = '91' + cleanPhone;
+  }
+
+  const graphVersion = process.env.META_GRAPH_VERSION || 'v20.0';
+  const url = `https://graph.facebook.com/${graphVersion}/${phoneId}/messages`;
+  const headers = { 'Authorization': `Bearer ${token}` };
+
+  const body = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: cleanPhone,
+    type: 'document',
+    document: {
+      link: pdfUrl,
+      filename: filename,
+      caption: caption
+    }
+  };
+
+  try {
+    const response = await postRequest(url, headers, body);
+    const resBody = JSON.parse(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300 && resBody.messages && resBody.messages[0]) {
+      const messageId = resBody.messages[0].id;
+      const sentTime = new Date().toISOString();
+      console.log(`[META DOCUMENT SUCCESS]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Message ID    : ${messageId}
+- Sent Time     : ${sentTime}
+- Status        : Sent`);
+      return { success: true, messageId, status: 'sent' };
+    } else {
+      const errMessage = resBody.error?.message || response.body || 'Unknown Meta API error';
+      console.error(`[META DOCUMENT FAILURE]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Sent Time     : ${new Date().toISOString()}
+- Error         : ${errMessage}`);
+      return { success: false, error: errMessage };
+    }
+  } catch (err) {
+    console.error(`[META DOCUMENT FAILURE]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Sent Time     : ${new Date().toISOString()}
+- Error         : ${err.message}`);
+    return { success: false, error: err.message };
+  }
+};
+
 module.exports = {
   sendExpiringSoonReminder,
   sendExpiringSoonPendingReminder,
@@ -377,5 +543,8 @@ module.exports = {
   sendDueFirstReminder,
   sendDueSecondReminder,
   sendDueThirdReminder,
-  sendDueReminder
+  sendDueReminder,
+  sendPaymentReceived,
+  sendPaymentReceivedTemplate,
+  sendWhatsAppDocument
 };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FileText, CheckCircle2, X } from 'lucide-react';
+import { FileText, CheckCircle2, X, Download } from 'lucide-react';
 import Button from '../../components/Button';
 import ClientRenewModal from '../../components/ClientRenewModal';
 import { calculateEndDate } from '../../utils/membership';
@@ -35,6 +35,28 @@ const ClientPayments = () => {
   const [showRenewModal, setShowRenewModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
+
+  const downloadInvoice = async (payment) => {
+    setDownloadingId(payment._id);
+    try {
+      const response = await api.get(`/payment/${payment._id}/pdf`, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Invoice_${payment.paymentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      toast.success("Invoice downloaded successfully");
+    } catch (err) {
+      toast.error("Failed to download invoice");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -225,13 +247,25 @@ const ClientPayments = () => {
                       )}
                     </td>
                     <td className="p-5 text-center">
-                      <button
-                        onClick={() => { setSelectedPayment(pmt); setShowReceiptModal(true); }}
-                        className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
-                        title="View Bill"
-                      >
-                        <FileText size={18} />
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedPayment(pmt); setShowReceiptModal(true); }}
+                          className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
+                          title="View Invoice"
+                        >
+                          <FileText size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={downloadingId === pmt._id}
+                          onClick={() => downloadInvoice(pmt)}
+                          className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
+                          title="Download Invoice"
+                        >
+                          <Download size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -257,12 +291,22 @@ const ClientPayments = () => {
               <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Invoice Preview</span>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => window.print()}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
                 >
-                  Print Invoice
+                  Print
                 </button>
                 <button
+                  type="button"
+                  disabled={downloadingId === selectedPayment._id}
+                  onClick={() => downloadInvoice(selectedPayment)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
+                >
+                  Download
+                </button>
+                <button
+                  type="button"
                   onClick={() => setShowReceiptModal(false)}
                   className="p-1.5 text-text-secondary hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
                 >

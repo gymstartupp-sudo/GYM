@@ -37,4 +37,7 @@ router.post('/create-order', protect, authorize('owner', 'client'), [
 router.route('/:id')
   .put(protect, authorize('owner', 'client'), updatePaymentValidation, validate, paymentController.updatePayment);
 
+router.get('/:id/pdf', protect, authorize('owner', 'client'), paymentController.downloadInvoicePDF);
+router.post('/:id/send-whatsapp', protect, authorize('owner'), paymentController.resendWhatsAppInvoice);
+
 module.exports = router;
