@@ -315,10 +315,75 @@ exports.registerClient = async (req, res, next) => {
 // @access  Public
 exports.universalLogin = async (req, res, next) => {
   try {
-    const { loginId, password } = req.body;
+    const { loginId, password, gymId, role } = req.body;
     const isEmail = loginId.includes('@');
     const { getTenantConnection } = require('../utils/connectionManager');
 
+    // If gymId and role are provided, perform direct, optimized lookup
+    if (gymId && role) {
+      if (role === 'superadmin') {
+        if (isEmail) {
+          const admin = await Admin.findOne({ email: loginId });
+          if (admin && (await admin.matchPassword(password))) {
+            return res.json({
+              success: true,
+              data: { email: admin.email, role: admin.role },
+              token: generateToken(admin._id, 'superadmin'),
+              role: admin.role
+            });
+          }
+        }
+      } else if (role === 'owner') {
+        const gymQuery = isEmail 
+          ? { gymEmail: loginId, gymId } 
+          : { gymContact: loginId, gymId };
+        const gym = await Gym.findOne(gymQuery);
+        if (gym && (await gym.matchPassword(password))) {
+          if (!gym.isActive) {
+            return res.status(403).json({
+              success: false,
+              message: 'Your gym account has been deactivated. Please contact the administrator.'
+            });
+          }
+          return res.json({
+            success: true,
+            data: gym,
+            token: generateToken(gym._id, 'owner', { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }),
+            role: 'owner'
+          });
+        }
+      } else if (role === 'client') {
+        const clientGym = await Gym.findOne({ gymId });
+        if (clientGym) {
+          const clientQuery = isEmail ? { 'personalInfo.email': loginId } : { 'personalInfo.mobileNo': loginId };
+          const conn = await getTenantConnection(clientGym.dbName);
+          const TenantClient = conn.model('Client');
+          const client = await TenantClient.findOne(clientQuery);
+          if (client && (await client.matchPassword(password))) {
+            if (clientGym.isActive === false) {
+              return res.status(403).json({
+                success: false,
+                message: 'Your gym account has been suspended. Please contact your gym owner.'
+              });
+            }
+
+            if (!client.membership.requestApproved) {
+              return res.status(401).json({ success: false, message: 'Your membership is pending approval by the gym owner' });
+            }
+
+            return res.json({
+              success: true,
+              data: client,
+              token: generateToken(client._id, 'client', { gymId: client.gymId, dbName: clientGym.dbName }),
+              role: 'client'
+            });
+          }
+        }
+      }
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    // Fallback: Perform sequential lookup (old logic)
     // 1. Check Admin
     if (isEmail) {
       const admin = await Admin.findOne({ email: loginId });
@@ -372,7 +437,6 @@ exports.universalLogin = async (req, res, next) => {
     }
     
     if (foundClient && clientGym) {
-      // Block login if client's gym has been deactivated by admin
       if (clientGym.isActive === false) {
         return res.status(403).json({
           success: false,
@@ -392,8 +456,78 @@ exports.universalLogin = async (req, res, next) => {
       });
     }
 
-    // If no match found
     res.status(401).json({ success: false, message: 'Invalid credentials' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Find Gyms/Portals matching loginId
+// @route   POST /api/auth/find-gyms
+// @access  Public
+exports.findGyms = async (req, res, next) => {
+  try {
+    const { loginId } = req.body;
+    if (!loginId) {
+      return res.status(400).json({ success: false, message: 'Email or Phone is required' });
+    }
+
+    const isEmail = loginId.includes('@');
+    const { getTenantConnection } = require('../utils/connectionManager');
+    const matchingGyms = [];
+
+    // 1. Check if loginId belongs to Admin
+    if (isEmail) {
+      const admin = await Admin.findOne({ email: loginId }).lean();
+      if (admin) {
+        matchingGyms.push({
+          gymId: 'admin',
+          gymName: 'Super Admin Portal',
+          role: 'superadmin'
+        });
+      }
+    }
+
+    // 2. Check if loginId belongs to a Gym Owner
+    const gymQuery = isEmail ? { gymEmail: loginId } : { gymContact: loginId };
+    const gym = await Gym.findOne(gymQuery).lean();
+    if (gym) {
+      matchingGyms.push({
+        gymId: gym.gymId,
+        gymName: gym.gymName,
+        role: 'owner'
+      });
+    }
+
+    // 3. Check if loginId belongs to Client in tenant databases
+    const clientQuery = isEmail ? { 'personalInfo.email': loginId } : { 'personalInfo.mobileNo': loginId };
+    const gymsList = await Gym.find({ isActive: true }).lean();
+
+    for (const g of gymsList) {
+      try {
+        const conn = await getTenantConnection(g.dbName);
+        const TenantClient = conn.model('Client');
+        const client = await TenantClient.findOne(clientQuery).lean();
+        if (client) {
+          matchingGyms.push({
+            gymId: g.gymId,
+            gymName: g.gymName,
+            role: 'client'
+          });
+        }
+      } catch (err) {
+        console.error(`findGyms search client error in tenant ${g.dbName}:`, err);
+      }
+    }
+
+    if (matchingGyms.length === 0) {
+      return res.status(404).json({ success: false, message: 'No accounts found for this email or phone number' });
+    }
+
+    res.json({
+      success: true,
+      gyms: matchingGyms
+    });
   } catch (err) {
     next(err);
   }
