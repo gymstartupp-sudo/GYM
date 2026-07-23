@@ -98,6 +98,7 @@ const checkExistsValidation = [
 
 // Routes
 router.post('/check-exists', checkExistsValidation, validate, authController.checkExists);
+router.post('/find-gyms', authController.findGyms);
 
 router.post('/gym/register', uploadLogo.single('logo'), gymRegisterValidation, validate, authController.registerGymOwner);
 router.post('/client/register', clientRegisterValidation, validate, authController.registerClient);

@@ -1,4 +1,8 @@
 require('dotenv').config();
+const dns = require('dns');
+// Force public DNS resolution to prevent ECONNREFUSED error on SRV queries (common on some Windows/ISP setups)
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { FileText, CheckCircle2, X, Download } from 'lucide-react';
+import { FileText, CheckCircle2, X, Download, Printer, Phone, Mail } from 'lucide-react';
 import Button from '../../components/Button';
 import ClientRenewModal from '../../components/ClientRenewModal';
 import { calculateEndDate } from '../../utils/membership';
@@ -160,6 +160,15 @@ const ClientPayments = () => {
     return `${startStr} to Expiry`;
   };
 
+  const getClientDisplayId = (clientId) => {
+    return profile?.clientId || 'N/A';
+  };
+
+  const getClientMemberSince = (clientId) => {
+    if (!profile?.createdAt) return 'Jan 2024';
+    return new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
+
   if (loading || !profile) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -284,157 +293,189 @@ const ClientPayments = () => {
 
       {/* Receipt / Bill Modal */}
       {showReceiptModal && selectedPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="bg-white text-gray-900 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print-invoice-container my-8 relative">
-            {/* Actions Header (Hidden in print) */}
-            <div className="no-print p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-              <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">Invoice Preview</span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-text-primary text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
-                >
-                  Print
-                </button>
-                <button
-                  type="button"
-                  disabled={downloadingId === selectedPayment._id}
-                  onClick={() => downloadInvoice(selectedPayment)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
-                >
-                  Download
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowReceiptModal(false)}
-                  className="p-1.5 text-text-secondary hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
-                >
-                  <X size={18} />
-                </button>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-md print:hidden"
+            onClick={() => setShowReceiptModal(false)}
+          />
+          
+          {/* Modal content wrapper */}
+          <div 
+            className="flex min-h-full items-start justify-center p-4"
+            onClick={(e) => { if (e.target === e.currentTarget) setShowReceiptModal(false); }}
+          >
+            <div className="bg-white text-gray-900 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 print-invoice-container my-6 relative z-10">
+              {/* Actions Header (sticky, hidden in print) */}
+              <div className="print:hidden sticky top-0 z-10 p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Invoice Preview</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-gray-900 text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
+                  >
+                    <Printer size={13} />
+                    Print
+                  </button>
+                  <button
+                    type="button"
+                    disabled={downloadingId === selectedPayment._id}
+                    onClick={() => downloadInvoice(selectedPayment)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
+                  >
+                    Download
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowReceiptModal(false)}
+                    className="p-1.5 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-200 transition-all"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Invoice Printable Body */}
-            <div className="p-5 space-y-4">
-              {/* Header: Gym Info */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-gray-200">
-                <div className="flex items-center gap-2.5">
-                  {getLogoUrl() ? (
-                    <img
-                      src={getLogoUrl()}
-                      alt={gymInfo?.gymName || "Gym Logo"}
-                      className="w-12 h-12 object-contain rounded-lg border border-gray-100"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center font-black text-primary text-lg">
-                      {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
+              {/* Invoice Printable Body */}
+              <div className="p-5 space-y-4">
+                {/* Header: Gym & Invoice Details */}
+                <div className="flex justify-between items-start gap-3 pb-4 border-b border-gray-200">
+                  {/* Gym Details on Left */}
+                  <div className="flex items-center gap-2.5">
+                    {getLogoUrl() ? (
+                      <img
+                        src={getLogoUrl()}
+                        alt={gymInfo?.gymName || "Gym Logo"}
+                        className="w-11 h-11 object-contain rounded-lg border border-gray-100"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center font-black text-primary text-lg">
+                        {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h2 className="text-base font-black uppercase tracking-tight text-gray-900 leading-none">{gymInfo?.gymName || "LIK GYM"}</h2>
+                      <p className="text-[9px] text-text-muted font-bold uppercase tracking-wider mt-1">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                      <p className="text-[10px] text-gray-600 max-w-[220px] leading-relaxed whitespace-pre-line mt-0.5">
+                        {gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || ""}
+                      </p>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Invoice Meta on Right */}
+                  <div className="text-right">
+                    <div className="mb-1.5">
+                      {selectedPayment.status === 'paid' || (selectedPayment.remainingBalance !== undefined ? selectedPayment.remainingBalance : (selectedPayment.amount - (selectedPayment.paidAmount || 0))) === 0 ? (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-widest">Paid</span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">Partially Paid</span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-black text-gray-900">Invoice #{selectedPayment.paymentId}</h3>
+                    <p className="text-[10px] text-text-muted mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                  </div>
+                </div>
+
+                {/* Billed To & Payment Details */}
+                <div className="grid grid-cols-2 gap-4 text-xs pb-2">
                   <div>
-                    <h2 className="text-lg font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
-                    <p className="text-[9px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                    <h4 className="font-bold text-amber-600 uppercase tracking-wider mb-1.5 text-[9px]">Billed To</h4>
+                    <p className="font-black text-gray-900 text-sm">{selectedPayment.clientName || profile.personalInfo?.name}</p>
+                    <p className="text-text-secondary mt-0.5">Client ID: {getClientDisplayId(selectedPayment.clientId)}</p>
+                    <p className="text-text-muted mt-0.5">Member since: {getClientMemberSince(selectedPayment.clientId)}</p>
+                  </div>
+                  <div className="text-right">
+                    <h4 className="font-bold text-amber-600 uppercase tracking-wider mb-1.5 text-[9px]">Payment Details</h4>
+                    <p className="text-text-secondary">Method: <strong className="text-gray-900 uppercase font-black">{selectedPayment.paymentMethod || 'CASH'}</strong></p>
+                    <p className="text-text-secondary mt-0.5">Status: <span className="font-bold text-gray-900">{selectedPayment.status === 'partial' ? 'Installment Plan' : 'Full Payment'}</span></p>
                   </div>
                 </div>
 
-                <div className="text-left sm:text-right text-[11px] text-gray-600 space-y-0.5">
-                  <p className="font-bold text-gray-900">Address:</p>
-                  <p className="max-w-[200px] leading-snug whitespace-pre-line">{gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || "Address details"}</p>
-                  {gymInfo?.billingInfo?.helpContact && (
-                    <p className="font-medium">Support: +91 {gymInfo.billingInfo.helpContact}</p>
-                  )}
-                  {(gymInfo?.billingInfo?.gst || gymInfo?.gst) && (
-                    <p className="font-bold text-primary">GSTIN: {gymInfo?.billingInfo?.gst || gymInfo?.gst}</p>
-                  )}
+                {/* Table of Subscription Details */}
+                <div className="space-y-2">
+                  <h4 className="text-[9px] font-black text-amber-600 uppercase tracking-wider">Membership Details</h4>
+                  <div className="overflow-hidden border border-gray-100 rounded-lg">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50 text-text-muted font-bold uppercase tracking-wider border-b border-gray-100">
+                          <th className="p-2.5">Membership Details</th>
+                          <th className="p-2.5 text-center">Period</th>
+                          <th className="p-2.5 text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="text-gray-800">
+                          <td className="p-3 align-top">
+                            <p className="font-black text-gray-900 text-sm">{selectedPayment.planName} Subscription</p>
+                            <p className="text-[10px] text-text-muted mt-0.5 leading-relaxed max-w-xs">
+                              Premium access to all gym facilities and equipment.
+                            </p>
+                          </td>
+                          <td className="p-3 text-center align-top font-medium text-gray-700 whitespace-nowrap">
+                            {getInvoicePeriod(selectedPayment)}
+                          </td>
+                          <td className="p-3 text-right align-top font-black text-gray-900 text-sm">
+                            ₹{Number(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
 
-              {/* Middle Section: Meta & Client details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4 border-b border-gray-200 text-xs">
-                <div>
-                  <h4 className="font-black text-text-secondary uppercase tracking-widest mb-1 text-[9px]">Billed To (Client Details)</h4>
-                  <p className="font-bold text-gray-900 text-sm">{profile.personalInfo?.name}</p>
-                  <p className="text-text-muted font-medium mt-0.5">Client ID: {profile.clientId}</p>
-                </div>
-                <div className="text-left sm:text-right">
-                  <h4 className="font-black text-text-secondary uppercase tracking-widest mb-1 text-[9px]">Invoice Info</h4>
-                  <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
-                  <p className="text-text-muted font-medium mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
-                  <p className="mt-1">{getStatusBadge(selectedPayment)}</p>
-                </div>
-              </div>
+                {/* Quote and Payment Summary Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                  {/* Quote card */}
+                  <div className="bg-blue-50/40 border border-blue-100/50 rounded-lg p-3">
+                    <h4 className="text-[9px] font-black text-amber-600 uppercase tracking-wider">Membership Note</h4>
+                    <p className="text-[10px] text-gray-600 leading-relaxed font-semibold italic mt-1">
+                      "Discipline is the bridge between goals and accomplishment. Thank you for staying dedicated to your fitness journey."
+                    </p>
+                  </div>
 
-              {/* Subscription Details Table */}
-              <div className="space-y-2">
-                <h4 className="text-[9px] font-black text-text-secondary uppercase tracking-widest">Membership Details</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-gray-50 text-text-muted font-bold uppercase tracking-wider border-b border-gray-200">
-                        <th className="p-2.5">Plan Name / Description</th>
-                        <th className="p-2.5 text-center">Payment Method</th>
-                        <th className="p-2.5 text-right">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-gray-100 text-gray-800">
-                        <td className="p-2.5 font-semibold">
-                          {selectedPayment.planName} Subscription
-                          {selectedPayment.startDate && (
-                            <span className="block text-[10px] text-text-muted font-normal mt-0.5">
-                              Period: {getInvoicePeriod(selectedPayment)}
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-2.5 text-center font-bold uppercase tracking-wider text-slate-700">
-                          {selectedPayment.paymentMethod === 'cash' ? 'Cash' : 'Online'}
-                        </td>
-                        <td className="p-2.5 text-right font-black text-gray-900">
-                          ₹{selectedPayment.paidNow || selectedPayment.paidAmount || 0}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Payment Summary */}
-              {(() => {
-                const paidNow = selectedPayment.paidNow || selectedPayment.paidAmount || 0;
-                const planAmt = selectedPayment.invoiceAmount || selectedPayment.amount || 0;
-                const showSummary = paidNow < planAmt;
-                if (!showSummary) return null;
-                return (
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-1.5 text-xs">
-                    <h4 className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Payment Summary</h4>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 font-medium">Plan Amount:</span>
-                      <span className="font-bold text-gray-900">₹{planAmt}</span>
+                  {/* Financial Calculations */}
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between py-0.5">
+                      <span className="text-gray-500 font-medium">Plan Amount</span>
+                      <span className="font-bold text-gray-900">₹{Number(selectedPayment.invoiceAmount || selectedPayment.amount || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 font-medium">Paid Now:</span>
-                      <span className="font-bold text-blue-600">₹{paidNow}</span>
+                    <div className="flex justify-between py-0.5">
+                      <span className="text-gray-500 font-medium">Paid Now</span>
+                      <span className="font-bold text-blue-600">₹{Number(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 font-medium">Total Paid:</span>
-                      <span className="font-bold text-emerald-600">₹{selectedPayment.totalPaid || selectedPayment.paidAmount || 0}</span>
+                    <div className="flex justify-between py-0.5">
+                      <span className="text-gray-500 font-medium">Total Paid</span>
+                      <span className="font-bold text-emerald-600">₹{Number(selectedPayment.totalPaid || selectedPayment.paidAmount || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between pt-1.5 border-t border-amber-300">
-                      <span className="text-gray-800 font-bold">Balance Due:</span>
-                      <span className="font-black text-rose-600">₹{selectedPayment.remainingBalance !== undefined ? selectedPayment.remainingBalance : getBalance(selectedPayment)}</span>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <div className="flex justify-between py-1 items-baseline">
+                      <span className="text-gray-900 font-black text-sm">Balance Due</span>
+                      <span className="font-black text-rose-600 text-sm">₹{Number(selectedPayment.remainingBalance !== undefined && selectedPayment.remainingBalance !== null ? selectedPayment.remainingBalance : (selectedPayment.amount - (selectedPayment.paidAmount || 0))).toFixed(2)}</span>
                     </div>
                   </div>
-                );
-              })()}
+                </div>
 
-              {/* Footer: Greetings & Regards */}
-              <div className="pt-4 border-t border-gray-200 text-center space-y-2">
-                {gymInfo?.billingInfo?.greetingText && (
-                  <p className="text-[11px] text-text-muted font-medium italic">"{gymInfo.billingInfo.greetingText}"</p>
-                )}
-                <div className="text-[10px] text-text-secondary">
-                  <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
-                  <p className="mt-0.5 font-medium">Thank you for your business!</p>
+                {/* Footer: Greetings & Contact info */}
+                <div className="pt-3 border-t border-gray-200 text-center space-y-2">
+                  <div>
+                    <p className="text-xs font-black text-gray-900">Thank you for your business!</p>
+                    <p className="text-[10px] text-text-muted font-medium mt-0.5">
+                      For any inquiries regarding this invoice or your membership, please reach out to our dedicated support team.
+                    </p>
+                  </div>
+                  <div className="flex justify-center items-center gap-5 text-[10px] text-gray-600 font-bold">
+                    <div className="flex items-center gap-1">
+                      <Phone size={11} className="text-amber-600" />
+                      <span>+91 {gymInfo?.billingInfo?.helpContact || "9865327412"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Mail size={11} className="text-amber-600" />
+                      <span>{gymInfo?.gymEmail || "support@likgym.com"}</span>
+                    </div>
+                  </div>
+                  <p className="text-[8px] text-text-muted font-black tracking-widest uppercase">
+                    © 2024 {gymInfo?.gymName || "LIK GYM"} MANAGEMENT SYSTEM. ALL RIGHTS RESERVED.
+                  </p>
                 </div>
               </div>
             </div>
