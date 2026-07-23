@@ -629,3 +629,74 @@ exports.createRazorpayOrder = async (req, res, next) => {
   }
 };
 
+// @desc    Download / View Invoice PDF
+// @route   GET /api/payment/:id/pdf
+// @access  Private (Owner, Client)
+exports.downloadInvoicePDF = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const payment = await Payment.findById(id);
+    if (!payment) return res.status(404).json({ success: false, message: 'Payment record not found' });
+
+    // Secure client requests
+    if (req.userRole === 'client' && payment.clientId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized access to payment record' });
+    }
+
+    const path = require('path');
+    const fs = require('fs');
+
+    // Always generate a fresh PDF to ensure the latest layout, logo, and profile details are present
+    const client = await Client.findById(payment.clientId);
+    const gym = await Gym.findOne({ gymId: payment.gymId });
+    
+    const { generatePaymentPDF } = require('../services/pdfService');
+    const pdfPath = await generatePaymentPDF(payment, client, gym);
+    
+    payment.invoicePDFUrl = `/uploads/${path.basename(pdfPath)}`;
+    await payment.save();
+
+    const absolutePath = path.join(__dirname, '..', payment.invoicePDFUrl);
+    if (fs.existsSync(absolutePath)) {
+      return res.download(absolutePath, `Invoice_${payment.paymentId}.pdf`);
+    } else {
+      return res.status(404).json({ success: false, message: 'Generated PDF file not found' });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Resend WhatsApp Invoice (Utility Template & Document PDF)
+// @route   POST /api/payment/:id/send-whatsapp
+// @access  Private (Owner)
+exports.resendWhatsAppInvoice = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const payment = await Payment.findById(id);
+    if (!payment) return res.status(404).json({ success: false, message: 'Payment record not found' });
+
+    const client = await Client.findById(payment.clientId);
+    if (!client) return res.status(404).json({ success: false, message: 'Associated client not found' });
+
+    const gym = await Gym.findOne({ gymId: payment.gymId });
+    if (!gym) return res.status(404).json({ success: false, message: 'Associated gym not found' });
+
+    // Validate phone number
+    const rawNum = client.personalInfo?.whatsappNumber || client.whatsappNumber || client.personalInfo?.mobileNo || client.personalInfo?.mobile;
+    if (!rawNum) {
+      return res.status(400).json({ success: false, message: 'Client has no WhatsApp or mobile number' });
+    }
+
+    const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+    // Trigger in background as requested
+    sendPaymentNotification(payment._id, client._id, gym.gymId, gym.dbName).catch(err => {
+      console.error('Error in resending WhatsApp invoice:', err);
+    });
+
+    res.status(200).json({ success: true, message: 'Invoice send request queued successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+

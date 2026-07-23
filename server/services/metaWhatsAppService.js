@@ -425,6 +425,114 @@ const sendPaymentReceived = async ({ phone, clientName, gymName, amount, pdfUrl,
     clientId,
     gymId
   });
+};const sendPaymentReceivedTemplate = async ({ phone, clientName, gymName, amount, pdfUrl, paymentId, clientId, gymId }) => {
+  const templateName = process.env.META_TEMPLATE_PAYMENT_RECEIVED || 'payment_received';
+
+  const components = [
+    {
+      type: 'header',
+      parameters: [
+        {
+          type: 'document',
+          document: {
+            link: pdfUrl,
+            filename: `${paymentId || 'receipt'}.pdf`
+          }
+        }
+      ]
+    },
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', parameter_name: 'customer_name', text: String(clientName) },
+        { type: 'text', parameter_name: 'gym_name', text: String(gymName) },
+        { type: 'text', parameter_name: 'amount', text: String(amount) }
+      ]
+    }
+  ];
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Payment Received Template',
+    clientId,
+    gymId
+  });
+};
+const sendWhatsAppDocument = async ({ phone, pdfUrl, filename, caption, clientId, gymId }) => {
+  const token = process.env.META_ACCESS_TOKEN;
+  const phoneId = process.env.META_PHONE_NUMBER_ID;
+
+  if (!token || !phoneId) {
+    const mockId = `wamid.MOCK_DOC_${Math.random().toString(36).substring(2, 15)}`;
+    const mockSentTime = new Date().toISOString();
+    console.log(`[META DOCUMENT MOCK]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Message ID    : ${mockId}
+- Sent Time     : ${mockSentTime}
+- Status        : MockSent
+- Details       : To: ${phone}, URL: ${pdfUrl}, Caption: ${caption}`);
+    return { success: true, messageId: mockId, status: 'sent' };
+  }
+
+  let cleanPhone = phone.replace(/\D/g, '');
+  if (cleanPhone.length === 10) {
+    cleanPhone = '91' + cleanPhone;
+  }
+
+  const graphVersion = process.env.META_GRAPH_VERSION || 'v20.0';
+  const url = `https://graph.facebook.com/${graphVersion}/${phoneId}/messages`;
+  const headers = { 'Authorization': `Bearer ${token}` };
+
+  const body = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to: cleanPhone,
+    type: 'document',
+    document: {
+      link: pdfUrl,
+      filename: filename,
+      caption: caption
+    }
+  };
+
+  try {
+    const response = await postRequest(url, headers, body);
+    const resBody = JSON.parse(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300 && resBody.messages && resBody.messages[0]) {
+      const messageId = resBody.messages[0].id;
+      const sentTime = new Date().toISOString();
+      console.log(`[META DOCUMENT SUCCESS]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Message ID    : ${messageId}
+- Sent Time     : ${sentTime}
+- Status        : Sent`);
+      return { success: true, messageId, status: 'sent' };
+    } else {
+      const errMessage = resBody.error?.message || response.body || 'Unknown Meta API error';
+      console.error(`[META DOCUMENT FAILURE]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Sent Time     : ${new Date().toISOString()}
+- Error         : ${errMessage}`);
+      return { success: false, error: errMessage };
+    }
+  } catch (err) {
+    console.error(`[META DOCUMENT FAILURE]
+- File Name     : ${filename}
+- Client ID     : ${clientId || 'N/A'}
+- Gym ID        : ${gymId || 'N/A'}
+- Sent Time     : ${new Date().toISOString()}
+- Error         : ${err.message}`);
+    return { success: false, error: err.message };
+  }
 };
 
 module.exports = {
@@ -436,5 +544,7 @@ module.exports = {
   sendDueSecondReminder,
   sendDueThirdReminder,
   sendDueReminder,
-  sendPaymentReceived
+  sendPaymentReceived,
+  sendPaymentReceivedTemplate,
+  sendWhatsAppDocument
 };

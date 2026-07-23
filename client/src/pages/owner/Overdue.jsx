@@ -6,25 +6,37 @@ import { toast } from 'react-toastify';
 import { AlertOctagon } from 'lucide-react';
 import ClientCard from '../../components/ClientCard';
 import Pagination from '../../components/Pagination';
+import ReminderDetailsModal from '../../components/ReminderDetailsModal';
 
 const Overdue = () => {
     const navigate = useNavigate();
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [currentPage, setCurrentPage] = useState(1);
+    const [reminderModalClient, setReminderModalClient] = useState(null);
+    const [reminderModalTab, setReminderModalTab] = useState('both');
 
-    const fetchOverdueClients = async () => {
+    const fetchOverdueClients = async (showLoading = true) => {
         try {
+            if (showLoading) setLoading(true);
             const res = await api.get('/overdue');
             setClients(res.data.data);
         } catch(e) {
             toast.error("Failed to load overdue clients");
+        } finally {
+            if (showLoading) setLoading(false);
         }
-        setLoading(false);
     };
 
-    useEffect(() => { fetchOverdueClients(); }, []);
+    useEffect(() => {
+        fetchOverdueClients(true);
+
+        const interval = setInterval(() => {
+            fetchOverdueClients(false);
+        }, 10000); // Poll every 10 seconds
+
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -78,6 +90,7 @@ const Overdue = () => {
                                     client={client}
                                     onView={handleView}
                                     onRenew={handleRenew}
+                                    onReminderClick={(c, tab) => { setReminderModalClient(c); setReminderModalTab(tab); }}
                                     showRenew
                                 />
                             ))}
@@ -89,6 +102,13 @@ const Overdue = () => {
                         />
                     </div>
                 )}
+
+            <ReminderDetailsModal
+                isOpen={!!reminderModalClient}
+                onClose={() => { setReminderModalClient(null); setReminderModalTab('both'); }}
+                client={reminderModalClient}
+                activeTab={reminderModalTab}
+            />
         </div>
     );
 };

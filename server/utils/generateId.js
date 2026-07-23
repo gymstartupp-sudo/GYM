@@ -52,17 +52,19 @@ const generateClientId = async (gymIdStr) => {
   let sequence = await getNextSequenceValue(counterName);
 
   // Sync/Correction: check highest existing clientId for this gym to avoid collisions
-  const lastClient = await Client.findOne({
+  const clients = await Client.find({
     gymId: gymIdStr,
     clientId: new RegExp('^CL-')
-  }).sort({ clientId: -1 });
+  }, { clientId: 1 }).lean();
 
   let lastCount = 0;
-  if (lastClient && lastClient.clientId) {
-    const parts = lastClient.clientId.split('-');
-    const lastNum = parseInt(parts[parts.length - 1], 10);
-    if (!isNaN(lastNum)) {
-      lastCount = lastNum;
+  for (const c of clients) {
+    if (c.clientId) {
+      const parts = c.clientId.split('-');
+      const num = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(num) && num > lastCount) {
+        lastCount = num;
+      }
     }
   }
 
@@ -84,17 +86,19 @@ const generatePaymentId = async (gymId, billingPrefix) => {
 
   // Sync/Correction: check highest existing paymentId for this prefix and gymId to avoid collisions
   const escapedPrefix = billingPrefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-  const lastPayment = await Payment.findOne({
+  const payments = await Payment.find({
     gymId,
     paymentId: new RegExp(`^${escapedPrefix}-`)
-  }).sort({ paymentId: -1 });
+  }, { paymentId: 1 }).lean();
 
   let lastCount = 0;
-  if (lastPayment && lastPayment.paymentId) {
-    const parts = lastPayment.paymentId.split('-');
-    const lastNum = parseInt(parts[parts.length - 1], 10);
-    if (!isNaN(lastNum)) {
-      lastCount = lastNum;
+  for (const p of payments) {
+    if (p.paymentId) {
+      const parts = p.paymentId.split('-');
+      const num = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(num) && num > lastCount) {
+        lastCount = num;
+      }
     }
   }
 

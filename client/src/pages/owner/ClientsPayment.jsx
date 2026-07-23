@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { Receipt, Plus, X, Edit2, Eye, FileText, Calendar, CreditCard, User, CheckCircle2, Phone, Mail, Printer } from 'lucide-react';
+import { Receipt, Plus, X, Edit2, Eye, FileText, Calendar, CreditCard, User, CheckCircle2, Phone, Mail, Printer, Download, MessageSquare } from 'lucide-react';
 import Button from '../../components/Button';
 import { getPlanStatus, calculateEndDate, toLocalDateString } from '../../utils/membership';
 import PaymentModal from '../../components/PaymentModal';
@@ -42,6 +42,42 @@ const Transactions = () => {
         dueDate: new Date().toISOString().split('T')[0],
         startDate: new Date().toISOString().split('T')[0]
     });
+
+    const [sendingWhatsAppId, setSendingWhatsAppId] = useState(null);
+    const [downloadingId, setDownloadingId] = useState(null);
+
+    const handleSendWhatsAppInvoice = async (payment) => {
+        setSendingWhatsAppId(payment._id);
+        try {
+            await api.post(`/payment/${payment._id}/send-whatsapp`);
+            toast.success("Invoice queued to send via WhatsApp");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to send invoice via WhatsApp");
+        } finally {
+            setSendingWhatsAppId(null);
+        }
+    };
+
+    const downloadInvoice = async (payment) => {
+        setDownloadingId(payment._id);
+        try {
+            const response = await api.get(`/payment/${payment._id}/pdf`, { responseType: 'blob' });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Invoice_${payment.paymentId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            toast.success("Invoice downloaded successfully");
+        } catch (err) {
+            toast.error("Failed to download invoice");
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -354,14 +390,35 @@ const Transactions = () => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td className="p-5 text-center">
-                                                <button
-                                                    onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
-                                                    className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
-                                                    title="View Bill"
-                                                >
-                                                    <FileText size={18} />
-                                                </button>
+                                            <td className="p-5 text-center text-xs">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
+                                                        className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
+                                                        title="View Invoice"
+                                                    >
+                                                        <FileText size={16} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={downloadingId === payment._id}
+                                                        onClick={() => downloadInvoice(payment)}
+                                                        className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
+                                                        title="Download Invoice"
+                                                    >
+                                                        <Download size={16} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={sendingWhatsAppId === payment._id}
+                                                        onClick={() => handleSendWhatsAppInvoice(payment)}
+                                                        className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
+                                                        title="Send via WhatsApp"
+                                                    >
+                                                        <MessageSquare size={16} />
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td className="p-5">
                                                 <div className="flex items-center justify-center gap-2">
@@ -434,7 +491,23 @@ const Transactions = () => {
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-gray-900 text-xs font-bold rounded-lg hover:brightness-95 transition-all shadow-sm"
                                 >
                                     <Printer size={13} />
-                                    Print Invoice
+                                    Print
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={downloadingId === selectedPayment._id}
+                                    onClick={() => downloadInvoice(selectedPayment)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
+                                >
+                                    Download
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={sendingWhatsAppId === selectedPayment._id}
+                                    onClick={() => handleSendWhatsAppInvoice(selectedPayment)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50"
+                                >
+                                    Send WhatsApp
                                 </button>
                                 <button
                                     onClick={() => setShowReceiptModal(false)}

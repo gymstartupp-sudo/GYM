@@ -343,7 +343,8 @@ exports.addClient = async (req, res, next) => {
         totalPaid: payment.paidAmount,
         remainingBalance: remainingBalanceVal,
         status: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
-        paymentMethod: payment.paymentMethod, dueDate: resolvedDueDate, startDate: membershipWindow.startDate, isPlanActivated: true
+        paymentMethod: payment.paymentMethod, dueDate: resolvedDueDate, startDate: membershipWindow.startDate, isPlanActivated: true,
+        mode: payment.paymentMethod, date: new Date(), paymentDate: new Date()
       });
     } catch (paymentErr) {
       // Rollback: delete the client since payment failed
@@ -356,6 +357,15 @@ exports.addClient = async (req, res, next) => {
       { _id: client._id },
       { $set: { paymentHistory: [paymentRecord._id] } }
     );
+
+    // Trigger WhatsApp notification with bill PDF in the background
+    const gymDoc = await Gym.findOne({ gymId: gymIdStr });
+    if (gymDoc && gymDoc.dbName) {
+      const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+      sendPaymentNotification(paymentRecord._id, client._id, gymDoc.gymId, gymDoc.dbName).catch(err => {
+        console.error('Error triggering payment notification in createClient:', err);
+      });
+    }
 
     const enriched = calculateBalances(client, [paymentRecord]);
     res.status(201).json({ success: true, data: enriched });
@@ -628,7 +638,10 @@ exports.approveClient = async (req, res, next) => {
       paymentMethod,
       startDate: membershipWindow.startDate,
       dueDate: resolvedDueDate,
-      isPlanActivated: true
+      isPlanActivated: true,
+      mode: paymentMethod,
+      date: new Date(),
+      paymentDate: new Date()
     });
 
     // 2. Build the new memberships entry
@@ -676,6 +689,14 @@ exports.approveClient = async (req, res, next) => {
     // Sync client status using syncClientStatus utility
     const { syncClientStatus } = require('../utils/syncStatus');
     await syncClientStatus(client._id);
+
+    // Trigger WhatsApp notification with bill PDF in the background
+    if (gym && gym.dbName) {
+      const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+      sendPaymentNotification(paymentRecord._id, client._id, gym.gymId, gym.dbName).catch(err => {
+        console.error('Error triggering payment notification in approveClient:', err);
+      });
+    }
 
     // Fetch the updated client doc to return enriched with balances
     const updatedClient = await Client.findById(client._id);
@@ -763,6 +784,34 @@ Please clear the pending balance as soon as possible to continue your membership
 
 Thank you.`;
 
+    // Calculate daysUntilDue dynamically
+    let stage = 3;
+    let reminderKey = 'reminder3';
+    let reminderType = 'Due Reminder 3';
+    let templateName = process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder';
+
+    if (membership?.dueDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const normalizedToday = new Date(today);
+      const normalizedDueDate = new Date(membership.dueDate);
+      normalizedDueDate.setHours(0, 0, 0, 0);
+      const diffTime = normalizedDueDate.getTime() - normalizedToday.getTime();
+      const daysUntilDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (daysUntilDue > 0) {
+        stage = 1;
+        reminderKey = 'reminder1';
+        reminderType = 'Due Reminder 1';
+        templateName = process.env.META_TEMPLATE_DUE_FIRST || 'due_first_reminder';
+      } else if (daysUntilDue <= 0 && daysUntilDue > -3) {
+        stage = 2;
+        reminderKey = 'reminder2';
+        reminderType = 'Due Reminder 2';
+        templateName = process.env.META_TEMPLATE_DUE_SECOND || 'due_second_reminder';
+      }
+    }
+
     const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${client.clientId}?balance=true`;
     const result = await metaWhatsAppService.sendDueReminder({
       phone,
@@ -772,7 +821,7 @@ Thank you.`;
       renewalLink: paymentLink,
       clientId: client.clientId,
       gymId: gym?.gymId,
-      stage: 3
+      stage
     });
 
     // Initialize overdueReminders if needed
@@ -789,14 +838,17 @@ Thank you.`;
       client.overdueReminders.manualReminders = [];
     }
 
-    const templateName = process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder';
-
     if (result && result.success) {
+      client.overdueReminders[reminderKey] = {
+        status: 'sent',
+        sentAt: new Date(),
+        error: null
+      };
       client.overdueReminders.manualReminders.push({
         sentAt: new Date(),
         status: 'sent',
         error: null,
-        reminderType: 'Due Reminder 3',
+        reminderType,
         templateName,
         executionSource: 'Manual Reminder',
         messageId: result.messageId,
@@ -805,11 +857,16 @@ Thank you.`;
       await client.save();
       res.status(200).json({ success: true, message: 'Reminder sent successfully' });
     } else {
+      client.overdueReminders[reminderKey] = {
+        status: 'failed',
+        sentAt: new Date(),
+        error: result?.error || 'Unknown error'
+      };
       client.overdueReminders.manualReminders.push({
         sentAt: new Date(),
         status: 'failed',
         error: result?.error || 'Unknown error',
-        reminderType: 'Due Reminder 3',
+        reminderType,
         templateName,
         executionSource: 'Manual Reminder',
         messageId: null,
@@ -951,6 +1008,14 @@ exports.restoreClient = async (req, res, next) => {
       client.paymentHistory.push(paymentRecord._id);
       await client.save();
       await syncClientStatus(client._id);
+
+      // Trigger WhatsApp notification with bill PDF in the background
+      if (gym && gym.dbName) {
+        const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+        sendPaymentNotification(paymentRecord._id, client._id, gym.gymId, gym.dbName).catch(err => {
+          console.error('Error triggering payment notification in reactivateClient:', err);
+        });
+      }
     } else {
       client.isDeleted = false;
       client.deletedAt = null;

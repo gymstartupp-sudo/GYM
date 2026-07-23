@@ -154,8 +154,8 @@ const Clients = () => {
   ];
 
   // Fetch clients whenever either filter changes
-  const fetchClients = useCallback(async () => {
-    setLoading(true);
+  const fetchClients = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filterStatus !== 'All') params.append('status', filterStatus);
@@ -168,11 +168,19 @@ const Clients = () => {
     } catch {
       toast.error('Failed to fetch clients');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, [filterStatus, filterPlan, filterReminder]);
 
-  useEffect(() => { fetchClients(); }, [fetchClients]);
+  useEffect(() => {
+    fetchClients(true);
+
+    const interval = setInterval(() => {
+      fetchClients(false);
+    }, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchClients]);
 
   // Modal helpers
   const closeAddModal = () => {
