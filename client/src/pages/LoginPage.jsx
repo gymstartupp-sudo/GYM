@@ -30,7 +30,7 @@ const CustomPortalDropdown = ({ selectedGym, onSelect, gyms }) => {
             <button
                 type="button"
                 onClick={() => setOpen(prev => !prev)}
-                className="input-field w-full bg-surface-card border border-border text-text-primary rounded-lg p-3 flex items-center justify-between cursor-pointer focus:ring-primary focus:border-primary font-bold text-left shadow-sm"
+                className="input-field w-full bg-surface-card border border-border hover:border-primary/50 text-text-primary rounded-lg p-3 flex items-center justify-between cursor-pointer focus:ring-primary focus:border-primary font-bold text-left shadow-sm transition-colors duration-200"
             >
                 <span className="truncate">{selectedGym ? formatGymLabel(selectedGym) : '-- Choose Gym / Portal --'}</span>
                 <ChevronDown
@@ -49,14 +49,14 @@ const CustomPortalDropdown = ({ selectedGym, onSelect, gyms }) => {
                                 key={`${g.gymId}-${g.role}`}
                                 type="button"
                                 onClick={() => { onSelect(g); setOpen(false); }}
-                                className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-sm text-left transition-colors font-bold ${
+                                className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-sm text-left transition-colors font-bold hover:bg-primary hover:text-black ${
                                     isSelected
-                                        ? 'bg-primary text-black'
-                                        : 'text-text-primary hover:bg-primary hover:text-black'
+                                        ? 'text-primary'
+                                        : 'text-text-primary'
                                 }`}
                             >
                                 <span className="truncate">{labelText}</span>
-                                {isSelected && <Check size={16} className="shrink-0 text-black font-extrabold" />}
+                                {isSelected && <Check size={16} className="shrink-0 font-extrabold" />}
                             </button>
                         );
                     })}
@@ -74,11 +74,11 @@ const LoginPage = () => {
     const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(false);
 
-    // Step state for multi-step login flow
-    const [step, setStep] = useState('loginId');
+    // Gym matching state for dynamic lookup
     const [gyms, setGyms] = useState([]);
     const [selectedGym, setSelectedGym] = useState(null);
     const [loadingGyms, setLoadingGyms] = useState(false);
+    const [fetchedLoginId, setFetchedLoginId] = useState('');
 
     useEffect(() => {
         const reason = searchParams.get('reason');
@@ -111,12 +111,41 @@ const LoginPage = () => {
         return '';
     };
 
-    const isFormValid = useMemo(() => {
-        const loginId = (formData.loginId || '').trim();
-        const password = formData.password || '';
-        if (!loginId || !password) return false;
-        return validateLoginId(loginId) === '' && validatePassword(password) === '';
-    }, [formData]);
+    const triggerGymsFetch = async (id) => {
+        const trimmed = (id || '').trim();
+        if (!trimmed) return;
+        if (validateLoginId(trimmed) !== '') return;
+        if (trimmed === fetchedLoginId) return;
+
+        setFetchedLoginId(trimmed);
+        setLoadingGyms(true);
+        try {
+            const res = await api.post('/auth/find-gyms', { loginId: trimmed });
+            const foundGyms = res.data.gyms;
+            setGyms(foundGyms);
+            if (foundGyms.length === 1) {
+                setSelectedGym(foundGyms[0]);
+            } else {
+                setSelectedGym(null);
+            }
+            // Clear any previous error on loginId
+            setErrors(prev => {
+                const next = { ...prev };
+                delete next.loginId;
+                return next;
+            });
+        } catch (error) {
+            setGyms([]);
+            setSelectedGym(null);
+            // Silently swallow search/not-found errors to keep layout clean.
+            // Errors will be reported properly when user tries to click Login.
+            if (error.response && error.response.status !== 404) {
+                toast.error(error.response?.data?.message || "An error occurred fetching accounts");
+            }
+        } finally {
+            setLoadingGyms(false);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -128,6 +157,13 @@ const LoginPage = () => {
                 newValue = value.replace(/\D/g, '').slice(0, 10);
             } else if (/[a-zA-Z]/.test(firstChar)) {
                 newValue = value.replace(/[^a-zA-Z0-9@._+\-]/g, '').slice(0, 25);
+            }
+
+            // Reset matching state if user changes input
+            if (newValue.trim() !== fetchedLoginId) {
+                setGyms([]);
+                setSelectedGym(null);
+                setFetchedLoginId('');
             }
         }
 
@@ -147,6 +183,16 @@ const LoginPage = () => {
             const errorMsg = name === 'loginId' ? validateLoginId(newValue) : validatePassword(newValue);
             if (errorMsg) {
                 setErrors(prev => ({ ...prev, [name]: errorMsg }));
+            } else if (name === 'loginId') {
+                // Auto trigger fetch when login ID is valid
+                const trimmed = newValue.trim();
+                if (isPhone(trimmed)) {
+                    if (trimmed.length === 10) {
+                        triggerGymsFetch(trimmed);
+                    }
+                } else if (isValidEmail(trimmed)) {
+                    triggerGymsFetch(trimmed);
+                }
             }
         }
     };
@@ -164,90 +210,98 @@ const LoginPage = () => {
                 delete next[name];
                 return next;
             });
+            if (name === 'loginId') {
+                triggerGymsFetch(trimmed);
+            }
         }
     };
 
-    const handleFindGyms = async () => {
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
+        
         const loginId = (formData.loginId || '').trim();
         if (!loginId) {
-            setErrors({ loginId: 'Please enter your email or phone number' });
+            setErrors(prev => ({ ...prev, loginId: 'Please enter your email or phone number' }));
             return;
         }
 
         const loginIdError = validateLoginId(loginId);
         if (loginIdError) {
-            setErrors({ loginId: loginIdError });
+            setErrors(prev => ({ ...prev, loginId: loginIdError }));
             return;
         }
 
-        setErrors({});
-        setLoadingGyms(true);
-        try {
-            const res = await api.post('/auth/find-gyms', { loginId });
-            const foundGyms = res.data.gyms;
-            setGyms(foundGyms);
-
-            if (foundGyms.length === 1) {
-                setSelectedGym(foundGyms[0]);
-                setStep('password');
-            } else if (foundGyms.length > 1) {
-                setStep('selectGym');
+        // If we haven't fetched gyms yet or if it is currently loading, fetch them first
+        if (!fetchedLoginId || fetchedLoginId !== loginId) {
+            setLoadingGyms(true);
+            try {
+                const res = await api.post('/auth/find-gyms', { loginId });
+                const foundGyms = res.data.gyms;
+                setGyms(foundGyms);
+                setFetchedLoginId(loginId);
+                
+                if (foundGyms.length === 1) {
+                    const singleGym = foundGyms[0];
+                    setSelectedGym(singleGym);
+                    await executeLogin(loginId, formData.password, singleGym);
+                } else if (foundGyms.length > 1) {
+                    setSelectedGym(null);
+                    setErrors(prev => ({ ...prev, gym: 'Please select a gym from the dropdown' }));
+                    toast.warn("Multiple accounts found. Please select your gym.");
+                }
+            } catch (error) {
+                setGyms([]);
+                setSelectedGym(null);
+                if (error.response && error.response.status === 404) {
+                    setErrors(prev => ({ ...prev, loginId: "No account found matching this email or phone number" }));
+                } else {
+                    toast.error(error.response?.data?.message || "An error occurred");
+                }
+            } finally {
+                setLoadingGyms(false);
             }
-        } catch (error) {
-            if (!error.response) {
-                toast.error("Network error: Server is unreachable. Please try again.");
-            } else if (error.response.status === 404) {
-                setErrors({ loginId: "No account found matching this email or phone number" });
-            } else {
-                toast.error(error.response.data?.message || "An error occurred");
-            }
-        } finally {
-            setLoadingGyms(false);
+            return;
         }
-    };
 
-    const handleBackToLoginId = () => {
-        setFormData(prev => ({ ...prev, password: '' }));
-        setSelectedGym(null);
-        setGyms([]);
-        setStep('loginId');
-    };
-
-    const handleFormSubmit = (e) => {
-        e.preventDefault();
-        if (step === 'loginId') {
-            handleFindGyms();
-        } else if (step === 'selectGym') {
-            if (selectedGym) setStep('password');
-        } else if (step === 'password') {
-            handleSubmit();
+        // If multiple gyms found but user hasn't selected one
+        if (gyms.length > 1 && !selectedGym) {
+            setErrors(prev => ({ ...prev, gym: 'Please select a gym from the dropdown' }));
+            toast.warn("Please select a gym from the dropdown");
+            return;
         }
+
+        // Proceed to submit
+        await executeLogin(loginId, formData.password, selectedGym);
     };
 
-    const handleSubmit = async () => {
-        const loginId = (formData.loginId || '').trim();
+    const executeLogin = async (loginId, password, gym) => {
         const newErrors = {};
 
-        if (!formData.password) {
+        if (!password) {
             newErrors.password = 'Please enter your password';
         } else {
-            const pwError = validatePassword(formData.password);
+            const pwError = validatePassword(password);
             if (pwError) newErrors.password = pwError;
         }
 
         if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
+            setErrors(prev => ({ ...prev, ...newErrors }));
             return;
         }
 
-        setErrors({});
+        setErrors(prev => {
+            const next = { ...prev };
+            delete next.password;
+            delete next.gym;
+            return next;
+        });
         setLoading(true);
         try {
             const res = await api.post('/auth/login', { 
                 loginId, 
-                password: formData.password,
-                gymId: selectedGym?.gymId,
-                role: selectedGym?.role
+                password,
+                gymId: gym?.gymId,
+                role: gym?.role
             });
             const { token, role, data } = res.data;
 
@@ -280,135 +334,91 @@ const LoginPage = () => {
             </div>
             <div className="max-w-md w-full space-y-8 backdrop-blur-md bg-surface-card/90 p-10 rounded-2xl border border-border shadow-2xl">
                 <div>
-                    <h2 className="mt-2 mr-2 text-center text-4xl font-extrabold text-text-primary tracking-tight flex items-center justify-center gap-3">
+                    <h2 className="mt-2 text-center text-4xl font-extrabold text-text-primary tracking-tight flex items-center justify-center gap-3">
                         <LogIn className="text-primary" size={36} />Welcome
                     </h2>
-                    <p className="mt-3 ml-8 text-center text-sm text-text-secondary">Log in to your portal</p>
+                    <p className="mt-3 text-center text-sm text-text-secondary">Log in to your portal</p>
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleFormSubmit} noValidate>
-                    {step === 'loginId' && (
-                        <div className="space-y-4 animate-in fade-in duration-300">
-                            <div>
-                                <input
-                                    name="loginId"
-                                    value={formData.loginId || ''}
-                                    placeholder="Email or Phone Number"
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    required
-                                    className={`input-field ${errors.loginId ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : ''}`}
-                                    maxLength="25"
-                                />
-                                <div className="min-h-[20px] mt-1">
-                                    {errors.loginId && <p className="text-red-500 text-xs font-medium leading-tight">{errors.loginId}</p>}
-                                </div>
+                    <div className="space-y-4">
+                        <div className="relative">
+                            <input
+                                name="loginId"
+                                value={formData.loginId || ''}
+                                placeholder="Email or Phone Number"
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                required
+                                className={`input-field pr-4 hover:border-primary/50 ${errors.loginId ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                                maxLength="25"
+                            />
+                            <div className="min-h-[20px] mt-1">
+                                {errors.loginId && <p className="text-red-500 text-xs font-medium leading-tight">{errors.loginId}</p>}
                             </div>
-                            <Button
-                                type="submit"
-                                isLoading={loadingGyms}
-                                className="w-full text-lg shadow-lg shadow-primary/20"
-                            >
-                                Next
-                            </Button>
                         </div>
-                    )}
 
-                    {step === 'selectGym' && (
-                        <div className="space-y-4 animate-in fade-in duration-300">
-                            <div>
-                                <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">
-                                    Multiple Accounts Found
+                        {gyms.length > 1 && (
+                            <div className="space-y-2 animate-in fade-in duration-300">
+                                <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider">
+                                    Select Gym / Portal
                                 </label>
-                                <p className="text-xs text-text-muted mb-3 leading-relaxed">
-                                    Please select which gym or portal account you want to access:
-                                </p>
                                 <CustomPortalDropdown
                                     selectedGym={selectedGym}
-                                    onSelect={(g) => setSelectedGym(g)}
+                                    onSelect={(g) => {
+                                        setSelectedGym(g);
+                                        setErrors(prev => {
+                                            const next = { ...prev };
+                                            delete next.gym;
+                                            return next;
+                                        });
+                                    }}
                                     gyms={gyms}
                                 />
-                            </div>
-                            <div className="flex gap-3">
-                                <Button
-                                    type="button"
-                                    onClick={handleBackToLoginId}
-                                    variant="secondary"
-                                    className="flex-1 text-sm font-bold py-2.5"
-                                >
-                                    Back
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={!selectedGym}
-                                    className="flex-1 text-lg shadow-lg shadow-primary/20"
-                                >
-                                    Continue
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    {step === 'password' && (
-                        <div className="space-y-4 animate-in fade-in duration-300">
-                            {selectedGym && (
-                                <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-center">
-                                    <p className="text-[9px] font-black text-primary uppercase tracking-widest">Accessing Portal</p>
-                                    <p className="text-base font-extrabold text-text-primary mt-0.5">{selectedGym.gymName}</p>
-                                    {selectedGym.gymId && selectedGym.gymId !== 'admin' && (
-                                        <p className="text-[11px] font-bold text-amber-500 tracking-wider mt-0.5">Gym ID: {selectedGym.gymId}</p>
-                                    )}
-                                    <p className="text-[10px] text-text-secondary uppercase tracking-wider mt-0.5">
-                                        Role: {selectedGym.role === 'client' ? 'Gym Member' : selectedGym.role === 'owner' ? 'Owner Admin' : 'Super Admin'}
-                                    </p>
-                                </div>
-                            )}
-                            <div>
-                                <PasswordInput
-                                    name="password"
-                                    value={formData.password || ''}
-                                    placeholder="Password"
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    required
-                                    className={`input-field w-full ${errors.password ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : ''}`}
-                                    maxLength="20"
-                                />
                                 <div className="min-h-[20px] mt-1">
+                                    {errors.gym && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gym}</p>}
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <PasswordInput
+                                name="password"
+                                value={formData.password || ''}
+                                placeholder="Password"
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                required
+                                className={`input-field w-full hover:border-primary/50 ${errors.password ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                                maxLength="20"
+                            />
+                            <div className="flex justify-between items-start mt-1">
+                                <div className="min-h-[20px] flex-1">
                                     {errors.password && <p className="text-red-500 text-xs font-medium leading-tight">{errors.password}</p>}
                                 </div>
-                            </div>
-                            <div className="flex gap-3">
-                                <Button
-                                    type="button"
-                                    onClick={() => {
-                                        if (gyms.length > 1) {
-                                            setStep('selectGym');
-                                        } else {
-                                            handleBackToLoginId();
-                                        }
-                                    }}
-                                    variant="secondary"
-                                    className="flex-1 text-sm font-bold py-2.5"
+                                <Link 
+                                    to="/forgot-password" 
+                                    className="text-xs text-primary hover:text-primary-hover font-bold transition-colors block ml-2 h-5"
                                 >
-                                    Back
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    isLoading={loading}
-                                    className="flex-1 text-lg shadow-lg shadow-primary/20"
-                                >
-                                    Login
-                                </Button>
+                                    Forgot Password?
+                                </Link>
                             </div>
                         </div>
-                    )}
+
+                        <Button
+                            type="submit"
+                            isLoading={loading}
+                            className="w-full text-lg shadow-lg shadow-primary/20 bg-primary hover:bg-primary-hover text-[var(--btn-primary-text)] font-extrabold"
+                        >
+                            Login to Platform
+                        </Button>
+                    </div>
                 </form>
 
                 <div className="flex justify-between text-sm mt-6 pt-6 border-t border-border">
                     <span className="text-text-secondary">Don't have an account?</span>
                     <div className="flex gap-4">
-                        <Link to="/register" className="font-bold text-primary hover:text-success transition-colors">Register as Gym or Client</Link>
+                        <Link to="/register" className="font-bold text-primary hover:text-primary-hover transition-colors">Register as Gym or Client</Link>
                     </div>
                 </div>
             </div>
