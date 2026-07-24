@@ -93,6 +93,12 @@ const ClientProfile = () => {
       } else {
         errMsg = validateDob(value) || '';
       }
+    } else if (key === 'city') {
+      if (value && value.length > 25) errMsg = 'Max 25 characters';
+    } else if (key === 'state') {
+      if (value && value.length > 25) errMsg = 'Max 25 characters';
+    } else if (key === 'pincode') {
+      if (value && value.length !== 6) errMsg = 'Enter a valid 6-digit pincode';
     }
 
     setErrors(prev => {
@@ -141,6 +147,10 @@ const ClientProfile = () => {
       }
     }
 
+    if (pi.city && pi.city.length > 25) newErrors.city = 'Max 25 characters';
+    if (pi.state && pi.state.length > 25) newErrors.state = 'Max 25 characters';
+    if (pi.pincode && pi.pincode.length !== 6) newErrors.pincode = 'Enter a valid 6-digit pincode';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -165,6 +175,9 @@ const ClientProfile = () => {
       setEditing(false);
       setErrors({});
       toast.success('Profile updated successfully');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       const serverError = error.response?.data;
       if (serverError?.field) {
@@ -217,7 +230,7 @@ const ClientProfile = () => {
         <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4">Personal Info</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Field label="Client ID" value={formState.clientId} disabled />
-          <Field label="Home Gym ID" value={formState.gymId} disabled />
+          <Field label="Gym ID" value={formState.gymId} disabled />
 
           <Field
             label="Full Name *"
@@ -304,6 +317,34 @@ const ClientProfile = () => {
               maxLength={100}
               error={errors.address}
               onChange={e => setPersonalInfo('address', e.target.value)}
+            />
+          </div>
+
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Field
+              label="City"
+              value={formState.personalInfo?.city}
+              disabled={!editing}
+              maxLength={25}
+              error={errors.city}
+              onChange={e => setPersonalInfo('city', e.target.value)}
+            />
+            <Field
+              label="State"
+              value={formState.personalInfo?.state}
+              disabled={!editing}
+              maxLength={25}
+              error={errors.state}
+              onChange={e => setPersonalInfo('state', e.target.value)}
+            />
+            <Field
+              label="Pincode"
+              value={formState.personalInfo?.pincode}
+              disabled={!editing}
+              maxLength={6}
+              error={errors.pincode}
+              onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); }}
+              onChange={e => setPersonalInfo('pincode', e.target.value)}
             />
           </div>
 

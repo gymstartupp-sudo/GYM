@@ -13,6 +13,9 @@ const ClientRegister = lazy(() => import('./pages/ClientRegister'));
 const RegistrationSuccess = lazy(() => import('./pages/RegistrationSuccess'));
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const OtpVerification = lazy(() => import('./pages/OtpVerification'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 // Owner - Lazy loaded for code splitting
 const OwnerLayout = lazy(() => import('./layouts/OwnerLayout'));
@@ -99,6 +102,9 @@ const AppContent = () => {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-otp" element={<OtpVerification />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/registration-success" element={<RegistrationSuccess />} />
               
               {/* Owner Routes */}
@@ -123,7 +129,7 @@ const AppContent = () => {
               {/* Client Routes */}
               <Route path="/client" element={<ProtectedRoute allowedRoles={['client']}><ClientLayout /></ProtectedRoute>}>
                 <Route index element={<ClientHome />} />
-                <Route path="profile" element={<Navigate to="/client/settings?tab=profile" replace />} />
+                <Route path="profile" element={<ClientProfile />} />
                 <Route path="payments" element={<ClientPayments />} />
                 <Route path="plans" element={<ClientPlans />} />
                 <Route path="feedback" element={<ClientFeedback />} />
