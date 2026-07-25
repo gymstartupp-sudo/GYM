@@ -27,6 +27,7 @@ const ResetPassword = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const email = queryParams.get('email') || '';
+  const phone = queryParams.get('phone') || '';
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -39,13 +40,13 @@ const ResetPassword = () => {
 
   const passwordVal = watch('password', '');
 
-  // Auto-redirect if no email
+  // Auto-redirect if no context
   useEffect(() => {
-    if (!email) {
+    if (!email && !phone) {
       toast.error('Invalid request context. Starting over.');
       navigate('/forgot-password');
     }
-  }, [email, navigate]);
+  }, [email, phone, navigate]);
 
   // Password criteria checklist
   const criteria = [
@@ -71,7 +72,8 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       const res = await api.post('/auth/reset-password', {
-        email,
+        email: email || undefined,
+        phone: phone || undefined,
         password: data.password,
       });
       toast.success(res.data?.message || 'Password changed successfully. Please login.');

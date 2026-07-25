@@ -11,9 +11,10 @@ const OtpVerification = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const email = queryParams.get('email') || '';
+  const phone = queryParams.get('phone') || '';
 
   const [otp, setOtp] = useState(new Array(6).fill(''));
-  const [expireTime, setExpireTime] = useState(600); // 10 minutes
+  const [expireTime, setExpireTime] = useState(300); // 5 minutes for both email and phone
   const [resendCooldown, setResendCooldown] = useState(60); // 60 seconds cooldown
   const [attemptsRemaining, setAttemptsRemaining] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -21,13 +22,13 @@ const OtpVerification = () => {
 
   const inputRefs = useRef([]);
 
-  // Auto-redirect if no email
+  // Auto-redirect if no context
   useEffect(() => {
-    if (!email) {
+    if (!email && !phone) {
       toast.error('Invalid request context. Starting over.');
       navigate('/forgot-password');
     }
-  }, [email, navigate]);
+  }, [email, phone, navigate]);
 
   // Expire timer decrement
   useEffect(() => {
@@ -102,9 +103,17 @@ const OtpVerification = () => {
 
     setLoading(true);
     try {
-      await api.post('/auth/verify-reset-otp', { email, otp: code });
+      await api.post('/auth/verify-reset-otp', { 
+        email: email || undefined, 
+        phone: phone || undefined, 
+        otp: code 
+      });
       toast.success('Code verified successfully.');
-      navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+      if (email) {
+        navigate(`/reset-password?email=${encodeURIComponent(email)}`);
+      } else {
+        navigate(`/reset-password?phone=${encodeURIComponent(phone)}`);
+      }
     } catch (error) {
       const serverErr = error.response?.data;
       if (serverErr?.message?.includes('locked')) {
@@ -127,10 +136,13 @@ const OtpVerification = () => {
     if (resendCooldown > 0) return;
     setLoading(true);
     try {
-      const res = await api.post('/auth/resend-reset-otp', { email });
+      const res = await api.post('/auth/resend-reset-otp', { 
+        email: email || undefined, 
+        phone: phone || undefined 
+      });
       toast.success(res.data?.message || 'A new verification code has been sent.');
       setOtp(new Array(6).fill(''));
-      setExpireTime(600);
+      setExpireTime(300);
       setResendCooldown(60);
       setAttemptsRemaining(5);
       setLocked(false);
@@ -155,7 +167,7 @@ const OtpVerification = () => {
             <ShieldCheck className="text-primary" size={36} /> Verify Code
           </h2>
           <p className="mt-3 text-center text-sm text-text-secondary">
-            Enter the 6-digit verification code sent to: <strong className="text-text-primary">{email}</strong>
+            Enter the 6-digit verification code sent to: <strong className="text-text-primary">{email || phone}</strong>
           </p>
         </div>
 

@@ -125,6 +125,23 @@ const LoginPage = () => {
             setGyms(foundGyms);
             if (foundGyms.length === 1) {
                 setSelectedGym(foundGyms[0]);
+            } else if (foundGyms.length > 1) {
+                const savedGymStr = localStorage.getItem('lastLoginGym');
+                let matchedGym = null;
+                if (savedGymStr) {
+                    try {
+                        const savedGym = JSON.parse(savedGymStr);
+                        matchedGym = foundGyms.find(g => g.gymId === savedGym.gymId && g.role === savedGym.role);
+                    } catch (e) {
+                        console.error("Error parsing saved gym", e);
+                    }
+                }
+
+                if (matchedGym) {
+                    setSelectedGym(matchedGym);
+                } else {
+                    setSelectedGym(null);
+                }
             } else {
                 setSelectedGym(null);
             }
@@ -245,9 +262,25 @@ const LoginPage = () => {
                     setSelectedGym(singleGym);
                     await executeLogin(loginId, formData.password, singleGym);
                 } else if (foundGyms.length > 1) {
+                    const savedGymStr = localStorage.getItem('lastLoginGym');
+                    let matchedGym = null;
+                    if (savedGymStr) {
+                        try {
+                            const savedGym = JSON.parse(savedGymStr);
+                            matchedGym = foundGyms.find(g => g.gymId === savedGym.gymId && g.role === savedGym.role);
+                        } catch (e) {}
+                    }
+
+                    if (matchedGym) {
+                        setSelectedGym(matchedGym);
+                        await executeLogin(loginId, formData.password, matchedGym);
+                    } else {
+                        setSelectedGym(null);
+                        setErrors(prev => ({ ...prev, gym: 'Please select a gym from the dropdown' }));
+                        toast.warn("Multiple accounts found. Please select your gym.");
+                    }
+                } else {
                     setSelectedGym(null);
-                    setErrors(prev => ({ ...prev, gym: 'Please select a gym from the dropdown' }));
-                    toast.warn("Multiple accounts found. Please select your gym.");
                 }
             } catch (error) {
                 setGyms([]);
@@ -263,7 +296,7 @@ const LoginPage = () => {
             return;
         }
 
-        // If multiple gyms found but user hasn't selected one
+        // If multiple gyms are found but user hasn't selected one
         if (gyms.length > 1 && !selectedGym) {
             setErrors(prev => ({ ...prev, gym: 'Please select a gym from the dropdown' }));
             toast.warn("Please select a gym from the dropdown");
@@ -307,6 +340,10 @@ const LoginPage = () => {
 
             const roleForApp = role === 'superadmin' ? 'superadmin' : role;
             login(token, roleForApp, data);
+
+            if (gym) {
+                localStorage.setItem('lastLoginGym', JSON.stringify({ gymId: gym.gymId, role: gym.role }));
+            }
 
             const redirectUrl = searchParams.get('redirect');
             if (redirectUrl) {

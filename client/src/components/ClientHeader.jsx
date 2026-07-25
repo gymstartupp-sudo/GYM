@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, LogOut, Sunrise, Sun, Sunset, Moon, X, Camera, AlertTriangle, Info } from 'lucide-react';
+import { Bell, LogOut, Sunrise, Sun, Sunset, Moon, X, Camera, AlertTriangle, Info, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from './ThemeToggle';
@@ -32,6 +33,28 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
     }
   });
 
+  const handleInstantDeleteNotification = (notif) => {
+    if (!notif) return;
+    const deletedIds = JSON.parse(localStorage.getItem('client_deleted_notification_ids') || '[]');
+    const newDeletedIds = [...new Set([...deletedIds, notif.id])];
+    localStorage.setItem('client_deleted_notification_ids', JSON.stringify(newDeletedIds));
+
+    // Update state immediately
+    setNotifications(prev => prev.filter(n => n.id !== notif.id));
+    toast.success("Notification deleted.");
+  };
+
+  const handleClearAllNotifications = () => {
+    const deletedIds = JSON.parse(localStorage.getItem('client_deleted_notification_ids') || '[]');
+    const activeIds = notifications.map(n => n.id);
+    const newDeletedIds = [...new Set([...deletedIds, ...activeIds])];
+    localStorage.setItem('client_deleted_notification_ids', JSON.stringify(newDeletedIds));
+
+    // Clear state immediately
+    setNotifications([]);
+    toast.success("All notifications cleared.");
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -50,136 +73,61 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
 
     const notifs = [];
     const getTs = (d) => d ? new Date(d).getTime() : 0;
-
-    const sortedMemberships = [...(profile.memberships || [])]
-      .sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-    const latestMembership = sortedMemberships[0];
-
-    const normalizeDate = (d) => {
-      const nd = new Date(d);
-      nd.setHours(0, 0, 0, 0);
-      return nd;
+    const formatDateStr = (d) => {
+      if (!d) return 'N/A';
+      return new Date(d).toLocaleDateString('en-GB').replace(/\//g, '-');
     };
 
-    const newMembershipStarted = latestMembership && normalizeDate(latestMembership.startDate) <= normalizeDate(new Date());
-
-    // 1. Membership Expiry / Expiring Soon Check
-    const membership = profile.membership;
-    if (membership && membership.endDate) {
-      const daysLeft = calculateDaysLeft(membership.startDate, membership.endDate);
-
-      // Find the membership with balance (if any) to check for outstanding payments
-      let remainingBalance = 0;
-      let activeMembership = null;
-      if (newMembershipStarted) {
-        const finalPrice = latestMembership.finalPrice || 0;
-        const totalPaid = latestMembership.totalPaid || 0;
-        if (finalPrice - totalPaid > 0) {
-          activeMembership = latestMembership;
-        }
-      } else {
-        activeMembership = sortedMemberships.find(m => {
-          const finalPrice = m.finalPrice || 0;
-          const totalPaid = m.totalPaid || 0;
-          return (finalPrice - totalPaid) > 0;
-        });
-      }
-      if (activeMembership) {
-        remainingBalance = (activeMembership.finalPrice || 0) - (activeMembership.totalPaid || 0);
-      }
-
-      if (daysLeft < 0) {
-        // Expired
-        if (remainingBalance > 0) {
-          notifs.push({
-            id: `expired-dues-${getTs(membership.startDate)}-${getTs(membership.endDate)}-${remainingBalance}`,
-            type: 'danger',
-            title: 'Membership Expired',
-            message: `Your membership has expired. You still have an outstanding balance of ₹${remainingBalance}. Please clear the pending amount and renew.`,
-          });
-        } else {
-          notifs.push({
-            id: `expired-clean-${getTs(membership.startDate)}-${getTs(membership.endDate)}`,
-            type: 'danger',
-            title: 'Membership Expired',
-            message: 'Your membership has expired. Please renew your membership to continue.',
-          });
-        }
-      } else if (daysLeft <= 3) {
-        // Expiring Soon (3, 2, 1, 0 days left)
-        const daysText = daysLeft === 0 ? 'today' : `in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
-        if (remainingBalance > 0) {
-          notifs.push({
-            id: `expiring-dues-${getTs(membership.startDate)}-${getTs(membership.endDate)}-${remainingBalance}`,
-            type: 'warning',
-            title: 'Membership Expiring Soon',
-            message: `Your membership will expire ${daysText}. You currently have a pending balance of ₹${remainingBalance}. Please clear the pending balance and renew.`,
-          });
-        } else {
-          notifs.push({
-            id: `expiring-clean-${getTs(membership.startDate)}-${getTs(membership.endDate)}`,
-            type: 'warning',
-            title: 'Membership Expiring Soon',
-            message: `Your membership plan is expiring soon (expires ${daysText}). Please renew your plan.`,
-          });
-        }
-      }
-    }
-
-    // 2. Partial Payment Due Date Check
-    let memWithDues = null;
-    if (newMembershipStarted) {
-      const finalPrice = latestMembership.finalPrice || 0;
-      const totalPaid = latestMembership.totalPaid || 0;
-      if (finalPrice - totalPaid > 0) {
-        memWithDues = latestMembership;
-      }
-    } else {
-      memWithDues = sortedMemberships.find(mem => {
-        const finalPrice = mem.finalPrice || 0;
-        const totalPaid = mem.totalPaid || 0;
-        return (finalPrice - totalPaid) > 0;
+    // 1. Plan Active Check
+    if (profile.membership && (profile.membership.status === 'active' || profile.membership.status === 'expiring_soon')) {
+      const planName = profile.membership.planName || 'Membership Plan';
+      const startStr = formatDateStr(profile.membership.startDate);
+      const endStr = formatDateStr(profile.membership.endDate);
+      notifs.push({
+        id: `plan-active-${getTs(profile.membership.startDate)}`,
+        type: 'info',
+        title: 'Plan Active',
+        message: `Your membership plan "${planName}" is active (Start: ${startStr}, Valid until: ${endStr}).`,
       });
     }
 
-    if (memWithDues && memWithDues.dueDate) {
-      const balance = (memWithDues.finalPrice || 0) - (memWithDues.totalPaid || 0);
+    // 2. WhatsApp Reminders Check (Expiring Soon, Expired, Due Reminders)
+    const sortedReminders = [...(profile.overdueReminders?.manualReminders || [])]
+      .filter(r => r.status === 'sent')
+      .sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
 
-      const normalizedToday = normalizeDate(new Date());
-      const normalizedDueDate = normalizeDate(memWithDues.dueDate);
-      const diffTime = normalizedDueDate.getTime() - normalizedToday.getTime();
-      const daysUntilDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      const dueDateString = new Date(memWithDues.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-');
+    sortedReminders.forEach((r, idx) => {
+      const typeStr = String(r.reminderType || '').toLowerCase();
+      const sentStr = formatDateStr(r.sentAt);
 
-      if (daysUntilDue <= 3 && daysUntilDue > 0) {
-        // 3 days before due date (due soon)
+      if (typeStr.includes('expiring soon')) {
         notifs.push({
-          id: `due-soon-${getTs(memWithDues.startDate)}-${getTs(memWithDues.dueDate)}-${balance}`,
-          type: 'info',
-          title: 'Payment Due Soon',
-          message: `Friendly reminder: your pending membership balance of ₹${balance} is due on ${dueDateString}.`,
-        });
-      } else if (daysUntilDue <= 0 && daysUntilDue > -3) {
-        // on the due date and up to 2 days after
-        const daysText = daysUntilDue === 0 ? 'today' : `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''} ago`;
-        notifs.push({
-          id: `due-today-${getTs(memWithDues.startDate)}-${getTs(memWithDues.dueDate)}-${balance}`,
+          id: `whatsapp-expiring-${getTs(r.sentAt)}-${idx}`,
           type: 'warning',
-          title: 'Payment Due',
-          message: `Your pending membership balance of ₹${balance} is due ${daysText}. Please clear the payment.`,
+          title: 'Membership Expiring Soon',
+          message: `An expiry warning was sent to your WhatsApp on ${sentStr}. Please renew soon.`,
         });
-      } else if (daysUntilDue <= -3) {
-        // 3 days or more overdue
+      } else if (typeStr.includes('expired')) {
         notifs.push({
-          id: `overdue-${getTs(memWithDues.startDate)}-${getTs(memWithDues.dueDate)}-${balance}`,
+          id: `whatsapp-expired-${getTs(r.sentAt)}-${idx}`,
           type: 'danger',
-          title: 'Payment Overdue',
-          message: `Your pending membership balance of ₹${balance} is overdue (Due Date: ${dueDateString}). Please clear the dues immediately.`,
+          title: 'Membership Expired',
+          message: `Your membership expired. An alert was sent to your WhatsApp on ${sentStr}. Please renew to continue.`,
+        });
+      } else if (typeStr.includes('due reminder') || typeStr.includes('payment reminder')) {
+        notifs.push({
+          id: `whatsapp-due-${getTs(r.sentAt)}-${idx}`,
+          type: 'danger',
+          title: 'Payment Reminder Received',
+          message: `A payment reminder for outstanding balance was sent to your WhatsApp on ${sentStr}.`,
         });
       }
-    }
+    });
 
-    setNotifications(notifs);
+    const deletedIds = JSON.parse(localStorage.getItem('client_deleted_notification_ids') || '[]');
+    const activeNotifs = notifs.filter(n => !deletedIds.includes(n.id));
+
+    setNotifications(activeNotifs);
   }, [profile]);
 
   useEffect(() => {
@@ -294,9 +242,19 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
               >
                 <div className="flex justify-between items-center mb-3 pb-2 border-b" style={{ borderColor: 'var(--border-color)' }}>
                   <h3 className="font-bold text-sm text-text-primary">Notifications</h3>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
-                    {notifications.length} Active
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-hover)', color: 'var(--text-muted)' }}>
+                      {notifications.length} Active
+                    </span>
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={handleClearAllNotifications}
+                        className="text-[11px] font-bold text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="max-h-[280px] overflow-y-auto space-y-2.5 pr-1 scrollbar-hide">
@@ -309,7 +267,7 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
                     notifications.map((notif) => (
                       <div
                         key={notif.id}
-                        className="p-3.5 rounded-xl border flex gap-3 hover:scale-[1.01] transition-transform duration-200"
+                        className="p-3.5 rounded-xl border flex gap-3 hover:scale-[1.01] transition-transform duration-200 relative group"
                         style={{
                           background: 'rgba(255,255,255,0.01)',
                           borderColor: notif.type === 'danger' ? 'rgba(239,68,68,0.2)' : notif.type === 'warning' ? 'rgba(245,158,11,0.2)' : 'var(--border-color)'
@@ -324,12 +282,22 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
                         >
                           {notif.type === 'danger' ? <AlertTriangle size={15} /> : notif.type === 'warning' ? <AlertTriangle size={15} /> : <Info size={15} />}
                         </div>
-                        <div className="flex-1 space-y-1">
+                        <div className="flex-1 space-y-1 pr-6 text-left">
                           <div className="flex justify-between items-start">
                             <h4 className="text-xs font-bold text-text-primary leading-tight">{notif.title}</h4>
                           </div>
                           <p className="text-[11px] text-text-secondary leading-normal">{notif.message}</p>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleInstantDeleteNotification(notif);
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-muted hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer"
+                          title="Delete Notification"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     ))
                   )}
