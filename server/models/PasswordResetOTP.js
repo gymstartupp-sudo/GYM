@@ -3,9 +3,15 @@ const mongoose = require('mongoose');
 const passwordResetOTPSchema = new mongoose.Schema({
   email: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
     lowercase: true,
+    index: true
+  },
+  phone: {
+    type: String,
+    required: false,
+    trim: true,
     index: true
   },
   otpHash: {
@@ -30,7 +36,7 @@ const passwordResetOTPSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// TTL Index: automatically delete document after 10 minutes (600 seconds)
-passwordResetOTPSchema.index({ createdAt: 1 }, { expireAfterSeconds: 600 });
+// TTL Index: automatically delete document after 5 minutes (300 seconds)
+passwordResetOTPSchema.index({ createdAt: 1 }, { expireAfterSeconds: 300 });
 
 module.exports = mongoose.model('PasswordResetOTP', passwordResetOTPSchema);

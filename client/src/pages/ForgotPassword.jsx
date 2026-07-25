@@ -9,24 +9,48 @@ import api from '../utils/api';
 import Button from '../components/Button';
 import ThemeToggle from '../components/ThemeToggle';
 
-const schema = yup.object().shape({
-  email: yup.string().required('Email is required').email('Enter a valid email address'),
-});
-
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [method, setMethod] = useState('email'); // 'email' or 'whatsapp'
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(schema),
+  const { register, handleSubmit, formState: { errors }, setError, clearErrors } = useForm({
+    defaultValues: { email: '', phone: '' }
   });
 
   const onSubmit = async (data) => {
+    clearErrors();
+    if (method === 'email') {
+      if (!data.email) {
+        setError('email', { type: 'manual', message: 'Email is required' });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        setError('email', { type: 'manual', message: 'Enter a valid email address' });
+        return;
+      }
+    } else {
+      if (!data.phone) {
+        setError('phone', { type: 'manual', message: 'Phone number is required' });
+        return;
+      }
+      if (!/^[6-9]\d{9}$/.test(data.phone)) {
+        setError('phone', { type: 'manual', message: 'Enter a valid 10-digit Indian mobile number' });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      const res = await api.post('/auth/forgot-password', { email: data.email });
-      toast.success(res.data?.message || 'Verification code sent if account exists.');
-      navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+      if (method === 'email') {
+        const res = await api.post('/auth/forgot-password', { email: data.email });
+        toast.success(res.data?.message || 'Verification code sent if account exists.');
+        navigate(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+      } else {
+        const res = await api.post('/auth/forgot-password', { phone: data.phone });
+        toast.success(res.data?.message || 'Verification code sent if account exists.');
+        navigate(`/verify-otp?phone=${encodeURIComponent(data.phone)}`);
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to send verification code. Please try again.');
     } finally {
@@ -45,23 +69,75 @@ const ForgotPassword = () => {
             <KeyRound className="text-primary" size={36} /> Forgot Password
           </h2>
           <p className="mt-3 text-center text-sm text-text-secondary">
-            Enter your email and we'll send you a 6-digit OTP code to verify your identity.
+            Select verification method and enter credentials to reset your password.
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="space-y-4">
-            <div>
-              <input
-                type="email"
-                placeholder="Email Address"
-                {...register('email')}
-                className={`input-field hover:border-primary/50 ${errors.email ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
-              />
-              <div className="min-h-[20px] mt-1">
-                {errors.email && <p className="text-red-500 text-xs font-medium leading-tight">{errors.email.message}</p>}
+            {/* Verification Method Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-text-secondary uppercase tracking-wider">
+                Verification Method
+              </label>
+              <div className="flex gap-6 p-1">
+                <label className="flex items-center gap-2.5 text-text-primary text-sm font-bold cursor-pointer hover:text-primary transition-colors">
+                  <input
+                    type="radio"
+                    name="method"
+                    value="email"
+                    checked={method === 'email'}
+                    onChange={() => {
+                      setMethod('email');
+                      clearErrors();
+                    }}
+                    className="w-4 h-4 text-primary focus:ring-primary border-border bg-surface-secondary cursor-pointer"
+                  />
+                  Email
+                </label>
+                <label className="flex items-center gap-2.5 text-text-primary text-sm font-bold cursor-pointer hover:text-primary transition-colors">
+                  <input
+                    type="radio"
+                    name="method"
+                    value="whatsapp"
+                    checked={method === 'whatsapp'}
+                    onChange={() => {
+                      setMethod('whatsapp');
+                      clearErrors();
+                    }}
+                    className="w-4 h-4 text-primary focus:ring-primary border-border bg-surface-secondary cursor-pointer"
+                  />
+                  Phone (WhatsApp)
+                </label>
               </div>
             </div>
+
+            {method === 'email' ? (
+              <div>
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  {...register('email')}
+                  className={`input-field hover:border-primary/50 ${errors.email ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                />
+                <div className="min-h-[20px] mt-1">
+                  {errors.email && <p className="text-red-500 text-xs font-medium leading-tight">{errors.email.message}</p>}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <input
+                  type="tel"
+                  placeholder="10-digit Phone Number"
+                  {...register('phone')}
+                  className={`input-field hover:border-primary/50 ${errors.phone ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                  maxLength="10"
+                />
+                <div className="min-h-[20px] mt-1">
+                  {errors.phone && <p className="text-red-500 text-xs font-medium leading-tight">{errors.phone.message}</p>}
+                </div>
+              </div>
+            )}
 
             <Button
               type="submit"

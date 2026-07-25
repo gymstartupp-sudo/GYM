@@ -90,7 +90,7 @@ const runOverdueCheck = async () => {
 };
 
 // Run every day at 00:05
-cron.schedule('30 16 * * *', async () => {
+cron.schedule('42 0 * * *', async () => {
   console.log('Running statusUpdater job...');
   try {
     await runOverdueCheck();

@@ -604,41 +604,82 @@ exports.forgotPassword = async (req, res, next) => {
       return res.status(429).json({ success: false, message: 'Too many requests. Please try again after 15 minutes.' });
     }
 
-    const { email } = req.body;
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    const { email, phone } = req.body;
+    if (!email && !phone) {
+      return res.status(400).json({ success: false, message: 'Please provide either an email or a phone number' });
     }
 
-    const genericMessage = 'If an account exists with this email, a verification code has been sent.';
+    const method = email ? 'Email' : 'WhatsApp';
+    console.log(`\nForgot Password Request\n\n↓\n\nVerification Method:\n${method}`);
 
-    // Search email in Admin
-    const admin = await Admin.findOne({ email }).lean();
-    let userExists = !!admin;
+    let userExists = false;
 
-    // Search email in Gym (Owner)
-    if (!userExists) {
-      const gym = await Gym.findOne({ gymEmail: email }).lean();
-      userExists = !!gym;
-    }
+    if (email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+      }
 
-    // Search email in Client across tenant databases
-    if (!userExists) {
-      const { getTenantConnection } = require('../utils/connectionManager');
-      const gymsList = await Gym.find({ isActive: true }).lean();
-      for (const g of gymsList) {
-        try {
-          const conn = await getTenantConnection(g.dbName);
-          const TenantClient = conn.model('Client');
-          const client = await TenantClient.findOne({ 'personalInfo.email': email }).lean();
-          if (client) {
-            userExists = true;
-            break;
+      // Search email in Admin
+      const admin = await Admin.findOne({ email }).lean();
+      userExists = !!admin;
+
+      // Search email in Gym (Owner)
+      if (!userExists) {
+        const gym = await Gym.findOne({ gymEmail: email }).lean();
+        userExists = !!gym;
+      }
+
+      // Search email in Client across tenant databases
+      if (!userExists) {
+        const { getTenantConnection } = require('../utils/connectionManager');
+        const gymsList = await Gym.find({ isActive: true }).lean();
+        for (const g of gymsList) {
+          try {
+            const conn = await getTenantConnection(g.dbName);
+            const TenantClient = conn.model('Client');
+            const client = await TenantClient.findOne({ 'personalInfo.email': email }).lean();
+            if (client) {
+              userExists = true;
+              break;
+            }
+          } catch (err) {
+            console.error(`forgotPassword client check error in tenant ${g.dbName}:`, err);
           }
-        } catch (err) {
-          console.error(`forgotPassword client check error in tenant ${g.dbName}:`, err);
+        }
+      }
+    } else {
+      // phone validation (10 digit Indian number)
+      if (!/^[6-9]\d{9}$/.test(phone)) {
+        return res.status(400).json({ success: false, message: 'Please provide a valid 10-digit Indian phone number' });
+      }
+
+      // Search phone in Gym (Owner)
+      const gym = await Gym.findOne({ gymContact: phone }).lean();
+      userExists = !!gym;
+
+      // Search phone in Client across tenant databases
+      if (!userExists) {
+        const { getTenantConnection } = require('../utils/connectionManager');
+        const gymsList = await Gym.find({ isActive: true }).lean();
+        for (const g of gymsList) {
+          try {
+            const conn = await getTenantConnection(g.dbName);
+            const TenantClient = conn.model('Client');
+            const client = await TenantClient.findOne({ 'personalInfo.mobileNo': phone }).lean();
+            if (client) {
+              userExists = true;
+              break;
+            }
+          } catch (err) {
+            console.error(`forgotPassword client check error in tenant ${g.dbName}:`, err);
+          }
         }
       }
     }
+
+    const genericMessage = email 
+      ? 'If an account exists with this email, a verification code has been sent.'
+      : 'If an account exists with this phone number, a verification code has been sent.';
 
     if (!userExists) {
       // Return generic message to prevent account enumeration
@@ -650,53 +691,83 @@ exports.forgotPassword = async (req, res, next) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     const bcrypt = require('bcryptjs');
     const otpHash = await bcrypt.hash(otp, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    
+    // Both email and phone get 5 minutes expiry
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    // Invalidate/delete any previous OTP for this email
     const PasswordResetOTP = require('../models/PasswordResetOTP');
-    await PasswordResetOTP.deleteMany({ email });
+    
+    if (email) {
+      // Invalidate/delete any previous OTP for this email
+      await PasswordResetOTP.deleteMany({ email });
 
-    // Store OTP in database
-    await PasswordResetOTP.create({
-      email,
-      otpHash,
-      expiresAt
-    });
-    console.log(`[TEST DEBUG] Generated OTP for ${email}: ${otp}`);
-
-    // Send OTP via Nodemailer
-    const sendEmail = require('../utils/sendEmail');
-    const htmlTemplate = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #E2E2DC; border-radius: 16px; background-color: #111111; color: #FFFFFF;">
-        <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #2A2A2A;">
-          <h2 style="color: #FFBD07; margin: 0; font-size: 28px;">Gym Management</h2>
-        </div>
-        <div style="padding: 20px 10px;">
-          <h3 style="color: #FFFFFF; font-size: 20px;">Password Reset Request</h3>
-          <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">Hello,</p>
-          <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">We received a request to reset your password. Use the verification code below to proceed:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <span style="display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #FFBD07; background-color: #1F1F1F; padding: 12px 30px; border-radius: 8px; border: 1px solid #FFBD07;">
-              ${otp}
-            </span>
-          </div>
-          <p style="color: #BDBDBD; font-size: 13px; line-height: 1.5; font-style: italic;">Note: This verification code is only valid for 10 minutes. If you did not request a password reset, please ignore this email.</p>
-        </div>
-        <div style="text-align: center; padding-top: 20px; border-top: 1px solid #2A2A2A; color: #8A8A8A; font-size: 12px;">
-          <p style="margin: 0;">&copy; ${new Date().getFullYear()} Gym Management Platform. All rights reserved.</p>
-        </div>
-      </div>
-    `;
-
-    try {
-      await sendEmail({
+      // Store OTP in database
+      await PasswordResetOTP.create({
         email,
-        subject: 'Gym Management Password Reset',
-        message: `Your verification code is ${otp}. It is valid for 10 minutes.`,
-        html: htmlTemplate
+        otpHash,
+        expiresAt
       });
-    } catch (mailErr) {
-      console.error(`[TEST DEBUG] Nodemailer failed to send email:`, mailErr.message);
+      console.log(`[TEST DEBUG] Generated OTP for ${email}: ${otp}`);
+      console.log(`\n↓\n\nOTP Generated`);
+
+      // Send OTP via Nodemailer
+      const sendEmail = require('../utils/sendEmail');
+      const htmlTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #E2E2DC; border-radius: 16px; background-color: #111111; color: #FFFFFF;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #2A2A2A;">
+            <h2 style="color: #FFBD07; margin: 0; font-size: 28px;">Gym Management</h2>
+          </div>
+          <div style="padding: 20px 10px;">
+            <h3 style="color: #FFFFFF; font-size: 20px;">Password Reset Request</h3>
+            <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">Hello,</p>
+            <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">We received a request to reset your password. Use the verification code below to proceed:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <span style="display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #FFBD07; background-color: #1F1F1F; padding: 12px 30px; border-radius: 8px; border: 1px solid #FFBD07;">
+                ${otp}
+              </span>
+            </div>
+            <p style="color: #BDBDBD; font-size: 13px; line-height: 1.5; font-style: italic;">Note: This verification code is only valid for 10 minutes. If you did not request a password reset, please ignore this email.</p>
+          </div>
+          <div style="text-align: center; padding-top: 20px; border-top: 1px solid #2A2A2A; color: #8A8A8A; font-size: 12px;">
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Gym Management Platform. All rights reserved.</p>
+          </div>
+        </div>
+      `;
+
+      try {
+        await sendEmail({
+          email,
+          subject: 'Gym Management Password Reset',
+          message: `Your verification code is ${otp}. It is valid for 10 minutes.`,
+          html: htmlTemplate
+        });
+        console.log(`\n↓\n\nEmail Sent\n\nCompleted`);
+      } catch (mailErr) {
+        console.error(`[TEST DEBUG] Nodemailer failed to send email:`, mailErr.message);
+      }
+    } else {
+      // Invalidate/delete any previous OTP for this phone
+      await PasswordResetOTP.deleteMany({ phone });
+
+      // Store OTP in database
+      await PasswordResetOTP.create({
+        phone,
+        otpHash,
+        expiresAt
+      });
+      console.log(`[TEST DEBUG] Generated OTP for ${phone}: ${otp}`);
+      console.log(`\n↓\n\nOTP Generated`);
+
+      // Send OTP via Meta WhatsApp Cloud API
+      const { sendForgotPasswordOTP } = require('../services/metaWhatsAppService');
+      const whatsappResult = await sendForgotPasswordOTP({ phone, otp });
+
+      if (whatsappResult && whatsappResult.success) {
+        console.log(`\n↓\n\nWhatsApp OTP Sent\n\nCompleted`);
+      } else {
+        console.log(`\nWhatsApp OTP Failed\n\nReason:\n${whatsappResult?.error || 'Unknown Meta API error'}`);
+        return res.status(500).json({ success: false, message: 'Failed to send WhatsApp OTP. Please try again.' });
+      }
     }
 
     res.status(200).json({ success: true, message: genericMessage });
@@ -716,13 +787,16 @@ exports.verifyResetOtp = async (req, res, next) => {
       return res.status(429).json({ success: false, message: 'Too many requests. Please try again after 15 minutes.' });
     }
 
-    const { email, otp } = req.body;
-    if (!email || !otp) {
-      return res.status(400).json({ success: false, message: 'Email and verification code are required' });
+    const { email, phone, otp } = req.body;
+    if ((!email && !phone) || !otp) {
+      return res.status(400).json({ success: false, message: 'Email or Phone and verification code are required' });
     }
 
     const PasswordResetOTP = require('../models/PasswordResetOTP');
-    const resetEntry = await PasswordResetOTP.findOne({ email, verified: false });
+    
+    // Find entry
+    const query = email ? { email, verified: false } : { phone, verified: false };
+    const resetEntry = await PasswordResetOTP.findOne(query);
 
     if (!resetEntry) {
       return res.status(400).json({ success: false, message: 'Verification code has expired or is invalid' });
@@ -749,12 +823,13 @@ exports.verifyResetOtp = async (req, res, next) => {
       if (remainingAttempts <= 0) {
         return res.status(400).json({ success: false, message: 'Too many invalid attempts. This code is locked. Please request a new one.' });
       }
-      return res.status(400).json({ success: false, message: `Invalid verification code. \${remainingAttempts} attempts remaining.` });
+      return res.status(400).json({ success: false, message: `Invalid verification code. ${remainingAttempts} attempts remaining.` });
     }
 
     // Set as verified
     resetEntry.verified = true;
     await resetEntry.save();
+    console.log(`\n↓\n\nOTP Verified`);
 
     res.status(200).json({ success: true, message: 'OTP verified successfully' });
   } catch (err) {
@@ -773,20 +848,29 @@ exports.resendResetOtp = async (req, res, next) => {
       return res.status(429).json({ success: false, message: 'Too many requests. Please try again after 15 minutes.' });
     }
 
-    const { email } = req.body;
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const { email, phone } = req.body;
+    if (!email && !phone) {
+      return res.status(400).json({ success: false, message: 'Email or phone number is required' });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
     }
 
+    if (phone && !/^[6-9]\d{9}$/.test(phone)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid 10-digit Indian phone number' });
+    }
+
     const PasswordResetOTP = require('../models/PasswordResetOTP');
-    const existingEntry = await PasswordResetOTP.findOne({ email });
+    const query = email ? { email } : { phone };
+    const existingEntry = await PasswordResetOTP.findOne(query);
 
     // Enforce 60-second resend limit
     if (existingEntry) {
       const secondsSinceLast = (Date.now() - new Date(existingEntry.createdAt).getTime()) / 1000;
       if (secondsSinceLast < 60) {
         const secondsRemaining = Math.ceil(60 - secondsSinceLast);
-        return res.status(429).json({ success: false, message: `Please wait \${secondsRemaining} seconds before requesting a new code.` });
+        return res.status(429).json({ success: false, message: `Please wait ${secondsRemaining} seconds before requesting a new code.` });
       }
     }
 
@@ -795,55 +879,66 @@ exports.resendResetOtp = async (req, res, next) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     const bcrypt = require('bcryptjs');
     const otpHash = await bcrypt.hash(otp, 10);
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     // Delete old entries immediately
-    await PasswordResetOTP.deleteMany({ email });
+    await PasswordResetOTP.deleteMany(query);
 
     // Store new OTP
-    await PasswordResetOTP.create({
-      email,
-      otpHash,
-      expiresAt
-    });
-    console.log(`[TEST DEBUG] Resent OTP for ${email}: ${otp}`);
+    const createData = email ? { email, otpHash, expiresAt } : { phone, otpHash, expiresAt };
+    await PasswordResetOTP.create(createData);
+    console.log(`[TEST DEBUG] Resent OTP for ${email || phone}: ${otp}`);
 
-    // Send OTP email
-    const sendEmail = require('../utils/sendEmail');
-    const htmlTemplate = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #E2E2DC; border-radius: 16px; background-color: #111111; color: #FFFFFF;">
-        <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #2A2A2A;">
-          <h2 style="color: #FFBD07; margin: 0; font-size: 28px;">Gym Management</h2>
-        </div>
-        <div style="padding: 20px 10px;">
-          <h3 style="color: #FFFFFF; font-size: 20px;">Password Reset Request</h3>
-          <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">Hello,</p>
-          <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">Here is your new verification code to reset your password:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <span style="display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #FFBD07; background-color: #1F1F1F; padding: 12px 30px; border-radius: 8px; border: 1px solid #FFBD07;">
-              ${otp}
-            </span>
+    const genericMessage = email 
+      ? 'If an account exists with this email, a verification code has been sent.'
+      : 'If an account exists with this phone number, a verification code has been sent.';
+
+    if (email) {
+      // Send OTP email
+      const sendEmail = require('../utils/sendEmail');
+      const htmlTemplate = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #E2E2DC; border-radius: 16px; background-color: #111111; color: #FFFFFF;">
+          <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #2A2A2A;">
+            <h2 style="color: #FFBD07; margin: 0; font-size: 28px;">Gym Management</h2>
           </div>
-          <p style="color: #BDBDBD; font-size: 13px; line-height: 1.5; font-style: italic;">Note: This verification code is only valid for 10 minutes. If you did not request a password reset, please ignore this email.</p>
+          <div style="padding: 20px 10px;">
+            <h3 style="color: #FFFFFF; font-size: 20px;">Password Reset Request</h3>
+            <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">Hello,</p>
+            <p style="color: #BDBDBD; font-size: 14px; line-height: 1.5;">Here is your new verification code to reset your password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <span style="display: inline-block; font-size: 36px; font-weight: bold; letter-spacing: 5px; color: #FFBD07; background-color: #1F1F1F; padding: 12px 30px; border-radius: 8px; border: 1px solid #FFBD07;">
+                ${otp}
+              </span>
+            </div>
+            <p style="color: #BDBDBD; font-size: 13px; line-height: 1.5; font-style: italic;">Note: This verification code is only valid for 10 minutes. If you did not request a password reset, please ignore this email.</p>
+          </div>
+          <div style="text-align: center; padding-top: 20px; border-top: 1px solid #2A2A2A; color: #8A8A8A; font-size: 12px;">
+            <p style="margin: 0;">&copy; ${new Date().getFullYear()} Gym Management Platform. All rights reserved.</p>
+          </div>
         </div>
-        <div style="text-align: center; padding-top: 20px; border-top: 1px solid #2A2A2A; color: #8A8A8A; font-size: 12px;">
-          <p style="margin: 0;">&copy; ${new Date().getFullYear()} Gym Management Platform. All rights reserved.</p>
-        </div>
-      </div>
-    `;
+      `;
 
-    try {
-      await sendEmail({
-        email,
-        subject: 'Gym Management Password Reset',
-        message: `Your new verification code is ${otp}. It is valid for 10 minutes.`,
-        html: htmlTemplate
-      });
-    } catch (mailErr) {
-      console.error(`[TEST DEBUG] Nodemailer failed to send email:`, mailErr.message);
+      try {
+        await sendEmail({
+          email,
+          subject: 'Gym Management Password Reset',
+          message: `Your new verification code is ${otp}. It is valid for 10 minutes.`,
+          html: htmlTemplate
+        });
+      } catch (mailErr) {
+        console.error(`[TEST DEBUG] Nodemailer failed to send email:`, mailErr.message);
+      }
+    } else {
+      // Send OTP via Meta WhatsApp Cloud API
+      const { sendForgotPasswordOTP } = require('../services/metaWhatsAppService');
+      const whatsappResult = await sendForgotPasswordOTP({ phone, otp });
+
+      if (!whatsappResult || !whatsappResult.success) {
+        return res.status(500).json({ success: false, message: 'Failed to resend WhatsApp OTP. Please try again.' });
+      }
     }
 
-    res.status(200).json({ success: true, message: 'If an account exists with this email, a verification code has been sent.' });
+    res.status(200).json({ success: true, message: genericMessage });
   } catch (err) {
     next(err);
   }
@@ -854,9 +949,9 @@ exports.resendResetOtp = async (req, res, next) => {
 // @access  Public
 exports.resetPassword = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email and new password are required' });
+    const { email, phone, password } = req.body;
+    if ((!email && !phone) || !password) {
+      return res.status(400).json({ success: false, message: 'Email or Phone and new password are required' });
     }
 
     // Password validation rules
@@ -870,7 +965,8 @@ exports.resetPassword = async (req, res, next) => {
 
     // Verify OTP was verified successfully
     const PasswordResetOTP = require('../models/PasswordResetOTP');
-    const resetEntry = await PasswordResetOTP.findOne({ email, verified: true });
+    const query = email ? { email, verified: true } : { phone, verified: true };
+    const resetEntry = await PasswordResetOTP.findOne(query);
     
     if (!resetEntry) {
       return res.status(400).json({ success: false, message: 'Verification session has expired or is invalid. Please start over.' });
@@ -879,46 +975,80 @@ exports.resetPassword = async (req, res, next) => {
     // Update password for all matching user accounts across all models
     let userUpdated = false;
 
-    // 1. Check Admin
-    const admin = await Admin.findOne({ email });
-    if (admin) {
-      admin.password = password;
-      await admin.save();
-      userUpdated = true;
-    }
+    if (email) {
+      // 1. Check Admin
+      const admin = await Admin.findOne({ email });
+      if (admin) {
+        admin.password = password;
+        await admin.save();
+        userUpdated = true;
+      }
 
-    // 2. Check Gym (Owner)
-    const gym = await Gym.findOne({ gymEmail: email });
-    if (gym) {
-      gym.password = password;
-      await gym.save();
-      userUpdated = true;
-    }
+      // 2. Check Gym (Owner)
+      const gym = await Gym.findOne({ gymEmail: email });
+      if (gym) {
+        gym.password = password;
+        await gym.save();
+        userUpdated = true;
+      }
 
-    // 3. Check Clients across all tenant databases
-    const { getTenantConnection } = require('../utils/connectionManager');
-    const gymsList = await Gym.find({ isActive: true }).lean();
-    for (const g of gymsList) {
-      try {
-        const conn = await getTenantConnection(g.dbName);
-        const TenantClient = conn.model('Client');
-        const client = await TenantClient.findOne({ 'personalInfo.email': email });
-        if (client) {
-          client.password = password;
-          await client.save();
-          userUpdated = true;
+      // 3. Check Clients across all tenant databases
+      const { getTenantConnection } = require('../utils/connectionManager');
+      const gymsList = await Gym.find({ isActive: true }).lean();
+      for (const g of gymsList) {
+        try {
+          const conn = await getTenantConnection(g.dbName);
+          const TenantClient = conn.model('Client');
+          const client = await TenantClient.findOne({ 'personalInfo.email': email });
+          if (client) {
+            client.password = password;
+            await client.save();
+            userUpdated = true;
+          }
+        } catch (err) {
+          console.error(`resetPassword client save error in tenant ${g.dbName}:`, err);
         }
-      } catch (err) {
-        console.error(`resetPassword client save error in tenant \${g.dbName}:`, err);
+      }
+    } else {
+      // 1. Check Gym (Owner)
+      const gym = await Gym.findOne({ gymContact: phone });
+      if (gym) {
+        gym.password = password;
+        await gym.save();
+        userUpdated = true;
+      }
+
+      // 2. Check Clients across all tenant databases
+      const { getTenantConnection } = require('../utils/connectionManager');
+      const gymsList = await Gym.find({ isActive: true }).lean();
+      for (const g of gymsList) {
+        try {
+          const conn = await getTenantConnection(g.dbName);
+          const TenantClient = conn.model('Client');
+          const client = await TenantClient.findOne({ 'personalInfo.mobileNo': phone });
+          if (client) {
+            client.password = password;
+            await client.save();
+            userUpdated = true;
+          }
+        } catch (err) {
+          console.error(`resetPassword client save error in tenant ${g.dbName}:`, err);
+        }
       }
     }
 
     if (!userUpdated) {
-      return res.status(404).json({ success: false, message: 'No accounts associated with this email were found.' });
+      return res.status(404).json({ 
+        success: false, 
+        message: email 
+          ? 'No accounts associated with this email were found.' 
+          : 'No accounts associated with this phone number were found.' 
+      });
     }
 
     // Clean up OTP entries
-    await PasswordResetOTP.deleteMany({ email });
+    await PasswordResetOTP.deleteMany(query);
+    console.log(`\n↓\n\nPassword Updated\n\n↓\n\nCompleted`);
 
     res.status(200).json({ success: true, message: 'Password changed successfully. Please login.' });
   } catch (err) {

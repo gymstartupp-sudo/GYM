@@ -155,6 +155,11 @@ exports.getClientProfile = async (req, res, next) => {
   try {
     const Payment = require('../models/Payment');
     const Gym = require('../models/Gym');
+    const { syncClientStatus } = require('../utils/syncStatus');
+
+    // Run authoritative status sync to ensure membership.status and details are updated
+    await syncClientStatus(req.user._id);
+
     const client = await Client.findById(req.user._id).populate('membership.planId').lean();
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
     
