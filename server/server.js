@@ -141,7 +141,6 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/expenses', require('./routes/expense'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/issues', require('./routes/issues'));
-app.use('/api/trigger', require('./routes/trigger'));
 
 // Error Handler Middleware
 app.use(errorHandler);

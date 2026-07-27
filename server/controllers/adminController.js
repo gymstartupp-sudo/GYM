@@ -880,6 +880,32 @@ exports.clearReminderHistory = async (req, res, next) => {
   }
 };
 
+// @desc    Manually trigger all reminder jobs (Expiry + Overdue)
+// @route   POST /api/admin/run-reminders
+// @access  Private (SuperAdmin only)
+exports.triggerRunReminders = async (req, res, next) => {
+  try {
+    const { runReminders } = require('../jobs/reminderJob');
+    const { runOverdueReminders } = require('../jobs/overdueReminderJob');
+
+    console.log(`[Admin] Manual reminder trigger initiated by Super Admin (id: ${req.user?._id})`);
+
+    const membershipStats = await runReminders({ executionSource: 'Manual Admin Trigger' });
+    const overdueStats = await runOverdueReminders({ executionSource: 'Manual Admin Trigger' });
+
+    res.status(200).json({
+      success: true,
+      message: 'All reminder jobs executed successfully.',
+      data: {
+        membershipReminders: membershipStats,
+        overdueReminders: overdueStats
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Bulk Import Clients from client-parsed Excel JSON
 // @route   POST /api/admin/bulk-import
 // @access  Private (SuperAdmin, Developer)

@@ -46,7 +46,7 @@ const AdminDashboard = () => {
     const handleRunRemindersJob = async () => {
         setRunningReminders(true);
         try {
-            const res = await api.post('/trigger/reminders');
+            const res = await api.post('/admin/run-reminders');
             if (res.data.success) {
                 toast.success(res.data.message || 'Reminder job executed successfully!');
             } else {

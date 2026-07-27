@@ -20,6 +20,7 @@ router.put('/gym/:id/status', adminController.toggleGymStatus);
 router.delete('/gym/:id', adminController.deleteGym);
 router.post('/overdue-check', adminController.triggerOverdueCheck);
 router.post('/bulk-import', adminController.bulkImportClients);
+router.post('/run-reminders', adminController.triggerRunReminders);
 
 // Reminder Testing Developer Tools Routes
 router.get('/reminder-test/clients', devEnvGuard, adminController.getReminderTestClients);
