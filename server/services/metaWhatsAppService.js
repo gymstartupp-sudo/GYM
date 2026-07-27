@@ -535,6 +535,43 @@ const sendWhatsAppDocument = async ({ phone, pdfUrl, filename, caption, clientId
   }
 };
 
+/**
+ * 12. Forgot Password OTP
+ * Variables: OTP Code
+ */
+const sendForgotPasswordOTP = async ({ phone, otp, clientId, gymId }) => {
+  const templateName = 'forgot_psd_otp';
+
+  // Standard Meta Authentication templates have:
+  // - Body component with 1 parameter (the OTP code)
+  // - Button component (sub_type: 'url') with 1 parameter (the OTP code) for the copy/autofill button.
+  const components = [
+    {
+      type: 'body',
+      parameters: [
+        { type: 'text', text: String(otp) }
+      ]
+    },
+    {
+      type: 'button',
+      sub_type: 'url',
+      index: '0',
+      parameters: [
+        { type: 'text', text: String(otp) }
+      ]
+    }
+  ];
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Forgot Password OTP',
+    clientId,
+    gymId
+  });
+};
+
 module.exports = {
   sendExpiringSoonReminder,
   sendExpiringSoonPendingReminder,
@@ -546,5 +583,6 @@ module.exports = {
   sendDueReminder,
   sendPaymentReceived,
   sendPaymentReceivedTemplate,
-  sendWhatsAppDocument
+  sendWhatsAppDocument,
+  sendForgotPasswordOTP
 };

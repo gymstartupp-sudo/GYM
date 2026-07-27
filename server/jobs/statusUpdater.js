@@ -15,7 +15,7 @@ const runOverdueCheck = async () => {
 
   try {
     const gyms = await Gym.find({ isActive: true });
-    
+
     for (const gym of gyms) {
       try {
         const conn = await getTenantConnection(gym.dbName);
@@ -31,7 +31,7 @@ const runOverdueCheck = async () => {
 
         await runWithTenantContext({ tenantDb: conn, models }, async () => {
           // 1. Transition past due payments to overdue
-          const pendingPayments = await Payment.find({ 
+          const pendingPayments = await Payment.find({
             status: { $in: ['pending', 'partial'] },
             dueDate: { $lt: new Date() }
           });
@@ -90,7 +90,7 @@ const runOverdueCheck = async () => {
 };
 
 // Run every day at 00:05
-cron.schedule('5 0 * * *', async () => {
+cron.schedule('42 0 * * *', async () => {
   console.log('Running statusUpdater job...');
   try {
     await runOverdueCheck();
