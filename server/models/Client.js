@@ -86,7 +86,7 @@ const clientSchema = new mongoose.Schema({
       error: { type: String, default: null },
       reminderType: { type: String },
       templateName: { type: String },
-      executionSource: { type: String, enum: ['Automatic Cron', 'Manual Trigger', 'Manual Reminder'] },
+      executionSource: { type: String, enum: ['Automatic Cron', 'Manual Trigger', 'Manual Reminder', 'Manual Admin Trigger'] },
       messageId: { type: String },
       sentBy: { type: String }
     }],

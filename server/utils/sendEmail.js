@@ -1,4 +1,9 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
+
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const sendEmail = async (options) => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -17,6 +22,7 @@ const sendEmail = async (options) => {
       port,
       secure,
       requireTLS: port === 587,
+      family: 4, // Explicitly force IPv4 to prevent ENETUNREACH on Render's dual-stack container network
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
