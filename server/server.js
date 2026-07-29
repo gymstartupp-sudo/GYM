@@ -28,6 +28,8 @@ const { blockNoSqlInjection } = require('./middleware/security');
 const Admin = require('./models/Admin');
 
 const app = express();
+// Trust Render's reverse proxy (required for express-rate-limit)
+app.set("trust proxy", 1);
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
