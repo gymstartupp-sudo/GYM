@@ -33,7 +33,7 @@ const Overdue = () => {
 
         const interval = setInterval(() => {
             fetchOverdueClients(false);
-        }, 10000); // Poll every 10 seconds
+        }, 30000); // Poll every 30 seconds
 
         return () => clearInterval(interval);
     }, []);

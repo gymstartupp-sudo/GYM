@@ -5,9 +5,11 @@ import { UserPlus, Check, X, Clock } from 'lucide-react';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
 import Pagination from '../../components/Pagination';
+import { useAuth } from '../../context/AuthContext';
 
 const ClientRequests = () => {
-    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+    const { role } = useAuth();
+    const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionId, setActionId] = useState(null);

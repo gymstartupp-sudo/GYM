@@ -325,11 +325,18 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     } catch (err) {
       if (err.response?.status === 409) {
         const data = err.response.data;
-        if (data.exists && data.client) {
+        if (data.exists) {
           setDuplicateModal({
             type: data.isDeleted ? 'deleted' : 'active',
             isExpired: data.isExpired,
-            client: data.client
+            client: {
+              personalInfo: {
+                name: values.name || '',
+                mobileNo: values.mobileNo,
+                email: values.email
+              },
+              deletedAt: data.deletedAt
+            }
           });
         }
         setError(field, { type: 'manual', message: field === 'email' ? 'Email already exists' : 'Phone number already exists' });
@@ -382,7 +389,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         };
 
         if (isRestoring) {
-          const res = await api.put(`/client/${restoringClientId}/restore`, {
+          const res = await api.put('/client/restore/by-contact', {
+            email: data.email,
+            phone: data.mobileNo,
             membership: payload.membership
           });
           toast.success('Client restored successfully');
@@ -393,17 +402,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         }
       } else {
         if (isRestoring) {
-          await api.put(`/auth/client/${restoringClientId}/restore`, {
-            gymId: data.gymId,
-            password: data.password,
-            membership: {
-              planId: data.planId,
-              startDate: data.startDate,
-              planType: data.planType
-            }
-          });
-          toast.success('Restore request submitted for approval');
-          onSuccess?.({ gymName: data.gymName }, 'restore');
+          toast.info('Account already exists for this contact. Please log in to your account or contact your gym owner.');
+          setLoading(false);
+          return;
         } else {
           const payload = {
             gymId: data.gymId,
@@ -466,7 +467,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       };
 
       if (isRestoring) {
-        const res = await api.put(`/client/${restoringClientId}/restore`, {
+        const res = await api.put('/client/restore/by-contact', {
+          email: values.email,
+          phone: values.mobileNo,
           membership: payload.membership,
           payment: payload.payment
         });
@@ -507,11 +510,18 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       } catch (err) {
         if (err.response?.status === 409) {
           const data = err.response.data;
-          if (data.exists && data.client) {
+          if (data.exists) {
             setDuplicateModal({
               type: data.isDeleted ? 'deleted' : 'active',
               isExpired: data.isExpired,
-              client: data.client
+              client: {
+                personalInfo: {
+                  name: values.name || '',
+                  mobileNo: values.mobileNo,
+                  email: values.email
+                },
+                deletedAt: data.deletedAt
+              }
             });
           } else {
             toast.error(data.message || 'Duplicate detected');
@@ -544,11 +554,18 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       } catch (err) {
         if (err.response?.status === 409) {
           const data = err.response.data;
-          if (data.exists && data.client) {
+          if (data.exists) {
             setDuplicateModal({
               type: data.isDeleted ? 'deleted' : 'active',
               isExpired: data.isExpired,
-              client: data.client
+              client: {
+                personalInfo: {
+                  name: values.name || '',
+                  mobileNo: values.mobileNo,
+                  email: values.email
+                },
+                deletedAt: data.deletedAt
+              }
             });
           } else {
             toast.error(data.message || 'Duplicate detected');
@@ -911,7 +928,8 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
                     setDuplicateModal(null);
                     onCancel?.();
                     if (isOwner) {
-                      navigate(`/owner/clients/${duplicateModal.client._id}`);
+                      const searchVal = values.mobileNo || values.email || '';
+                      navigate(`/owner/clients?search=${encodeURIComponent(searchVal)}`);
                     } else {
                       navigate('/login');
                     }
@@ -925,32 +943,8 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
                   className="bg-primary hover:bg-primary/90 text-black font-bold"
                   onClick={async () => {
                     if (duplicateModal.isExpired) {
-                      const c = duplicateModal.client;
-                      const p = c.personalInfo || {};
-
-                      const setValIfPresent = (field, dbVal) => {
-                        if (dbVal !== undefined && dbVal !== null && dbVal !== '') {
-                          setValue(field, dbVal, { shouldValidate: true, shouldDirty: true });
-                        }
-                      };
-
-                      setValIfPresent('name', p.name);
-                      setValIfPresent('gender', p.gender);
-                      setValIfPresent('email', p.email);
-                      if (p.dob) {
-                        setValIfPresent('dob', p.dob.substring(0, 10));
-                      }
-                      setValIfPresent('mobileNo', p.mobileNo);
-                      setValIfPresent('address', p.address);
-                      setValIfPresent('city', p.city);
-                      setValIfPresent('state', p.state);
-                      setValIfPresent('pincode', p.pincode);
-                      setValIfPresent('emergencyContact', p.emergencyContact);
-                      setValIfPresent('medicalCondition', p.medicalCondition);
-                      
                       clearErrors(['email', 'mobileNo']);
                       setIsRestoring(true);
-                      setRestoringClientId(c._id);
                       setDuplicateModal(null);
                       if (!isOwner) {
                         setStep(2);
@@ -959,16 +953,18 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
                     } else {
                       try {
                         if (isOwner) {
-                          await api.put(`/client/${duplicateModal.client._id}/restore`);
+                          await api.put('/client/restore/by-contact', {
+                            email: values.email,
+                            phone: values.mobileNo
+                          });
+                          toast.success('Client restored successfully.');
+                          setDuplicateModal(null);
+                          onCancel?.();
+                          const searchVal = values.mobileNo || values.email || '';
+                          navigate(`/owner/clients?search=${encodeURIComponent(searchVal)}`);
                         } else {
-                          await api.put(`/auth/client/${duplicateModal.client._id}/restore`, { gymId: values.gymId });
-                        }
-                        toast.success('Client restored successfully.');
-                        setDuplicateModal(null);
-                        onCancel?.();
-                        if (isOwner) {
-                          navigate(`/owner/clients/${duplicateModal.client._id}`);
-                        } else {
+                          toast.info('Please log in with your existing credentials or contact your gym owner.');
+                          setDuplicateModal(null);
                           navigate('/login');
                         }
                       } catch (err) {

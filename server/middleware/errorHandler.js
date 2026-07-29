@@ -1,3 +1,5 @@
+const logger = require('../utils/logger');
+
 const errorHandler = (err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   
@@ -21,14 +23,7 @@ const errorHandler = (err, req, res, next) => {
   }
   
   // Custom Error Object
-  const fs = require('fs');
-  const path = require('path');
-  console.error('SERVER ERROR:', err);
-  try {
-    fs.appendFileSync(path.join(__dirname, '../../last_error.log'), `\n[${new Date().toISOString()}] ${err.stack || err.message}\n`);
-  } catch (e) {
-    console.error('Failed to write to last_error.log', e);
-  }
+  logger.error('SERVER ERROR:', err);
 
   res.status(statusCode).json({
     success: false,

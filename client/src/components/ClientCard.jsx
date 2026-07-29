@@ -4,8 +4,10 @@ import Button from './Button';
 import ReminderTimeline from './ReminderTimeline';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../utils/membership';
 import { planStatusStyles, paymentStatusStyles } from '../utils/statusStyles';
+import { useAuth } from '../context/AuthContext';
 
 const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onReminderClick, onDelete, deleteLabel, showRenew = false, showReactivate = false, hideStatus = false, hideReminders = false }) => {
+  const { role } = useAuth();
   const name = client?.personalInfo?.name || 'Client';
   const avatarText = client?.avatar || name.charAt(0).toUpperCase();
 
@@ -20,7 +22,7 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
   const dynamicDaysLeft = calculateDaysLeft(currentPlan?.startDate, currentPlan?.endDate);
   const daysLeft = dynamicDaysLeft !== null ? dynamicDaysLeft : '-';
 
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
 
   return (
     <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group">

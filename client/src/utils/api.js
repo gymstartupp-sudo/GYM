@@ -21,7 +21,6 @@ api.interceptors.response.use(
     const status = err.response?.status;
     if (status === 401 || status === 403) {
       localStorage.removeItem('token');
-      localStorage.removeItem('role');
       // If we aren't already on login page, redirect to prevent loop
       if (window.location.pathname !== '/login') {
           const reason = status === 403 ? 'suspended' : 'expired';

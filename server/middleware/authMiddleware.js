@@ -17,6 +17,9 @@ const protect = async (req, res, next) => {
       if (decoded.role === 'client') {
         user = await Client.findById(decoded.id).select('-password').lean();
         role = 'client';
+        if (user && (user.isActive === false || user.isDeleted === true)) {
+          return res.status(403).json({ success: false, message: 'Not authorized, client account is deactivated' });
+        }
         // Block login if the client's gym has been deactivated by admin
         if (user && user.gymId) {
           const gym = await Gym.findOne({ gymId: user.gymId }).select('isActive').lean();

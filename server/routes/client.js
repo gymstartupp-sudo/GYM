@@ -9,7 +9,8 @@ const {
   phoneValidation,
   mongoIdValidation,
   stringValidation,
-  numberValidation
+  numberValidation,
+  passwordValidation
 } = require('../middleware/validate');
 
 const clientProfileValidation = [
@@ -19,7 +20,7 @@ const clientProfileValidation = [
 
 const changePasswordValidation = [
   stringValidation('currentPassword'),
-  stringValidation('newPassword')
+  passwordValidation('newPassword')
 ];
 
 const getClientsQueryValidation = [
@@ -49,6 +50,8 @@ router.route('/')
 
 router.get('/inactive', protect, authorize('owner', 'superadmin', 'developer'), getClientsQueryValidation, validate, clientController.getInactiveClients);
 router.get('/deleted', protect, authorize('owner', 'superadmin', 'developer'), clientController.getDeletedClients);
+
+router.put('/restore/by-contact', protect, authorize('owner'), clientController.restoreClientByContact);
 
 router.route('/:id')
   .get(protect, authorize('owner', 'superadmin', 'developer'), [mongoIdValidation('id', 'param')], validate, clientController.getClientById)

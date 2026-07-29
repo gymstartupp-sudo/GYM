@@ -3,6 +3,7 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
 import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '', disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -101,7 +102,8 @@ const PlanDetailModal = ({ plan, onClose }) => {
 
 // ─── Plan Card ──────────────────────────────────────────────────────────────
 const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+  const { role } = useAuth();
+  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   return (
   <div className="card relative flex flex-col group border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-primary/10 hover:shadow-xl">
     {/* Hover actions */}
@@ -508,7 +510,8 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
 
 // ─── Main Plans Page ────────────────────────────────────────────────────────
 const Plans = () => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+  const { role } = useAuth();
+  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFormModal, setShowFormModal] = useState(false);

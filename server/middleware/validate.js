@@ -43,8 +43,7 @@ const phoneValidation = (field, optional = false) => {
   return chain
     .isString().withMessage(`${field} must be a string primitive`)
     .trim()
-    .matches(/^\d+$/).withMessage(`${field} must contain only digits`)
-    .matches(/^[0-9]{10}$/).withMessage(`Please enter a valid 10-digit phone number`);
+    .matches(/^[6-9]\d{9}$/).withMessage(`Please enter a valid 10-digit mobile number starting with 6-9`);
 };
 
 // Reusable Mongo ID validation helper
@@ -121,11 +120,55 @@ const numberValidation = (field, optional = false, options = {}) => {
   return chain;
 };
 
+// Reusable password strength validation helper
+const passwordValidation = (field = 'password', optional = false) => {
+  const passwordMessage = 'Password must be at least 8 characters with 1 uppercase and 1 number';
+  return stringValidation(field, optional)
+    .isLength({ min: 8 })
+    .withMessage(passwordMessage)
+    .matches(/^(?=.*[A-Z])(?=.*\d).+$/)
+    .withMessage(passwordMessage);
+};
+
+// Robust external URL validation helper (allows http and https only)
+const isValidExternalUrl = (urlStr) => {
+  if (typeof urlStr !== 'string') return false;
+  const trimmed = urlStr.trim();
+  if (!trimmed) return false;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+const urlValidation = (field, optional = false) => {
+  let chain = body(field);
+  if (optional) {
+    chain = chain.optional({ nullable: true, checkFalsy: true });
+  } else {
+    chain = chain.exists().withMessage(`${field} is required`);
+  }
+  return chain
+    .isString().withMessage(`${field} must be a string primitive`)
+    .trim()
+    .custom((val) => {
+      if (!isValidExternalUrl(val)) {
+        throw new Error(`${field} must be a valid URL with http or https protocol`);
+      }
+      return true;
+    });
+};
+
 module.exports = {
   validate,
   emailValidation,
   phoneValidation,
   mongoIdValidation,
   stringValidation,
-  numberValidation
+  numberValidation,
+  passwordValidation,
+  isValidExternalUrl,
+  urlValidation
 };

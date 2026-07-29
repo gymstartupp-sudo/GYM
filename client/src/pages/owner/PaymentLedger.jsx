@@ -51,8 +51,8 @@ const getBillUrl = (billPath) => {
 };
 
 const PaymentLedger = () => {
-    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
-    const { user } = useAuth();
+    const { user, role } = useAuth();
+    const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const [payments, setPayments] = useState([]);
     const [expenses, setExpenses] = useState([]);
     const [clients, setClients] = useState([]);

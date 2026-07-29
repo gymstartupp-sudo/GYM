@@ -2,8 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const adminController = require('../controllers/adminController');
+const {
+  adminLimiter,
+  heavyOperationLimiter,
+  heavyConcurrencyGuard
+} = require('../middleware/rateLimiter');
 
-router.use(protect, authorize('superadmin', 'developer'));
+// Apply adminLimiter to all admin routes
+router.use(protect, authorize('superadmin', 'developer'), adminLimiter);
 
 // Environment Guard for Developer Tools
 const devEnvGuard = (req, res, next) => {
@@ -18,9 +24,11 @@ router.get('/gyms', adminController.getAllGyms);
 router.get('/gym/:id/profile', adminController.getGymProfile);
 router.put('/gym/:id/status', adminController.toggleGymStatus);
 router.delete('/gym/:id', adminController.deleteGym);
-router.post('/overdue-check', adminController.triggerOverdueCheck);
 router.post('/bulk-import', adminController.bulkImportClients);
-router.post('/run-reminders', adminController.triggerRunReminders);
+
+// Heavy operations: rate-limited + concurrency guard
+router.post('/overdue-check', heavyOperationLimiter, heavyConcurrencyGuard, adminController.triggerOverdueCheck);
+router.post('/run-reminders', heavyOperationLimiter, heavyConcurrencyGuard, adminController.triggerRunReminders);
 
 // Reminder Testing Developer Tools Routes
 router.get('/reminder-test/clients', devEnvGuard, adminController.getReminderTestClients);

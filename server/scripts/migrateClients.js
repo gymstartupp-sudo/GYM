@@ -11,7 +11,7 @@
  *   4. Updates the Counter collection so future registrations continue from the correct number.
  *   5. Drops any legacy single-field unique index on clientId (if it exists).
  *
- * Run once with: node server/migrateClients.js
+ * Run with: node server/scripts/migrateClients.js
  */
 
 require('dotenv').config();

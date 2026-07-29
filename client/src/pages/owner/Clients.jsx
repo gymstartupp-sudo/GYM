@@ -10,6 +10,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import ReminderDetailsModal from '../../components/ReminderDetailsModal';
 import { getPlanStatus } from '../../utils/membership';
 import Pagination from '../../components/Pagination';
+import { useAuth } from '../../context/AuthContext';
 
 // ─── Status options config ───────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -106,19 +107,21 @@ const FilterBadge = ({ label, onClear }) => (
 const Clients = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+  const { role } = useAuth();
+  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+
+  const queryParams = new URLSearchParams(location.search);
+  const initialStatus = queryParams.get('status') || 'All';
+  const initialSearch = queryParams.get('search') || '';
+
   const [clients, setClients] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [duesClient, setDuesClient] = useState(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // Get status from URL if present
-  const queryParams = new URLSearchParams(location.search);
-  const initialStatus = queryParams.get('status') || 'All';
 
   const [filterStatus, setFilterStatus] = useState(initialStatus);
   const [filterPlan, setFilterPlan] = useState('All');
@@ -126,10 +129,12 @@ const Clients = () => {
   const [reminderModalClient, setReminderModalClient] = useState(null);
   const [reminderModalTab, setReminderModalTab] = useState('both');
 
-  // Sync filter with URL changes
+  // Sync filter and search with URL changes
   useEffect(() => {
     const s = new URLSearchParams(location.search).get('status');
     if (s) setFilterStatus(s);
+    const searchVal = new URLSearchParams(location.search).get('search');
+    if (searchVal !== null) setSearchTerm(searchVal);
   }, [location.search]);
 
   // Reset page when search or filters change
@@ -177,7 +182,7 @@ const Clients = () => {
 
     const interval = setInterval(() => {
       fetchClients(false);
-    }, 10000); // Poll every 10 seconds
+    }, 30000); // Poll every 30 seconds
 
     return () => clearInterval(interval);
   }, [fetchClients]);

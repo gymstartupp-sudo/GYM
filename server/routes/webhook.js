@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Gym = require('../models/Gym');
 const { getTenantConnection } = require('../utils/connectionManager');
+const logger = require('../utils/logger');
 
 // Meta Webhook Verification (GET /api/webhook)
 router.get('/', (req, res) => {
@@ -13,10 +14,10 @@ router.get('/', (req, res) => {
 
   if (mode && token) {
     if (mode === 'subscribe' && token === localVerifyToken) {
-      console.log('[META WEBHOOK] Verification successful.');
+      logger.info('[META WEBHOOK] Verification successful.');
       return res.status(200).send(challenge);
     } else {
-      console.warn('[META WEBHOOK] Verification failed. Token mismatch.');
+      logger.warn('[META WEBHOOK] Verification failed. Token mismatch.');
       return res.sendStatus(403);
     }
   }
@@ -27,7 +28,7 @@ router.get('/', (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const body = req.body;
-    console.log('[META WEBHOOK] Received payload:', JSON.stringify(body, null, 2));
+    logger.info('[META WEBHOOK] Received payload:', logger.redact(body));
 
     if (body.object === 'whatsapp_business_account') {
       const entry = body.entry?.[0];
@@ -38,7 +39,7 @@ router.post('/', async (req, res) => {
       if (statuses && Array.isArray(statuses)) {
         for (const statusObj of statuses) {
           const { id, status, recipient_id, errors } = statusObj;
-          console.log(`[META WEBHOOK STATUS UPDATE] Message ID: ${id}, Status: ${status}, Recipient: ${recipient_id}`);
+          logger.info(`[META WEBHOOK STATUS UPDATE] Message ID: ${id}, Status: ${status}, Recipient: ${logger.maskPhone(recipient_id)}`);
 
           // Find which tenant database has this invoiceMessageId
           const activeGyms = await Gym.find({ isActive: true });
@@ -58,24 +59,24 @@ router.post('/', async (req, res) => {
                   payment.invoiceError = null;
                 }
                 await payment.save();
-                console.log(`[META WEBHOOK SUCCESS] Updated payment ${payment.paymentId} in DB ${gym.dbName} to status: ${status}`);
+                logger.info(`[META WEBHOOK SUCCESS] Updated payment ${payment.paymentId} to status: ${status}`);
                 matched = true;
                 break;
               }
             } catch (connErr) {
-              console.error(`Error querying tenant DB ${gym.dbName} in webhook:`, connErr);
+              logger.error(`Error querying tenant DB in webhook:`, connErr.message);
             }
           }
 
           if (!matched) {
-            console.log(`[META WEBHOOK INFO] Message ID ${id} did not match any stored invoiceMessageId.`);
+            logger.info(`[META WEBHOOK INFO] Message ID ${id} did not match any stored invoiceMessageId.`);
           }
         }
       }
     }
     return res.sendStatus(200);
   } catch (err) {
-    console.error('[META WEBHOOK ERROR]:', err);
+    logger.error('[META WEBHOOK ERROR]:', err.message);
     return res.sendStatus(500);
   }
 });

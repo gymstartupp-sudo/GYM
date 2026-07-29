@@ -172,30 +172,57 @@ exports.getClientProfile = async (req, res, next) => {
   }
 };
 
+const { sanitizePayload } = require('../utils/allowlist');
+
 // @desc    Update Client Profile
 // @route   PUT /api/client/profile
 // @access  Private (Client)
 exports.updateClientProfile = async (req, res, next) => {
   try {
+    const ALLOWED_TOP_LEVEL = ['personalInfo'];
+    const ALLOWED_PERSONAL_INFO_FIELDS = [
+      'name', 'email', 'mobileNo', 'gender', 'dob', 'address',
+      'emergencyContact', 'city', 'state', 'pincode', 'bloodGroup',
+      'occupation', 'whatsappNumber', 'mobile'
+    ];
+
+    const topKeys = Object.keys(req.body || {});
+    const invalidTopKeys = topKeys.filter(k => !ALLOWED_TOP_LEVEL.includes(k));
+    if (invalidTopKeys.length > 0) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
     const { personalInfo = {} } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(personalInfo, ALLOWED_PERSONAL_INFO_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
     const clientId = req.user._id.toString();
     const phoneRegex = /^[6-9]\d{9}$/;
 
-    if (personalInfo.email) {
-      const emailExists = await Client.findOne({ 'personalInfo.email': personalInfo.email, _id: { $ne: clientId } });
+    if (cleanData.email) {
+      const emailExists = await Client.findOne({ 'personalInfo.email': cleanData.email, _id: { $ne: clientId } });
       if (emailExists) return res.status(400).json({ success: false, message: 'Email already exists', field: 'email' });
     }
 
-    if (personalInfo.mobileNo) {
-      if (!phoneRegex.test(personalInfo.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid Indian mobile number', field: 'mobileNo' });
-      const mobileExists = await Client.findOne({ 'personalInfo.mobileNo': personalInfo.mobileNo, _id: { $ne: clientId } });
+    if (cleanData.mobileNo) {
+      if (!phoneRegex.test(cleanData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid Indian mobile number', field: 'mobileNo' });
+      const mobileExists = await Client.findOne({ 'personalInfo.mobileNo': cleanData.mobileNo, _id: { $ne: clientId } });
       if (mobileExists) return res.status(400).json({ success: false, message: 'Phone number already exists', field: 'mobileNo' });
     }
 
     const client = await Client.findById(clientId);
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
 
-    client.personalInfo = { ...client.personalInfo.toObject(), ...personalInfo };
+    // Explicitly copy only allowed fields into personalInfo
+    const currentPersonalInfo = client.personalInfo ? client.personalInfo.toObject() : {};
+    for (const field of ALLOWED_PERSONAL_INFO_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(cleanData, field)) {
+        currentPersonalInfo[field] = cleanData[field];
+      }
+    }
+    client.personalInfo = currentPersonalInfo;
     await client.save();
 
     // Fetch payments before calling calculateBalances to avoid showing zero balances
@@ -544,7 +571,8 @@ exports.approveClient = async (req, res, next) => {
   const { acquireLock, releaseLock } = require('../utils/lock');
   const lockKey = `approve-${req.params.id}`;
 
-  if (!acquireLock(lockKey)) {
+  const acquired = await acquireLock(lockKey);
+  if (!acquired) {
     return res.status(409).json({ success: false, message: 'Approval request is already in progress for this client' });
   }
 
@@ -712,7 +740,7 @@ exports.approveClient = async (req, res, next) => {
   } catch (err) {
     next(err);
   } finally {
-    releaseLock(lockKey);
+    await releaseLock(lockKey);
   }
 };
 
@@ -721,7 +749,24 @@ exports.approveClient = async (req, res, next) => {
 // @access  Private (Client)
 exports.changeClientPassword = async (req, res, next) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const ALLOWED_FIELDS = ['currentPassword', 'newPassword'];
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { currentPassword, newPassword } = cleanData;
+
+    // Validate password strength: min 8 characters, at least 1 uppercase and 1 number
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8 || !passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters with 1 uppercase and 1 number',
+        field: 'newPassword'
+      });
+    }
+
     const client = await Client.findById(req.user._id);
 
     if (!client) {
@@ -1032,7 +1077,28 @@ exports.restoreClient = async (req, res, next) => {
       await syncClientStatus(client._id);
     }
     
-    res.status(200).json({ success: true, message: 'Client restored successfully', data: client });
+    const sanitizedClient = client.toObject ? client.toObject() : { ...client };
+    delete sanitizedClient.password;
+
+    res.status(200).json({ success: true, message: 'Client restored successfully', data: sanitizedClient });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.restoreClientByContact = async (req, res, next) => {
+  try {
+    const { email, phone } = req.body || {};
+    if (!email && !phone) {
+      return res.status(400).json({ success: false, message: 'Email or phone number is required to restore client' });
+    }
+
+    const query = email ? { 'personalInfo.email': email } : { 'personalInfo.mobileNo': phone };
+    const client = await Client.findOne(query);
+    if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
+
+    req.params.id = client._id.toString();
+    return exports.restoreClient(req, res, next);
   } catch (err) {
     next(err);
   }

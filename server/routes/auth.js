@@ -9,6 +9,14 @@ const {
   stringValidation
 } = require('../middleware/validate');
 const { uploadLogo } = require('../middleware/upload');
+const {
+  loginLimiter,
+  findGymsLimiter,
+  forgotPasswordLimiter,
+  otpLimiter,
+  verifyOtpLimiter,
+  resetPasswordLimiter
+} = require('../middleware/rateLimiter');
 
 const phoneMessage = 'Please enter a valid 10-digit phone number';
 const passwordMessage = 'Password must be at least 8 characters with 1 uppercase and 1 number';
@@ -98,16 +106,15 @@ const checkExistsValidation = [
 
 // Routes
 router.post('/check-exists', checkExistsValidation, validate, authController.checkExists);
-router.post('/find-gyms', authController.findGyms);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/verify-reset-otp', authController.verifyResetOtp);
-router.post('/resend-reset-otp', authController.resendResetOtp);
-router.post('/reset-password', authController.resetPassword);
+router.post('/find-gyms', findGymsLimiter, authController.findGyms);
+router.post('/forgot-password', forgotPasswordLimiter, authController.forgotPassword);
+router.post('/verify-reset-otp', verifyOtpLimiter, authController.verifyResetOtp);
+router.post('/resend-reset-otp', otpLimiter, authController.resendResetOtp);
+router.post('/reset-password', resetPasswordLimiter, authController.resetPassword);
 
 router.post('/gym/register', uploadLogo.single('logo'), gymRegisterValidation, validate, authController.registerGymOwner);
 router.post('/client/register', clientRegisterValidation, validate, authController.registerClient);
-router.put('/client/:id/restore', authController.publicRestoreClient);
 
-router.post('/login', universalLoginValidation, validate, authController.universalLogin);
+router.post('/login', loginLimiter, universalLoginValidation, validate, authController.universalLogin);
 
 module.exports = router;

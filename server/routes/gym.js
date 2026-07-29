@@ -7,7 +7,8 @@ const {
   validate,
   emailValidation,
   phoneValidation,
-  stringValidation
+  stringValidation,
+  passwordValidation
 } = require('../middleware/validate');
 
 const { uploadLogo } = require('../middleware/upload');
@@ -21,7 +22,7 @@ const gymProfileValidation = [
 
 const changePasswordValidation = [
   stringValidation('currentPassword'),
-  stringValidation('newPassword')
+  passwordValidation('newPassword')
 ];
 
 router.get('/public/:gymId', [param('gymId').isString().trim().notEmpty()], validate, gymController.getGymPublicProfile);
