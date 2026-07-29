@@ -703,6 +703,10 @@ exports.forgotPassword = async (req, res, next) => {
         console.log(`\n↓\n\nEmail Sent\n\nCompleted`);
       } catch (mailErr) {
         console.error(`[TEST DEBUG] Nodemailer failed to send email:`, mailErr.message);
+        return res.status(500).json({
+          success: false,
+          message: `Failed to send verification email (${mailErr.message || 'SMTP error'}). Please check server email environment variables on Render.`
+        });
       }
     } else {
       // Invalidate/delete any previous OTP for this phone
