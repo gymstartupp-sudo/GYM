@@ -134,7 +134,8 @@ exports.recordPayment = async (req, res, next) => {
     }
 
     lockKey = `payment-${clientId}`;
-    if (!acquireLock(lockKey)) {
+    const acquired = await acquireLock(lockKey);
+    if (!acquired) {
       return res.status(409).json({ success: false, message: 'Another payment transaction is already in progress for this client' });
     }
 
@@ -217,6 +218,29 @@ exports.recordPayment = async (req, res, next) => {
       if (recentPayment) {
         return res.status(400).json({ success: false, message: 'Duplicate payment detected. Please wait.' });
       }
+    }
+
+    // Check if a payment for the same client, plan, and start date already exists
+    const targetStartDate = startDate ? new Date(startDate) : new Date();
+    const startValForDup = new Date(targetStartDate);
+    startValForDup.setHours(0, 0, 0, 0);
+    const endValForDup = new Date(targetStartDate);
+    endValForDup.setHours(23, 59, 59, 999);
+
+    const duplicatePayment = await Payment.findOne({
+      clientId: client._id,
+      planId: planId,
+      startDate: {
+        $gte: startValForDup,
+        $lte: endValForDup
+      }
+    });
+
+    if (duplicatePayment) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'A payment record for this plan and start date already exists.' 
+      });
     }
 
     const gym = await Gym.findOne({ gymId: gymIdStr });
@@ -313,7 +337,7 @@ exports.recordPayment = async (req, res, next) => {
   } catch (err) {
     next(err);
   } finally {
-    if (lockKey) releaseLock(lockKey);
+    if (lockKey) await releaseLock(lockKey);
   }
 };
 
@@ -369,6 +393,8 @@ exports.getPayments = async (req, res, next) => {
   }
 };
 
+const { sanitizePayload } = require('../utils/allowlist');
+
 // @desc    Update a payment (partial payments)
 // @route   PUT /api/payment/:id
 // @access  Private (Owner)
@@ -377,13 +403,22 @@ exports.updatePayment = async (req, res, next) => {
   const { acquireLock, releaseLock } = require('../utils/lock');
 
   try {
+    const ALLOWED_PAYMENT_UPDATE = [
+      'additionalAmount', 'paymentMethod', 'razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature'
+    ];
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_PAYMENT_UPDATE);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
     const { id } = req.params;
-    const { additionalAmount, paymentMethod, razorpay_payment_id } = req.body;
+    const { additionalAmount, paymentMethod, razorpay_payment_id } = cleanData;
     const payment = await Payment.findById(id);
     if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
 
     lockKey = `payment-${payment.clientId.toString()}`;
-    if (!acquireLock(lockKey)) {
+    const acquired = await acquireLock(lockKey);
+    if (!acquired) {
       return res.status(409).json({ success: false, message: 'Another payment transaction is already in progress for this client' });
     }
 
@@ -530,7 +565,7 @@ exports.updatePayment = async (req, res, next) => {
     }
     next(err);
   } finally {
-    if (lockKey) releaseLock(lockKey);
+    if (lockKey) await releaseLock(lockKey);
   }
 };
 
@@ -539,7 +574,13 @@ exports.updatePayment = async (req, res, next) => {
 // @access  Private (Client, Owner)
 exports.createRazorpayOrder = async (req, res, next) => {
   try {
-    const { planId, paidAmount, paymentId, additionalAmount } = req.body;
+    const ALLOWED_ORDER_CREATE = ['planId', 'paidAmount', 'paymentId', 'additionalAmount'];
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_ORDER_CREATE);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { planId, paidAmount, paymentId, additionalAmount } = cleanData;
     let gymIdStr = req.user.gymId;
 
     const gym = await Gym.findOne({ gymId: gymIdStr });

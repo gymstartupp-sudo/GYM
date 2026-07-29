@@ -1,11 +1,21 @@
 const Plan = require('../models/Plan');
+const { sanitizePayload } = require('../utils/allowlist');
+
+const ALLOWED_PLAN_FIELDS = [
+  'name', 'durationMonths', 'price', 'description', 'isCustom', 'partialPaymentDueDays'
+];
 
 // @desc    Create a new plan
 // @route   POST /api/plan
 // @access  Private (Owner)
 exports.createPlan = async (req, res, next) => {
   try {
-    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_PLAN_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays } = cleanData;
     const gymId = req.user.gymId;
 
     if (!price) {
@@ -113,7 +123,12 @@ exports.getPlans = async (req, res, next) => {
 // @access  Private (Owner)
 exports.updatePlan = async (req, res, next) => {
   try {
-    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_PLAN_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays } = cleanData;
 
     if (name && name.length > 25) {
       return res.status(400).json({ success: false, message: 'Plan name cannot exceed 25 characters' });
@@ -191,12 +206,14 @@ exports.updatePlan = async (req, res, next) => {
     }
 
     plan = await Plan.findByIdAndUpdate(req.params.id, {
-      name: cleanName || plan.name,
-      durationMonths: finalDurationMonths,
-      price: price !== undefined ? price : plan.price,
-      description: description !== undefined ? description : plan.description,
-      isCustom: finalIsCustom,
-      partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : plan.partialPaymentDueDays
+      $set: {
+        name: cleanName || plan.name,
+        durationMonths: finalDurationMonths,
+        price: price !== undefined ? price : plan.price,
+        description: description !== undefined ? description : plan.description,
+        isCustom: finalIsCustom,
+        partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : plan.partialPaymentDueDays
+      }
     }, { new: true, runValidators: true });
 
     res.status(200).json({ success: true, data: plan });

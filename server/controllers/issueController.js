@@ -21,6 +21,8 @@ const toPublicUrl = (filePath) => {
   return relative ? `/uploads/${relative}` : filePath;
 };
 
+const { sanitizePayload } = require('../utils/allowlist');
+
 // ─── Owner ──────────────────────────────────────────────────────────────────
 
 // @desc    Submit a new issue report
@@ -28,11 +30,21 @@ const toPublicUrl = (filePath) => {
 // @access  Private (owner)
 exports.submitIssue = async (req, res, next) => {
   try {
+    const ALLOWED_SUBMIT_FIELDS = [
+      'category', 'title', 'description', 'severity',
+      'ownerEmail', 'browser', 'operatingSystem', 'resolution',
+      'currentPage', 'appVersion', 'gymName', 'ownerName', 'ownerPhone', 'gymId'
+    ];
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_SUBMIT_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
     const {
       category, title, description, severity,
       ownerEmail, browser, operatingSystem, resolution,
       currentPage, appVersion
-    } = req.body;
+    } = cleanData;
 
     if (!category || !title || !description) {
       return res.status(400).json({ success: false, message: 'Category, title and description are required' });
@@ -40,9 +52,9 @@ exports.submitIssue = async (req, res, next) => {
 
     // Extract gym info from JWT (set by authMiddleware)
     const gymId = req.user?.gymId;
-    const gymName = req.user?.gymName || req.body.gymName || '';
-    const ownerName = req.body.ownerName || '';
-    const ownerPhone = req.body.ownerPhone || '';
+    const gymName = req.user?.gymName || cleanData.gymName || '';
+    const ownerName = cleanData.ownerName || '';
+    const ownerPhone = cleanData.ownerPhone || '';
 
     // Handle uploaded files
     const files = req.files || {};
@@ -62,7 +74,7 @@ exports.submitIssue = async (req, res, next) => {
 
     const issue = await IssueReport.create({
       ticketId,
-      gymId: gymId || req.body.gymId,
+      gymId: gymId || cleanData.gymId,
       gymName,
       ownerName,
       ownerEmail: ownerEmail || '',
@@ -207,7 +219,12 @@ exports.getIssueStats = async (req, res, next) => {
 // @access  Private (superadmin)
 exports.updateIssueStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ['status']);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { status } = cleanData;
     const allowed = ['Open', 'In Progress', 'Waiting for Customer', 'Resolved', 'Closed'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status value' });
@@ -231,7 +248,12 @@ exports.updateIssueStatus = async (req, res, next) => {
 // @access  Private (superadmin)
 exports.addAdminNote = async (req, res, next) => {
   try {
-    const { message } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ['message']);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { message } = cleanData;
     if (!message?.trim()) return res.status(400).json({ success: false, message: 'Note message required' });
 
     const issue = await IssueReport.findByIdAndUpdate(
@@ -252,7 +274,12 @@ exports.addAdminNote = async (req, res, next) => {
 // @access  Private (superadmin)
 exports.addReply = async (req, res, next) => {
   try {
-    const { message } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ['message']);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { message } = cleanData;
     if (!message?.trim()) return res.status(400).json({ success: false, message: 'Reply message required' });
 
     const issue = await IssueReport.findByIdAndUpdate(

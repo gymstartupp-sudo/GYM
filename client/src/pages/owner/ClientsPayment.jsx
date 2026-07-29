@@ -8,9 +8,11 @@ import { getPlanStatus, calculateEndDate, toLocalDateString } from '../../utils/
 import PaymentModal from '../../components/PaymentModal';
 import ClientDetail from './ClientDetail';
 import Pagination from '../../components/Pagination';
+import { useAuth } from '../../context/AuthContext';
 
 const Transactions = () => {
-    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+    const { role } = useAuth();
+    const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const location = useLocation();
     const navigate = useNavigate();
     const [payments, setPayments] = useState([]);

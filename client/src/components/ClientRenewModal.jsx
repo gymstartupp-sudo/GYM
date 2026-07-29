@@ -356,7 +356,11 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
       setDetectedPendingPayment(null);
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Membership renewal failed');
+      const errMsg = error.response?.status === 409
+        ? "Payment is already being processed."
+        : (error.response?.data?.message || 'Membership renewal failed');
+      setFormError(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsPaying(false);
     }
@@ -415,7 +419,11 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
             setDetectedPendingPayment(null);
             if (onSuccess) onSuccess();
           } catch (error) {
-            toast.error(error.response?.data?.message || 'Payment signature verification failed');
+            const errMsg = error.response?.status === 409
+              ? "Payment is already being processed."
+              : (error.response?.data?.message || 'Payment signature verification failed');
+            setFormError(errMsg);
+            toast.error(errMsg);
           } finally {
             setIsPaying(false);
           }
@@ -438,7 +446,11 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to initiate checkout order');
+      const errMsg = error.response?.status === 409
+        ? "Payment is already being processed."
+        : (error.response?.data?.message || 'Failed to initiate checkout order');
+      setFormError(errMsg);
+      toast.error(errMsg);
       setIsPaying(false);
     }
   };
@@ -750,7 +762,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
               disabled={!selectedPlan || isPaying}
               isLoading={isPaying}
             >
-              {renewalForm.paymentMethod === 'cash' ? 'Confirm Cash Renewal' : 'Proceed to Payment'}
+              {isPaying ? 'Processing Payment...' : (renewalForm.paymentMethod === 'cash' ? 'Confirm Cash Renewal' : 'Proceed to Payment')}
             </Button>
           </div>
         </form>

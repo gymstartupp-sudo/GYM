@@ -9,6 +9,7 @@ import PaymentModal from '../../components/PaymentModal';
 import ClientCard from '../../components/ClientCard';
 import Pagination from '../../components/Pagination';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../../utils/membership';
+import { useAuth } from '../../context/AuthContext';
 
 const StatCard = ({ title, value, icon, accentClass = 'text-primary' }) => (
     <div className="kpi-card">
@@ -68,7 +69,8 @@ const ClientDashboardTable = ({ clients, onView }) => (
 );
 
 const Dashboard = () => {
-    const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+    const { role } = useAuth();
+    const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);

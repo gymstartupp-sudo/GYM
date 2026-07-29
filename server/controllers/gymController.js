@@ -3,6 +3,7 @@ const Client = require('../models/Client');
 const Plan = require('../models/Plan');
 const Payment = require('../models/Payment');
 const Expense = require('../models/Expense');
+const { isValidExternalUrl } = require('../middleware/validate');
 
 // @desc    Get Gym Profile
 // @route   GET /api/gym/profile
@@ -30,39 +31,64 @@ exports.getGymProfile = async (req, res, next) => {
   }
 };
 
+const { sanitizePayload } = require('../utils/allowlist');
+
 // @desc    Update Gym Profile
 // @route   PUT /api/gym/profile
 // @access  Private (Owner)
 exports.updateGymProfile = async (req, res, next) => {
   try {
+    const ALLOWED_TOP_LEVEL = ['gymData', 'ownerData'];
+    const ALLOWED_GYM_FIELDS = [
+      'gymName', 'gymEmail', 'gymContact', 'address', 'city', 'state',
+      'pincode', 'gst', 'gymLogo', 'tagline', 'gymType', 'operatingDays',
+      'operatingHours', 'billingInfo', 'reminderSettings', 'socialMediaLinks'
+    ];
+    const ALLOWED_OWNER_FIELDS = ['name', 'email', 'mobile', 'phone', 'mobileNo', 'mailId'];
+
+    // 1. Verify Top-Level Keys
+    const topKeys = Object.keys(req.body || {});
+    const invalidTopKeys = topKeys.filter(k => !ALLOWED_TOP_LEVEL.includes(k));
+    if (invalidTopKeys.length > 0) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
     const { gymData, ownerData } = req.body;
     const gymStrId = req.user._id.toString();
-
     const phoneRegex = /^[6-9]\d{9}$/;
 
-    // ─── 1. Gym Data Checks ──────────────────────────────────────────────────
+    let cleanGymData = null;
+    let cleanOwnerData = null;
+
+    // ─── 1. Gym Data Checks & Sanitization ───────────────────────────────────
     if (gymData) {
-      if (gymData.gymName && gymData.gymName.length > 25) {
+      const { cleanData, hasInvalidFields } = sanitizePayload(gymData, ALLOWED_GYM_FIELDS);
+      if (hasInvalidFields) {
+        return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+      }
+      cleanGymData = cleanData;
+
+      if (cleanGymData.gymName && cleanGymData.gymName.length > 25) {
         return res.status(400).json({ success: false, message: 'Gym name cannot exceed 25 characters', field: 'gymName' });
       }
 
       // Duplicate Email Check
-      if (gymData.gymEmail) {
-        const emailExists = await Gym.findOne({ gymEmail: gymData.gymEmail, _id: { $ne: gymStrId } });
+      if (cleanGymData.gymEmail) {
+        const emailExists = await Gym.findOne({ gymEmail: cleanGymData.gymEmail, _id: { $ne: gymStrId } });
         if (emailExists) return res.status(400).json({ success: false, message: 'Email already exists', field: 'gymEmail' });
       }
 
       // Duplicate Contact Check
-      if (gymData.gymContact) {
-        if (!phoneRegex.test(gymData.gymContact)) {
+      if (cleanGymData.gymContact) {
+        if (!phoneRegex.test(cleanGymData.gymContact)) {
           return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'gymContact' });
         }
-        const contactExists = await Gym.findOne({ gymContact: gymData.gymContact, _id: { $ne: gymStrId } });
+        const contactExists = await Gym.findOne({ gymContact: cleanGymData.gymContact, _id: { $ne: gymStrId } });
         if (contactExists) return res.status(400).json({ success: false, message: 'Phone number already exists', field: 'gymContact' });
       }
 
-      if (gymData.reminderSettings) {
-        const { whatsappNumber, phoneNumber } = gymData.reminderSettings;
+      if (cleanGymData.reminderSettings) {
+        const { whatsappNumber, phoneNumber } = cleanGymData.reminderSettings;
         if (whatsappNumber && !phoneRegex.test(whatsappNumber)) {
           return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'whatsapp' });
         }
@@ -71,39 +97,53 @@ exports.updateGymProfile = async (req, res, next) => {
         }
       }
 
-      if (gymData.billingInfo) {
-        const { helpContact } = gymData.billingInfo;
+      if (cleanGymData.billingInfo) {
+        const { helpContact } = cleanGymData.billingInfo;
         if (helpContact && !phoneRegex.test(helpContact)) {
           return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'billHelp' });
         }
       }
 
-      // Password Safeguard
-      delete gymData.password;
+      if (cleanGymData.socialMediaLinks) {
+        if (!Array.isArray(cleanGymData.socialMediaLinks)) {
+          return res.status(400).json({ success: false, message: 'socialMediaLinks must be an array' });
+        }
+        for (const item of cleanGymData.socialMediaLinks) {
+          if (item?.url && !isValidExternalUrl(item.url)) {
+            return res.status(400).json({ success: false, message: `Invalid URL format for ${item.platform || 'social link'}. Only HTTP and HTTPS protocols are allowed.` });
+          }
+        }
+      }
 
-      // Update on Gym model directly
-      const gym = await Gym.findByIdAndUpdate(gymStrId, { $set: gymData }, { new: true, runValidators: true }).select('-password');
+      // Update on Gym model using explicitly sanitized fields
+      const gym = await Gym.findByIdAndUpdate(gymStrId, { $set: cleanGymData }, { new: true, runValidators: true }).select('-password');
       req.updatedGym = gym;
     }
 
-    // ─── 2. Owner Data Checks ─────────────────────────────────────────────────
+    // ─── 2. Owner Data Checks & Sanitization ─────────────────────────────────
     if (ownerData) {
-      if (ownerData.name && ownerData.name.length > 25) {
+      const { cleanData, hasInvalidFields } = sanitizePayload(ownerData, ALLOWED_OWNER_FIELDS);
+      if (hasInvalidFields) {
+        return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+      }
+      cleanOwnerData = cleanData;
+
+      if (cleanOwnerData.name && cleanOwnerData.name.length > 25) {
         return res.status(400).json({ success: false, message: 'Owner name cannot exceed 25 characters', field: 'ownerName' });
       }
       // Personal Mobile Format Check
-      if (ownerData.mobileNo) {
-        if (!phoneRegex.test(ownerData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'ownerMobile' });
+      if (cleanOwnerData.mobileNo) {
+        if (!phoneRegex.test(cleanOwnerData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'ownerMobile' });
       }
 
       // Update Owner in Gym Document
       const gym = await Gym.findById(gymStrId);
       if (gym) {
         gym.owner = {
-          name: ownerData.name || gym.owner?.name,
-          email: ownerData.mailId || gym.owner?.email,
-          mobile: ownerData.mobileNo || gym.owner?.mobile,
-          phone: ownerData.mobileNo || gym.owner?.phone
+          name: cleanOwnerData.name || gym.owner?.name,
+          email: cleanOwnerData.mailId || cleanOwnerData.email || gym.owner?.email,
+          mobile: cleanOwnerData.mobileNo || cleanOwnerData.mobile || gym.owner?.mobile,
+          phone: cleanOwnerData.mobileNo || cleanOwnerData.phone || gym.owner?.phone
         };
         await gym.save();
         req.updatedOwner = {
@@ -344,7 +384,24 @@ exports.getGymPublicProfile = async (req, res, next) => {
 // @access  Private (Owner)
 exports.changeGymPassword = async (req, res, next) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const ALLOWED_FIELDS = ['currentPassword', 'newPassword'];
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { currentPassword, newPassword } = cleanData;
+
+    // Validate password strength: min 8 characters, at least 1 uppercase and 1 number
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8 || !passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters with 1 uppercase and 1 number',
+        field: 'newPassword'
+      });
+    }
+
     const gym = await Gym.findById(req.user._id);
 
     if (!gym) {

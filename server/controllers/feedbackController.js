@@ -1,11 +1,17 @@
 const Feedback = require('../models/Feedback');
+const { sanitizePayload } = require('../utils/allowlist');
 
 // @desc    Submit new feedback
 // @route   POST /api/feedback/submit
 // @access  Private (Client)
 const submitFeedback = async (req, res) => {
   try {
-    const { subject, message } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ['subject', 'message']);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { subject, message } = cleanData;
     const clientObjectId = req.user._id;
     const gymId = req.user.gymId;
     const clientId = req.user.clientId;
@@ -76,7 +82,12 @@ const getGymFeedback = async (req, res) => {
 const updateFeedbackStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ['status']);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const { status } = cleanData;
 
     if (!['Unread', 'Read', 'Resolved'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });

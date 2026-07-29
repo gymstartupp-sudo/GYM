@@ -1,5 +1,10 @@
 const Expense = require('../models/Expense');
 const { uploadBillToCloudinary } = require('../utils/cloudinary');
+const { sanitizePayload } = require('../utils/allowlist');
+
+const ALLOWED_EXPENSE_FIELDS = [
+  'title', 'amount', 'category', 'date', 'paymentMethod', 'note', 'vendor', 'billImage'
+];
 
 // @desc    Get all expenses
 // @route   GET /api/expenses
@@ -18,22 +23,26 @@ exports.getExpenses = async (req, res, next) => {
 // @access  Private (Owner)
 exports.createExpense = async (req, res, next) => {
   try {
-    req.body = req.body || {};
-    req.body.gymId = req.user.gymId;
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_EXPENSE_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    cleanData.gymId = req.user.gymId;
     
-    if (req.body.amount && Number(req.body.amount) > 10000000) {
+    if (cleanData.amount && Number(cleanData.amount) > 10000000) {
       return res.status(400).json({ success: false, message: 'Expense amount cannot exceed 1 crore (₹10,000,000)' });
     }
-    if (req.body.note && req.body.note.length > 100) {
+    if (cleanData.note && cleanData.note.length > 100) {
       return res.status(400).json({ success: false, message: 'Notes cannot exceed 100 characters' });
     }
 
     if (req.file) {
       const billUrl = await uploadBillToCloudinary(req.file.path);
-      req.body.billImage = billUrl;
+      cleanData.billImage = billUrl;
     }
 
-    const expense = await Expense.create(req.body);
+    const expense = await Expense.create(cleanData);
     res.status(201).json({ success: true, data: expense });
   } catch (err) {
     next(err);
@@ -51,19 +60,24 @@ exports.updateExpense = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Expense not found' });
     }
 
-    if (req.body.amount && Number(req.body.amount) > 10000000) {
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_EXPENSE_FIELDS);
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    if (cleanData.amount && Number(cleanData.amount) > 10000000) {
       return res.status(400).json({ success: false, message: 'Expense amount cannot exceed 1 crore (₹10,000,000)' });
     }
-    if (req.body.note && req.body.note.length > 100) {
+    if (cleanData.note && cleanData.note.length > 100) {
       return res.status(400).json({ success: false, message: 'Notes cannot exceed 100 characters' });
     }
 
     if (req.file) {
       const billUrl = await uploadBillToCloudinary(req.file.path);
-      req.body.billImage = billUrl;
+      cleanData.billImage = billUrl;
     }
 
-    expense = await Expense.findByIdAndUpdate(req.params.id, req.body, {
+    expense = await Expense.findByIdAndUpdate(req.params.id, { $set: cleanData }, {
       new: true,
       runValidators: true
     });

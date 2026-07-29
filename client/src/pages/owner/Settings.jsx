@@ -10,8 +10,8 @@ import LogoutModal from '../../components/LogoutModal';
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
-  const { user, logout } = useAuth();
+  const { user, logout, role } = useAuth();
+  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 

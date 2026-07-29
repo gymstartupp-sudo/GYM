@@ -12,7 +12,7 @@ const dropIndex = async () => {
     await mongoose.connect(dbUri);
     console.log('Database connected successfully!');
     
-    const Feedback = require('./models/Feedback');
+    const Feedback = require('../models/Feedback');
     
     console.log('Dropping unique index "feedbackId_1" from feedbacks collection...');
     await Feedback.collection.dropIndex('feedbackId_1');

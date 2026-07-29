@@ -20,6 +20,10 @@ const getTenantConnection = async (dbName) => {
     throw new Error('Database name is required for tenant connection');
   }
 
+  if (mongoose.connection.readyState !== 1) {
+    throw new Error('Database is not connected');
+  }
+
   if (tenantConnections.has(dbName)) {
     const conn = tenantConnections.get(dbName);
     if (conn.readyState === 1) {

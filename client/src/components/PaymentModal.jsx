@@ -574,6 +574,10 @@ const PaymentModal = ({
             onClose();
         } catch (error) {
             console.error("Payment failed:", error);
+            const errMsg = error.response?.status === 409
+                ? "Payment is already being processed."
+                : (error.response?.data?.message || "Payment failed");
+            setFormError(errMsg);
             setIsSubmitting(false);
         }
     };
@@ -971,7 +975,7 @@ const PaymentModal = ({
                             isLoading={isSubmitting}
                             disabled={isSubmitting || !selectedClient || !selectedPlan}
                         >
-                            {isSubmitting ? 'Processing...' : 'Confirm Payment'}
+                            {isSubmitting ? 'Processing Payment...' : 'Confirm Payment'}
                         </Button>
                     </div>
                 </form>

@@ -1,6 +1,8 @@
 const fs = require('fs');
+const path = require('path');
 
-const content = fs.readFileSync('../client/src/index.css', 'utf8');
+const filePath = path.join(__dirname, '../../client/src/index.css');
+const content = fs.readFileSync(filePath, 'utf8');
 
 let braceCount = 0;
 let lines = content.split('\n');

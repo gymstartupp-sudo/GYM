@@ -1,7 +1,15 @@
 require('dotenv').config();
 const dns = require('dns');
-// Force public DNS resolution to prevent ECONNREFUSED error on SRV queries (common on some Windows/ISP setups)
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// Windows local DNS resolvers frequently return ECONNREFUSED for SRV queries (_mongodb._tcp).
+// Use Cloudflare & Google public DNS by default unless DNS_SERVERS env is explicitly set.
+const customDns = process.env.DNS_SERVERS
+  ? process.env.DNS_SERVERS.split(',').map(s => s.trim()).filter(Boolean)
+  : ['1.1.1.1', '1.0.0.1', '8.8.8.8', '8.8.4.4'];
+try {
+  dns.setServers(customDns);
+} catch (e) {
+  // Fallback to system DNS if setting custom servers fails
+}
 
 const express = require('express');
 const mongoose = require('mongoose');
@@ -10,6 +18,7 @@ const path = require('path');
 const compression = require('compression');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
+const logger = require('./utils/logger');
 
 // Import Middlewares
 const { errorHandler } = require('./middleware/errorHandler');
@@ -84,14 +93,16 @@ const connectDB = async () => {
         }
       }
     }
-    const conn = await mongoose.connect(uri);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-    console.log("Connected DB:", mongoose.connection.name);
+    const conn = await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000
+    });
+    logger.info('MongoDB Connected to database:', mongoose.connection.name);
 
     // Seed Super Admin on first run
     await seedSuperAdmin();
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    logger.error(`Database Connection Error: ${error.message}`);
     process.exit(1);
   }
 };
@@ -108,10 +119,10 @@ const seedSuperAdmin = async () => {
         password: adminPassword,
         role: 'superadmin'
       });
-      console.log('Super Admin Seeded Successfully');
+      logger.info('Super Admin Seeded Successfully');
     }
   } catch (err) {
-    console.error('Error seeding admin', err);
+    logger.error('Error seeding admin:', err.message);
   }
 };
 
@@ -130,6 +141,10 @@ app.use('/api/webhook', require('./routes/webhook'));
 const { tenantDbMiddleware } = require('./middleware/tenantDbMiddleware');
 app.use(tenantDbMiddleware);
 
+// Global API Rate Limiter — applies to all authenticated routes below
+const { apiLimiter } = require('./middleware/rateLimiter');
+app.use('/api', apiLimiter);
+
 // Routes (to be loaded)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/gym', require('./routes/gym'));
@@ -141,16 +156,17 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/expenses', require('./routes/expense'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/issues', require('./routes/issues'));
-app.use('/api/trigger', require('./routes/trigger'));
 
 // Error Handler Middleware
 app.use(errorHandler);
 
-
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  connectDB();
-});
-// Trigger reload for new query fields - env file non-srv update
+const startServer = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`);
+  });
+};
+
+startServer();

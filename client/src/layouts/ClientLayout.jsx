@@ -38,7 +38,7 @@ export default function ClientLayout() {
       }
     };
     fetchProfile();
-    const interval = setInterval(fetchProfile, 5000);
+    const interval = setInterval(fetchProfile, 30000);
     return () => clearInterval(interval);
   }, [user?.personalInfo?.name, user?.personalInfo?.email]);
 

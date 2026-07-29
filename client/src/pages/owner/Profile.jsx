@@ -4,6 +4,7 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { ChevronLeft } from 'lucide-react';
 import Button from '../../components/Button';
+import { useAuth } from '../../context/AuthContext';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const disabledInputClass = 'input-field bg-surface-hover/60 text-text-muted cursor-not-allowed';
@@ -158,7 +159,8 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
 
 // ─── Main Profile Page ───────────────────────────────────────────────────────
 const Profile = () => {
-  const isReadOnly = localStorage.getItem('role') === 'superadmin' && !!sessionStorage.getItem('viewGymId');
+  const { role } = useAuth();
+  const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const navigate = useNavigate();
   const [profile, setProfile]     = useState(null);
   const [formState, setFormState] = useState(null);

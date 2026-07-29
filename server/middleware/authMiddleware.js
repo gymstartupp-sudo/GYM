@@ -17,6 +17,9 @@ const protect = async (req, res, next) => {
       if (decoded.role === 'client') {
         user = await Client.findById(decoded.id).select('-password').lean();
         role = 'client';
+        if (user && (user.isActive === false || user.isDeleted === true)) {
+          return res.status(403).json({ success: false, message: 'Not authorized, client account is deactivated' });
+        }
         // Block login if the client's gym has been deactivated by admin
         if (user && user.gymId) {
           const gym = await Gym.findOne({ gymId: user.gymId }).select('isActive').lean();
@@ -64,7 +67,6 @@ const protect = async (req, res, next) => {
       if ((role === 'superadmin' || role === 'developer') && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
         const isAllowedAdminPath = req.originalUrl.startsWith('/api/admin') || 
                                    req.originalUrl.startsWith('/api/issues') || 
-                                   req.originalUrl.startsWith('/api/trigger') || 
                                    req.originalUrl.startsWith('/api/auth');
         if (!isAllowedAdminPath) {
           return res.status(403).json({ success: false, message: 'Super Admin / Developer is in read-only mode for gym data' });

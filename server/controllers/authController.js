@@ -4,6 +4,7 @@ const Admin = require('../models/Admin');
 const jwt = require('jsonwebtoken');
 const { generateGymId, generateClientId } = require('../utils/generateId');
 const Plan = require('../models/Plan');
+const { isValidExternalUrl } = require('../middleware/validate');
 
 const parseJsonField = (value, fallback) => {
   if (!value) {
@@ -24,7 +25,7 @@ const parseJsonField = (value, fallback) => {
 const buildLogoPath = (file) => file ? `/uploads/logos/${file.filename}` : '';
 
 const generateToken = (id, role, extra = {}) => {
-  return jwt.sign({ id, role, ...extra }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id, role, ...extra }, process.env.JWT_SECRET, { expiresIn: '24h' });
 };
 
 // @desc    Register a new Gym Owner
@@ -56,7 +57,8 @@ exports.registerGymOwner = async (req, res, next) => {
     const newGymId = await generateGymId();
     const dbName = `gym_${newGymId.replace('-', '_')}`;
 
-    const parsedSocialMediaLinks = parseJsonField(socialMediaLinks, []).filter((item) => item?.platform && item?.url);
+    const parsedSocialMediaLinks = parseJsonField(socialMediaLinks, [])
+      .filter((item) => item?.platform && item?.url && isValidExternalUrl(item.url));
     const parsedOperatingDays = parseJsonField(operatingDays, []);
     const parsedOperatingHours = parseJsonField(operatingHours, {});
 
@@ -190,7 +192,7 @@ exports.checkExists = async (req, res, next) => {
             isExpired: clientEmailExists.membership?.endDate
               ? new Date(clientEmailExists.membership.endDate) < new Date()
               : true,
-            client: clientEmailExists
+            deletedAt: clientEmailExists.isDeleted === true ? clientEmailExists.deletedAt : undefined
           });
         }
       }
@@ -225,7 +227,7 @@ exports.checkExists = async (req, res, next) => {
             isExpired: clientPhoneExists.membership?.endDate
               ? new Date(clientPhoneExists.membership.endDate) < new Date()
               : true,
-            client: clientPhoneExists
+            deletedAt: clientPhoneExists.isDeleted === true ? clientPhoneExists.deletedAt : undefined
           });
         }
       }
@@ -528,49 +530,6 @@ exports.findGyms = async (req, res, next) => {
       success: true,
       gyms: matchingGyms
     });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// @desc    Public Restore Client (during self-registration)
-// @route   PUT /api/auth/client/:id/restore
-// @access  Public
-exports.publicRestoreClient = async (req, res, next) => {
-  try {
-    const { gymId } = req.body || {};
-    if (!gymId) {
-      return res.status(400).json({ success: false, message: 'Gym ID is required' });
-    }
-
-    const mongoose = require('mongoose');
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, message: 'Invalid client ID' });
-    }
-
-    const Gym = require('../models/Gym');
-    const { getTenantConnection } = require('../utils/connectionManager');
-
-    const gym = await Gym.findOne({ gymId });
-    if (!gym) {
-      return res.status(404).json({ success: false, message: 'Gym not found' });
-    }
-
-    const conn = await getTenantConnection(gym.dbName);
-    const TenantClient = conn.model('Client');
-
-    const client = await TenantClient.findById(req.params.id);
-    if (!client) {
-      return res.status(404).json({ success: false, message: 'Client not found' });
-    }
-
-    client.isDeleted = false;
-    client.deletedAt = null;
-    client.deletedBy = null;
-    
-    await client.save();
-
-    res.status(200).json({ success: true, message: 'Client restored successfully', data: client });
   } catch (err) {
     next(err);
   }

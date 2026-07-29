@@ -1,11 +1,11 @@
-require('dotenv').config({ path: __dirname + '/.env' });
+require('dotenv').config({ path: __dirname + '/../.env' });
 const mongoose = require('mongoose');
-const Client = require('./models/Client');
-const Gym = require('./models/Gym');
-const { runReminders } = require('./jobs/reminderJob');
-const { runOverdueReminders } = require('./jobs/overdueReminderJob');
-const { getTenantConnection } = require('./utils/connectionManager');
-const { runWithTenantContext } = require('./utils/tenantContext');
+const Client = require('../models/Client');
+const Gym = require('../models/Gym');
+const { runReminders } = require('../jobs/reminderJob');
+const { runOverdueReminders } = require('../jobs/overdueReminderJob');
+const { getTenantConnection } = require('../utils/connectionManager');
+const { runWithTenantContext } = require('../utils/tenantContext');
 
 const testWorkflows = async () => {
   try {

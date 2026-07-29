@@ -10,26 +10,27 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const storedRole = localStorage.getItem('role');
+    // Clear legacy localStorage role entry if present
+    localStorage.removeItem('role');
+
     if (token && token !== 'undefined') {
       try {
         const decoded = jwtDecode(token);
         setUser(decoded);
-        setRole(storedRole);
+        setRole(decoded.role || null);
       } catch {
         localStorage.removeItem('token');
-        localStorage.removeItem('role');
       }
     }
     setLoading(false);
   }, []);
 
-  const login = useCallback((token, role) => {
+  const login = useCallback((token, explicitRole) => {
     localStorage.setItem('token', token);
-    localStorage.setItem('role', role);
+    localStorage.removeItem('role');
     const decoded = jwtDecode(token);
     setUser(decoded);
-    setRole(role);
+    setRole(explicitRole || decoded.role || null);
   }, []);
 
   const logout = useCallback(() => {
