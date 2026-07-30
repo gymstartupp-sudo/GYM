@@ -107,7 +107,7 @@ exports.registerGymOwner = async (req, res, next) => {
     // Automatically create database and initialize collections
     const { getTenantConnection } = require('../utils/connectionManager');
     const conn = await getTenantConnection(dbName);
-    
+
     await conn.createCollection('clients');
     await conn.createCollection('plans');
     await conn.createCollection('payments');
@@ -139,7 +139,7 @@ exports.registerGymOwner = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: 'Gym registered successfully',
-      data: { 
+      data: {
         gymId: newGymId,
         gymName: gym.gymName,
         token: generateToken(gym._id, 'owner', { gymId: newGymId, gymName: gym.gymName, dbName })
@@ -266,8 +266,8 @@ exports.registerClient = async (req, res, next) => {
       const isEmail = clientExists.personalInfo.email === email;
       return res.status(400).json({
         success: false,
-        message: isEmail 
-          ? 'Client with this email already registered in this gym' 
+        message: isEmail
+          ? 'Client with this email already registered in this gym'
           : 'Client with this mobile number already registered in this gym'
       });
     }
@@ -336,8 +336,8 @@ exports.universalLogin = async (req, res, next) => {
           }
         }
       } else if (role === 'owner') {
-        const gymQuery = isEmail 
-          ? { gymEmail: loginId, gymId } 
+        const gymQuery = isEmail
+          ? { gymEmail: loginId, gymId }
           : { gymContact: loginId, gymId };
         const gym = await Gym.findOne(gymQuery);
         if (gym && (await gym.matchPassword(password))) {
@@ -437,7 +437,7 @@ exports.universalLogin = async (req, res, next) => {
         console.error(`universalLogin search client error in tenant ${g.dbName}:`, err);
       }
     }
-    
+
     if (foundClient && clientGym) {
       if (clientGym.isActive === false) {
         return res.status(403).json({
@@ -636,7 +636,7 @@ exports.forgotPassword = async (req, res, next) => {
       }
     }
 
-    const genericMessage = email 
+    const genericMessage = email
       ? 'If an account exists with this email, a verification code has been sent.'
       : 'If an account exists with this phone number, a verification code has been sent.';
 
@@ -650,12 +650,12 @@ exports.forgotPassword = async (req, res, next) => {
     const otp = crypto.randomInt(100000, 999999).toString();
     const bcrypt = require('bcryptjs');
     const otpHash = await bcrypt.hash(otp, 10);
-    
+
     // Both email and phone get 5 minutes expiry
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     const PasswordResetOTP = require('../models/PasswordResetOTP');
-    
+
     if (email) {
       // Invalidate/delete any previous OTP for this email
       await PasswordResetOTP.deleteMany({ email });
@@ -697,11 +697,11 @@ exports.forgotPassword = async (req, res, next) => {
       sendEmail({
         email,
         subject: 'Gym Management Password Reset',
-        message: `Your verification code is ${otp}. It is valid for 10 minutes.`,
+        message: `Your verification code is ${otp}. It is valid for 5 minutes.`,
         html: htmlTemplate
       })
-      .then(() => console.log('Email sent successfully in background'))
-      .catch((mailErr) => console.error('[TEST DEBUG] Background email dispatch failed:', mailErr.message));
+        .then(() => console.log('Email sent successfully in background'))
+        .catch((mailErr) => console.error('[TEST DEBUG] Background email dispatch failed:', mailErr.message));
     } else {
       // Invalidate/delete any previous OTP for this phone
       await PasswordResetOTP.deleteMany({ phone });
@@ -750,7 +750,7 @@ exports.verifyResetOtp = async (req, res, next) => {
     }
 
     const PasswordResetOTP = require('../models/PasswordResetOTP');
-    
+
     // Find entry
     const query = email ? { email, verified: false } : { phone, verified: false };
     const resetEntry = await PasswordResetOTP.findOne(query);
@@ -776,7 +776,7 @@ exports.verifyResetOtp = async (req, res, next) => {
       resetEntry.attempts += 1;
       await resetEntry.save();
       const remainingAttempts = 5 - resetEntry.attempts;
-      
+
       if (remainingAttempts <= 0) {
         return res.status(400).json({ success: false, message: 'Too many invalid attempts. This code is locked. Please request a new one.' });
       }
@@ -846,7 +846,7 @@ exports.resendResetOtp = async (req, res, next) => {
     await PasswordResetOTP.create(createData);
     console.log(`[TEST DEBUG] Resent OTP for ${email || phone}: ${otp}`);
 
-    const genericMessage = email 
+    const genericMessage = email
       ? 'If an account exists with this email, a verification code has been sent.'
       : 'If an account exists with this phone number, a verification code has been sent.';
 
@@ -882,8 +882,8 @@ exports.resendResetOtp = async (req, res, next) => {
         message: `Your new verification code is ${otp}. It is valid for 10 minutes.`,
         html: htmlTemplate
       })
-      .then(() => console.log('Resent email sent successfully in background'))
-      .catch((mailErr) => console.error('[TEST DEBUG] Background resent email dispatch failed:', mailErr.message));
+        .then(() => console.log('Resent email sent successfully in background'))
+        .catch((mailErr) => console.error('[TEST DEBUG] Background resent email dispatch failed:', mailErr.message));
     } else {
       // Send OTP via Meta WhatsApp Cloud API
       const { sendForgotPasswordOTP } = require('../services/metaWhatsAppService');
@@ -923,7 +923,7 @@ exports.resetPassword = async (req, res, next) => {
     const PasswordResetOTP = require('../models/PasswordResetOTP');
     const query = email ? { email, verified: true } : { phone, verified: true };
     const resetEntry = await PasswordResetOTP.findOne(query);
-    
+
     if (!resetEntry) {
       return res.status(400).json({ success: false, message: 'Verification session has expired or is invalid. Please start over.' });
     }
@@ -994,11 +994,11 @@ exports.resetPassword = async (req, res, next) => {
     }
 
     if (!userUpdated) {
-      return res.status(404).json({ 
-        success: false, 
-        message: email 
-          ? 'No accounts associated with this email were found.' 
-          : 'No accounts associated with this phone number were found.' 
+      return res.status(404).json({
+        success: false,
+        message: email
+          ? 'No accounts associated with this email were found.'
+          : 'No accounts associated with this phone number were found.'
       });
     }
 
