@@ -693,21 +693,15 @@ exports.forgotPassword = async (req, res, next) => {
         </div>
       `;
 
-      try {
-        await sendEmail({
-          email,
-          subject: 'Gym Management Password Reset',
-          message: `Your verification code is ${otp}. It is valid for 10 minutes.`,
-          html: htmlTemplate
-        });
-        console.log(`\n↓\n\nEmail Sent\n\nCompleted`);
-      } catch (mailErr) {
-        console.error(`[TEST DEBUG] Nodemailer failed to send email:`, mailErr.message);
-        return res.status(500).json({
-          success: false,
-          message: `Failed to send verification email (${mailErr.message || 'SMTP error'}). Please check server email environment variables on Render.`
-        });
-      }
+      // Send OTP in background without awaiting it to keep response time instant (< 100ms)
+      sendEmail({
+        email,
+        subject: 'Gym Management Password Reset',
+        message: `Your verification code is ${otp}. It is valid for 10 minutes.`,
+        html: htmlTemplate
+      })
+      .then(() => console.log('Email sent successfully in background'))
+      .catch((mailErr) => console.error('[TEST DEBUG] Background email dispatch failed:', mailErr.message));
     } else {
       // Invalidate/delete any previous OTP for this phone
       await PasswordResetOTP.deleteMany({ phone });
@@ -881,16 +875,15 @@ exports.resendResetOtp = async (req, res, next) => {
         </div>
       `;
 
-      try {
-        await sendEmail({
-          email,
-          subject: 'Gym Management Password Reset',
-          message: `Your new verification code is ${otp}. It is valid for 10 minutes.`,
-          html: htmlTemplate
-        });
-      } catch (mailErr) {
-        console.error(`[TEST DEBUG] Nodemailer failed to send email:`, mailErr.message);
-      }
+      // Send OTP in background without awaiting it to keep response time instant (< 100ms)
+      sendEmail({
+        email,
+        subject: 'Gym Management Password Reset',
+        message: `Your new verification code is ${otp}. It is valid for 10 minutes.`,
+        html: htmlTemplate
+      })
+      .then(() => console.log('Resent email sent successfully in background'))
+      .catch((mailErr) => console.error('[TEST DEBUG] Background resent email dispatch failed:', mailErr.message));
     } else {
       // Send OTP via Meta WhatsApp Cloud API
       const { sendForgotPasswordOTP } = require('../services/metaWhatsAppService');
