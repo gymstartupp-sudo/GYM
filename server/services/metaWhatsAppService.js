@@ -173,7 +173,7 @@ const sendExpiringSoonReminder = async ({ phone, clientName, gymName, expiryDate
  * Variables: Client Name, Gym Name, Expiry Date, Renewal Link
  */
 const sendExpiredReminder = async ({ phone, clientName, gymName, expiryDate, renewalLink, clientId, gymId }) => {
-  const templateName = process.env.META_TEMPLATE_EXPIRED || 'memberships_expired';
+  const templateName = process.env.META_TEMPLATE_EXPIRED || 'membership_expired';
   const isDynamic = process.env.META_EXPIRED_LINK_AS_BUTTON_DYNAMIC === 'true';
 
   const components = [
@@ -425,7 +425,7 @@ const sendPaymentReceived = async ({ phone, clientName, gymName, amount, pdfUrl,
     clientId,
     gymId
   });
-};const sendPaymentReceivedTemplate = async ({ phone, clientName, gymName, amount, pdfUrl, paymentId, clientId, gymId }) => {
+}; const sendPaymentReceivedTemplate = async ({ phone, clientName, gymName, amount, pdfUrl, paymentId, clientId, gymId }) => {
   const templateName = process.env.META_TEMPLATE_PAYMENT_RECEIVED || 'payment_received';
 
   const components = [

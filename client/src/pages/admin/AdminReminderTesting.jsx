@@ -11,19 +11,19 @@ const AdminReminderTesting = () => {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState('all');
   const [history, setHistory] = useState([]);
-  
+
   const [loadingGyms, setLoadingGyms] = useState(true);
   const [loadingClients, setLoadingClients] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  
+
   const [isMobile, setIsMobile] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
   const [sendingType, setSendingType] = useState('');
   const [runningCron, setRunningCron] = useState('');
-  
+
   const [lastResult, setLastResult] = useState(null);
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [clearingHistory, setClearingHistory] = useState(false);
 
@@ -145,7 +145,7 @@ const AdminReminderTesting = () => {
         reminderType: type
       });
       toast.success(res.data.message || 'Reminder sent successfully!');
-      
+
       // Update result panel
       setLastResult({
         type: 'Individual Trigger',
@@ -154,7 +154,7 @@ const AdminReminderTesting = () => {
         success: true,
         data: res.data.data || {}
       });
-      
+
       // Refresh history
       fetchHistory();
     } catch (err) {
@@ -183,13 +183,13 @@ const AdminReminderTesting = () => {
     setRunningCron(cronName);
     setLastResult(null);
     try {
-      const res = await api.post('/admin/reminder-test/run-cron', { 
+      const res = await api.post('/admin/reminder-test/run-cron', {
         cronName,
         gymId: selectedGym,
         clientId: selectedClient
       });
       toast.success('Cron job completed!');
-      
+
       // Update result panel
       setLastResult({
         type: 'Cron Execution',
@@ -198,7 +198,7 @@ const AdminReminderTesting = () => {
         success: true,
         stats: res.data.data
       });
-      
+
       // Refresh history
       fetchHistory();
     } catch (err) {
@@ -240,14 +240,14 @@ const AdminReminderTesting = () => {
   // Filtered History
   const filteredHistory = history.filter(item => {
     return item.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           item.reminderType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           item.templateName.toLowerCase().includes(searchTerm.toLowerCase());
+      item.reminderType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.templateName.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
     <div className="flex h-screen bg-surface-primary overflow-hidden">
       <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-      
+
       <div className="flex-1 flex flex-col overflow-y-auto p-4 md:p-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -267,7 +267,7 @@ const AdminReminderTesting = () => {
               </p>
             </div>
           </div>
-          
+
           {selectedGym && (
             <div className="flex items-center gap-2">
               <button
@@ -322,86 +322,86 @@ const AdminReminderTesting = () => {
                     ))}
                   </select>
                 </div>
-                 <div>
-                 <div className="relative" ref={dropdownRef}>
-                  <label className="block text-xs font-bold text-text-secondary mb-1">Target Client</label>
-                  <button
-                    type="button"
-                    disabled={!selectedGym || loadingClients}
-                    onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
-                    className="w-full bg-surface-primary border border-border rounded-lg text-xs py-2 px-3 focus:outline-none focus:border-primary text-text-primary disabled:opacity-50 disabled:cursor-not-allowed flex justify-between items-center text-left"
-                  >
-                    <span className="truncate">{getClientDisplayLabel()}</span>
-                    <ChevronDown size={14} className="text-text-muted shrink-0 ml-1" />
-                  </button>
+                <div>
+                  <div className="relative" ref={dropdownRef}>
+                    <label className="block text-xs font-bold text-text-secondary mb-1">Target Client</label>
+                    <button
+                      type="button"
+                      disabled={!selectedGym || loadingClients}
+                      onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
+                      className="w-full bg-surface-primary border border-border rounded-lg text-xs py-2 px-3 focus:outline-none focus:border-primary text-text-primary disabled:opacity-50 disabled:cursor-not-allowed flex justify-between items-center text-left"
+                    >
+                      <span className="truncate">{getClientDisplayLabel()}</span>
+                      <ChevronDown size={14} className="text-text-muted shrink-0 ml-1" />
+                    </button>
 
-                  {isClientDropdownOpen && selectedGym && !loadingClients && (
-                    <div className="absolute right-0 left-0 mt-1.5 bg-surface-primary border border-border rounded-xl shadow-xl z-30 p-3 space-y-2 flex flex-col max-h-72">
-                      <div className="relative shrink-0">
-                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
-                          <Search size={12} className="text-text-muted" />
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Search clients..."
-                          value={clientSearchQuery}
-                          onChange={(e) => setClientSearchQuery(e.target.value)}
-                          className="w-full bg-surface-secondary border border-border rounded-lg text-xs pl-8 pr-3 py-1.5 focus:outline-none focus:border-primary text-text-primary"
-                        />
-                      </div>
-
-                      <div className="overflow-y-auto divide-y divide-border/30 flex-1 custom-scrollbar text-xs">
-                        {/* Option: All Clients */}
-                        <label className="flex items-center gap-2.5 py-2 px-1 hover:bg-surface-divider/40 rounded cursor-pointer font-bold text-text-primary">
+                    {isClientDropdownOpen && selectedGym && !loadingClients && (
+                      <div className="absolute right-0 left-0 mt-1.5 bg-surface-primary border border-border rounded-xl shadow-xl z-30 p-3 space-y-2 flex flex-col max-h-72">
+                        <div className="relative shrink-0">
+                          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                            <Search size={12} className="text-text-muted" />
+                          </div>
                           <input
-                            type="checkbox"
-                            checked={selectedClient === 'all' || !Array.isArray(selectedClient) || selectedClient.length === 0}
-                            onChange={() => {
-                              setSelectedClient('all');
-                            }}
-                            className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 bg-surface-primary"
+                            type="text"
+                            placeholder="Search clients..."
+                            value={clientSearchQuery}
+                            onChange={(e) => setClientSearchQuery(e.target.value)}
+                            className="w-full bg-surface-secondary border border-border rounded-lg text-xs pl-8 pr-3 py-1.5 focus:outline-none focus:border-primary text-text-primary"
                           />
-                          All Clients
-                        </label>
+                        </div>
 
-                        {/* Options: Individual Clients */}
-                        {filteredClients.length > 0 ? (
-                          filteredClients.map(client => {
-                            const isChecked = Array.isArray(selectedClient) && selectedClient.includes(client._id);
-                            return (
-                              <label key={client._id} className="flex items-center gap-2.5 py-2 px-1 hover:bg-surface-divider/40 rounded cursor-pointer text-text-secondary">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked && selectedClient !== 'all'}
-                                  onChange={() => {
-                                    let nextSelected = Array.isArray(selectedClient) ? [...selectedClient] : [];
-                                    if (isChecked) {
-                                      nextSelected = nextSelected.filter(id => id !== client._id);
-                                    } else {
-                                      nextSelected.push(client._id);
-                                    }
-                                    if (nextSelected.length === 0) {
-                                      setSelectedClient('all');
-                                    } else {
-                                      setSelectedClient(nextSelected);
-                                    }
-                                  }}
-                                  className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 bg-surface-primary"
-                                />
-                                <span className="font-mono text-[9px] bg-surface-divider px-1.5 py-0.5 rounded text-text-primary font-bold tracking-wider shrink-0">
-                                  {client.clientId || 'N/A'}
-                                </span>
-                                <span className="truncate">{client.personalInfo?.name}</span>
-                              </label>
-                            );
-                          })
-                        ) : (
-                          <div className="text-center py-4 text-[11px] text-text-muted">No clients match search</div>
-                        )}
+                        <div className="overflow-y-auto divide-y divide-border/30 flex-1 custom-scrollbar text-xs">
+                          {/* Option: All Clients */}
+                          <label className="flex items-center gap-2.5 py-2 px-1 hover:bg-surface-divider/40 rounded cursor-pointer font-bold text-text-primary">
+                            <input
+                              type="checkbox"
+                              checked={selectedClient === 'all' || !Array.isArray(selectedClient) || selectedClient.length === 0}
+                              onChange={() => {
+                                setSelectedClient('all');
+                              }}
+                              className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 bg-surface-primary"
+                            />
+                            All Clients
+                          </label>
+
+                          {/* Options: Individual Clients */}
+                          {filteredClients.length > 0 ? (
+                            filteredClients.map(client => {
+                              const isChecked = Array.isArray(selectedClient) && selectedClient.includes(client._id);
+                              return (
+                                <label key={client._id} className="flex items-center gap-2.5 py-2 px-1 hover:bg-surface-divider/40 rounded cursor-pointer text-text-secondary">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked && selectedClient !== 'all'}
+                                    onChange={() => {
+                                      let nextSelected = Array.isArray(selectedClient) ? [...selectedClient] : [];
+                                      if (isChecked) {
+                                        nextSelected = nextSelected.filter(id => id !== client._id);
+                                      } else {
+                                        nextSelected.push(client._id);
+                                      }
+                                      if (nextSelected.length === 0) {
+                                        setSelectedClient('all');
+                                      } else {
+                                        setSelectedClient(nextSelected);
+                                      }
+                                    }}
+                                    className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 bg-surface-primary"
+                                  />
+                                  <span className="font-mono text-[9px] bg-surface-divider px-1.5 py-0.5 rounded text-text-primary font-bold tracking-wider shrink-0">
+                                    {client.clientId || 'N/A'}
+                                  </span>
+                                  <span className="truncate">{client.personalInfo?.name}</span>
+                                </label>
+                              );
+                            })
+                          ) : (
+                            <div className="text-center py-4 text-[11px] text-text-muted">No clients match search</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div></div>
+                    )}
+                  </div></div>
               </div>
             </div>
 
@@ -429,7 +429,7 @@ const AdminReminderTesting = () => {
           <div>
             <div className="card p-6 bg-surface-secondary border border-border rounded-2xl h-full flex flex-col">
               <h2 className="text-sm font-black uppercase text-text-muted tracking-wider mb-4">Test Result Panel</h2>
-              
+
               {!lastResult ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-text-muted border border-dashed border-border rounded-xl bg-surface-primary/30">
                   <Info size={28} className="mb-2 text-text-muted opacity-50" />
@@ -439,11 +439,10 @@ const AdminReminderTesting = () => {
               ) : (
                 <div className="flex-1 space-y-4 animate-in fade-in duration-300">
                   {/* Status header */}
-                  <div className={`p-4 rounded-xl flex items-center gap-3 border ${
-                    lastResult.success 
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                  <div className={`p-4 rounded-xl flex items-center gap-3 border ${lastResult.success
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                       : 'bg-danger/10 border-danger/20 text-danger'
-                  }`}>
+                    }`}>
                     {lastResult.success ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
                     <div>
                       <h3 className="text-xs font-extrabold uppercase tracking-wide">
@@ -600,13 +599,12 @@ const AdminReminderTesting = () => {
                           {item.reminderType}
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold ${
-                            item.executionSource === 'Automatic Cron'
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold ${item.executionSource === 'Automatic Cron'
                               ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                               : item.executionSource === 'Manual Trigger'
-                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          }`}>
+                                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}>
                             {item.executionSource}
                           </span>
                         </td>
@@ -614,11 +612,10 @@ const AdminReminderTesting = () => {
                           {item.templateName}
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                            item.status === 'sent' || item.status === 'success'
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.status === 'sent' || item.status === 'success'
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                               : 'bg-danger/10 text-danger border border-danger/20'
-                          }`}>
+                            }`}>
                             {item.status === 'sent' || item.status === 'success' ? 'Sent' : 'Failed'}
                           </span>
                         </td>
