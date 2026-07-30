@@ -10,11 +10,10 @@ export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
 
   return (
     <div
-      className={`${
-        isMobile
-          ? `fixed inset-y-0 left-0 z-50 w-64 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`
-          : 'w-64'
-      } h-screen bg-surface-secondary border-r border-border flex flex-col shrink-0`}
+      className={`${isMobile
+        ? `fixed inset-y-0 left-0 z-50 w-64 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`
+        : 'w-64'
+        } h-screen bg-surface-secondary border-r border-border flex flex-col shrink-0`}
     >
       <div className="p-5 border-b border-border">
         <div className="flex items-center justify-between gap-3 mb-4">
@@ -66,8 +65,7 @@ export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
           <span className="leading-none">Support Tickets</span>
         </NavLink>
 
-        {/* Developer Tools Section - only shown in development for superadmin or developer role */}
-        {(role === 'superadmin' || role === 'developer') && import.meta.env.DEV && (
+        {(role === 'superadmin' || role === 'developer') && (
           <>
             <div className="px-5 py-2 mt-4 text-[10px] font-black uppercase text-text-muted tracking-widest border-t border-border/50">
               Developer Tools

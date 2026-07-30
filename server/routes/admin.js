@@ -31,10 +31,10 @@ router.post('/overdue-check', heavyOperationLimiter, heavyConcurrencyGuard, admi
 router.post('/run-reminders', heavyOperationLimiter, heavyConcurrencyGuard, adminController.triggerRunReminders);
 
 // Reminder Testing Developer Tools Routes
-router.get('/reminder-test/clients', devEnvGuard, adminController.getReminderTestClients);
-router.post('/reminder-test/send', devEnvGuard, adminController.sendTestReminder);
-router.post('/reminder-test/run-cron', devEnvGuard, adminController.runTestCron);
-router.get('/reminder-test/history', devEnvGuard, adminController.getReminderHistory);
-router.post('/reminder-test/clear-history', devEnvGuard, adminController.clearReminderHistory);
+router.get('/reminder-test/clients', adminController.getReminderTestClients);
+router.post('/reminder-test/send', adminController.sendTestReminder);
+router.post('/reminder-test/run-cron', adminController.runTestCron);
+router.get('/reminder-test/history', adminController.getReminderHistory);
+router.post('/reminder-test/clear-history', adminController.clearReminderHistory);
 
 module.exports = router;
