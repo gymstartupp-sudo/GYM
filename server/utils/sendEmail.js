@@ -17,12 +17,26 @@ const sendEmail = async (options) => {
     // secure = true for port 465, false for port 587/25
     const secure = process.env.EMAIL_SECURE === 'true' || port === 465;
 
+    // Resolve hostname to IPv4 address to prevent ENETUNREACH on Render's dual-stack container network
+    let resolvedHost = host;
+    try {
+      const ipAddress = await new Promise((resolve, reject) => {
+        dns.lookup(host, { family: 4 }, (err, address) => {
+          if (err) reject(err);
+          else resolve(address);
+        });
+      });
+      resolvedHost = ipAddress;
+      console.log(`Resolved SMTP host ${host} to IPv4: ${resolvedHost}`);
+    } catch (dnsErr) {
+      console.warn(`DNS lookup failed for ${host}: ${dnsErr.message}. Falling back to original host.`);
+    }
+
     const transportConfig = {
-      host,
+      host: resolvedHost,
       port,
       secure,
       requireTLS: port === 587,
-      family: 4, // Explicitly force IPv4 to prevent ENETUNREACH on Render's dual-stack container network
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -31,12 +45,13 @@ const sendEmail = async (options) => {
       greetingTimeout: 8000,
       socketTimeout: 8000,
       tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        servername: host // Crucial for TLS handshake SNI validation when using IP address
       }
     };
 
-    // Only set service if explicitly configured by environment variable
-    if (process.env.EMAIL_SERVICE) {
+    // Only set service if DNS resolution failed (to avoid overriding the IP host configuration)
+    if (process.env.EMAIL_SERVICE && resolvedHost === host) {
       transportConfig.service = process.env.EMAIL_SERVICE;
     }
 
