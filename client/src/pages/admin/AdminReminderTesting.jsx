@@ -289,15 +289,13 @@ const AdminReminderTesting = () => {
           )}
         </div>
 
-        {/* Environment Alert */}
-        {!import.meta.env.DEV && (
-          <div className="mb-6 p-4 bg-danger/10 border border-danger/30 text-danger text-sm rounded-xl flex items-center gap-3">
-            <ShieldAlert size={20} className="shrink-0 animate-pulse" />
-            <div>
-              <span className="font-bold">Production Safeguard Warning:</span> This dashboard panel is strictly limited to Development mode environment settings. Testing triggers on live accounts are deactivated.
-            </div>
+        <div className="mb-6 p-4 bg-danger/10 border border-danger/30 text-danger text-sm rounded-xl flex items-center gap-3">
+          <ShieldAlert size={20} className="shrink-0 animate-pulse" />
+          <div>
+            <span className="font-bold">Production Safeguard Warning:</span> This dashboard panel is strictly limited to Development mode environment settings. Testing triggers on live accounts are deactivated.
           </div>
-        )}
+        </div>
+
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Column 1: Configuration and Triggers */}
@@ -440,8 +438,8 @@ const AdminReminderTesting = () => {
                 <div className="flex-1 space-y-4 animate-in fade-in duration-300">
                   {/* Status header */}
                   <div className={`p-4 rounded-xl flex items-center gap-3 border ${lastResult.success
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                      : 'bg-danger/10 border-danger/20 text-danger'
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                    : 'bg-danger/10 border-danger/20 text-danger'
                     }`}>
                     {lastResult.success ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
                     <div>
@@ -600,10 +598,10 @@ const AdminReminderTesting = () => {
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold ${item.executionSource === 'Automatic Cron'
-                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                              : item.executionSource === 'Manual Trigger'
-                                ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            : item.executionSource === 'Manual Trigger'
+                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                             }`}>
                             {item.executionSource}
                           </span>
@@ -613,8 +611,8 @@ const AdminReminderTesting = () => {
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${item.status === 'sent' || item.status === 'success'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                              : 'bg-danger/10 text-danger border border-danger/20'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : 'bg-danger/10 text-danger border border-danger/20'
                             }`}>
                             {item.status === 'sent' || item.status === 'success' ? 'Sent' : 'Failed'}
                           </span>
