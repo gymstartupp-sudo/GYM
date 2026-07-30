@@ -45,47 +45,49 @@ const getTenantConnection = async (dbName) => {
   const Counter = conn.models.Counter || conn.model('Counter', require('../models/Counter').schema);
   const Setting = conn.models.Setting || conn.model('Setting', require('../models/Setting').schema);
 
-  // Migration: Populate normalizedName and deactivate duplicate active plans to avoid unique index build failures
-  try {
-    const plans = await PlanModel.find({ isActive: true }).lean();
-    const seenNames = new Set();
-    const seenDurations = new Set();
+  // Migration: Run asynchronously in background to make connection retrieval instant
+  // ponytail: runs on every new connection setup. If too many cold connections are established concurrently, background promises will run in parallel.
+  PlanModel.find({ isActive: true }).lean()
+    .then(async (plans) => {
+      const seenNames = new Set();
+      const seenDurations = new Set();
 
-    for (const plan of plans) {
-      const normName = plan.name ? plan.name.trim().replace(/\s+/g, ' ').toLowerCase() : '';
-      
-      if (plan.normalizedName !== normName) {
-        await PlanModel.updateOne({ _id: plan._id }, { $set: { normalizedName: normName } });
-      }
+      for (const plan of plans) {
+        const normName = plan.name ? plan.name.trim().replace(/\s+/g, ' ').toLowerCase() : '';
+        
+        if (plan.normalizedName !== normName) {
+          await PlanModel.updateOne({ _id: plan._id }, { $set: { normalizedName: normName } });
+        }
 
-      // Check name duplication among active plans
-      if (seenNames.has(normName)) {
-        await PlanModel.updateOne({ _id: plan._id }, { $set: { isActive: false } });
-        continue;
-      }
-      seenNames.add(normName);
-
-      // Check standard plan duration duplication
-      if (!plan.isCustom) {
-        if (seenDurations.has(plan.durationMonths)) {
+        // Check name duplication among active plans
+        if (seenNames.has(normName)) {
           await PlanModel.updateOne({ _id: plan._id }, { $set: { isActive: false } });
           continue;
         }
-        seenDurations.add(plan.durationMonths);
-      }
-    }
+        seenNames.add(normName);
 
-    // Also populate normalizedName for any inactive plans that are missing it
-    const unpopulatedInactive = await PlanModel.find({ isActive: { $ne: true }, normalizedName: { $exists: false } }).lean();
-    for (const plan of unpopulatedInactive) {
-      if (plan.name) {
-        const norm = plan.name.trim().replace(/\s+/g, ' ').toLowerCase();
-        await PlanModel.updateOne({ _id: plan._id }, { $set: { normalizedName: norm } });
+        // Check standard plan duration duplication
+        if (!plan.isCustom) {
+          if (seenDurations.has(plan.durationMonths)) {
+            await PlanModel.updateOne({ _id: plan._id }, { $set: { isActive: false } });
+            continue;
+          }
+          seenDurations.add(plan.durationMonths);
+        }
       }
-    }
-  } catch (err) {
-    console.error(`Error running plan normalizedName migration for ${dbName}:`, err);
-  }
+
+      // Also populate normalizedName for any inactive plans that are missing it
+      const unpopulatedInactive = await PlanModel.find({ isActive: { $ne: true }, normalizedName: { $exists: false } }).lean();
+      for (const plan of unpopulatedInactive) {
+        if (plan.name) {
+          const norm = plan.name.trim().replace(/\s+/g, ' ').toLowerCase();
+          await PlanModel.updateOne({ _id: plan._id }, { $set: { normalizedName: norm } });
+        }
+      }
+    })
+    .catch((err) => {
+      console.error(`Error running plan normalizedName migration for ${dbName}:`, err);
+    });
 
   return conn;
 };

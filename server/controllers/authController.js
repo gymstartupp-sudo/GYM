@@ -423,18 +423,27 @@ exports.universalLogin = async (req, res, next) => {
     let foundClient = null;
     let clientGym = null;
 
-    for (const g of gyms) {
-      try {
-        const conn = await getTenantConnection(g.dbName);
-        const TenantClient = conn.model('Client');
-        const client = await TenantClient.findOne(clientQuery);
-        if (client && (await client.matchPassword(password))) {
-          foundClient = client;
-          clientGym = g;
-          break;
+    const loginResults = await Promise.all(
+      gyms.map(async (g) => {
+        try {
+          const conn = await getTenantConnection(g.dbName);
+          const TenantClient = conn.model('Client');
+          const client = await TenantClient.findOne(clientQuery);
+          if (client && (await client.matchPassword(password))) {
+            return { client, gym: g };
+          }
+        } catch (err) {
+          console.error(`universalLogin search client error in tenant ${g.dbName}:`, err);
         }
-      } catch (err) {
-        console.error(`universalLogin search client error in tenant ${g.dbName}:`, err);
+        return null;
+      })
+    );
+
+    for (const result of loginResults) {
+      if (result) {
+        foundClient = result.client;
+        clientGym = result.gym;
+        break;
       }
     }
 
@@ -505,20 +514,29 @@ exports.findGyms = async (req, res, next) => {
     const clientQuery = isEmail ? { 'personalInfo.email': loginId } : { 'personalInfo.mobileNo': loginId };
     const gymsList = await Gym.find({ isActive: true }).lean();
 
-    for (const g of gymsList) {
-      try {
-        const conn = await getTenantConnection(g.dbName);
-        const TenantClient = conn.model('Client');
-        const client = await TenantClient.findOne(clientQuery).lean();
-        if (client) {
-          matchingGyms.push({
-            gymId: g.gymId,
-            gymName: g.gymName,
-            role: 'client'
-          });
+    const clientGyms = await Promise.all(
+      gymsList.map(async (g) => {
+        try {
+          const conn = await getTenantConnection(g.dbName);
+          const TenantClient = conn.model('Client');
+          const client = await TenantClient.findOne(clientQuery).lean();
+          if (client) {
+            return {
+              gymId: g.gymId,
+              gymName: g.gymName,
+              role: 'client'
+            };
+          }
+        } catch (err) {
+          console.error(`findGyms search client error in tenant ${g.dbName}:`, err);
         }
-      } catch (err) {
-        console.error(`findGyms search client error in tenant ${g.dbName}:`, err);
+        return null;
+      })
+    );
+
+    for (const cg of clientGyms) {
+      if (cg) {
+        matchingGyms.push(cg);
       }
     }
 
@@ -592,19 +610,20 @@ exports.forgotPassword = async (req, res, next) => {
       if (!userExists) {
         const { getTenantConnection } = require('../utils/connectionManager');
         const gymsList = await Gym.find({ isActive: true }).lean();
-        for (const g of gymsList) {
-          try {
-            const conn = await getTenantConnection(g.dbName);
-            const TenantClient = conn.model('Client');
-            const client = await TenantClient.findOne({ 'personalInfo.email': email }).lean();
-            if (client) {
-              userExists = true;
-              break;
+        const results = await Promise.all(
+          gymsList.map(async (g) => {
+            try {
+              const conn = await getTenantConnection(g.dbName);
+              const TenantClient = conn.model('Client');
+              const client = await TenantClient.findOne({ 'personalInfo.email': email }).lean();
+              return !!client;
+            } catch (err) {
+              console.error(`forgotPassword client check error in tenant ${g.dbName}:`, err);
+              return false;
             }
-          } catch (err) {
-            console.error(`forgotPassword client check error in tenant ${g.dbName}:`, err);
-          }
-        }
+          })
+        );
+        userExists = results.some(exists => exists);
       }
     } else {
       // phone validation (10 digit Indian number)
@@ -620,19 +639,20 @@ exports.forgotPassword = async (req, res, next) => {
       if (!userExists) {
         const { getTenantConnection } = require('../utils/connectionManager');
         const gymsList = await Gym.find({ isActive: true }).lean();
-        for (const g of gymsList) {
-          try {
-            const conn = await getTenantConnection(g.dbName);
-            const TenantClient = conn.model('Client');
-            const client = await TenantClient.findOne({ 'personalInfo.mobileNo': phone }).lean();
-            if (client) {
-              userExists = true;
-              break;
+        const results = await Promise.all(
+          gymsList.map(async (g) => {
+            try {
+              const conn = await getTenantConnection(g.dbName);
+              const TenantClient = conn.model('Client');
+              const client = await TenantClient.findOne({ 'personalInfo.mobileNo': phone }).lean();
+              return !!client;
+            } catch (err) {
+              console.error(`forgotPassword client check error in tenant ${g.dbName}:`, err);
+              return false;
             }
-          } catch (err) {
-            console.error(`forgotPassword client check error in tenant ${g.dbName}:`, err);
-          }
-        }
+          })
+        );
+        userExists = results.some(exists => exists);
       }
     }
 
@@ -951,19 +971,25 @@ exports.resetPassword = async (req, res, next) => {
       // 3. Check Clients across all tenant databases
       const { getTenantConnection } = require('../utils/connectionManager');
       const gymsList = await Gym.find({ isActive: true }).lean();
-      for (const g of gymsList) {
-        try {
-          const conn = await getTenantConnection(g.dbName);
-          const TenantClient = conn.model('Client');
-          const client = await TenantClient.findOne({ 'personalInfo.email': email });
-          if (client) {
-            client.password = password;
-            await client.save();
-            userUpdated = true;
+      const results = await Promise.all(
+        gymsList.map(async (g) => {
+          try {
+            const conn = await getTenantConnection(g.dbName);
+            const TenantClient = conn.model('Client');
+            const client = await TenantClient.findOne({ 'personalInfo.email': email });
+            if (client) {
+              client.password = password;
+              await client.save();
+              return true;
+            }
+          } catch (err) {
+            console.error(`resetPassword client save error in tenant ${g.dbName}:`, err);
           }
-        } catch (err) {
-          console.error(`resetPassword client save error in tenant ${g.dbName}:`, err);
-        }
+          return false;
+        })
+      );
+      if (results.some(updated => updated)) {
+        userUpdated = true;
       }
     } else {
       // 1. Check Gym (Owner)
@@ -977,19 +1003,25 @@ exports.resetPassword = async (req, res, next) => {
       // 2. Check Clients across all tenant databases
       const { getTenantConnection } = require('../utils/connectionManager');
       const gymsList = await Gym.find({ isActive: true }).lean();
-      for (const g of gymsList) {
-        try {
-          const conn = await getTenantConnection(g.dbName);
-          const TenantClient = conn.model('Client');
-          const client = await TenantClient.findOne({ 'personalInfo.mobileNo': phone });
-          if (client) {
-            client.password = password;
-            await client.save();
-            userUpdated = true;
+      const results = await Promise.all(
+        gymsList.map(async (g) => {
+          try {
+            const conn = await getTenantConnection(g.dbName);
+            const TenantClient = conn.model('Client');
+            const client = await TenantClient.findOne({ 'personalInfo.mobileNo': phone });
+            if (client) {
+              client.password = password;
+              await client.save();
+              return true;
+            }
+          } catch (err) {
+            console.error(`resetPassword client save error in tenant ${g.dbName}:`, err);
           }
-        } catch (err) {
-          console.error(`resetPassword client save error in tenant ${g.dbName}:`, err);
-        }
+          return false;
+        })
+      );
+      if (results.some(updated => updated)) {
+        userUpdated = true;
       }
     }
 
