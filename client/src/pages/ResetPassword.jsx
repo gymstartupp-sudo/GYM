@@ -108,7 +108,7 @@ const ResetPassword = () => {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="New Password"
                 {...register('password')}
-                className={`input-field pr-10 hover:border-primary/50 ${errors.password ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                className={`input-field pr-10 hover:border-primary/50 ${errors.password ? 'border-red-500/80 focus:ring-red-500/30' : 'focus:border-primary focus:ring-primary'}`}
               />
               <button
                 type="button"
@@ -153,7 +153,7 @@ const ResetPassword = () => {
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm New Password"
                 {...register('confirmPassword')}
-                className={`input-field pr-10 hover:border-primary/50 ${errors.confirmPassword ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                className={`input-field pr-10 hover:border-primary/50 ${errors.confirmPassword ? 'border-red-500/80 focus:ring-red-500/30' : 'focus:border-primary focus:ring-primary'}`}
               />
               <button
                 type="button"

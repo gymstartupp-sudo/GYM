@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
+import ConfirmModal from '../../components/ConfirmModal';
 import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -117,7 +118,7 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => {
           <Edit2 size={14} />
         </button>
         <button
-          onClick={() => onDelete(plan._id)}
+          onClick={() => onDelete(plan)}
           title="Delete plan"
           className="text-red-400 hover:text-red-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
         >
@@ -518,6 +519,8 @@ const Plans = () => {
   const [editingPlan, setEditingPlan] = useState(null);
   const [detailPlan, setDetailPlan] = useState(null);
 
+  const [deletingPlan, setDeletingPlan] = useState(null);
+
   const fetchPlans = async () => {
     try {
       const res = await api.get('/plan');
@@ -535,15 +538,20 @@ const Plans = () => {
   const handleCreateNew = () => { setEditingPlan(null); setShowFormModal(true); };
   const handleFormSuccess = () => { setShowFormModal(false); setEditingPlan(null); fetchPlans(); };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to deactivate this plan?')) {
-      try {
-        await api.delete(`/plan/${id}`);
-        toast.success('Plan removed');
-        fetchPlans();
-      } catch {
-        toast.error('Failed to remove plan');
-      }
+  const handleDeleteClick = (plan) => {
+    setDeletingPlan(plan);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingPlan) return;
+    try {
+      await api.delete(`/plan/${deletingPlan._id}`);
+      toast.success('Plan removed successfully');
+      fetchPlans();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to remove plan');
+    } finally {
+      setDeletingPlan(null);
     }
   };
 
@@ -577,7 +585,7 @@ const Plans = () => {
                 key={plan._id}
                 plan={plan}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
                 onViewDetails={setDetailPlan}
               />
             ))}
@@ -599,6 +607,17 @@ const Plans = () => {
           onClose={() => setDetailPlan(null)}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deletingPlan}
+        onCancel={() => setDeletingPlan(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Plan"
+        message={deletingPlan ? `Are you sure you want to delete "${deletingPlan.name}"? This action cannot be undone.` : ''}
+        confirmLabel="Delete Plan"
+        cancelLabel="Cancel"
+        danger={true}
+      />
     </div>
   );
 };

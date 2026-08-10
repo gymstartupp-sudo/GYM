@@ -364,7 +364,7 @@ const GymRegister = () => {
 
   const fieldClassName = (field, extra = '') => {
     const isError = showFieldError(field);
-    return `input-field ${extra} ${isError ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : ''}`.trim();
+    return `input-field ${extra} ${isError ? 'border-red-500/80 focus:ring-red-500/30' : ''}`.trim();
   };
 
   const isFieldFilled = (field) => {
