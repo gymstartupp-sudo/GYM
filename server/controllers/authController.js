@@ -62,6 +62,14 @@ exports.registerGymOwner = async (req, res, next) => {
     const parsedOperatingDays = parseJsonField(operatingDays, []);
     const parsedOperatingHours = parseJsonField(operatingHours, {});
 
+    if (!Array.isArray(parsedOperatingDays) || parsedOperatingDays.length === 0) {
+      return res.status(400).json({ success: false, message: 'Operating days are required' });
+    }
+
+    if (!parsedOperatingHours || !parsedOperatingHours.open || !parsedOperatingHours.close) {
+      return res.status(400).json({ success: false, message: 'Operating hours (open & close times) are required' });
+    }
+
     const gym = await Gym.create({
       gymId: newGymId,
       dbName,

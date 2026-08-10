@@ -5,12 +5,14 @@ import { toast } from 'react-toastify';
 import { ChevronLeft } from 'lucide-react';
 import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
+import { sortOperatingDays } from '../../utils/membership';
+import { STATES_LIST, getCitiesForState } from '../../utils/indianStatesCities';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const disabledInputClass = 'input-field bg-surface-hover/60 text-text-muted cursor-not-allowed';
 const errorInputClass    = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.2)]';
 const phoneRegex         = /^[6-9]\d{9}$/;
-const emailRegex         = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailRegex         = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = ['00', '15', '30', '45'];
@@ -57,7 +59,8 @@ const buildFormState = (data) => {
         allowPartialPayments: true,
         ...data.gym?.billingInfo
       },
-      operatingDaysText: (data.gym?.operatingDays || []).join(', '),
+      operatingDays: sortOperatingDays(data.gym?.operatingDays || []),
+      operatingDaysText: sortOperatingDays(data.gym?.operatingDays || []).join(', '),
       operatingOpen: data.gym?.operatingHours?.open || '',
       operatingClose: data.gym?.operatingHours?.close || '',
       operatingOpenHour: openTimeParsed.hour,
@@ -116,42 +119,135 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
 
 // ─── Component: Reusable TimeField ───────────────────────────────────────────
 const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinuteChange, onAmpmChange }) => {
+  const [openDropdown, setOpenDropdown] = useState(null); // 'hour' | 'minute' | 'ampm' | null
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="space-y-1 block group">
-      <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">
+    <div className="space-y-1 block group relative" ref={containerRef}>
+      <span className="text-xs uppercase tracking-wider text-text-muted group-hover:text-primary transition-colors font-medium block">
         {label}
       </span>
-      <div className={`flex items-center gap-1 bg-surface-secondary border rounded-lg p-1.5 transition-colors ${
+      
+      <div className={`flex items-center gap-1.5 h-11 px-3 bg-surface-card border rounded-input transition-all duration-200 ${
         disabled 
           ? 'bg-surface-hover/60 border-border text-text-muted cursor-not-allowed' 
-          : 'border-border hover:border-gray-750 focus-within:border-primary/50'
+          : 'border-border hover:border-primary hover:shadow-[0_0_8px_rgba(255,189,7,0.25)] focus-within:border-primary'
       }`}>
-        <select
-          value={hour || '6'}
-          disabled={disabled}
-          onChange={onHourChange}
-          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-text-muted disabled:cursor-not-allowed"
-        >
-          {HOURS.map(h => <option key={h} className="bg-slate-950 text-slate-200" value={h}>{h}</option>)}
-        </select>
-        <span className="text-slate-500 font-bold select-none">:</span>
-        <select
-          value={minute || '00'}
-          disabled={disabled}
-          onChange={onMinuteChange}
-          className="bg-transparent text-slate-200 text-sm focus:outline-none cursor-pointer flex-1 text-center py-1 select-none disabled:text-text-muted disabled:cursor-not-allowed"
-        >
-          {MINUTES.map(m => <option key={m} className="bg-slate-950 text-slate-200" value={m}>{m}</option>)}
-        </select>
-        <select
-          value={ampm || 'AM'}
-          disabled={disabled}
-          onChange={onAmpmChange}
-          className={`bg-transparent text-slate-300 font-medium text-xs focus:outline-none cursor-pointer w-14 text-center py-1 px-1 bg-slate-800 rounded select-none border border-slate-700/50 disabled:bg-gray-850 disabled:border-transparent disabled:text-text-muted disabled:cursor-not-allowed`}
-        >
-          <option className="bg-slate-950 text-slate-200" value="AM">AM</option>
-          <option className="bg-slate-950 text-slate-200" value="PM">PM</option>
-        </select>
+        
+        {/* Hour Picker */}
+        <div className="relative flex-1 text-center">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setOpenDropdown(prev => prev === 'hour' ? null : 'hour')}
+            className="w-full text-text-primary hover:text-primary font-semibold text-sm focus:outline-none cursor-pointer py-1 flex items-center justify-center gap-1 select-none disabled:text-text-muted disabled:cursor-not-allowed transition-colors"
+          >
+            {hour || '6'}
+          </button>
+
+          {openDropdown === 'hour' && !disabled && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-20 max-h-48 overflow-y-auto bg-surface-card border border-border rounded-xl shadow-2xl z-50 py-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+              {HOURS.map(h => (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => {
+                    onHourChange({ target: { value: h } });
+                    setOpenDropdown(null);
+                  }}
+                  className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${
+                    String(hour) === String(h)
+                      ? 'bg-primary text-black font-bold'
+                      : 'text-text-primary hover:bg-primary hover:text-black'
+                  }`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <span className="text-text-muted font-bold select-none group-hover:text-primary transition-colors">:</span>
+
+        {/* Minute Picker */}
+        <div className="relative flex-1 text-center">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setOpenDropdown(prev => prev === 'minute' ? null : 'minute')}
+            className="w-full text-text-primary hover:text-primary font-semibold text-sm focus:outline-none cursor-pointer py-1 flex items-center justify-center gap-1 select-none disabled:text-text-muted disabled:cursor-not-allowed transition-colors"
+          >
+            {minute || '00'}
+          </button>
+
+          {openDropdown === 'minute' && !disabled && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-20 bg-surface-card border border-border rounded-xl shadow-2xl z-50 py-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+              {MINUTES.map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    onMinuteChange({ target: { value: m } });
+                    setOpenDropdown(null);
+                  }}
+                  className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${
+                    String(minute) === String(m)
+                      ? 'bg-primary text-black font-bold'
+                      : 'text-text-primary hover:bg-primary hover:text-black'
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* AM/PM Picker */}
+        <div className="relative">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setOpenDropdown(prev => prev === 'ampm' ? null : 'ampm')}
+            className="bg-surface-divider text-text-primary font-bold text-xs focus:outline-none cursor-pointer px-2.5 py-1 rounded-md select-none border border-border hover:border-primary hover:bg-primary/20 hover:text-primary disabled:bg-transparent disabled:border-transparent disabled:text-text-muted disabled:cursor-not-allowed transition-all"
+          >
+            {ampm || 'AM'}
+          </button>
+
+          {openDropdown === 'ampm' && !disabled && (
+            <div className="absolute top-full right-0 mt-2 w-16 bg-surface-card border border-border rounded-xl shadow-2xl z-50 py-1 space-y-0.5 animate-in fade-in zoom-in-95 duration-150">
+              {['AM', 'PM'].map(ap => (
+                <button
+                  key={ap}
+                  type="button"
+                  onClick={() => {
+                    onAmpmChange({ target: { value: ap } });
+                    setOpenDropdown(null);
+                  }}
+                  className={`w-full text-center px-3 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
+                    String(ampm) === String(ap)
+                      ? 'bg-primary text-black font-bold'
+                      : 'text-text-primary hover:bg-primary hover:text-black'
+                  }`}
+                >
+                  {ap}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
@@ -361,14 +457,21 @@ const Profile = () => {
 
     // Gym validations
     if (!gym.gymName?.trim()) newErrors.gymName = 'Gym name is required';
-    else if (gym.gymName.length > 25) newErrors.gymName = 'Max 25 characters';
+    else if (gym.gymName.length > 50) newErrors.gymName = 'Max 50 characters';
 
     if (gym.gymType?.length > 20) newErrors.gymType = 'Max 20 characters';
-    if (gym.tagline?.length > 20) newErrors.tagline = 'Max 20 characters';
+    if (gym.tagline?.length > 50) newErrors.tagline = 'Max 50 characters';
 
+    if (!gym.operatingDays || gym.operatingDays.length === 0) {
+      newErrors.operatingDays = 'Please select at least one operating day';
+    }
+
+    if (!gym.operatingOpenHour || !gym.operatingCloseHour) {
+      newErrors.operatingHours = 'Operating hours are required';
+    }
 
     if (!gym.gymEmail?.trim()) newErrors.gymEmail = 'Email is required';
-    else if (!emailRegex.test(gym.gymEmail)) newErrors.gymEmail = 'Enter a valid email address';
+    else if (!emailRegex.test(gym.gymEmail)) newErrors.gymEmail = 'Email address must end with @gmail.com';
 
     if (!gym.gymContact?.trim()) newErrors.gymContact = 'Contact is required';
     else if (!phoneRegex.test(gym.gymContact)) newErrors.gymContact = 'Enter a valid 10-digit Indian mobile number';
@@ -377,29 +480,30 @@ const Profile = () => {
     else if (gym.address.length > 100) newErrors.address = 'Max 100 characters';
 
     if (!gym.city?.trim()) newErrors.city = 'City is required';
-    else if (gym.city.length > 25) newErrors.city = 'Max 25 characters';
+    else if (gym.city.length > 35) newErrors.city = 'Max 35 characters';
 
     if (!gym.state?.trim()) newErrors.state = 'State is required';
-    else if (gym.state.length > 25) newErrors.state = 'Max 25 characters';
+    else if (gym.state.length > 35) newErrors.state = 'Max 35 characters';
 
     if (!gym.pincode?.trim()) newErrors.pincode = 'Pincode is required';
     else if (!/^\d{6}$/.test(gym.pincode)) newErrors.pincode = 'Pincode must be exactly 6 digits';
 
     // Owner validations
     if (!owner.name?.trim()) newErrors.ownerName = 'Owner name is required';
-    else if (owner.name.length > 25) newErrors.ownerName = 'Max 25 characters';
+    else if (owner.name.length > 50) newErrors.ownerName = 'Max 50 characters';
+    else if (!/^[a-zA-Z\s]+$/.test(owner.name)) newErrors.ownerName = 'Only letters and spaces are allowed';
 
     if (!owner.mobileNo?.trim()) newErrors.ownerMobile = 'Mobile number is required';
     else if (!phoneRegex.test(owner.mobileNo)) newErrors.ownerMobile = 'Enter a valid 10-digit Indian mobile number';
 
     if (!owner.mailId?.trim()) newErrors.ownerEmail = 'Email is required';
-    else if (!emailRegex.test(owner.mailId)) newErrors.ownerEmail = 'Enter a valid email address';
+    else if (!emailRegex.test(owner.mailId)) newErrors.ownerEmail = 'Email address must end with @gmail.com';
 
     // Reminder validations
     const rs = gym.reminderSettings || {};
     if (rs.whatsappNumber && !phoneRegex.test(rs.whatsappNumber)) newErrors.whatsapp = 'Enter a valid 10-digit Indian mobile number';
     if (rs.phoneNumber && !phoneRegex.test(rs.phoneNumber)) newErrors.smsPhone = 'Enter a valid 10-digit Indian mobile number';
-    if (rs.gmail && !emailRegex.test(rs.gmail)) newErrors.reminderEmail = 'Enter a valid email address';
+    if (rs.gmail && !emailRegex.test(rs.gmail)) newErrors.reminderEmail = 'Email address must end with @gmail.com';
 
     // Billing validations
     const bi = gym.billingInfo || {};
@@ -572,29 +676,31 @@ const Profile = () => {
         <ProfileSection title="Establishment Details">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Field label="Gym ID" value={formState.gym.gymId} disabled />
-            <Field label="Gym Name *" value={formState.gym.gymName} disabled={!isEditing} maxLength={25} error={errors.gymName} onChange={e => setSectionValue('gym', 'gymName', e.target.value)} />
+            <Field label="Gym Name *" value={formState.gym.gymName} disabled={!isEditing} maxLength={50} error={errors.gymName} onChange={e => setSectionValue('gym', 'gymName', e.target.value)} />
             <Field label="Gym Type" value={formState.gym.gymType} disabled={!isEditing} maxLength={20} error={errors.gymType} onChange={e => setSectionValue('gym', 'gymType', e.target.value)} />
 
-            <Field label="Tagline" value={formState.gym.tagline} disabled={!isEditing} maxLength={20} error={errors.tagline} onChange={e => setSectionValue('gym', 'tagline', e.target.value)} />
+            <Field label="Tagline" value={formState.gym.tagline} disabled={!isEditing} maxLength={50} error={errors.tagline} onChange={e => setSectionValue('gym', 'tagline', e.target.value)} />
             <Field label="Gym Email *" value={formState.gym.gymEmail} type="email" disabled={!isEditing} error={errors.gymEmail} onChange={e => setSectionValue('gym', 'gymEmail', e.target.value)} />
             <Field label="Gym Contact *" value={formState.gym.gymContact} type="tel" disabled={!isEditing} error={errors.gymContact} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'gymContact', e.target.value)} />
             <Field label="GST Number" value={formState.gym.gst} disabled={!isEditing} onChange={e => setSectionValue('gym', 'gst', e.target.value)} />
             
             {/* Operating Days */}
             <div className="md:col-span-2">
-              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block mb-2">Operating Days</span>
+              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block mb-2">Operating Days *</span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
                   const isChecked = (formState.gym.operatingDays || []).includes(day);
                   return (
                     <label
                       key={day}
-                      className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 border select-none transition-all duration-200 ${
-                        !isEditing ? 'opacity-85 cursor-not-allowed bg-surface-divider/80 border-border/80 text-text-muted' : 'cursor-pointer bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60'
-                      } ${
-                        isChecked && isEditing ? 'bg-primary/10 border-primary/40 text-primary font-medium' : ''
-                      } ${
-                        isChecked && !isEditing ? 'bg-primary/5 border-primary/20 text-primary/60 font-medium' : ''
+                      className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2.5 border select-none transition-all duration-200 ${
+                        !isEditing
+                          ? isChecked
+                            ? 'opacity-90 cursor-not-allowed bg-primary/10 border-primary/30 text-primary font-semibold'
+                            : 'opacity-50 cursor-not-allowed bg-surface-divider/50 border-border/50 text-text-muted'
+                          : isChecked
+                            ? 'cursor-pointer bg-primary/15 border-primary/50 text-primary font-bold shadow-sm'
+                            : 'cursor-pointer bg-surface-card border-border text-text-secondary hover:border-primary/40 hover:text-text-primary'
                       }`}
                     >
                       <input
@@ -608,22 +714,24 @@ const Profile = () => {
                           } else {
                             days = days.filter(d => d !== day);
                           }
+                          const sortedDays = sortOperatingDays(days);
                           setFormState(c => ({
                             ...c,
                             gym: {
                               ...c.gym,
-                              operatingDays: days,
-                              operatingDaysText: days.join(', ')
+                              operatingDays: sortedDays,
+                              operatingDaysText: sortedDays.join(', ')
                             }
                           }));
                         }}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary disabled:opacity-50"
+                        className="w-3.5 h-3.5 rounded border-border bg-surface-card text-primary focus:ring-primary/50 accent-primary cursor-pointer disabled:cursor-not-allowed"
                       />
                       <span>{day}</span>
                     </label>
                   );
                 })}
               </div>
+              {errors.operatingDays && <p className="text-red-500 text-xs mt-1 italic">{errors.operatingDays}</p>}
             </div>
 
             <Field label="Instagram URL" value={formState.gym.instagramUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'instagramUrl', e.target.value)} />
@@ -631,7 +739,7 @@ const Profile = () => {
             <Field label="Website URL" value={formState.gym.websiteUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'websiteUrl', e.target.value)} />
             <div className="grid grid-cols-2 gap-3">
               <TimeField
-                label="Open Time"
+                label="Open Time *"
                 hour={formState.gym.operatingOpenHour}
                 minute={formState.gym.operatingOpenMinute}
                 ampm={formState.gym.operatingOpenAmpm}
@@ -641,7 +749,7 @@ const Profile = () => {
                 onAmpmChange={e => setSectionValue('gym', 'operatingOpenAmpm', e.target.value)}
               />
               <TimeField
-                label="Close Time"
+                label="Close Time *"
                 hour={formState.gym.operatingCloseHour}
                 minute={formState.gym.operatingCloseMinute}
                 ampm={formState.gym.operatingCloseAmpm}
@@ -651,11 +759,60 @@ const Profile = () => {
                 onAmpmChange={e => setSectionValue('gym', 'operatingCloseAmpm', e.target.value)}
               />
             </div>
+            {errors.operatingHours && <p className="text-red-500 text-xs mt-1 italic md:col-span-2">{errors.operatingHours}</p>}
             <div className="md:col-span-2">
               <Field label="Establishment Address *" value={formState.gym.address} textarea disabled={!isEditing} maxLength={100} error={errors.address} onChange={e => setSectionValue('gym', 'address', e.target.value)} />
             </div>
-            <Field label="City *" value={formState.gym.city} disabled={!isEditing} maxLength={25} error={errors.city} onChange={e => setSectionValue('gym', 'city', e.target.value)} />
-            <Field label="State *" value={formState.gym.state} disabled={!isEditing} maxLength={25} error={errors.state} onChange={e => setSectionValue('gym', 'state', e.target.value)} />
+            {isEditing ? (
+              <div className="space-y-1 block group">
+                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">State *</span>
+                <select
+                  value={formState.gym.state || ''}
+                  onChange={(e) => {
+                    const newState = e.target.value;
+                    const cities = getCitiesForState(newState);
+                    const currentCity = formState.gym.city;
+                    const newCity = cities.includes(currentCity) ? currentCity : (cities[0] || '');
+                    setFormState(c => ({
+                      ...c,
+                      gym: {
+                        ...c.gym,
+                        state: newState,
+                        city: newCity
+                      }
+                    }));
+                  }}
+                  className={`input-field bg-surface-card text-text-primary ${errors.state ? errorInputClass : ''}`}
+                >
+                  <option value="">Select State</option>
+                  {STATES_LIST.map(st => (
+                    <option key={st} value={st} className="bg-surface-card text-text-primary">{st}</option>
+                  ))}
+                </select>
+                {errors.state && <p className="text-red-500 text-[11px] mt-1 italic">{errors.state}</p>}
+              </div>
+            ) : (
+              <Field label="State *" value={formState.gym.state} disabled />
+            )}
+
+            {isEditing ? (
+              <div className="space-y-1 block group">
+                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">City *</span>
+                <select
+                  value={formState.gym.city || ''}
+                  onChange={(e) => setSectionValue('gym', 'city', e.target.value)}
+                  className={`input-field bg-surface-card text-text-primary ${errors.city ? errorInputClass : ''}`}
+                >
+                  <option value="">{formState.gym.state ? "Select City" : "Select State First"}</option>
+                  {getCitiesForState(formState.gym.state).map(ct => (
+                    <option key={ct} value={ct} className="bg-surface-card text-text-primary">{ct}</option>
+                  ))}
+                </select>
+                {errors.city && <p className="text-red-500 text-[11px] mt-1 italic">{errors.city}</p>}
+              </div>
+            ) : (
+              <Field label="City *" value={formState.gym.city} disabled />
+            )}
             <Field label="Pincode *" value={formState.gym.pincode} disabled={!isEditing} maxLength={6} error={errors.pincode} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6)} onChange={e => setSectionValue('gym', 'pincode', e.target.value)} />
           </div>
         </ProfileSection>
@@ -663,7 +820,7 @@ const Profile = () => {
         {/* ── Section: Ownership ── */}
         <ProfileSection title="Ownership Details">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field label="Owner Full Name *" value={formState.owner?.name} disabled={!isEditing} maxLength={25} error={errors.ownerName} onChange={e => setSectionValue('owner', 'name', e.target.value)} />
+            <Field label="Owner Full Name *" value={formState.owner?.name} disabled={!isEditing} maxLength={50} error={errors.ownerName} onInput={e => e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '')} onChange={e => setSectionValue('owner', 'name', e.target.value)} />
             <Field label="Mobile Number *" value={formState.owner?.mobileNo} type="tel" disabled={!isEditing} error={errors.ownerMobile} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('owner', 'mobileNo', e.target.value)} />
             <Field label="Email Address *" value={formState.owner?.mailId} type="email" disabled={!isEditing} error={errors.ownerEmail} onChange={e => setSectionValue('owner', 'mailId', e.target.value)} />
           </div>

@@ -20,9 +20,13 @@ import {
 } from '../utils/dateInput';
 
 
+import { STATES_LIST, getCitiesForState } from '../utils/indianStatesCities';
+
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
 const passwordError = 'Password must be at least 8 characters with 1 uppercase, 1 number, and 1 special character';
+const gmailError = 'Email address must end with @gmail.com';
+const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 
 const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -122,9 +126,9 @@ const getValidationSchema = (mode, isRestoring = false) => {
   return yup.object({
     gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').max(8, 'Max 8 chars') : yup.string().nullable(),
     gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
-    name: yup.string().trim().required('Name is required').max(50, 'Max 50 chars'),
+    name: yup.string().trim().required('Name is required').matches(/^[a-zA-Z\s]+$/, 'Only letters and spaces are allowed').max(50, 'Max 50 chars'),
     gender: yup.string().required('Gender is required'),
-    email: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
+    email: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
     dob: yup.date()
       .typeError('Date of birth is required')
       .transform((val, orig) => (orig === '' || orig === null || orig === undefined ? null : val))
@@ -664,7 +668,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Full Name <span className="text-red-500">*</span></p>
-        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="50" />
+        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="50" onInput={(e) => { e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ''); }} />
         {showFieldError('name') && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
       </div>
 
@@ -730,13 +734,32 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">State <span className="text-red-500">*</span></p>
-        <input {...register('state')} placeholder="E.g. Karnataka" className={fieldClassName('state')} maxLength="25" />
+        <CustomSelect
+          value={watch('state') || ''}
+          onChange={(val) => {
+            setValue('state', val, { shouldValidate: true, shouldDirty: true });
+            const availableCities = getCitiesForState(val);
+            const currentCity = watch('city');
+            if (!availableCities.includes(currentCity)) {
+              setValue('city', availableCities[0] || '', { shouldValidate: true, shouldDirty: true });
+            }
+          }}
+          options={STATES_LIST.map(s => ({ label: s, value: s }))}
+          placeholder="Select State"
+          className={fieldClassName('state', 'focus:border-primary focus:ring-primary/50')}
+        />
         {showFieldError('state') && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
       </div>
 
       <div>
         <p className="text-xs text-text-secondary mb-1">City <span className="text-red-500">*</span></p>
-        <input {...register('city')} placeholder="E.g. Bengaluru" className={fieldClassName('city')} maxLength="25" />
+        <CustomSelect
+          value={watch('city') || ''}
+          onChange={(val) => setValue('city', val, { shouldValidate: true, shouldDirty: true })}
+          options={getCitiesForState(watch('state')).map(c => ({ label: c, value: c }))}
+          placeholder={watch('state') ? "Select City" : "Select State First"}
+          className={fieldClassName('city', 'focus:border-primary focus:ring-primary/50')}
+        />
         {showFieldError('city') && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
       </div>
 

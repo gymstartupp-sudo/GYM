@@ -22,12 +22,17 @@ import {
   Calendar,
   Clock,
   UploadCloud,
-  X
+  X,
+  Link as LinkIcon
 } from 'lucide-react';
+
+import { STATES_LIST, getCitiesForState } from '../utils/indianStatesCities';
 
 const phoneError = 'Enter a valid 10-digit Indian mobile number';
 const phoneRegex = /^[6-9]\d{9}$/;
 const passwordError = 'Password must be at least 8 characters with 1 uppercase, 1 number, and 1 special character';
+const gmailError = 'Email address must end with @gmail.com';
+const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const handlePhoneInput = (e) => {
@@ -39,7 +44,7 @@ const handlePhoneInput = (e) => {
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = ['00', '15', '30', '45'];
 
-const CustomSelect = ({ options, value, onChange, className = '', buttonClassName = '' }) => {
+const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', className = '', buttonClassName = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = React.useRef(null);
 
@@ -58,28 +63,34 @@ const CustomSelect = ({ options, value, onChange, className = '', buttonClassNam
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer text-center py-2 select-none flex items-center justify-center gap-1 hover:bg-slate-800/40 transition-colors ${buttonClassName}`}
+        className={`w-full bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer text-center py-2 select-none flex items-center justify-between px-3 gap-1 hover:bg-slate-800/40 transition-colors ${buttonClassName}`}
       >
-        <span>{value}</span>
-        <ChevronDown size={12} className={`text-slate-500 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
+        <span className={value ? 'text-text-primary font-medium truncate' : 'text-slate-500 font-normal truncate'}>
+          {value || placeholder}
+        </span>
+        <ChevronDown size={14} className={`text-slate-500 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
       </button>
 
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1 bg-slate-950 border border-slate-800 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-100">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => {
-                onChange(opt);
-                setIsOpen(false);
-              }}
-              className={`w-full text-center py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-slate-300'
-                }`}
-            >
-              {opt}
-            </button>
-          ))}
+          {options.length === 0 ? (
+            <p className="text-center py-2 text-xs text-slate-500">No options available</p>
+          ) : (
+            options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-slate-300'
+                  }`}
+              >
+                {opt}
+              </button>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -104,7 +115,7 @@ const TimeInput = ({ fieldHour, fieldMinute, fieldAmpm, register, setValue, watc
         value={hourVal}
         onChange={val => setValue(fieldHour, val, { shouldValidate: true, shouldDirty: true })}
         className="border-r border-border"
-        buttonClassName="rounded-l-input"
+        buttonClassName="rounded-l-input justify-center"
       />
       <span className="text-text-muted font-bold select-none flex items-center px-0.5">:</span>
       <CustomSelect
@@ -112,12 +123,13 @@ const TimeInput = ({ fieldHour, fieldMinute, fieldAmpm, register, setValue, watc
         value={minuteVal}
         onChange={val => setValue(fieldMinute, val, { shouldValidate: true, shouldDirty: true })}
         className="border-r border-border"
+        buttonClassName="justify-center"
       />
       <CustomSelect
         options={['AM', 'PM']}
         value={ampmVal}
         onChange={val => setValue(fieldAmpm, val, { shouldValidate: true, shouldDirty: true })}
-        buttonClassName="bg-primary/15 text-primary font-bold hover:bg-primary/25 rounded-r-input w-14"
+        buttonClassName="bg-primary/15 text-primary font-bold hover:bg-primary/25 rounded-r-input w-14 justify-center"
       />
     </div>
   );
@@ -130,34 +142,34 @@ const optionalUrl = yup.string().trim().test(
 );
 
 const schema = yup.object({
-  gymName: yup.string().trim().required('Gym name is required').max(35, 'Max 35 chars'),
-  gymEmail: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Gym email is required'),
+  gymName: yup.string().trim().required('Gym name is required').max(50, 'Max 50 chars'),
+  gymEmail: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Gym email is required'),
   gymContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
-  state: yup.string().trim().required('State is required').max(25, 'Max 25 chars'),
-  city: yup.string().trim().required('City is required').max(25, 'Max 25 chars'),
+  state: yup.string().trim().required('State is required').max(35, 'Max 35 chars'),
+  city: yup.string().trim().required('City is required').max(35, 'Max 35 chars'),
   pincode: yup.string().trim().matches(/^\d{6}$/, 'Pincode must be 6 digits').required('Pincode is required'),
   gst: yup.string().trim().nullable().max(15, 'Max 15 chars'),
   gymType: yup.string().trim().nullable().max(35, 'Max 35 chars'),
-  tagline: yup.string().trim().nullable().max(35, 'Max 35 chars'),
+  tagline: yup.string().trim().nullable().max(50, 'Max 50 chars'),
   instagramUrl: optionalUrl,
   facebookUrl: optionalUrl,
   websiteUrl: optionalUrl,
-  operatingDays: yup.array().of(yup.string()).nullable(),
-  operatingOpenHour: yup.string().nullable(),
-  operatingOpenMinute: yup.string().nullable(),
-  operatingOpenAmpm: yup.string().nullable(),
-  operatingCloseHour: yup.string().nullable(),
-  operatingCloseMinute: yup.string().nullable(),
-  operatingCloseAmpm: yup.string().nullable(),
+  operatingDays: yup.array().of(yup.string()).min(1, 'Please select at least one operating day').required('Operating days are required'),
+  operatingOpenHour: yup.string().required('Opening hour is required'),
+  operatingOpenMinute: yup.string().required('Opening minute is required'),
+  operatingOpenAmpm: yup.string().required('Opening AM/PM is required'),
+  operatingCloseHour: yup.string().required('Closing hour is required'),
+  operatingCloseMinute: yup.string().required('Closing minute is required'),
+  operatingCloseAmpm: yup.string().required('Closing AM/PM is required'),
   password: yup.string().min(8, passwordError).max(30, 'Max 30 chars').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]).+$/, passwordError).required(passwordError),
   confirmPassword: yup.string().max(30, 'Max 30 chars').oneOf([yup.ref('password')], 'Passwords do not match').required('Please confirm your password'),
-  name: yup.string().trim().required('Owner name is required').max(50, 'Max 50 chars'),
+  name: yup.string().trim().required('Owner name is required').matches(/^[a-zA-Z\s]+$/, 'Only letters and spaces are allowed').max(50, 'Max 50 chars'),
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  mailId: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
+  mailId: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
   whatsappNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   phoneNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  gmail: yup.string().trim().email('Please enter a valid email address').max(50, 'Email cannot exceed 50 characters').required('Email is required'),
+  gmail: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
   billingIdPrefix: yup.string().trim().required('Billing prefix is required').max(5, 'Max 5 chars').matches(/^[A-Za-z0-9]+$/, 'Alphanumeric only'),
   helpContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   addressOnBill: yup.string().trim().required('Billing address is required').max(100, 'Max 100 chars'),
@@ -167,7 +179,7 @@ const schema = yup.object({
 });
 
 const stepRequiredFields = {
-  1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'password', 'confirmPassword'],
+  1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'password', 'confirmPassword', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm'],
   2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'phoneNumber', 'gmail'],
   3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText']
 };
@@ -595,7 +607,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">Gym Name <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="35" />
+              <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="50" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymName') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymName.message}</p>}
               </div>
@@ -606,7 +618,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.6">
                 <p className="text-xs text-slate-400 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
               </div>
-              <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="35" />
+              <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="50" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('tagline') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.tagline.message}</p>}
               </div>
@@ -689,7 +701,20 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">State <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('state')} placeholder="E.g. Karnataka" className={fieldClassName('state')} maxLength="25" />
+              <CustomSelect
+                options={STATES_LIST}
+                value={watch('state') || ''}
+                onChange={(val) => {
+                  setValue('state', val, { shouldValidate: true, shouldDirty: true });
+                  const availableCities = getCitiesForState(val);
+                  const currentCity = watch('city');
+                  if (!availableCities.includes(currentCity)) {
+                    setValue('city', availableCities[0] || '', { shouldValidate: true, shouldDirty: true });
+                  }
+                }}
+                placeholder="Select State"
+                buttonClassName={fieldClassName('state', 'text-left justify-between')}
+              />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('state') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.state.message}</p>}
               </div>
@@ -700,7 +725,13 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-slate-400 font-medium">City <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('city')} placeholder="E.g. Bengaluru" className={fieldClassName('city')} maxLength="25" />
+              <CustomSelect
+                options={getCitiesForState(watch('state'))}
+                value={watch('city') || ''}
+                onChange={(val) => setValue('city', val, { shouldValidate: true, shouldDirty: true })}
+                placeholder={watch('state') ? "Select City" : "Select State First"}
+                buttonClassName={fieldClassName('city', 'text-left justify-between')}
+              />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('city') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.city.message}</p>}
               </div>
@@ -751,7 +782,7 @@ const GymRegister = () => {
             <div className="md:col-span-2">
               <p className="text-xs text-slate-400 mb-2.5 font-medium flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-primary" />
-                <span>Operating Days</span>
+                <span>Operating Days <span className="text-red-500">*</span></span>
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {weekDays.map((day) => (
@@ -773,14 +804,16 @@ const GymRegister = () => {
                   </label>
                 ))}
               </div>
-              <div className="min-h-[12px]" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('operatingDays') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.operatingDays.message}</p>}
+              </div>
             </div>
 
             {/* Operating Hours */}
             <div className="md:col-span-2">
               <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-primary" />
-                <span>Operating Hours <span className="text-slate-500 font-normal">(Optional)</span></span>
+                <span>Operating Hours <span className="text-red-500">*</span></span>
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -806,7 +839,11 @@ const GymRegister = () => {
                   />
                 </div>
               </div>
-              <div className="min-h-[12px]" />
+              <div className="min-h-[20px] mt-1">
+                {(showFieldError('operatingOpenHour') || showFieldError('operatingCloseHour')) && (
+                  <p className="text-red-500 text-xs font-medium leading-tight">Operating hours are required</p>
+                )}
+              </div>
             </div>
 
             {/* Collapsible Social Media Links */}
@@ -817,7 +854,7 @@ const GymRegister = () => {
                 className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-slate-400 hover:text-text-primary hover:bg-slate-900/40 transition-all select-none"
               >
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <LinkIcon className="w-3.5 h-3.5 text-primary" />
                   <span>Social Media Links</span>
                 </div>
                 {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
@@ -870,7 +907,7 @@ const GymRegister = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2">
                 <div>
                   <p className="text-xs text-slate-400 mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
-                  <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="50" />
+                  <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="50" onInput={(e) => { e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ''); }} />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('name') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.name.message}</p>}
                   </div>
