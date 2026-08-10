@@ -3,7 +3,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import Button from '../components/Button';
 import PasswordInput from '../components/PasswordInput';
-import ThemeToggle from '../components/ThemeToggle';
 import { LogIn, ChevronDown, Check } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
@@ -365,10 +364,7 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-surface-primary py-12 px-4 sm:px-6 lg:px-8 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat bg-blend-overlay bg-black/80 relative">
-            <div className="absolute top-4 right-4">
-                <ThemeToggle className="w-10 h-10" />
-            </div>
+        <div className="dark min-h-screen flex items-center justify-center bg-surface-primary py-12 px-4 sm:px-6 lg:px-8 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat bg-blend-overlay bg-black/80 relative">
             <div className="max-w-md w-full space-y-8 backdrop-blur-md bg-surface-card/90 p-10 rounded-2xl border border-border shadow-2xl">
                 <div>
                     <h2 className="mt-2 text-center text-4xl font-extrabold text-text-primary tracking-tight flex items-center justify-center gap-3">

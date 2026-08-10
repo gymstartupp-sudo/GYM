@@ -94,9 +94,9 @@ const ClientProfile = () => {
         errMsg = validateDob(value) || '';
       }
     } else if (key === 'city') {
-      if (value && value.length > 25) errMsg = 'Max 25 characters';
+      // No max validation
     } else if (key === 'state') {
-      if (value && value.length > 25) errMsg = 'Max 25 characters';
+      // No max validation
     } else if (key === 'pincode') {
       if (value && value.length !== 6) errMsg = 'Enter a valid 6-digit pincode';
     }
@@ -147,8 +147,7 @@ const ClientProfile = () => {
       }
     }
 
-    if (pi.city && pi.city.length > 25) newErrors.city = 'Max 25 characters';
-    if (pi.state && pi.state.length > 25) newErrors.state = 'Max 25 characters';
+    // No max validation for city and state
     if (pi.pincode && pi.pincode.length !== 6) newErrors.pincode = 'Enter a valid 6-digit pincode';
 
     setErrors(newErrors);
@@ -325,7 +324,6 @@ const ClientProfile = () => {
               label="City"
               value={formState.personalInfo?.city}
               disabled={!editing}
-              maxLength={25}
               error={errors.city}
               onChange={e => setPersonalInfo('city', e.target.value)}
             />
@@ -333,7 +331,6 @@ const ClientProfile = () => {
               label="State"
               value={formState.personalInfo?.state}
               disabled={!editing}
-              maxLength={25}
               error={errors.state}
               onChange={e => setPersonalInfo('state', e.target.value)}
             />

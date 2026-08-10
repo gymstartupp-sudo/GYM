@@ -143,8 +143,8 @@ const getValidationSchema = (mode, isRestoring = false) => {
 
     mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
     address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
-    city: yup.string().trim().required('City is required').max(25, 'Max 25 chars'),
-    state: yup.string().trim().required('State is required').max(25, 'Max 25 chars'),
+    city: yup.string().trim().required('City is required'),
+    state: yup.string().trim().required('State is required'),
     pincode: yup.string().matches(/^\d{6}$/, 'Pincode must be exactly 6 digits').required('Pincode is required'),
     emergencyContact: yup.string().matches(phoneRegex, phoneError).required(phoneError).notOneOf([yup.ref('mobileNo')], 'Must be different from Mobile Number'),
     medicalCondition: yup.string().trim().max(100, 'Max 100 chars').nullable(),

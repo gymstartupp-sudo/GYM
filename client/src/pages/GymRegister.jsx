@@ -65,16 +65,16 @@ const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', c
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer text-center py-2 select-none flex items-center justify-between px-3 gap-1 hover:bg-slate-800/40 transition-colors ${buttonClassName}`}
       >
-        <span className={value ? 'text-text-primary font-medium truncate' : 'text-slate-500 font-normal truncate'}>
+        <span className={value ? 'text-text-primary font-medium truncate' : 'text-text-secondary font-normal truncate'}>
           {value || placeholder}
         </span>
-        <ChevronDown size={14} className={`text-slate-500 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
+        <ChevronDown size={14} className={`text-text-secondary transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
       </button>
 
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1 bg-slate-950 border border-slate-800 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-100">
           {options.length === 0 ? (
-            <p className="text-center py-2 text-xs text-slate-500">No options available</p>
+            <p className="text-center py-2 text-xs text-text-secondary">No options available</p>
           ) : (
             options.map((opt) => (
               <button
@@ -84,7 +84,7 @@ const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', c
                   onChange(opt);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-slate-300'
+                className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-white'
                   }`}
               >
                 {opt}
@@ -146,8 +146,8 @@ const schema = yup.object({
   gymEmail: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Gym email is required'),
   gymContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
-  state: yup.string().trim().required('State is required').max(35, 'Max 35 chars'),
-  city: yup.string().trim().required('City is required').max(35, 'Max 35 chars'),
+  state: yup.string().trim().required('State is required'),
+  city: yup.string().trim().required('City is required'),
   pincode: yup.string().trim().matches(/^\d{6}$/, 'Pincode must be 6 digits').required('Pincode is required'),
   gst: yup.string().trim().nullable().max(15, 'Max 15 chars'),
   gymType: yup.string().trim().nullable().max(35, 'Max 35 chars'),
@@ -168,7 +168,6 @@ const schema = yup.object({
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   mailId: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
   whatsappNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  phoneNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   gmail: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
   billingIdPrefix: yup.string().trim().required('Billing prefix is required').max(5, 'Max 5 chars').matches(/^[A-Za-z0-9]+$/, 'Alphanumeric only'),
   helpContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
@@ -180,13 +179,13 @@ const schema = yup.object({
 
 const stepRequiredFields = {
   1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'password', 'confirmPassword', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm'],
-  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'phoneNumber', 'gmail'],
+  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'gmail'],
   3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText']
 };
 
 const stepAllFields = {
   1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'gst', 'gymType', 'tagline', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm', 'password', 'confirmPassword'],
-  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'phoneNumber', 'gmail'],
+  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'gmail'],
   3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText', 'logo']
 };
 
@@ -279,7 +278,6 @@ const GymRegister = () => {
 
   // Smart Sync toggles (Defaulting to true for frictionless "one-click" experience)
   const [syncWhatsapp, setSyncWhatsapp] = useState(true);
-  const [syncSms, setSyncSms] = useState(true);
   const [syncEmail, setSyncEmail] = useState(true);
   const [syncAddress, setSyncAddress] = useState(true);
   const [syncHelpContact, setSyncHelpContact] = useState(true);
@@ -332,12 +330,6 @@ const GymRegister = () => {
     }
   }, [gymContact, syncOwnerMobile, setValue, isSubmitted]);
 
-  // SMS Sync
-  useEffect(() => {
-    if (syncSms && gymContact) {
-      setValue('phoneNumber', gymContact, { shouldValidate: isSubmitted });
-    }
-  }, [gymContact, syncSms, setValue, isSubmitted]);
 
   // Email Sync
   useEffect(() => {
@@ -489,7 +481,7 @@ const GymRegister = () => {
         mobileNo: data.mobileNo,
         mailId: data.mailId,
         whatsappNumber: data.whatsappNumber,
-        phoneNumber: data.phoneNumber,
+        phoneNumber: '',
         gmail: data.gmail,
         billingIdPrefix: data.billingIdPrefix,
         helpContact: data.helpContact,
@@ -605,7 +597,7 @@ const GymRegister = () => {
             {/* Gym Name */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Gym Name <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Gym Name <span className="text-red-500">*</span></p>
               </div>
               <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="50" />
               <div className="min-h-[20px] mt-1">
@@ -616,7 +608,7 @@ const GymRegister = () => {
             {/* Tagline */}
             <div>
               <div className="flex items-center h-5 mb-1.6">
-                <p className="text-xs text-slate-400 font-medium">Tagline <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <p className="text-xs text-text-secondary font-medium">Tagline <span className="text-text-secondary font-normal">(Optional)</span></p>
               </div>
               <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="50" />
               <div className="min-h-[20px] mt-1">
@@ -627,7 +619,7 @@ const GymRegister = () => {
             {/* Gym Email */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Gym Email <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Gym Email <span className="text-red-500">*</span></p>
               </div>
               <input {...register('gymEmail')} type="email" placeholder="E.g. contact@fitness.com" className={fieldClassName('gymEmail')} maxLength="50" onBlur={(e) => { checkDuplicate('gymEmail', e.target.value); }} />
               <div className="min-h-[20px] mt-1">
@@ -638,7 +630,7 @@ const GymRegister = () => {
             {/* Contact Number */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Contact Number <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Contact Number <span className="text-red-500">*</span></p>
               </div>
               <input
                 {...register('gymContact')}
@@ -659,7 +651,7 @@ const GymRegister = () => {
             {/* GST Number */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">GST Number <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <p className="text-xs text-text-secondary font-medium">GST Number <span className="text-text-secondary font-normal">(Optional)</span></p>
               </div>
               <input {...register('gst')} placeholder="E.g. 22AAAAA0000A1Z5" className={fieldClassName('gst')} maxLength="15" />
               <div className="min-h-[20px] mt-1">
@@ -670,7 +662,7 @@ const GymRegister = () => {
             {/* Gym Type */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Gym Type <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <p className="text-xs text-text-secondary font-medium">Gym Type <span className="text-text-secondary font-normal">(Optional)</span></p>
               </div>
               <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
@@ -683,7 +675,7 @@ const GymRegister = () => {
             {/* Address - full width below both columns */}
             <div className="md:col-span-2">
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Address <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Address <span className="text-red-500">*</span></p>
               </div>
               <textarea
                 {...register('address')}
@@ -699,7 +691,7 @@ const GymRegister = () => {
             {/* State */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">State <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">State <span className="text-red-500">*</span></p>
               </div>
               <CustomSelect
                 options={STATES_LIST}
@@ -723,7 +715,7 @@ const GymRegister = () => {
             {/* City */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">City <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">City <span className="text-red-500">*</span></p>
               </div>
               <CustomSelect
                 options={getCitiesForState(watch('state'))}
@@ -740,7 +732,7 @@ const GymRegister = () => {
             {/* Pincode */}
             <div >
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Pincode <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Pincode <span className="text-red-500">*</span></p>
               </div>
               <input {...register('pincode')} placeholder="E.g. 560102" className={fieldClassName('pincode')} maxLength="6" onInput={(e) => { let val = e.target.value.replace(/\D/g, ''); e.target.value = val.slice(0, 6); }} />
               <div className="min-h-[20px] mt-1">
@@ -751,7 +743,7 @@ const GymRegister = () => {
             {/* Password */}
             <div className="md:col-start-1">
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                <p className="text-xs text-text-secondary font-medium flex items-center gap-1">
                   <Lock className="w-3 h-3 text-slate-500" />
                   <span>Password <span className="text-red-500">*</span></span>
                 </p>
@@ -765,7 +757,7 @@ const GymRegister = () => {
             {/* Confirm Password */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                <p className="text-xs text-text-secondary font-medium flex items-center gap-1">
                   <Lock className="w-3 h-3 text-slate-500" />
                   <span>Confirm Password <span className="text-red-500">*</span></span>
                 </p>
@@ -780,7 +772,7 @@ const GymRegister = () => {
 
             {/* Operating Days Section */}
             <div className="md:col-span-2">
-              <p className="text-xs text-slate-400 mb-2.5 font-medium flex items-center gap-1.5">
+              <p className="text-xs text-text-secondary mb-2.5 font-medium flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-primary" />
                 <span>Operating Days <span className="text-red-500">*</span></span>
               </p>
@@ -791,7 +783,7 @@ const GymRegister = () => {
                     className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 cursor-pointer border select-none transition-all duration-200
                         ${watch('operatingDays')?.includes(day)
                         ? 'bg-primary/10 border-primary/40 text-primary font-medium'
-                        : 'bg-slate-900/40 border-slate-800/80 text-slate-400 hover:border-slate-700/60 hover:bg-slate-850'
+                        : 'bg-slate-900/40 border-slate-800/80 text-text-secondary hover:border-slate-700/60 hover:bg-slate-850'
                       }`}
                   >
                     <input
@@ -811,13 +803,13 @@ const GymRegister = () => {
 
             {/* Operating Hours */}
             <div className="md:col-span-2">
-              <p className="text-xs text-slate-400 mb-1.5 font-medium flex items-center gap-1">
+              <p className="text-xs text-text-secondary mb-1.5 font-medium flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5 text-primary" />
                 <span>Operating Hours <span className="text-red-500">*</span></span>
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-0.5">Opening</span>
+                  <span className="text-[10px] text-text-secondary block mb-0.5">Opening</span>
                   <TimeInput
                     fieldHour="operatingOpenHour"
                     fieldMinute="operatingOpenMinute"
@@ -828,7 +820,7 @@ const GymRegister = () => {
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-0.5">Closing</span>
+                  <span className="text-[10px] text-text-secondary block mb-0.5">Closing</span>
                   <TimeInput
                     fieldHour="operatingCloseHour"
                     fieldMinute="operatingCloseMinute"
@@ -851,33 +843,33 @@ const GymRegister = () => {
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-slate-400 hover:text-text-primary hover:bg-slate-900/40 transition-all select-none"
+                className="w-full flex items-center justify-between px-5 py-3 text-left font-semibold text-xs text-text-secondary hover:text-text-primary hover:bg-slate-900/40 transition-all select-none"
               >
                 <div className="flex items-center gap-2">
                   <LinkIcon className="w-3.5 h-3.5 text-primary" />
                   <span>Social Media Links</span>
                 </div>
-                {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                {showAdvanced ? <ChevronUp className="w-4 h-4 text-text-secondary" /> : <ChevronDown className="w-4 h-4 text-text-secondary" />}
               </button>
 
               {showAdvanced && (
                 <div className="p-5 border-t border-slate-800/60 bg-slate-950/20 grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
                   <div>
-                    <p className="text-xs text-slate-400 mb-1">Website URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
+                    <p className="text-xs text-text-secondary mb-1">Website URL <span className="text-[10px] text-text-secondary">(Optional)</span></p>
                     <input {...register('websiteUrl')} placeholder="E.g. https://yoursite.com" className={fieldClassName('websiteUrl')} />
                     <div className="min-h-[20px] mt-1">
                       {showFieldError('websiteUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.websiteUrl.message}</p>}
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 mb-1">Instagram URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
+                    <p className="text-xs text-text-secondary mb-1">Instagram URL <span className="text-[10px] text-text-secondary">(Optional)</span></p>
                     <input {...register('instagramUrl')} placeholder="E.g. https://instagram.com/gym" className={fieldClassName('instagramUrl')} />
                     <div className="min-h-[20px] mt-1">
                       {showFieldError('instagramUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.instagramUrl.message}</p>}
                     </div>
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-xs text-slate-400 mb-1">Facebook URL <span className="text-[10px] text-slate-500">(Optional)</span></p>
+                    <p className="text-xs text-text-secondary mb-1">Facebook URL <span className="text-[10px] text-text-secondary">(Optional)</span></p>
                     <input {...register('facebookUrl')} placeholder="E.g. https://facebook.com/gym" className={fieldClassName('facebookUrl')} />
                     <div className="min-h-[20px] mt-1">
                       {showFieldError('facebookUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.facebookUrl.message}</p>}
@@ -906,7 +898,7 @@ const GymRegister = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2">
                 <div>
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
+                  <p className="text-xs text-text-secondary mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
                   <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="50" onInput={(e) => { e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ''); }} />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('name') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.name.message}</p>}
@@ -914,7 +906,7 @@ const GymRegister = () => {
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-slate-400 font-medium">Personal Mobile Number <span className="text-red-500">*</span></span>
+                    <span className="text-xs text-text-secondary font-medium">Personal Mobile Number <span className="text-red-500">*</span></span>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -932,7 +924,7 @@ const GymRegister = () => {
                       {...register('mobileNo')}
                       type="tel"
                       placeholder="10-digit mobile number"
-                      className={fieldClassName('mobileNo', syncOwnerMobile ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      className={fieldClassName('mobileNo', syncOwnerMobile ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : '')}
                       onInput={handlePhoneInput}
                       maxLength="10"
                       readOnly={syncOwnerMobile}
@@ -944,11 +936,11 @@ const GymRegister = () => {
                       </div>
                     )}
                   </div>
-                  {syncOwnerMobile && <p className="text-[10px] text-slate-500 mt-1">Using Gym Contact Number</p>}
+                  {syncOwnerMobile && <p className="text-[10px] text-text-secondary mt-1">Using Gym Contact Number</p>}
                   {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mobileNo.message}</p>}
                 </div>
                 <div className="md:col-span-2">
-                  <p className="text-xs text-slate-400 mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
+                  <p className="text-xs text-text-secondary mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
                   <input {...register('mailId')} type="email" placeholder="E.g. alex@gmail.com" className={fieldClassName('mailId')} maxLength="50" />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('mailId') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mailId.message}</p>}
@@ -972,7 +964,7 @@ const GymRegister = () => {
                 {/* WhatsApp Number Field */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-slate-400 font-medium">WhatsApp Business Number <span className="text-red-500">*</span></span>
+                    <span className="text-xs text-text-secondary font-medium">WhatsApp Business Number <span className="text-red-500">*</span></span>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -990,7 +982,7 @@ const GymRegister = () => {
                       {...register('whatsappNumber')}
                       type="tel"
                       placeholder="10-digit WhatsApp number"
-                      className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : '')}
                       onInput={handlePhoneInput}
                       maxLength="10"
                       readOnly={syncWhatsapp}
@@ -1002,51 +994,15 @@ const GymRegister = () => {
                       </div>
                     )}
                   </div>
-                  {syncWhatsapp && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
+                  {syncWhatsapp && <p className="text-[10px] text-text-secondary mt-1">Using details from Gym Information</p>}
                   {showFieldError('whatsappNumber') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.whatsappNumber.message}</p>}
                 </div>
 
-                {/* SMS Source Number Field */}
-                <div>
-                  <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-slate-400 font-medium">SMS Source Number <span className="text-red-500">*</span></span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={syncSms}
-                        onChange={(e) => setSyncSms(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                      />
-                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                        [ Same as Gym Contact Number ]
-                      </span>
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      {...register('phoneNumber')}
-                      type="tel"
-                      placeholder="10-digit SMS number"
-                      className={fieldClassName('phoneNumber', syncSms ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
-                      onInput={handlePhoneInput}
-                      maxLength="10"
-                      readOnly={syncSms}
-                    />
-                    {syncSms && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                        <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                        SYNCED
-                      </div>
-                    )}
-                  </div>
-                  {syncSms && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
-                  {showFieldError('phoneNumber') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phoneNumber.message}</p>}
-                </div>
 
                 {/* Sender Email Field */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-slate-400 font-medium">Sender Email <span className="text-red-500">*</span></span>
+                    <span className="text-xs text-text-secondary font-medium">Sender Email <span className="text-red-500">*</span></span>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -1064,7 +1020,7 @@ const GymRegister = () => {
                       {...register('gmail')}
                       type="email"
                       placeholder="Email address used for reminders"
-                      className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                      className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : '')}
                       readOnly={syncEmail}
                       maxLength="25"
                     />
@@ -1075,7 +1031,7 @@ const GymRegister = () => {
                       </div>
                     )}
                   </div>
-                  {syncEmail && <p className="text-[10px] text-slate-500 mt-1">Using details from Gym Information</p>}
+                  {syncEmail && <p className="text-[10px] text-text-secondary mt-1">Using details from Gym Information</p>}
                   {showFieldError('gmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gmail.message}</p>}
                 </div>
 
@@ -1095,7 +1051,7 @@ const GymRegister = () => {
             {/* Billing ID */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Billing ID <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Billing ID <span className="text-red-500">*</span></p>
               </div>
               <input
                 {...register('billingIdPrefix')}
@@ -1107,7 +1063,7 @@ const GymRegister = () => {
                 {showFieldError('billingIdPrefix') ? (
                   <p className="text-red-500 text-xs font-medium leading-tight">{errors.billingIdPrefix.message}</p>
                 ) : (
-                  <p className="text-[10px] text-slate-500 leading-tight">Shorthand for invoice records (e.g. INV-0001).</p>
+                  <p className="text-[10px] text-text-secondary leading-tight">Shorthand for invoice records (e.g. INV-0001).</p>
                 )}
               </div>
             </div>
@@ -1115,7 +1071,7 @@ const GymRegister = () => {
             {/* Helpdesk Contact */}
             <div>
               <div className="flex justify-between items-center h-5 mb-1.5 select-none">
-                <span className="text-xs text-slate-400 font-medium">Helpdesk Contact <span className="text-red-500">*</span></span>
+                <span className="text-xs text-text-secondary font-medium">Helpdesk Contact <span className="text-red-500">*</span></span>
                 <label className="flex items-center gap-1.5 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1133,7 +1089,7 @@ const GymRegister = () => {
                   {...register('helpContact')}
                   type="tel"
                   placeholder="Support / Helpdesk number"
-                  className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : '')}
+                  className={fieldClassName('helpContact', syncHelpContact ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : '')}
                   onInput={handlePhoneInput}
                   maxLength="10"
                   readOnly={syncHelpContact}
@@ -1153,7 +1109,7 @@ const GymRegister = () => {
             {/* Address on Invoice */}
             <div>
               <div className="flex justify-between items-center h-5 mb-1.5 select-none">
-                <span className="text-xs text-slate-400 font-medium">Address on Invoice <span className="text-red-500">*</span></span>
+                <span className="text-xs text-text-secondary font-medium">Address on Invoice <span className="text-red-500">*</span></span>
                 <label className="flex items-center gap-1.5 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1170,7 +1126,7 @@ const GymRegister = () => {
                 <textarea
                   {...register('addressOnBill')}
                   placeholder="Billing address for invoices"
-                  className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-slate-400 cursor-not-allowed pr-24' : ''}`)}
+                  className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : ''}`)}
                   maxLength="100"
                   readOnly={syncAddress}
                 />
@@ -1189,7 +1145,7 @@ const GymRegister = () => {
             {/* Gym Logo */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Gym Logo <span className="text-slate-500 font-normal">(Optional)</span></p>
+                <p className="text-xs text-text-secondary font-medium">Gym Logo <span className="text-text-secondary font-normal">(Optional)</span></p>
               </div>
               {logoPreview ? (
                 <div className="relative border border-slate-800 rounded-xl px-4 py-2 bg-slate-900/30 flex items-center gap-3 h-20 group animate-in fade-in duration-200">
@@ -1198,7 +1154,7 @@ const GymRegister = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-slate-200 truncate">{logoName}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Ready for upload</p>
+                    <p className="text-[10px] text-text-secondary mt-0.5">Ready for upload</p>
                   </div>
                   <button
                     type="button"
@@ -1231,7 +1187,7 @@ const GymRegister = () => {
                     <span className="text-xs font-semibold text-slate-300 block">
                       {isDragActive ? 'Drop image here' : 'Drag & drop logo, or browse'}
                     </span>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Supports PNG, JPG, JPEG, WEBP up to 5MB</p>
+                    <p className="text-[10px] text-text-secondary mt-0.5">Supports PNG, JPG, JPEG, WEBP up to 5MB</p>
                   </div>
                 </label>
               )}
@@ -1243,14 +1199,14 @@ const GymRegister = () => {
             {/* Regards Text */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Regards Text <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Regards Text <span className="text-red-500">*</span></p>
               </div>
               <input {...register('regards')} placeholder="Regards, Team Gym" className={fieldClassName('regards')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('regards') ? (
                   <p className="text-red-500 text-xs font-medium leading-tight">{errors.regards.message}</p>
                 ) : (
-                  <p className="text-[10px] text-slate-500 leading-tight">Automatically generated from Gym Name, but customizable.</p>
+                  <p className="text-[10px] text-text-secondary leading-tight">Automatically generated from Gym Name, but customizable.</p>
                 )}
               </div>
             </div>
@@ -1258,14 +1214,14 @@ const GymRegister = () => {
             {/* Greeting Message */}
             <div>
               <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-slate-400 font-medium">Greeting Message <span className="text-red-500">*</span></p>
+                <p className="text-xs text-text-secondary font-medium">Greeting Message <span className="text-red-500">*</span></p>
               </div>
               <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('greetingText') ? (
                   <p className="text-red-500 text-xs font-medium leading-tight">{errors.greetingText.message}</p>
                 ) : (
-                  <p className="text-[10px] text-slate-500 leading-tight">Greeting shown at bottom of client dashboard.</p>
+                  <p className="text-[10px] text-text-secondary leading-tight">Greeting shown at bottom of client dashboard.</p>
                 )}
               </div>
             </div>

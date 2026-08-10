@@ -14,8 +14,8 @@ const gymSchema = new mongoose.Schema({
     phone: { type: String, trim: true }
   },
   address: { type: String, required: true, maxlength: 100 },
-  city: { type: String, required: true, maxlength: 25 },
-  state: { type: String, required: true, maxlength: 25 },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
   pincode: { type: String, required: true, maxlength: 6 },
   gst: { type: String, default: "", maxlength: 15 },
   gymLogo: { type: String, default: "" },
