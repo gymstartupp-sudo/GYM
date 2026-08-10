@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, Eye, Users, Power, Trash2, AlertTriangle, Building2, Calendar, Phone, Mail, MapPin, Tag, Clock } from 'lucide-react';
+import { sortOperatingDays } from '../../utils/membership';
 
 // ─── Shared style tokens ──────────────────────────────────────────────────────
 const COLORS = {
@@ -41,7 +42,7 @@ const GymProfileModal = ({ gymId, onClose }) => {
   const owner = data?.owner || {};
   const stats = data?.stats || {};
 
-  const operatingDays = (gym.operatingDays || []).join(', ') || '—';
+  const operatingDays = sortOperatingDays(gym.operatingDays || []).join(', ') || '—';
   const openTime = gym.operatingHours?.open || '—';
   const closeTime = gym.operatingHours?.close || '—';
   const regDate = gym.createdAt

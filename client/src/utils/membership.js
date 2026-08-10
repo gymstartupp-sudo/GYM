@@ -179,3 +179,17 @@ export const calculateEndDate = (startDate, durationMonths) => {
   }
   return result;
 };
+
+const WEEK_DAYS_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+export const sortOperatingDays = (days) => {
+  if (!days || !Array.isArray(days)) return [];
+  return [...days].sort((a, b) => {
+    const indexA = WEEK_DAYS_ORDER.indexOf(String(a).trim().toLowerCase());
+    const indexB = WEEK_DAYS_ORDER.indexOf(String(b).trim().toLowerCase());
+    const posA = indexA === -1 ? 999 : indexA;
+    const posB = indexB === -1 ? 999 : indexB;
+    return posA - posB;
+  });
+};
+

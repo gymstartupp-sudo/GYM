@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { Sparkles, Clock, MapPin, Phone, Mail, Calendar } from 'lucide-react';
 import Button from '../../components/Button';
 import ClientRenewModal from '../../components/ClientRenewModal';
-import { calculateDaysLeft, formatDisplayDate } from '../../utils/membership';
+import { calculateDaysLeft, formatDisplayDate, sortOperatingDays } from '../../utils/membership';
 
 const getPendingPayment = (clientDoc) => {
   if (!clientDoc || !clientDoc.paymentHistory || clientDoc.paymentHistory.length === 0) return null;
@@ -167,7 +167,7 @@ const ClientHome = () => {
               )}
               {profile.gym.operatingDays && profile.gym.operatingDays.length > 0 && (
                 <p className="text-xs text-text-secondary mt-1 flex items-center gap-1">
-                  <Calendar size={12} /> {profile.gym.operatingDays.join(', ')}
+                  <Calendar size={12} /> {sortOperatingDays(profile.gym.operatingDays).join(', ')}
                 </p>
               )}
             </div>

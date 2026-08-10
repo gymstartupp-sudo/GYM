@@ -148,6 +148,8 @@ const generatePaymentPDF = async (payment, client, gym) => {
       };
 
       // 1. Header: Gym Logo & Details (Left side) and Status & Invoice Details (Right side)
+      let hasLogoBox = false;
+
       if (logoFile) {
         try {
           // Draw logo with rounded corners and light gray border
@@ -157,27 +159,13 @@ const generatePaymentPDF = async (payment, client, gym) => {
           doc.restore();
 
           doc.strokeColor('#e5e7eb').lineWidth(1).roundedRect(40, 50, 45, 45, 6).stroke();
-
-          doc.fillColor('#1f2937')
-            .fontSize(14)
-            .font(fontBold)
-            .text(String(gym.gymName).toUpperCase(), 95, 52);
-          doc.fontSize(8)
-            .fillColor('#4b5563')
-            .font(fontBold)
-            .text(`GYM ID: ${gym.gymId}`, 95, 68);
+          hasLogoBox = true;
         } catch (imgErr) {
-          console.error('[PDF SERVICE WARNING] Failed to render image, falling back to text:', imgErr);
-          doc.fillColor('#1f2937')
-            .fontSize(14)
-            .font(fontBold)
-            .text(String(gym.gymName).toUpperCase(), 40, 50);
-          doc.fontSize(8)
-            .fillColor('#4b5563')
-            .font(fontBold)
-            .text(`GYM ID: ${gym.gymId}`, 40, 68);
+          console.error('[PDF SERVICE WARNING] Failed to render image, falling back to initial box:', imgErr);
         }
-      } else {
+      }
+
+      if (!hasLogoBox) {
         // Fallback graphical box with first letter
         doc.fillColor('#f3f4f6')
           .roundedRect(40, 50, 45, 45, 6)
@@ -186,24 +174,32 @@ const generatePaymentPDF = async (payment, client, gym) => {
           .font(fontBold)
           .fontSize(18)
           .text((gym.gymName || 'G').charAt(0).toUpperCase(), 40, 63, { width: 45, align: 'center' });
-
-        doc.fillColor('#1f2937')
-          .fontSize(14)
-          .font(fontBold)
-          .text(String(gym.gymName).toUpperCase(), 95, 52);
-        doc.fontSize(8)
-          .fillColor('#4b5563')
-          .font(fontBold)
-          .text(`GYM ID: ${gym.gymId}`, 95, 68);
+        hasLogoBox = true;
       }
 
+      const textX = hasLogoBox ? 95 : 40;
+
+      doc.fillColor('#1f2937')
+        .fontSize(14)
+        .font(fontBold)
+        .text(String(gym.gymName).toUpperCase(), textX, 50, { width: 280 });
+      doc.fontSize(8)
+        .fillColor('#4b5563')
+        .font(fontBold)
+        .text(`GYM ID: ${gym.gymId}`, textX, 66, { width: 280 });
+
       // Address below details (no tagline)
-      const gymAddress = gym.billingInfo?.addressOnBill || gym.address || '';
+      const rawAddress = gym.billingInfo?.addressOnBill || gym.address || '';
+      const gymAddress = String(rawAddress)
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '')
+        .trim();
+
       if (gymAddress) {
         doc.fontSize(8)
           .font(fontName)
           .fillColor('#4b5563')
-          .text(gymAddress, logoFile ? 95 : 40, logoFile ? 78 : 80);
+          .text(gymAddress, textX, 78, { width: 280 });
       }
 
       // Status Badge (Top-Right)
