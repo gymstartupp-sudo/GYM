@@ -58,16 +58,42 @@ const getLogoBufferOrPath = async (logoPath) => {
 const generatePaymentPDF = async (payment, client, gym) => {
   const logoFile = await getLogoBufferOrPath(gym.gymLogo);
 
-  // Register custom font if available on Windows/Linux to support the Rupee symbol
+  // Register custom font if available (in server/fonts, Windows, or Linux) to support Unicode & Rupee symbol
   let fontName = 'Helvetica';
   let fontBold = 'Helvetica-Bold';
   let fontOblique = 'Helvetica-Oblique';
+  let hasCustomFont = false;
 
-  const winFont = 'C:\\Windows\\Fonts\\arial.ttf';
-  const winFontBold = 'C:\\Windows\\Fonts\\arialbd.ttf';
-  const winFontOblique = 'C:\\Windows\\Fonts\\ariali.ttf';
+  const fontCandidates = [
+    {
+      regular: path.join(__dirname, '..', 'fonts', 'Arial.ttf'),
+      bold: path.join(__dirname, '..', 'fonts', 'Arial-Bold.ttf'),
+      oblique: path.join(__dirname, '..', 'fonts', 'Arial-Italic.ttf')
+    },
+    {
+      regular: 'C:\\Windows\\Fonts\\arial.ttf',
+      bold: 'C:\\Windows\\Fonts\\arialbd.ttf',
+      oblique: 'C:\\Windows\\Fonts\\ariali.ttf'
+    },
+    {
+      regular: '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+      bold: '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+      oblique: '/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf'
+    },
+    {
+      regular: '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+      bold: '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+      oblique: '/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf'
+    }
+  ];
 
-  const hasWinFonts = fs.existsSync(winFont) && fs.existsSync(winFontBold);
+  let selectedFont = null;
+  for (const fc of fontCandidates) {
+    if (fs.existsSync(fc.regular) && fs.existsSync(fc.bold)) {
+      selectedFont = fc;
+      break;
+    }
+  }
 
   // Fetch description dynamically from Plan model
   let planDescription = 'Premium access to all gym facilities and equipment.';
@@ -99,20 +125,22 @@ const generatePaymentPDF = async (payment, client, gym) => {
 
       doc.pipe(writeStream);
 
-      if (hasWinFonts) {
-        doc.registerFont('Arial', winFont);
-        doc.registerFont('Arial-Bold', winFontBold);
-        fontName = 'Arial';
-        fontBold = 'Arial-Bold';
-        if (fs.existsSync(winFontOblique)) {
-          doc.registerFont('Arial-Italic', winFontOblique);
-          fontOblique = 'Arial-Italic';
+      if (selectedFont) {
+        doc.registerFont('CustomFont', selectedFont.regular);
+        doc.registerFont('CustomFont-Bold', selectedFont.bold);
+        fontName = 'CustomFont';
+        fontBold = 'CustomFont-Bold';
+        if (fs.existsSync(selectedFont.oblique)) {
+          doc.registerFont('CustomFont-Italic', selectedFont.oblique);
+          fontOblique = 'CustomFont-Italic';
         } else {
-          fontOblique = 'Arial';
+          fontOblique = 'CustomFont';
         }
+        hasCustomFont = true;
       }
 
-      const currencySymbol = '₹';
+      // Use Rupee symbol when custom TTF font is loaded, otherwise fallback to 'Rs. ' to avoid CP1252 '¹' rendering issues on Linux/Vercel
+      const currencySymbol = hasCustomFont ? '₹' : 'Rs. ';
 
       // Helper: Draw line
       const drawLine = (y) => {
@@ -352,8 +380,8 @@ const generatePaymentPDF = async (payment, client, gym) => {
       footerY += 14;
       const contactPhone = gym.billingInfo?.helpContact || gym.gymContact || 'N/A';
       const contactEmail = gym.gymEmail || 'N/A';
-      const phoneText = `\u260E  +91 ${contactPhone}`;
-      const emailText = `\u2709  ${contactEmail}`;
+      const phoneText = `Ph: +91 ${contactPhone}`;
+      const emailText = `Email: ${contactEmail}`;
 
       doc.font(fontBold)
         .fontSize(8)
