@@ -9,8 +9,8 @@
     /* Semantic Color Tokens (based on reference image) */
     --color-primary: #FFBD07;
     --color-primary-hover: #E5AA06;
-    --color-secondary: #0A7C3F;
-    --color-accent: #56F299;
+    --color-secondary: #10B981;
+    --color-accent: #10B981;
     --color-background: #F4F4F3;
     --color-surface: #FFFFFF;
     --color-surface-elevated: #FFFFFF;
@@ -18,9 +18,9 @@
     --color-text-secondary: #5A5A53;
     --color-text-muted: #8E8E88;
     --color-border: #E2E2DC;
-    --color-success-val: #0A7C3F;
+    --color-success-val: #10B981;
     --color-warning-val: #E5AA06;
-    --color-error-val: #B91C1C;
+    --color-error-val: #EF4444;
     --color-info-val: #0284C7;
 
     /* System Theme Variable Mappings */
@@ -46,12 +46,12 @@
     --overlay: rgba(27, 27, 24, 0.4);
 
     /* Badge Variables */
-    --badge-success-bg: rgba(10, 124, 63, 0.12);
-    --badge-success-text: #0A7C3F;
+    --badge-success-bg: rgba(16, 185, 129, 0.12);
+    --badge-success-text: #10B981;
     --badge-warning-bg: rgba(255, 189, 7, 0.15);
     --badge-warning-text: #E5AA06;
-    --badge-danger-bg: rgba(185, 28, 28, 0.12);
-    --badge-danger-text: #B91C1C;
+    --badge-danger-bg: rgba(239, 68, 68, 0.12);
+    --badge-danger-text: #EF4444;
     --badge-info-bg: rgba(2, 132, 199, 0.12);
     --badge-info-text: #0284C7;
 
@@ -174,6 +174,20 @@
 
   .password-toggle-field {
     @apply pr-10;
+  }
+
+  /* Native select & option theming */
+  select option {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    padding: 8px 12px;
+  }
+
+  select option:checked,
+  select option:hover,
+  select option:focus {
+    background-color: var(--color-primary) !important;
+    color: var(--btn-primary-text) !important;
   }
 
   /* Cards */

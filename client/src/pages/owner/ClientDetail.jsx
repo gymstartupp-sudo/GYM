@@ -282,11 +282,13 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                         const { currentPlan, nextPlan, previousPlans, gaps } = getClientPlans(memberships);
 
                                         const getPaymentBadgeStyle = (status) => {
-                                            switch (status) {
-                                                case 'PAID': return 'bg-green-500 text-text-primary';
-                                                case 'PENDING': return 'bg-yellow-500 text-black';
-                                                case 'OVERDUE': return 'bg-red-500 text-text-primary';
-                                                default: return 'bg-gray-500 text-text-primary';
+                                            const s = String(status || '').toUpperCase();
+                                            switch (s) {
+                                                case 'PAID': return 'bg-emerald-600 text-white font-bold';
+                                                case 'PENDING': return 'bg-amber-500 text-white font-bold';
+                                                case 'PARTIAL': return 'bg-amber-500 text-white font-bold';
+                                                case 'OVERDUE': return 'bg-rose-600 text-white font-bold';
+                                                default: return 'bg-slate-600 text-white font-bold';
                                             }
                                         };
 

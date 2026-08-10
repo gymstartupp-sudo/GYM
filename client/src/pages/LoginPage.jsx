@@ -387,7 +387,7 @@ const LoginPage = () => {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 required
-                                className={`input-field pr-4 hover:border-primary/50 ${errors.loginId ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                                className={`input-field pr-4 hover:border-primary/50 ${errors.loginId ? 'border-red-500/80 focus:ring-red-500/30' : 'focus:border-primary focus:ring-primary'}`}
                                 maxLength="25"
                             />
                             <div className="min-h-[20px] mt-1">
@@ -426,7 +426,7 @@ const LoginPage = () => {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 required
-                                className={`input-field w-full hover:border-primary/50 ${errors.password ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                                className={`input-field w-full hover:border-primary/50 ${errors.password ? 'border-red-500/80 focus:ring-red-500/30' : 'focus:border-primary focus:ring-primary'}`}
                                 maxLength="20"
                             />
                             <div className="flex justify-between items-start mt-1">

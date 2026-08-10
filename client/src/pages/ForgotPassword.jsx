@@ -118,7 +118,7 @@ const ForgotPassword = () => {
                   type="email"
                   placeholder="Email Address"
                   {...register('email')}
-                  className={`input-field hover:border-primary/50 ${errors.email ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                  className={`input-field hover:border-primary/50 ${errors.email ? 'border-red-500/80 focus:ring-red-500/30' : 'focus:border-primary focus:ring-primary'}`}
                 />
                 <div className="min-h-[20px] mt-1">
                   {errors.email && <p className="text-red-500 text-xs font-medium leading-tight">{errors.email.message}</p>}
@@ -130,7 +130,7 @@ const ForgotPassword = () => {
                   type="tel"
                   placeholder="10-digit Phone Number"
                   {...register('phone')}
-                  className={`input-field hover:border-primary/50 ${errors.phone ? 'border-red-500/80 focus:ring-red-500/30 text-red-200' : 'focus:border-primary focus:ring-primary'}`}
+                  className={`input-field hover:border-primary/50 ${errors.phone ? 'border-red-500/80 focus:ring-red-500/30' : 'focus:border-primary focus:ring-primary'}`}
                   maxLength="10"
                 />
                 <div className="min-h-[20px] mt-1">

@@ -506,7 +506,7 @@ const Transactions = () => {
                                         type="button"
                                         disabled={downloadingId === selectedPayment._id}
                                         onClick={() => downloadInvoice(selectedPayment)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#10B981] text-white text-xs font-bold rounded-lg hover:bg-[#0e9f6e] transition-all shadow-sm disabled:opacity-50"
                                     >
                                         Download
                                     </button>

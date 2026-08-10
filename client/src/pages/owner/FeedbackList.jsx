@@ -78,19 +78,19 @@ const FeedbackList = () => {
     switch (status) {
       case 'Unread':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-500/15 text-sky-400 border border-sky-500/30">
             Unread
           </span>
         );
       case 'Read':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
             Read
           </span>
         );
       case 'Resolved':
         return (
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/20">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
             Resolved
           </span>
         );
@@ -202,7 +202,10 @@ const FeedbackList = () => {
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-accent/15 text-accent flex justify-center items-center font-bold text-lg border border-accent/25 shadow-inner">
+                <div 
+                  style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981', borderColor: 'rgba(16, 185, 129, 0.25)' }}
+                  className="w-12 h-12 rounded-xl flex justify-center items-center font-bold text-lg border shadow-inner"
+                >
                   {selectedFeedback.clientAvatar || selectedFeedback.clientName?.charAt(0).toUpperCase() || 'C'}
                 </div>
                 <div className="min-w-0">
@@ -249,13 +252,14 @@ const FeedbackList = () => {
                   <>
                     <button
                       onClick={() => handleStatusChange(selectedFeedback._id, 'Read')}
-                      className="px-4 py-2 rounded-lg text-sm font-semibold text-text-primary bg-blue-600 hover:bg-blue-700 transition-colors cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-sky-500 hover:bg-sky-600 transition-all cursor-pointer shadow-md shadow-sky-500/20"
                     >
                       Mark as Read
                     </button>
                     <button
                       onClick={() => handleStatusChange(selectedFeedback._id, 'Resolved')}
-                      className="px-4 py-2 rounded-lg text-sm font-semibold text-text-primary bg-green-600 hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                      style={{ backgroundColor: '#10B981' }}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#10B981]/20 hover:opacity-90"
                     >
                       <CheckCircle size={15} /> Resolve
                     </button>
@@ -264,7 +268,8 @@ const FeedbackList = () => {
                 {selectedFeedback.status === 'Read' && (
                   <button
                     onClick={() => handleStatusChange(selectedFeedback._id, 'Resolved')}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold text-text-primary bg-green-600 hover:bg-green-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                    style={{ backgroundColor: '#10B981' }}
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#10B981]/20 hover:opacity-90"
                   >
                     <CheckCircle size={15} /> Resolve
                   </button>

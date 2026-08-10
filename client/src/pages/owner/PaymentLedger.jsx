@@ -25,6 +25,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import CustomDatePicker from '../../components/CustomDatePicker';
+import CustomDropdown from '../../components/CustomDropdown';
 import { DATE_RULES, getCurrentYear, validateExpenseDate } from '../../utils/dateInput';
 import ConfirmModal from '../../components/ConfirmModal';
 
@@ -571,32 +572,18 @@ const PaymentLedger = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                     {/* Month Filter */}
-                    <div className="relative">
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                            className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
-                        >
-                            {MONTHS.map((m, idx) => (
-                                <option key={m} value={idx}>{m}</option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
-                    </div>
+                    <CustomDropdown
+                        value={selectedMonth}
+                        onChange={(val) => setSelectedMonth(Number(val))}
+                        options={MONTHS.map((m, idx) => ({ label: m, value: idx }))}
+                    />
 
                     {/* Year Filter */}
-                    <div className="relative">
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="bg-surface-secondary border border-border rounded-xl py-2 px-4 pr-10 text-text-primary font-medium focus:outline-none focus:border-primary appearance-none cursor-pointer text-sm"
-                        >
-                            {yearOptions.map(yr => (
-                                <option key={yr} value={yr}>{yr}</option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={16} />
-                    </div>
+                    <CustomDropdown
+                        value={selectedYear}
+                        onChange={(val) => setSelectedYear(Number(val))}
+                        options={yearOptions.map(yr => ({ label: String(yr), value: yr }))}
+                    />
 
                     {/* Reset button */}
                     <button
@@ -1023,16 +1010,13 @@ const PaymentLedger = () => {
                                     </div>
                                     <div>
                                         <label className="block text-text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Category</label>
-                                        <div className="relative">
-                                            <select
-                                                className="w-full bg-surface-secondary border border-border rounded-lg py-2.5 px-4 text-text-primary focus:outline-none focus:border-primary appearance-none cursor-pointer"
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                            >
-                                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                            </select>
-                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={16} />
-                                        </div>
+                                        <CustomDropdown
+                                            value={formData.category}
+                                            onChange={(val) => setFormData({ ...formData, category: val })}
+                                            options={CATEGORIES.map(cat => ({ label: cat, value: cat }))}
+                                            className="w-full"
+                                            buttonClassName="py-2.5"
+                                        />
                                     </div>
                                 </div>
 
