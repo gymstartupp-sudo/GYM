@@ -480,10 +480,8 @@ const Profile = () => {
     else if (gym.address.length > 100) newErrors.address = 'Max 100 characters';
 
     if (!gym.city?.trim()) newErrors.city = 'City is required';
-    else if (gym.city.length > 35) newErrors.city = 'Max 35 characters';
 
     if (!gym.state?.trim()) newErrors.state = 'State is required';
-    else if (gym.state.length > 35) newErrors.state = 'Max 35 characters';
 
     if (!gym.pincode?.trim()) newErrors.pincode = 'Pincode is required';
     else if (!/^\d{6}$/.test(gym.pincode)) newErrors.pincode = 'Pincode must be exactly 6 digits';
