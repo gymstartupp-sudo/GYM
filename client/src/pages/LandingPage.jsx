@@ -35,52 +35,52 @@ const LandingPage = () => {
   const features = [
     {
       icon: Users,
-      title: "Client Profiles",
-      description: "Manage membership states, emergency contacts, active plans, and Red Tag status flags from a single centralized list."
+      title: "Client Profiles & Auditing",
+      description: "Manage membership states, emergency contacts, medical details, active plans, and pending dues tags from a single list."
     },
     {
       icon: Calendar,
-      title: "Custom Plans",
-      description: "Create subscription plans (monthly, quarterly, custom days) with automatic end-date calculation and dynamic balance adjustments."
+      title: "Custom Plans & Date Shifting",
+      description: "Create subscription plans (monthly, quarterly, custom days) with automatic non-overlapping date calculation and dynamic balance tracking."
     },
     {
       icon: BellRing,
       title: "WhatsApp & SMS Autopilot",
-      description: "Automate renewal reminders. The system automatically scans memberships daily and dispatches alerts before their plans expire."
+      description: "Daily automated background scans dispatch Meta WhatsApp template messages and Twilio SMS before and after memberships expire."
     },
     {
       icon: DollarSign,
-      title: "Expense & Revenue Splits",
-      description: "Log expenses (rent, maintenance, API bills) and payments, tracking exact monthly profitability metrics automatically."
+      title: "Financial Ledger & Expenses",
+      description: "Log expenses (rent, salary, maintenance) and track monthly net revenue, Razorpay gateway fees, and total profit automatically."
     },
     {
       icon: CreditCard,
-      title: "Online Payments via Razorpay",
-      description: "Clients can pay directly inside their portal. The system handles secure payment signature validations and updates memberships instantly."
+      title: "Razorpay Online Payments",
+      description: "Clients can pay directly inside their portal. Server verifies HMAC-SHA256 payment signatures, extends plans, and emails/whatsapps PDF receipts."
     },
     {
       icon: AlertCircle,
-      title: "Unpaid Balance Auditing",
-      description: "Filter dues ledger, track partial payments, record remaining installments, and review overdue memberships on the fly."
+      title: "Dues & Partial Payment Auditing",
+      description: "Filter dues ledgers, track partial payments, record installment snapshots, and enforce minimum payments and due dates."
     }
   ];
 
   const faqs = [
     {
       q: "How does the automated reminder system work?",
-      a: "RexFit uses daily automated cron jobs to scan all clients. If a client's plan is set to expire soon (under 3 days) or has expired, it triggers SMS and WhatsApp notifications through integrated API gateways automatically."
+      a: "RexFit runs scheduled daily cron jobs to scan all clients. When a client's plan is set to expire soon (under 3 days) or has expired, it dispatches official Meta WhatsApp templates and Twilio SMS alerts automatically."
     },
     {
       q: "Can clients renew their memberships online?",
-      a: "Yes! RexFit integrates with Razorpay. Clients can log into their Client Portal, select their preferred plan, and securely complete payments online. The system verifies the payment signature and extends the membership automatically."
+      a: "Yes! RexFit integrates with Razorpay. Clients log into their Client Portal, select a plan, and pay online. The system verifies HMAC-SHA256 signatures, generates PDF receipts, and extends the membership automatically."
     },
     {
-      q: "Does RexFit support multiple gyms under one owner?",
-      a: "RexFit is built for scalability. While this deployment is tailored for single-gym operations, its backend schema is built with multi-gym routing keys, preparing your account to expand across multiple branches easily."
+      q: "Does RexFit support multi-tenant database routing?",
+      a: "Yes! RexFit is built with a multi-tenant database architecture. Each registered gym operates with its own isolated database key (dbName), keeping member data and financial ledgers strictly partitioned."
     },
     {
-      q: "What is the 'Red Tag' account auditing system?",
-      a: "The Red Tag system automatically flags clients who have pending dues, expired plans, or custom overdue states. It prevents administrative errors and ensures unpaid members do not slip past checkout counters."
+      q: "How does the Partial Payment and Dues system work?",
+      a: "Gym owners can allow or disallow partial payments per gym. When enabled, the system creates immutable payment snapshots, updates remaining balances, and flags clients with pending dues on the owner dashboard."
     }
   ];
 
@@ -237,13 +237,15 @@ const LandingPage = () => {
             {/* Dashboard Content Mockup */}
             <div className="flex-1 bg-surface-primary flex">
               {/* Sidebar */}
-              <div className="w-1/5 border-r border-border bg-surface-secondary p-3 hidden sm:flex flex-col gap-3">
-                <div className="h-6 bg-primary/20 border border-primary/30 rounded-lg flex items-center px-2 text-[10px] font-bold text-primary">Dashboard</div>
-                <div className="h-6 bg-surface-hover rounded-lg flex items-center px-2 text-[10px] text-text-secondary">Clients</div>
-                <div className="h-6 bg-surface-hover rounded-lg flex items-center px-2 text-[10px] text-text-secondary">Plans</div>
-                <div className="h-6 bg-surface-hover rounded-lg flex items-center px-2 text-[10px] text-text-secondary">Dues</div>
-                <div className="h-6 bg-surface-hover rounded-lg flex items-center px-2 text-[10px] text-text-secondary">Requests</div>
-                <div className="h-6 bg-surface-hover rounded-lg flex items-center px-2 text-[10px] text-text-secondary">Settings</div>
+              <div className="w-1/5 border-r border-border bg-surface-secondary p-2.5 hidden sm:flex flex-col gap-2">
+                <div className="h-5 bg-primary/20 border border-primary/30 rounded-lg flex items-center px-2 text-[9px] font-bold text-primary">Dashboard</div>
+                <div className="h-5 bg-surface-hover rounded-lg flex items-center px-2 text-[9px] text-text-secondary">Clients</div>
+                <div className="h-5 bg-surface-hover rounded-lg flex items-center px-2 text-[9px] text-text-secondary">Plans</div>
+                <div className="h-5 bg-surface-hover rounded-lg flex items-center px-2 text-[9px] text-text-secondary">Dues</div>
+                <div className="h-5 bg-surface-hover rounded-lg flex items-center px-2 text-[9px] text-text-secondary">Ledger</div>
+                <div className="h-5 bg-surface-hover rounded-lg flex items-center px-2 text-[9px] text-text-secondary">Requests</div>
+                <div className="h-5 bg-surface-hover rounded-lg flex items-center px-2 text-[9px] text-text-secondary">Feedback</div>
+                <div className="h-5 bg-surface-hover rounded-lg flex items-center px-2 text-[9px] text-text-secondary">Settings</div>
               </div>
 
               {/* Central View */}
@@ -355,7 +357,7 @@ const LandingPage = () => {
                   Renew Plan Online
                 </button>
                 <button className="w-full py-2 bg-surface-secondary text-text-primary text-[10px] font-semibold rounded-lg border border-border hover:bg-surface-hover transition-all text-center">
-                  Payment Ledger
+                  Payments & Receipts
                 </button>
               </div>
 
