@@ -183,7 +183,7 @@ exports.updateClientProfile = async (req, res, next) => {
     const ALLOWED_PERSONAL_INFO_FIELDS = [
       'name', 'email', 'mobileNo', 'gender', 'dob', 'address',
       'emergencyContact', 'city', 'state', 'pincode', 'bloodGroup',
-      'occupation', 'whatsappNumber', 'mobile'
+      'occupation', 'whatsappNumber', 'mobile', 'medicalCondition'
     ];
 
     const topKeys = Object.keys(req.body || {});
@@ -323,8 +323,8 @@ exports.addClient = async (req, res, next) => {
 
     let resolvedDueDate = null;
     if (remainingBalanceVal > 0) {
-      if (paidAmountVal <= 100) {
-        return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
+      if (paidAmountVal < 100) {
+        return res.status(400).json({ success: false, message: 'Minimum partial payment amount is ₹100.' });
       }
 
       const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
@@ -642,8 +642,8 @@ exports.approveClient = async (req, res, next) => {
     // Validate and Auto-Calculate Due Date & 50% Minimum
     let resolvedDueDate = null;
     if (remainingBalance > 0) {
-      if (paidAmount <= 100) {
-        return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
+      if (paidAmount < 100) {
+        return res.status(400).json({ success: false, message: 'Minimum partial payment amount is ₹100.' });
       }
 
       const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
@@ -888,6 +888,14 @@ Thank you.`;
       client.overdueReminders.manualReminders = [];
     }
 
+    const manualSentCount = client.overdueReminders.manualReminders.filter(
+      r => r.status === 'sent' && r.executionSource === 'Manual Reminder'
+    ).length;
+
+    if (manualSentCount >= 2) {
+      return res.status(400).json({ success: false, message: 'Overdue reminder limit reached (Maximum 2 reminders)' });
+    }
+
     if (result && result.success) {
       client.overdueReminders[reminderKey] = {
         status: 'sent',
@@ -999,8 +1007,8 @@ exports.restoreClient = async (req, res, next) => {
 
       let resolvedDueDate = null;
       if (remainingBalanceVal > 0) {
-        if (paidAmountVal <= 100) {
-          return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
+        if (paidAmountVal < 100) {
+          return res.status(400).json({ success: false, message: 'Minimum partial payment amount is ₹100.' });
         }
         const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
         const startVal = new Date(membership.startDate || Date.now());

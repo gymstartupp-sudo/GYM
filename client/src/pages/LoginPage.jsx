@@ -351,7 +351,12 @@ const LoginPage = () => {
             else if (role === 'client') navigate('/client');
             else navigate('/admin');
 
-            toast.success("Welcome Back!");
+            if (role === 'client') {
+                const name = data?.personalInfo?.name || 'Member';
+                toast.success(`Welcome ${name}`);
+            } else {
+                toast.success("Welcome Back!");
+            }
         } catch (error) {
             if (!error.response) {
                 toast.error("Network error: Server is unreachable. Please try again.");

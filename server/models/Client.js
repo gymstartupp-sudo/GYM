@@ -6,7 +6,7 @@ const clientSchema = new mongoose.Schema({
   gymId: { type: String },
   gymName: { type: String },
   personalInfo: {
-    name: { type: String, required: true, maxlength: 50 },
+    name: { type: String, required: true, maxlength: 35 },
     dob: { type: Date, required: true },
     gender: { type: String, required: true },
     address: { type: String, required: true, maxlength: 100 },
@@ -105,9 +105,9 @@ const clientSchema = new mongoose.Schema({
 
 clientSchema.index(
   { clientId: 1 },
-  { 
-    unique: true, 
-    partialFilterExpression: { clientId: { $exists: true } } 
+  {
+    unique: true,
+    partialFilterExpression: { clientId: { $exists: true } }
   }
 );
 clientSchema.index({ isActive: 1 });

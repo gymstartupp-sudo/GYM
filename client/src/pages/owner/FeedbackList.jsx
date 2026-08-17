@@ -53,7 +53,7 @@ const FeedbackList = () => {
     try {
       await api.put(`/feedback/${id}/status`, { status: newStatus });
       toast.success(`Feedback marked as ${newStatus}`);
-      
+
       // Update local state
       setFeedbacks((prev) =>
         prev.map((f) => (f._id === id ? { ...f, status: newStatus } : f))
@@ -108,7 +108,7 @@ const FeedbackList = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
-          <MessageSquare className="text-primary" /> Client Feedback
+          Client Feedback
         </h1>
         <p className="text-text-secondary mt-2 text-base md:text-lg">Monitor, read, and manage feedback submitted by your gym members.</p>
       </div>
@@ -134,9 +134,9 @@ const FeedbackList = () => {
               <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
                 <tr>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Client Info</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Subject</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Subject</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Action</th>
                 </tr>
               </thead>
@@ -157,17 +157,17 @@ const FeedbackList = () => {
                     </td>
 
                     {/* Date */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary text-center">
                       {formatDate(item.createdAt)}
                     </td>
 
                     {/* Subject */}
-                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md">
+                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md text-center">
                       {item.subject || <span className="text-text-muted italic">No Subject</span>}
                     </td>
 
                     {/* Status */}
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
                       {getStatusBadge(item.status)}
                     </td>
 
@@ -197,12 +197,12 @@ const FeedbackList = () => {
       {isModalOpen && selectedFeedback && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          
+
           <div className="relative w-full max-w-lg bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-2xl p-6 text-text-primary animate-in fade-in zoom-in duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981', borderColor: 'rgba(16, 185, 129, 0.25)' }}
                   className="w-12 h-12 rounded-xl flex justify-center items-center font-bold text-lg border shadow-inner"
                 >
@@ -241,7 +241,10 @@ const FeedbackList = () => {
 
               <div>
                 <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Message</span>
-                <div className="bg-surface-divider/50 border border-border rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                <div 
+                  className="bg-surface-divider/50 border border-border rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap break-all leading-relaxed max-h-60 overflow-y-auto"
+                  style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+                >
                   {selectedFeedback.message}
                 </div>
               </div>

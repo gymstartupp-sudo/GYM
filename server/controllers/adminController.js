@@ -1075,8 +1075,8 @@ exports.bulkImportClients = async (req, res, next) => {
 
           let resolvedDueDate = null;
           if (remainingBalanceVal > 0) {
-            if (paidAmountVal <= 100) {
-              throw new Error('You must pay an amount greater than ₹100 for partial payment.');
+            if (paidAmountVal < 100) {
+              throw new Error('Minimum partial payment amount is ₹100.');
             }
             const dueDays = plan.partialPaymentDueDays ?? 15;
             const startVal = new Date(validated.startDate);

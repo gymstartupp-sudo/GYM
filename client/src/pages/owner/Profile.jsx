@@ -10,9 +10,9 @@ import { STATES_LIST, getCitiesForState } from '../../utils/indianStatesCities';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const disabledInputClass = 'input-field bg-surface-hover/60 text-text-muted cursor-not-allowed';
-const errorInputClass    = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.2)]';
-const phoneRegex         = /^[6-9]\d{9}$/;
-const emailRegex         = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+const errorInputClass = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.2)]';
+const phoneRegex = /^[6-9]\d{9}$/;
+const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = ['00', '15', '30', '45'];
@@ -137,13 +137,12 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
       <span className="text-xs uppercase tracking-wider text-text-muted group-hover:text-primary transition-colors font-medium block">
         {label}
       </span>
-      
-      <div className={`flex items-center gap-1.5 h-11 px-3 bg-surface-card border rounded-input transition-all duration-200 ${
-        disabled 
-          ? 'bg-surface-hover/60 border-border text-text-muted cursor-not-allowed' 
+
+      <div className={`flex items-center gap-1.5 h-11 px-3 bg-surface-card border rounded-input transition-all duration-200 ${disabled
+          ? 'bg-surface-hover/60 border-border text-text-muted cursor-not-allowed'
           : 'border-border hover:border-primary hover:shadow-[0_0_8px_rgba(255,189,7,0.25)] focus-within:border-primary'
-      }`}>
-        
+        }`}>
+
         {/* Hour Picker */}
         <div className="relative flex-1 text-center">
           <button
@@ -165,11 +164,10 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
                     onHourChange({ target: { value: h } });
                     setOpenDropdown(null);
                   }}
-                  className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${
-                    String(hour) === String(h)
+                  className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${String(hour) === String(h)
                       ? 'bg-primary text-black font-bold'
                       : 'text-text-primary hover:bg-primary hover:text-black'
-                  }`}
+                    }`}
                 >
                   {h}
                 </button>
@@ -201,11 +199,10 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
                     onMinuteChange({ target: { value: m } });
                     setOpenDropdown(null);
                   }}
-                  className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${
-                    String(minute) === String(m)
+                  className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${String(minute) === String(m)
                       ? 'bg-primary text-black font-bold'
                       : 'text-text-primary hover:bg-primary hover:text-black'
-                  }`}
+                    }`}
                 >
                   {m}
                 </button>
@@ -235,11 +232,10 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
                     onAmpmChange({ target: { value: ap } });
                     setOpenDropdown(null);
                   }}
-                  className={`w-full text-center px-3 py-1.5 text-xs font-bold cursor-pointer transition-colors ${
-                    String(ampm) === String(ap)
+                  className={`w-full text-center px-3 py-1.5 text-xs font-bold cursor-pointer transition-colors ${String(ampm) === String(ap)
                       ? 'bg-primary text-black font-bold'
                       : 'text-text-primary hover:bg-primary hover:text-black'
-                  }`}
+                    }`}
                 >
                   {ap}
                 </button>
@@ -253,17 +249,109 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
   );
 };
 
+const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select', error }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSearch('');
+    }
+  }, [isOpen]);
+
+  const filteredOptions = options.filter(opt =>
+    String(opt).toLowerCase().startsWith(search.toLowerCase())
+  );
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`input-field bg-surface-card text-text-primary text-left flex items-center justify-between w-full h-11 px-3 ${error ? errorInputClass : ''
+          } focus:outline-none cursor-pointer`}
+      >
+        <span className={value ? 'text-text-primary' : 'text-text-muted'}>
+          {value || placeholder}
+        </span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 right-0 mt-1 bg-surface-card border border-border rounded-xl shadow-2xl z-50 max-h-56 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-2 py-1.5 border-b border-border shrink-0 bg-surface-card">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-surface-primary border border-border rounded px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-primary/50"
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto flex-1 max-h-40 py-1">
+            {filteredOptions.length === 0 ? (
+              <p className="text-center py-2 text-xs text-text-muted">No options found</p>
+            ) : (
+              filteredOptions.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors ${value === opt
+                      ? 'bg-primary text-black font-bold'
+                      : 'text-text-primary hover:bg-primary hover:text-black'
+                    }`}
+                >
+                  {opt}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Profile Page ───────────────────────────────────────────────────────
 const Profile = () => {
   const { role } = useAuth();
   const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   const navigate = useNavigate();
-  const [profile, setProfile]     = useState(null);
+  const [profile, setProfile] = useState(null);
   const [formState, setFormState] = useState(null);
-  const [loading, setLoading]     = useState(true);
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving]   = useState(false);
-  const [errors, setErrors]       = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState({});
   const fileInputRef = React.useRef(null);
 
   const handleLogoClick = () => {
@@ -298,9 +386,9 @@ const Profile = () => {
       const res = await api.put('/gym/profile/logo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
+
       const newLogoUrl = res.data.data.gymLogo;
-      
+
       setFormState(curr => ({
         ...curr,
         gym: {
@@ -312,7 +400,7 @@ const Profile = () => {
           }
         }
       }));
-      
+
       setProfile(curr => ({
         ...curr,
         gym: {
@@ -324,7 +412,7 @@ const Profile = () => {
           }
         }
       }));
-      
+
       toast.success('Profile picture updated successfully!');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update profile picture');
@@ -350,11 +438,11 @@ const Profile = () => {
     let errMsg = '';
     if (key === 'gymName' || key === 'name') {
       if (!value?.trim()) errMsg = 'Name is required';
-      else if (value.length > 25) errMsg = 'Max 25 characters';
+      else if (value.length > 35) errMsg = 'Max 35 characters';
     } else if (key === 'gymType' || key === 'tagline') {
-      if (value && value.length > 20) errMsg = 'Max 20 characters';
+      if (value && value.length > 50) errMsg = 'Max 20 characters';
     } else if (key === 'regards' || key === 'greetingText') {
-      if (value && value.length > 50) errMsg = 'Max 50 characters';
+      if (value && value.length > 35) errMsg = 'Max 35 characters';
     } else if (key === 'gymEmail' || key === 'gmail' || key === 'mailId') {
       if (!value?.trim()) errMsg = 'Email is required';
       else if (!emailRegex.test(value)) errMsg = 'Enter a valid email address';
@@ -457,10 +545,10 @@ const Profile = () => {
 
     // Gym validations
     if (!gym.gymName?.trim()) newErrors.gymName = 'Gym name is required';
-    else if (gym.gymName.length > 50) newErrors.gymName = 'Max 50 characters';
+    else if (gym.gymName.length > 35) newErrors.gymName = 'Max 35 characters';
 
-    if (gym.gymType?.length > 20) newErrors.gymType = 'Max 20 characters';
-    if (gym.tagline?.length > 50) newErrors.tagline = 'Max 50 characters';
+    if (gym.gymType?.length > 50) newErrors.gymType = 'Max 50 characters';
+    if (gym.tagline?.length > 30) newErrors.tagline = 'Max 30 characters';
 
     if (!gym.operatingDays || gym.operatingDays.length === 0) {
       newErrors.operatingDays = 'Please select at least one operating day';
@@ -488,7 +576,7 @@ const Profile = () => {
 
     // Owner validations
     if (!owner.name?.trim()) newErrors.ownerName = 'Owner name is required';
-    else if (owner.name.length > 50) newErrors.ownerName = 'Max 50 characters';
+    else if (owner.name.length > 35) newErrors.ownerName = 'Max 35 characters';
     else if (!/^[a-zA-Z\s]+$/.test(owner.name)) newErrors.ownerName = 'Only letters and spaces are allowed';
 
     if (!owner.mobileNo?.trim()) newErrors.ownerMobile = 'Mobile number is required';
@@ -507,9 +595,9 @@ const Profile = () => {
     const bi = gym.billingInfo || {};
     if (!bi.billingIdPrefix?.trim()) newErrors.billPrefix = 'Prefix is required';
     if (bi.helpContact && !phoneRegex.test(bi.helpContact)) newErrors.billHelp = 'Enter a valid 10-digit Indian mobile number';
-    if (bi.regards?.length > 50) newErrors.billRegards = 'Max 50 characters';
-    if (bi.greetingText?.length > 50) newErrors.billGreeting = 'Max 50 characters';
-    if (bi.addressOnBill?.length > 100) newErrors.billAddress = 'Max 100 characters';
+    if (bi.regards?.length > 35) newErrors.billRegards = 'Max 35 characters';
+    if (bi.greetingText?.length > 35) newErrors.billGreeting = 'Max 35 characters';
+    if (bi.addressOnBill?.length > 35) newErrors.billAddress = 'Max 35 characters';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -557,8 +645,8 @@ const Profile = () => {
           operatingHours: { open: openStr, close: closeStr },
           reminderSettings: {
             whatsappNumber: formState.gym.reminderSettings?.whatsappNumber,
-            phoneNumber:    formState.gym.reminderSettings?.phoneNumber,
-            gmail:          formState.gym.reminderSettings?.gmail
+            phoneNumber: formState.gym.reminderSettings?.phoneNumber,
+            gmail: formState.gym.reminderSettings?.gmail
           },
           billingInfo: { ...formState.gym.billingInfo }
         },
@@ -572,7 +660,7 @@ const Profile = () => {
       const res = await api.put('/gym/profile', payload);
       const data = res.data.data;
       const updatedProfile = { gym: data.gym || profile.gym, owner: data.owner || profile.owner };
-      
+
       setProfile(updatedProfile);
       setFormState(buildFormState(updatedProfile));
       setIsEditing(false);
@@ -601,17 +689,17 @@ const Profile = () => {
 
   return (
     <div className="p-8 pt-10 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-border pb-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <div className="flex items-center gap-5">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-border pb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="flex items-center gap-5">
             {/* Logo Preview */}
-            <div 
+            <div
               onClick={isReadOnly ? undefined : handleLogoClick}
               className={`relative w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 ${isReadOnly ? 'cursor-default' : 'cursor-pointer group'}`}
               title={isReadOnly ? undefined : "Click to change logo"}
@@ -631,7 +719,7 @@ const Profile = () => {
                   {formState.gym.gymName?.charAt(0).toUpperCase() || 'G'}
                 </div>
               )}
-              
+
               {/* Instagram-style Hover Overlay */}
               {!isReadOnly && (
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-text-primary gap-1 select-none">
@@ -641,7 +729,7 @@ const Profile = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Hidden Input for profile picture changes */}
             <input
               type="file"
@@ -654,199 +742,182 @@ const Profile = () => {
               <h1 className="text-4xl font-extrabold text-text-primary tracking-tight">{formState.gym.gymName || 'Gym Settings'}</h1>
               <p className="text-text-secondary mt-2 text-lg">Manage your gym establishment, ownership, and platform configuration.</p>
             </div>
-            </div>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            {!isReadOnly && (
-              isEditing ? (
-                <>
-                  <Button type="button" variant="secondary" onClick={cancelEditing} disabled={isSaving}>Cancel</Button>
-                  <Button type="button" onClick={saveAllProfile} isLoading={isSaving}>Save Changes</Button>
-                </>
-              ) : (
-                <Button type="button" onClick={() => setIsEditing(true)}>Edit Profile</Button>
-              )
-            )}
           </div>
         </div>
-
-        {/* ── Section: Gym establishment ── */}
-        <ProfileSection title="Establishment Details">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field label="Gym ID" value={formState.gym.gymId} disabled />
-            <Field label="Gym Name *" value={formState.gym.gymName} disabled={!isEditing} maxLength={50} error={errors.gymName} onChange={e => setSectionValue('gym', 'gymName', e.target.value)} />
-            <Field label="Gym Type" value={formState.gym.gymType} disabled={!isEditing} maxLength={20} error={errors.gymType} onChange={e => setSectionValue('gym', 'gymType', e.target.value)} />
-
-            <Field label="Tagline" value={formState.gym.tagline} disabled={!isEditing} maxLength={50} error={errors.tagline} onChange={e => setSectionValue('gym', 'tagline', e.target.value)} />
-            <Field label="Gym Email *" value={formState.gym.gymEmail} type="email" disabled={!isEditing} error={errors.gymEmail} onChange={e => setSectionValue('gym', 'gymEmail', e.target.value)} />
-            <Field label="Gym Contact *" value={formState.gym.gymContact} type="tel" disabled={!isEditing} error={errors.gymContact} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'gymContact', e.target.value)} />
-            <Field label="GST Number" value={formState.gym.gst} disabled={!isEditing} onChange={e => setSectionValue('gym', 'gst', e.target.value)} />
-            
-            {/* Operating Days */}
-            <div className="md:col-span-2">
-              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block mb-2">Operating Days *</span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
-                  const isChecked = (formState.gym.operatingDays || []).includes(day);
-                  return (
-                    <label
-                      key={day}
-                      className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2.5 border select-none transition-all duration-200 ${
-                        !isEditing
-                          ? isChecked
-                            ? 'opacity-90 cursor-not-allowed bg-primary/10 border-primary/30 text-primary font-semibold'
-                            : 'opacity-50 cursor-not-allowed bg-surface-divider/50 border-border/50 text-text-muted'
-                          : isChecked
-                            ? 'cursor-pointer bg-primary/15 border-primary/50 text-primary font-bold shadow-sm'
-                            : 'cursor-pointer bg-surface-card border-border text-text-secondary hover:border-primary/40 hover:text-text-primary'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        disabled={!isEditing}
-                        checked={isChecked}
-                        onChange={(e) => {
-                          let days = [...(formState.gym.operatingDays || [])];
-                          if (e.target.checked) {
-                            days.push(day);
-                          } else {
-                            days = days.filter(d => d !== day);
-                          }
-                          const sortedDays = sortOperatingDays(days);
-                          setFormState(c => ({
-                            ...c,
-                            gym: {
-                              ...c.gym,
-                              operatingDays: sortedDays,
-                              operatingDaysText: sortedDays.join(', ')
-                            }
-                          }));
-                        }}
-                        className="w-3.5 h-3.5 rounded border-border bg-surface-card text-primary focus:ring-primary/50 accent-primary cursor-pointer disabled:cursor-not-allowed"
-                      />
-                      <span>{day}</span>
-                    </label>
-                  );
-                })}
-              </div>
-              {errors.operatingDays && <p className="text-red-500 text-xs mt-1 italic">{errors.operatingDays}</p>}
-            </div>
-
-            <Field label="Instagram URL" value={formState.gym.instagramUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'instagramUrl', e.target.value)} />
-            <Field label="Facebook URL" value={formState.gym.facebookUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'facebookUrl', e.target.value)} />
-            <Field label="Website URL" value={formState.gym.websiteUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'websiteUrl', e.target.value)} />
-            <div className="grid grid-cols-2 gap-3">
-              <TimeField
-                label="Open Time *"
-                hour={formState.gym.operatingOpenHour}
-                minute={formState.gym.operatingOpenMinute}
-                ampm={formState.gym.operatingOpenAmpm}
-                disabled={!isEditing}
-                onHourChange={e => setSectionValue('gym', 'operatingOpenHour', e.target.value)}
-                onMinuteChange={e => setSectionValue('gym', 'operatingOpenMinute', e.target.value)}
-                onAmpmChange={e => setSectionValue('gym', 'operatingOpenAmpm', e.target.value)}
-              />
-              <TimeField
-                label="Close Time *"
-                hour={formState.gym.operatingCloseHour}
-                minute={formState.gym.operatingCloseMinute}
-                ampm={formState.gym.operatingCloseAmpm}
-                disabled={!isEditing}
-                onHourChange={e => setSectionValue('gym', 'operatingCloseHour', e.target.value)}
-                onMinuteChange={e => setSectionValue('gym', 'operatingCloseMinute', e.target.value)}
-                onAmpmChange={e => setSectionValue('gym', 'operatingCloseAmpm', e.target.value)}
-              />
-            </div>
-            {errors.operatingHours && <p className="text-red-500 text-xs mt-1 italic md:col-span-2">{errors.operatingHours}</p>}
-            <div className="md:col-span-2">
-              <Field label="Establishment Address *" value={formState.gym.address} textarea disabled={!isEditing} maxLength={100} error={errors.address} onChange={e => setSectionValue('gym', 'address', e.target.value)} />
-            </div>
-            {isEditing ? (
-              <div className="space-y-1 block group">
-                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">State *</span>
-                <select
-                  value={formState.gym.state || ''}
-                  onChange={(e) => {
-                    const newState = e.target.value;
-                    const cities = getCitiesForState(newState);
-                    const currentCity = formState.gym.city;
-                    const newCity = cities.includes(currentCity) ? currentCity : (cities[0] || '');
-                    setFormState(c => ({
-                      ...c,
-                      gym: {
-                        ...c.gym,
-                        state: newState,
-                        city: newCity
-                      }
-                    }));
-                  }}
-                  className={`input-field bg-surface-card text-text-primary ${errors.state ? errorInputClass : ''}`}
-                >
-                  <option value="">Select State</option>
-                  {STATES_LIST.map(st => (
-                    <option key={st} value={st} className="bg-surface-card text-text-primary">{st}</option>
-                  ))}
-                </select>
-                {errors.state && <p className="text-red-500 text-[11px] mt-1 italic">{errors.state}</p>}
-              </div>
+        <div className="flex gap-2 shrink-0">
+          {!isReadOnly && (
+            isEditing ? (
+              <>
+                <Button type="button" variant="secondary" onClick={cancelEditing} disabled={isSaving}>Cancel</Button>
+                <Button type="button" onClick={saveAllProfile} isLoading={isSaving}>Save Changes</Button>
+              </>
             ) : (
-              <Field label="State *" value={formState.gym.state} disabled />
-            )}
-
-            {isEditing ? (
-              <div className="space-y-1 block group">
-                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">City *</span>
-                <select
-                  value={formState.gym.city || ''}
-                  onChange={(e) => setSectionValue('gym', 'city', e.target.value)}
-                  className={`input-field bg-surface-card text-text-primary ${errors.city ? errorInputClass : ''}`}
-                >
-                  <option value="">{formState.gym.state ? "Select City" : "Select State First"}</option>
-                  {getCitiesForState(formState.gym.state).map(ct => (
-                    <option key={ct} value={ct} className="bg-surface-card text-text-primary">{ct}</option>
-                  ))}
-                </select>
-                {errors.city && <p className="text-red-500 text-[11px] mt-1 italic">{errors.city}</p>}
-              </div>
-            ) : (
-              <Field label="City *" value={formState.gym.city} disabled />
-            )}
-            <Field label="Pincode *" value={formState.gym.pincode} disabled={!isEditing} maxLength={6} error={errors.pincode} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6)} onChange={e => setSectionValue('gym', 'pincode', e.target.value)} />
-          </div>
-        </ProfileSection>
-
-        {/* ── Section: Ownership ── */}
-        <ProfileSection title="Ownership Details">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field label="Owner Full Name *" value={formState.owner?.name} disabled={!isEditing} maxLength={50} error={errors.ownerName} onInput={e => e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '')} onChange={e => setSectionValue('owner', 'name', e.target.value)} />
-            <Field label="Mobile Number *" value={formState.owner?.mobileNo} type="tel" disabled={!isEditing} error={errors.ownerMobile} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('owner', 'mobileNo', e.target.value)} />
-            <Field label="Email Address *" value={formState.owner?.mailId} type="email" disabled={!isEditing} error={errors.ownerEmail} onChange={e => setSectionValue('owner', 'mailId', e.target.value)} />
-          </div>
-        </ProfileSection>
-
-        {/* ── Section: Messaging ── */}
-        <ProfileSection title="Reminder & Notifications">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field label="WhatsApp Number" value={formState.gym.reminderSettings?.whatsappNumber} type="tel" disabled={!isEditing} error={errors.whatsapp} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'reminderSettings', e.target.value, 'whatsappNumber')} />
-            <Field label="SMS Phone Number" value={formState.gym.reminderSettings?.phoneNumber} type="tel" disabled={!isEditing} error={errors.smsPhone} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'reminderSettings', e.target.value, 'phoneNumber')} />
-            <Field label="System Sender Email" value={formState.gym.reminderSettings?.gmail} type="email" disabled={!isEditing} error={errors.reminderEmail} onChange={e => setSectionValue('gym', 'reminderSettings', e.target.value, 'gmail')} />
-          </div>
-        </ProfileSection>
-
-        {/* ── Section: Billing ── */}
-        <ProfileSection title="Invoicing & Billing">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field label="Billing ID Prefix *" value={formState.gym.billingInfo?.billingIdPrefix} disabled={!isEditing} maxLength={5} error={errors.billPrefix} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'billingIdPrefix')} />
-            <Field label="Helpdesk Contact" value={formState.gym.billingInfo?.helpContact} type="tel" disabled={!isEditing} error={errors.billHelp} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'helpContact')} />
-            <div className="md:col-span-2">
-              <Field label="Address On Invoice" value={formState.gym.billingInfo?.addressOnBill} textarea disabled={!isEditing} maxLength={100} error={errors.billAddress} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'addressOnBill')} />
-            </div>
-            <Field label="Regards Name" value={formState.gym.billingInfo?.regards} disabled={!isEditing} maxLength={50} error={errors.billRegards} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'regards')} />
-            <Field label="Greeting Footer" value={formState.gym.billingInfo?.greetingText} disabled={!isEditing} maxLength={50} error={errors.billGreeting} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'greetingText')} />
-
-          </div>
-        </ProfileSection>
+              <Button type="button" onClick={() => setIsEditing(true)}>Edit Profile</Button>
+            )
+          )}
+        </div>
       </div>
+
+      {/* ── Section: Gym establishment ── */}
+      <ProfileSection title="Establishment Details">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Gym ID" value={formState.gym.gymId} disabled />
+          <Field label="Gym Name *" value={formState.gym.gymName} disabled={!isEditing} maxLength={35} error={errors.gymName} onChange={e => setSectionValue('gym', 'gymName', e.target.value)} />
+          <Field label="Gym Type" value={formState.gym.gymType} disabled={!isEditing} maxLength={50} error={errors.gymType} onChange={e => setSectionValue('gym', 'gymType', e.target.value)} />
+
+          <Field label="Tagline" value={formState.gym.tagline} disabled={!isEditing} maxLength={30} error={errors.tagline} onChange={e => setSectionValue('gym', 'tagline', e.target.value)} />
+          <Field label="Gym Email *" value={formState.gym.gymEmail} type="email" disabled={!isEditing} error={errors.gymEmail} onChange={e => setSectionValue('gym', 'gymEmail', e.target.value)} />
+          <Field label="Gym Contact *" value={formState.gym.gymContact} type="tel" disabled={!isEditing} error={errors.gymContact} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'gymContact', e.target.value)} />
+          <Field label="GST Number" value={formState.gym.gst} disabled={!isEditing} maxLength={15} onChange={e => setSectionValue('gym', 'gst', e.target.value)} />
+
+          {/* Operating Days */}
+          <div className="md:col-span-2">
+            <span className="text-xs uppercase tracking-wider text-text-muted font-medium block mb-2">Operating Days *</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
+                const isChecked = (formState.gym.operatingDays || []).includes(day);
+                return (
+                  <label
+                    key={day}
+                    className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2.5 border select-none transition-all duration-200 ${!isEditing
+                        ? isChecked
+                          ? 'opacity-90 cursor-not-allowed bg-primary/10 border-primary/30 text-primary font-semibold'
+                          : 'opacity-50 cursor-not-allowed bg-surface-divider/50 border-border/50 text-text-muted'
+                        : isChecked
+                          ? 'cursor-pointer bg-primary/15 border-primary/50 text-primary font-bold shadow-sm'
+                          : 'cursor-pointer bg-surface-card border-border text-text-secondary hover:border-primary/40 hover:text-text-primary'
+                      }`}
+                  >
+                    <input
+                      type="checkbox"
+                      disabled={!isEditing}
+                      checked={isChecked}
+                      onChange={(e) => {
+                        let days = [...(formState.gym.operatingDays || [])];
+                        if (e.target.checked) {
+                          days.push(day);
+                        } else {
+                          days = days.filter(d => d !== day);
+                        }
+                        const sortedDays = sortOperatingDays(days);
+                        setFormState(c => ({
+                          ...c,
+                          gym: {
+                            ...c.gym,
+                            operatingDays: sortedDays,
+                            operatingDaysText: sortedDays.join(', ')
+                          }
+                        }));
+                      }}
+                      className="w-3.5 h-3.5 rounded border-border bg-surface-card text-primary focus:ring-primary/50 accent-primary cursor-pointer disabled:cursor-not-allowed"
+                    />
+                    <span>{day}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {errors.operatingDays && <p className="text-red-500 text-xs mt-1 italic">{errors.operatingDays}</p>}
+          </div>
+
+          <Field label="Instagram URL" value={formState.gym.instagramUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'instagramUrl', e.target.value)} />
+          <Field label="Facebook URL" value={formState.gym.facebookUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'facebookUrl', e.target.value)} />
+          <Field label="Website URL" value={formState.gym.websiteUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'websiteUrl', e.target.value)} />
+          <div className="grid grid-cols-2 gap-3">
+            <TimeField
+              label="Open Time *"
+              hour={formState.gym.operatingOpenHour}
+              minute={formState.gym.operatingOpenMinute}
+              ampm={formState.gym.operatingOpenAmpm}
+              disabled={!isEditing}
+              onHourChange={e => setSectionValue('gym', 'operatingOpenHour', e.target.value)}
+              onMinuteChange={e => setSectionValue('gym', 'operatingOpenMinute', e.target.value)}
+              onAmpmChange={e => setSectionValue('gym', 'operatingOpenAmpm', e.target.value)}
+            />
+            <TimeField
+              label="Close Time *"
+              hour={formState.gym.operatingCloseHour}
+              minute={formState.gym.operatingCloseMinute}
+              ampm={formState.gym.operatingCloseAmpm}
+              disabled={!isEditing}
+              onHourChange={e => setSectionValue('gym', 'operatingCloseHour', e.target.value)}
+              onMinuteChange={e => setSectionValue('gym', 'operatingCloseMinute', e.target.value)}
+              onAmpmChange={e => setSectionValue('gym', 'operatingCloseAmpm', e.target.value)}
+            />
+          </div>
+          {errors.operatingHours && <p className="text-red-500 text-xs mt-1 italic md:col-span-2">{errors.operatingHours}</p>}
+          <div className="md:col-span-2">
+            <Field label="Establishment Address *" value={formState.gym.address} textarea disabled={!isEditing} maxLength={100} error={errors.address} onChange={e => setSectionValue('gym', 'address', e.target.value)} />
+          </div>
+          {isEditing ? (
+            <div className="space-y-1 block group">
+              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">State *</span>
+              <SearchableSelect
+                value={formState.gym.state || ''}
+                onChange={(newState) => {
+                  const cities = getCitiesForState(newState);
+                  const currentCity = formState.gym.city;
+                  const newCity = cities.includes(currentCity) ? currentCity : (cities[0] || '');
+                  setFormState(c => ({
+                    ...c,
+                    gym: {
+                      ...c.gym,
+                      state: newState,
+                      city: newCity
+                    }
+                  }));
+                }}
+                options={STATES_LIST}
+                placeholder="Select State"
+                error={errors.state}
+              />
+              {errors.state && <p className="text-red-500 text-[11px] mt-1 italic">{errors.state}</p>}
+            </div>
+          ) : (
+            <Field label="State *" value={formState.gym.state} disabled />
+          )}
+
+          {isEditing ? (
+            <div className="space-y-1 block group">
+              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">City *</span>
+              <SearchableSelect
+                value={formState.gym.city || ''}
+                onChange={(newCity) => setSectionValue('gym', 'city', newCity)}
+                options={getCitiesForState(formState.gym.state)}
+                placeholder={formState.gym.state ? "Select City" : "Select State First"}
+                error={errors.city}
+              />
+              {errors.city && <p className="text-red-500 text-[11px] mt-1 italic">{errors.city}</p>}
+            </div>
+          ) : (
+            <Field label="City *" value={formState.gym.city} disabled />
+          )}
+          <Field label="Pincode *" value={formState.gym.pincode} disabled={!isEditing} maxLength={6} error={errors.pincode} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6)} onChange={e => setSectionValue('gym', 'pincode', e.target.value)} />
+        </div>
+      </ProfileSection>
+
+      {/* ── Section: Ownership ── */}
+      <ProfileSection title="Ownership Details">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Field label="Owner Full Name *" value={formState.owner?.name} disabled={!isEditing} maxLength={35} error={errors.ownerName} onInput={e => e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '')} onChange={e => setSectionValue('owner', 'name', e.target.value)} />
+          <Field label="Mobile Number *" value={formState.owner?.mobileNo} type="tel" disabled={!isEditing} error={errors.ownerMobile} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('owner', 'mobileNo', e.target.value)} />
+          <Field label="Email Address *" value={formState.owner?.mailId} type="email" disabled={!isEditing} error={errors.ownerEmail} onChange={e => setSectionValue('owner', 'mailId', e.target.value)} />
+        </div>
+      </ProfileSection>
+
+
+
+      {/* ── Section: Billing ── */}
+      <ProfileSection title="Invoicing & Billing">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Billing ID Prefix *" value={formState.gym.billingInfo?.billingIdPrefix} disabled={!isEditing} maxLength={5} error={errors.billPrefix} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'billingIdPrefix')} />
+          <Field label="Helpdesk Contact" value={formState.gym.billingInfo?.helpContact} type="tel" disabled={!isEditing} error={errors.billHelp} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'helpContact')} />
+          <div className="md:col-span-2">
+            <Field label="Address On Invoice" value={formState.gym.billingInfo?.addressOnBill} textarea disabled={!isEditing} maxLength={35} error={errors.billAddress} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'addressOnBill')} />
+          </div>
+          <Field label="Regards Name" value={formState.gym.billingInfo?.regards} disabled={!isEditing} maxLength={35} error={errors.billRegards} onChange={e => setSectionValue('gym', 'billingInfo', e.target.value, 'regards')} />
+        </div>
+      </ProfileSection>
+    </div>
   );
 };
 

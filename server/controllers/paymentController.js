@@ -188,8 +188,8 @@ exports.recordPayment = async (req, res, next) => {
     const remainingBalance = Math.max(0, numAmount - safePaidAmount);
     let computedDueDate = null;
     if (remainingBalance > 0) {
-      if (safePaidAmount <= 100) {
-        return res.status(400).json({ success: false, message: 'You must pay an amount greater than ₹100 for partial payment.' });
+      if (safePaidAmount < 100) {
+        return res.status(400).json({ success: false, message: 'Minimum partial payment amount is ₹100.' });
       }
 
       const dueDays = planDetails ? (planDetails.partialPaymentDueDays ?? 15) : 15;
@@ -717,6 +717,12 @@ exports.resendWhatsAppInvoice = async (req, res, next) => {
     const payment = await Payment.findById(id);
     if (!payment) return res.status(404).json({ success: false, message: 'Payment record not found' });
 
+    // Enforce send limit of 2
+    const sendCount = payment.whatsappSendCount || 0;
+    if (sendCount >= 2) {
+      return res.status(400).json({ success: false, message: 'Invoice send limit reached (Maximum 2 sends)' });
+    }
+
     const client = await Client.findById(payment.clientId);
     if (!client) return res.status(404).json({ success: false, message: 'Associated client not found' });
 
@@ -728,6 +734,10 @@ exports.resendWhatsAppInvoice = async (req, res, next) => {
     if (!rawNum) {
       return res.status(400).json({ success: false, message: 'Client has no WhatsApp or mobile number' });
     }
+
+    // Increment send count
+    payment.whatsappSendCount = sendCount + 1;
+    await payment.save();
 
     const { sendPaymentNotification } = require('../services/whatsappNotificationService');
     // Trigger in background as requested

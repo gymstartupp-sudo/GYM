@@ -29,7 +29,8 @@ const paymentSchema = new mongoose.Schema({
   invoiceWhatsAppStatus: { type: String, enum: ['sent', 'delivered', 'read', 'failed'], default: null },
   invoiceMessageId: { type: String, default: null },
   invoicePDFUrl: { type: String, default: null },
-  invoiceError: { type: String, default: null }
+  invoiceError: { type: String, default: null },
+  whatsappSendCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 paymentSchema.index({ clientId: 1 });

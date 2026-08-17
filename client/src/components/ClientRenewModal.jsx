@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Receipt, AlertTriangle, Package, Calendar, ChevronDown, Check, ArrowRight } from 'lucide-react';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
@@ -66,6 +67,66 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
     dueDate: ''
   });
   const [dateErrors, setDateErrors] = useState({});
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+  const [showPaymentDropdown, setShowPaymentDropdown] = useState(false);
+
+  // Synchronously initialize states when the modal transitions to open
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen && profile) {
+      const pendingPayment = getPendingPayment(profile);
+      if (pendingPayment) {
+        setDetectedPendingPayment(pendingPayment);
+        const initialPlan = {
+          _id: pendingPayment.planId,
+          name: pendingPayment.planName,
+          price: pendingPayment.invoiceAmount || pendingPayment.amount
+        };
+        setSelectedPlan(initialPlan);
+        setPlanSearchQuery(pendingPayment.planName);
+
+        const originalPlanPrice = pendingPayment.invoiceAmount || pendingPayment.amount || 0;
+        const totalPaidSoFar = pendingPayment.totalPaid || pendingPayment.paidNow || pendingPayment.paidAmount || 0;
+        const outstandingBalance = originalPlanPrice - totalPaidSoFar;
+
+        setPaymentType('full');
+        setRenewalForm({
+          startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          paymentMethod: 'upi',
+          paidAmount: outstandingBalance,
+          dueDate: ''
+        });
+      } else {
+        setDetectedPendingPayment(null);
+        if (profile?.membership?.planId && typeof profile.membership.planId === 'object') {
+          const plan = profile.membership.planId;
+          setSelectedPlan(plan);
+          setPlanSearchQuery(plan.name);
+
+          const latestExpiry = getLatestExpiryDate(profile);
+          let defaultStart = new Date().toISOString().split('T')[0];
+          if (latestExpiry) {
+            const nextDay = new Date(latestExpiry);
+            nextDay.setDate(nextDay.getDate() + 1);
+            defaultStart = nextDay.toISOString().split('T')[0];
+          }
+          setPaymentType('full');
+          setRenewalForm({
+            startDate: defaultStart,
+            paymentMethod: 'upi',
+            paidAmount: plan.price,
+            dueDate: ''
+          });
+        }
+      }
+    } else if (!isOpen) {
+      setSelectedPlan(null);
+      setDetectedPendingPayment(null);
+      setPlanSearchQuery('');
+      setShowPlanDropdown(false);
+      setShowPaymentDropdown(false);
+    }
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -162,47 +223,27 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
   const loadRenewalData = async () => {
     setLoadingPlans(true);
     try {
-      const pendingPayment = getPendingPayment(profile);
       const res = await api.get('/plan');
       const plansList = res.data.data || [];
       setAvailablePlans(plansList);
 
+      const pendingPayment = getPendingPayment(profile);
       if (pendingPayment) {
-        setDetectedPendingPayment(pendingPayment);
         const plan = plansList.find(p => p._id === pendingPayment.planId);
         if (plan) {
           setSelectedPlan(plan);
-          setPlanSearchQuery(plan.name);
-        } else {
-          setSelectedPlan({
-            _id: pendingPayment.planId,
-            name: pendingPayment.planName,
-            price: pendingPayment.invoiceAmount || pendingPayment.amount
-          });
-          setPlanSearchQuery(pendingPayment.planName);
         }
-
-        const originalPlanPrice = pendingPayment.invoiceAmount || pendingPayment.amount || 0;
-        const totalPaidSoFar = pendingPayment.totalPaid || pendingPayment.paidNow || pendingPayment.paidAmount || 0;
-        const outstandingBalance = originalPlanPrice - totalPaidSoFar;
-
-        setPaymentType('full');
-        setRenewalForm({
-          startDate: pendingPayment.startDate ? new Date(pendingPayment.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          paymentMethod: 'upi',
-          paidAmount: outstandingBalance,
-          dueDate: ''
-        });
       } else {
-        setDetectedPendingPayment(null);
-        // Auto-select active plan by default
+        let currentPlanId = null;
         if (profile?.membership?.planId) {
-          const pId = typeof profile.membership.planId === 'object' ? profile.membership.planId._id : profile.membership.planId;
-          const current = plansList.find(p => p._id === pId);
+          currentPlanId = typeof profile.membership.planId === 'object' ? profile.membership.planId._id : profile.membership.planId;
+        }
+        if (currentPlanId) {
+          const current = plansList.find(p => p._id === currentPlanId);
           if (current) {
-            handlePlanSelect(current);
+            setSelectedPlan(current);
           }
-        } else if (plansList.length > 0) {
+        } else if (plansList.length > 0 && !selectedPlan) {
           handlePlanSelect(plansList[0]);
         }
       }
@@ -285,8 +326,8 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
     }
 
     if (!detectedPendingPayment && paymentType === 'partial') {
-      if (paid <= 100) {
-        setFormError("You must pay an amount greater than ₹100 for partial payment.");
+      if (paid < 100) {
+        setFormError("Minimum partial payment amount is ₹100.");
         return;
       }
     }
@@ -457,7 +498,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div className="bg-gray-900 border border-gray-700/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
         {/* Header */}
@@ -504,24 +545,54 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
             <div className="relative">
               <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
               {selectedPlan ? (
-                <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                      <Package size={18} />
+                <div className="relative">
+                  <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                        <Package size={18} />
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-sm">{selectedPlan.name}</p>
+                        <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan.price?.toLocaleString('en-IN')}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-bold text-sm">{selectedPlan.name}</p>
-                      <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan.price?.toLocaleString('en-IN')}</p>
-                    </div>
+                    {!detectedPendingPayment && (
+                      <button
+                        type="button"
+                        onClick={() => setShowPlanDropdown(!showPlanDropdown)}
+                        className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700 flex items-center gap-1"
+                      >
+                        Change <ChevronDown size={14} className={`transition-transform duration-200 ${showPlanDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+                    )}
                   </div>
-                  {!detectedPendingPayment && (
-                    <button
-                      type="button"
-                      onClick={() => { setSelectedPlan(null); setPlanSearchQuery(''); }}
-                      className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700"
-                    >
-                      Change
-                    </button>
+
+                  {showPlanDropdown && (
+                    <div className="absolute z-[10000] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                      {availablePlans.length > 0 ? (
+                        availablePlans.map(p => (
+                          <button
+                            key={p._id}
+                            type="button"
+                            className="w-full flex items-center justify-between p-3.5 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-0 group"
+                            onClick={() => handlePlanSelect(p)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
+                                <Package size={16} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-200 group-hover:text-white">{p.name}</p>
+                                <p className="text-[10px] text-gray-500 font-bold">₹{p.price?.toLocaleString('en-IN')} for {p.durationMonths} Mo</p>
+                              </div>
+                            </div>
+                            {selectedPlan?._id === p._id && <Check size={16} className="text-primary" />}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-8 text-center text-gray-500 text-sm italic">No plans available</div>
+                      )}
+                    </div>
                   )}
                 </div>
               ) : (
@@ -631,17 +702,56 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                     />
                   </div>
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
-                  <select
-                    className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all"
-                    value={renewalForm.paymentMethod}
-                    onChange={(e) => setRenewalForm({ ...renewalForm, paymentMethod: e.target.value })}
-                  >
-                    <option value="upi">UPI (Razorpay Mockup)</option>
-                    <option value="card">Card (Razorpay Mockup)</option>
-                    <option value="cash">Cash (Simulated Manual)</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
+                      className="w-full bg-dark border border-gray-700 rounded-xl py-3 pl-4 pr-4 text-white font-bold flex items-center justify-between outline-none cursor-pointer text-sm"
+                    >
+                      <span>
+                        {renewalForm.paymentMethod === 'upi' ? 'UPI (Razorpay)' : 'Card (Razorpay)'}
+                      </span>
+                      <ChevronDown size={16} className={`text-gray-500 transition-transform duration-200 ${showPaymentDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {showPaymentDropdown && (
+                      <div className="absolute z-[10001] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                        <button
+                          type="button"
+                          className={`w-full text-left py-2.5 px-4 text-sm font-bold border-b border-gray-700/50 transition-colors flex items-center justify-between group
+                            ${renewalForm.paymentMethod === 'upi'
+                              ? 'bg-primary text-black'
+                              : 'text-gray-200 hover:bg-primary hover:text-black'}`}
+                          onClick={() => {
+                            setRenewalForm({ ...renewalForm, paymentMethod: 'upi' });
+                            setShowPaymentDropdown(false);
+                          }}
+                        >
+                          <span>UPI (Razorpay)</span>
+                          {renewalForm.paymentMethod === 'upi' && <Check size={16} className="text-black" />}
+                        </button>
+                        <button
+                          type="button"
+                          className={`w-full text-left py-2.5 px-4 text-sm font-bold transition-colors flex items-center justify-between group
+                            ${renewalForm.paymentMethod === 'card'
+                              ? 'bg-primary text-black'
+                              : 'text-gray-200 hover:bg-primary hover:text-black'}`}
+                          onClick={() => {
+                            setRenewalForm({ ...renewalForm, paymentMethod: 'card' });
+                            setShowPaymentDropdown(false);
+                          }}
+                        >
+                          <span>Card (Razorpay)</span>
+                          {renewalForm.paymentMethod === 'card' && <Check size={16} className="text-black" />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-amber-500 font-bold uppercase tracking-tight mt-1.5 ml-1">
+                    ⚠️ Online payments are temporarily disabled for test phase.
+                  </p>
                 </div>
               </div>
 
@@ -722,13 +832,13 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                       ) : selectedPlan.price
                     ) && (
                         <>
-                           <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
-                             Calculated Due Date
-                           </label>
-                           <div className="w-full bg-gray-800/30 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-dark flex items-center justify-between animate-in fade-in duration-200">
-                             <span>{formatDisplayDate(renewalForm.dueDate)}</span>
-                             <Calendar size={14} className="opacity-30" />
-                           </div>
+                          <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
+                            Calculated Due Date
+                          </label>
+                          <div className="w-full bg-gray-800/30 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-dark flex items-center justify-between animate-in fade-in duration-200">
+                            <span>{formatDisplayDate(renewalForm.dueDate)}</span>
+                            <Calendar size={14} className="opacity-30" />
+                          </div>
                         </>
                       )}
                   </div>
@@ -758,8 +868,8 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
             </Button>
             <Button
               type="submit"
-              className={`w-full sm:flex-1 py-3.5 text-xs font-black uppercase tracking-widest ${paymentType === 'full' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' : 'bg-primary shadow-primary/20'}`}
-              disabled={!selectedPlan || isPaying}
+              className="w-full sm:flex-1 py-3.5 text-xs font-black uppercase tracking-widest bg-primary hover:bg-[var(--color-primary-hover)] text-[var(--btn-primary-text)] shadow-primary/20 transition-all duration-200"
+              disabled={!selectedPlan || isPaying || renewalForm.paymentMethod === 'upi' || renewalForm.paymentMethod === 'card'}
               isLoading={isPaying}
             >
               {isPaying ? 'Processing Payment...' : (renewalForm.paymentMethod === 'cash' ? 'Confirm Cash Renewal' : 'Proceed to Payment')}
@@ -767,7 +877,8 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

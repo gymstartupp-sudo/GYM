@@ -28,8 +28,9 @@ const passwordError = 'Password must be at least 8 characters with 1 uppercase, 
 const gmailError = 'Email address must end with @gmail.com';
 const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 
-const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '' }) => {
+const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '', showSearch = false }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const containerRef = React.useRef(null);
 
   useEffect(() => {
@@ -42,7 +43,17 @@ const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setSearch('');
+    }
+  }, [isOpen]);
+
   const selectedOption = options.find(o => String(o.value) === String(value));
+
+  const filteredOptions = showSearch
+    ? options.filter((opt) => String(opt.label).toLowerCase().startsWith(search.toLowerCase()))
+    : options;
 
   return (
     <div className="relative" ref={containerRef}>
@@ -57,20 +68,38 @@ const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = 
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
       </div>
       {isOpen && (
-        <ul className="absolute z-50 w-full mt-1 bg-surface-card border border-border rounded-lg shadow-xl max-h-60 overflow-auto">
-          {options.map((option) => (
-            <li
-              key={option.value}
-              className={`px-4 py-2.5 cursor-pointer transition-colors border border-transparent rounded-md text-text-primary hover:bg-surface-hover hover:text-primary hover:border-primary ${String(value) === String(option.value) ? 'font-medium bg-surface-hover/50' : ''}`}
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-            >
-              {option.label}
-            </li>
-          ))}
-        </ul>
+        <div className="absolute z-50 w-full mt-1 bg-surface-card border border-border rounded-lg shadow-xl max-h-60 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
+          {showSearch && (
+            <div className="px-2 py-1.5 border-b border-border shrink-0 bg-surface-card">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-surface-primary border border-border rounded px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-primary/50"
+                autoFocus
+              />
+            </div>
+          )}
+          <ul className="overflow-y-auto flex-1 max-h-40">
+            {filteredOptions.length === 0 ? (
+              <li className="px-4 py-2.5 text-xs text-text-muted text-center">No options found</li>
+            ) : (
+              filteredOptions.map((option) => (
+                <li
+                  key={option.value}
+                  className={`px-4 py-2.5 cursor-pointer transition-colors border border-transparent rounded-md text-text-primary hover:bg-surface-hover hover:text-primary hover:border-primary ${String(value) === String(option.value) ? 'font-medium bg-surface-hover/50' : ''}`}
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  {option.label}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -126,7 +155,7 @@ const getValidationSchema = (mode, isRestoring = false) => {
   return yup.object({
     gymId: mode === 'self' ? yup.string().trim().required('Gym ID is required').max(8, 'Max 8 chars') : yup.string().nullable(),
     gymName: mode === 'self' ? yup.string().trim().required('Gym Name is required') : yup.string().nullable(),
-    name: yup.string().trim().required('Name is required').matches(/^[a-zA-Z\s]+$/, 'Only letters and spaces are allowed').max(50, 'Max 50 chars'),
+    name: yup.string().trim().required('Name is required').matches(/^[a-zA-Z\s]+$/, 'Only letters and spaces are allowed').max(35, 'Max 35 chars'),
     gender: yup.string().required('Gender is required'),
     email: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
     dob: yup.date()
@@ -329,9 +358,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     } catch (err) {
       if (err.response?.status === 409) {
         const data = err.response.data;
-        if (data.exists) {
+        if (data.exists && data.isDeleted) {
           setDuplicateModal({
-            type: data.isDeleted ? 'deleted' : 'active',
+            type: 'deleted',
             isExpired: data.isExpired,
             client: {
               personalInfo: {
@@ -514,9 +543,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       } catch (err) {
         if (err.response?.status === 409) {
           const data = err.response.data;
-          if (data.exists) {
+          clearErrors(['email', 'mobileNo']);
+          if (data.exists && data.isDeleted) {
             setDuplicateModal({
-              type: data.isDeleted ? 'deleted' : 'active',
+              type: 'deleted',
               isExpired: data.isExpired,
               client: {
                 personalInfo: {
@@ -527,11 +557,17 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
                 deletedAt: data.deletedAt
               }
             });
+          }
+          if (data.duplicateFields && Array.isArray(data.duplicateFields)) {
+            data.duplicateFields.forEach(f => {
+              if (f === 'email') setError('email', { type: 'manual', message: 'Email already exists' });
+              if (f === 'phone') setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+            });
           } else {
-            toast.error(data.message || 'Duplicate detected');
             if (data.message?.toLowerCase().includes('email')) {
               setError('email', { type: 'manual', message: 'Email already exists' });
-            } else {
+            }
+            if (data.message?.toLowerCase().includes('phone') || data.message?.toLowerCase().includes('mobile')) {
               setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
             }
           }
@@ -558,9 +594,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
       } catch (err) {
         if (err.response?.status === 409) {
           const data = err.response.data;
-          if (data.exists) {
+          clearErrors(['email', 'mobileNo']);
+          if (data.exists && data.isDeleted) {
             setDuplicateModal({
-              type: data.isDeleted ? 'deleted' : 'active',
+              type: 'deleted',
               isExpired: data.isExpired,
               client: {
                 personalInfo: {
@@ -571,11 +608,17 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
                 deletedAt: data.deletedAt
               }
             });
+          }
+          if (data.duplicateFields && Array.isArray(data.duplicateFields)) {
+            data.duplicateFields.forEach(f => {
+              if (f === 'email') setError('email', { type: 'manual', message: 'Email already exists' });
+              if (f === 'phone') setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+            });
           } else {
-            toast.error(data.message || 'Duplicate detected');
             if (data.message?.toLowerCase().includes('email')) {
               setError('email', { type: 'manual', message: 'Email already exists' });
-            } else {
+            }
+            if (data.message?.toLowerCase().includes('phone') || data.message?.toLowerCase().includes('mobile')) {
               setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
             }
           }
@@ -668,7 +711,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
 
       <div>
         <p className="text-xs text-text-secondary mb-1">Full Name <span className="text-red-500">*</span></p>
-        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="50" onInput={(e) => { e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ''); }} />
+        <input {...register('name')} placeholder="Full Name" className={fieldClassName('name')} maxLength="35" onInput={(e) => { e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ''); }} />
         {showFieldError('name') && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
       </div>
 
@@ -747,6 +790,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           options={STATES_LIST.map(s => ({ label: s, value: s }))}
           placeholder="Select State"
           className={fieldClassName('state', 'focus:border-primary focus:ring-primary/50')}
+          showSearch={true}
         />
         {showFieldError('state') && <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>}
       </div>
@@ -759,6 +803,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           options={getCitiesForState(watch('state')).map(c => ({ label: c, value: c }))}
           placeholder={watch('state') ? "Select City" : "Select State First"}
           className={fieldClassName('city', 'focus:border-primary focus:ring-primary/50')}
+          showSearch={true}
         />
         {showFieldError('city') && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
       </div>
@@ -811,7 +856,13 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           className={fieldClassName('planType', 'text-text-secondary bg-surface-secondary')}
         />
         {showFieldError('planType') && <p className="text-red-500 text-xs mt-1">{errors.planType.message}</p>}
-        {!isOwner && plans.length === 0 && <p className="text-yellow-500 text-xs mt-1">Verify the Gym ID first to load that gym&apos;s plans.</p>}
+        {!isOwner && plans.length === 0 && (
+          watchGymName ? (
+            <p className="text-yellow-500 text-xs mt-1">Your gym has no membership plans.</p>
+          ) : (
+            <p className="text-yellow-500 text-xs mt-1">Verify the Gym ID first to load that gym&apos;s plans.</p>
+          )
+        )}
       </div>
 
       <div>
@@ -900,7 +951,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
             <h2 className="text-xl font-bold text-text-primary mb-3 text-center">
               {duplicateModal.type === 'active' ? 'Client Already Exists' : 'Client Previously Deleted'}
             </h2>
-            
+
             <p className="text-sm text-text-secondary mb-5 text-center">
               {duplicateModal.type === 'active'
                 ? 'A client with this phone number already exists.'
@@ -944,23 +995,20 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
               >
                 Cancel
               </Button>
-              {duplicateModal.type === 'active' ? (
+              {duplicateModal.type === 'active' && isOwner && (
                 <Button
                   type="button"
                   onClick={() => {
                     setDuplicateModal(null);
                     onCancel?.();
-                    if (isOwner) {
-                      const searchVal = values.mobileNo || values.email || '';
-                      navigate(`/owner/clients?search=${encodeURIComponent(searchVal)}`);
-                    } else {
-                      navigate('/login');
-                    }
+                    const searchVal = values.mobileNo || values.email || '';
+                    navigate(`/owner/clients?search=${encodeURIComponent(searchVal)}`);
                   }}
                 >
-                  {isOwner ? 'View Client' : 'Login Here'}
+                  View Client
                 </Button>
-              ) : (
+              )}
+              {duplicateModal.type === 'deleted' && (
                 <Button
                   type="button"
                   className="bg-primary hover:bg-primary/90 text-black font-bold"

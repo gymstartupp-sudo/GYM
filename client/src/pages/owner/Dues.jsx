@@ -10,9 +10,27 @@ import ReminderTimeline from '../../components/ReminderTimeline';
 import ReminderDetailsModal from '../../components/ReminderDetailsModal';
 import { calculateEndDate, toLocalDateString } from '../../utils/membership';
 import Pagination from '../../components/Pagination';
+import Tooltip from '../../components/Tooltip';
 
 const Dues = () => {
     const navigate = useNavigate();
+    const getManualReminderTooltip = (client) => {
+        const sentCount = (client?.overdueReminders?.manualReminders || []).filter(
+            r => r.status === 'sent' && r.executionSource === 'Manual Reminder'
+        ).length;
+        const remaining = Math.max(0, 2 - sentCount);
+        if (remaining === 0) {
+            return "Send WhatsApp reminder (0 remaining - Limit Reached)";
+        }
+        return `Send WhatsApp reminder (${remaining} remaining)`;
+    };
+
+    const isManualReminderDisabled = (client) => {
+        const sentCount = (client?.overdueReminders?.manualReminders || []).filter(
+            r => r.status === 'sent' && r.executionSource === 'Manual Reminder'
+        ).length;
+        return sentCount >= 2;
+    };
     const [searchParams] = useSearchParams();
     const [clients, setClients] = useState([]);
     const [plans, setPlans] = useState([]);
@@ -428,86 +446,86 @@ const Dues = () => {
 
     return (
         <div className="p-4 md:p-8 md:pt-10">
-                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
-                            Due & Expired Clients
-                        </h1>
-                        <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and collect pending payments or renew expired memberships.</p>
-                    </div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
+                        Due & Expired Clients
+                    </h1>
+                    <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and collect pending payments or renew expired memberships.</p>
                 </div>
+            </div>
 
-                {/* Tabs */}
-                <div className="flex flex-wrap gap-1 mb-6 bg-surface-hover/50 p-1 rounded-xl w-full sm:w-fit">
-                    {[
-                        { id: 'pending', label: 'Pending', icon: Clock },
-                        { id: 'overdue', label: 'Overdue', icon: AlertCircle },
-                        { id: 'expiring', label: 'Expiring Soon', icon: AlertTriangle },
-                        { id: 'expired', label: 'Expired', icon: History },
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
-                                ? 'bg-[var(--color-warning)] text-black shadow-lg'
-                                : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/50'
-                                }`}
-                        >
-                            <tab.icon size={16} />
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-1 mb-6 bg-surface-hover/50 p-1 rounded-xl w-full sm:w-fit">
+                {[
+                    { id: 'pending', label: 'Pending', icon: Clock },
+                    { id: 'overdue', label: 'Overdue', icon: AlertCircle },
+                    { id: 'expiring', label: 'Expiring Soon', icon: AlertTriangle },
+                    { id: 'expired', label: 'Expired', icon: History },
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
+                            ? 'bg-[var(--color-warning)] text-black shadow-lg'
+                            : 'text-text-secondary hover:text-text-primary hover:bg-surface-hover/50'
+                            }`}
+                    >
+                        <tab.icon size={16} />
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
-                {/* Search Bar */}
-                <div className="mb-6 relative group max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search by client name or ID..."
-                        className="w-full bg-surface-secondary border border-border rounded-xl pl-11 pr-4 py-3 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
+            {/* Search Bar */}
+            <div className="mb-6 relative group max-w-md">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" size={18} />
+                <input
+                    type="text"
+                    placeholder="Search by client name or ID..."
+                    className="w-full bg-surface-secondary border border-border rounded-xl pl-11 pr-4 py-3 text-text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-gray-600 font-medium"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
 
-                <div className="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
-                            <thead>
-                                <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
-                                    <th className="p-4 font-bold">Client Info</th>
-                                    {(activeTab === 'expired' || activeTab === 'expiring') && <th className="p-4 font-bold">Mobile</th>}
-                                    <th className="p-4 font-bold">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Last Plan' : 'Plan'}</th>
-                                    {activeTab !== 'expired' && activeTab !== 'expiring' && (
-                                        <>
-                                            <th className="p-4 font-bold text-right">Total Amount</th>
-                                            <th className="p-4 font-bold text-right">Paid Amount</th>
-                                            <th className="p-4 font-bold text-right">Balance</th>
-                                        </>
-                                    )}
-                                    <th className="p-4 font-bold">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Ended On' : 'Due Date'}</th>
-                                    {activeTab === 'expired' && <th className="p-4 font-bold text-center">Days Ago</th>}
-                                    {activeTab === 'expiring' && <th className="p-4 font-bold text-center">Days Left</th>}
-                                    <th className="p-4 font-bold text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {loading ? (
-                                    [...Array(4)].map((_, i) => (
-                                        <tr key={i} className="border-b border-border">
-                                            <td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse"></div><div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div></div></td>
-                                            <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
-                                            {activeTab !== 'expired' && activeTab !== 'expiring' && <><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td></>}
-                                            <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-4 text-right"><div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div></td>
-                                        </tr>
-                                    ))
-                                ) : filteredDues.length === 0 ? (
-                                    <tr><td colSpan="8" className="text-center p-10 text-text-muted">No {activeTab} dues found.</td></tr>
-                                ) : (
-                                    paginatedDues.map((due, idx) => (
-                                        <React.Fragment key={`${due.clientId}-${idx}`}>
+            <div className="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+                        <thead>
+                            <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
+                                <th className="p-4 font-bold">Client Info</th>
+                                {(activeTab === 'expired' || activeTab === 'expiring') && <th className="p-4 font-bold text-center">Mobile</th>}
+                                <th className="p-4 font-bold text-center">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Last Plan' : 'Plan'}</th>
+                                {activeTab !== 'expired' && activeTab !== 'expiring' && (
+                                    <>
+                                        <th className="p-4 font-bold text-center">Total Amount</th>
+                                        <th className="p-4 font-bold text-center">Paid Amount</th>
+                                        <th className="p-4 font-bold text-center">Balance</th>
+                                    </>
+                                )}
+                                <th className="p-4 font-bold text-center">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Ended On' : 'Due Date'}</th>
+                                {activeTab === 'expired' && <th className="p-4 font-bold text-center">Days Ago</th>}
+                                {activeTab === 'expiring' && <th className="p-4 font-bold text-center">Days Left</th>}
+                                <th className="p-4 font-bold text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {loading ? (
+                                [...Array(4)].map((_, i) => (
+                                    <tr key={i} className="border-b border-border">
+                                        <td className="p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse"></div><div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div></div></td>
+                                        <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        {activeTab !== 'expired' && activeTab !== 'expiring' && <><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td><td className="p-4"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td></>}
+                                        <td className="p-4"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-4 text-right"><div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div></td>
+                                    </tr>
+                                ))
+                            ) : filteredDues.length === 0 ? (
+                                <tr><td colSpan="8" className="text-center p-10 text-text-muted">No {activeTab} dues found.</td></tr>
+                            ) : (
+                                paginatedDues.map((due, idx) => (
+                                    <React.Fragment key={`${due.clientId}-${idx}`}>
                                         <tr className="border-b border-border hover:bg-white/[0.02] transition-colors group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
@@ -521,11 +539,11 @@ const Dues = () => {
                                                 </div>
                                             </td>
                                             {(activeTab === 'expired' || activeTab === 'expiring') && (
-                                                <td className="p-4 text-text-secondary text-sm font-medium">
+                                                <td className="p-4 text-text-secondary text-sm font-medium text-center">
                                                     {due.mobile}
                                                 </td>
                                             )}
-                                            <td className="p-4 text-text-secondary text-sm font-medium">
+                                            <td className="p-4 text-text-secondary text-sm font-medium text-center">
                                                 <span className="block">{due.planName}</span>
                                                 {due.startDate && (() => {
                                                     const period = getBillingPeriod(due);
@@ -538,22 +556,22 @@ const Dues = () => {
                                             </td>
                                             {activeTab !== 'expired' && activeTab !== 'expiring' && (
                                                 <>
-                                                    <td className="p-4 text-right text-text-secondary font-bold text-sm">
+                                                    <td className="p-4 text-center text-text-secondary font-bold text-sm">
                                                         ₹{due.finalPrice}
                                                     </td>
-                                                    <td className="p-4 text-right text-emerald-400 font-bold text-sm">
+                                                    <td className="p-4 text-center text-emerald-400 font-bold text-sm">
                                                         ₹{due.totalPaid}
                                                     </td>
-                                                    <td className="p-4 text-right text-rose-500 font-black text-sm">
+                                                    <td className="p-4 text-center text-rose-500 font-black text-sm">
                                                         ₹{due.balance}
                                                     </td>
                                                 </>
                                             )}
-                                            <td className="p-4 text-text-secondary text-xs">
+                                            <td className="p-4 text-text-secondary text-xs text-center">
                                                 {(activeTab === 'expired' || activeTab === 'expiring') ? (
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <span className="whitespace-nowrap">Start: {due.startDate ? new Date(due.startDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
-                                                        <span className="whitespace-nowrap">End: {due.endDate ? new Date(due.endDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
+                                                    <div className="flex flex-col gap-0.5 text-left inline-flex">
+                                                        <span className="whitespace-nowrap"><span className="inline-block w-[32px]">Start</span> : {due.startDate ? new Date(due.startDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
+                                                        <span className="whitespace-nowrap"><span className="inline-block w-[32px]">End</span> : {due.endDate ? new Date(due.endDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span>
                                                     </div>
                                                 ) : (
                                                     due.dueDate ? new Date(due.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'
@@ -572,37 +590,39 @@ const Dues = () => {
                                             <td className="p-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     {activeTab === 'overdue' && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSendReminder(due); }}
-                                                            disabled={sendingReminder === due.clientId}
-                                                            className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border disabled:opacity-50"
-                                                            title="Send WhatsApp reminder"
-                                                        >
-                                                            {sendingReminder === due.clientId ? (
-                                                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                            ) : (
-                                                                <MessageSquare size={16} />
-                                                            )}
-                                                        </button>
+                                                        <Tooltip content={getManualReminderTooltip(due.rawClient)}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSendReminder(due); }}
+                                                                disabled={sendingReminder === due.clientId || isManualReminderDisabled(due.rawClient)}
+                                                                className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            >
+                                                                {sendingReminder === due.clientId ? (
+                                                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                                                ) : (
+                                                                    <MessageSquare size={16} />
+                                                                )}
+                                                            </button>
+                                                        </Tooltip>
                                                     )}
                                                     {due.rawClient && (
                                                         <ReminderTimeline
                                                             client={due.rawClient}
                                                             mode={
                                                                 activeTab === 'pending' ? 'pending' :
-                                                                activeTab === 'overdue' ? 'overdue' : 'membership'
+                                                                    activeTab === 'overdue' ? 'overdue' : 'membership'
                                                             }
                                                             onCircleClick={(c, tab) => { setReminderModalClient(c); setReminderModalTab(tab); }}
                                                         />
                                                     )}
-                                                    <button
-                                                        onClick={() => setViewClientId(due.clientId)}
-                                                        className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
-                                                        title="View client"
-                                                    >
-                                                        <Eye size={16} />
-                                                    </button>
+                                                    <Tooltip content="View client">
+                                                        <button
+                                                            onClick={() => setViewClientId(due.clientId)}
+                                                            className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
+                                                        >
+                                                            <Eye size={16} />
+                                                        </button>
+                                                    </Tooltip>
                                                     {(due.isExpiredTab || due.isExpiringTab) ? (
                                                         <button
                                                             onClick={() => handleRenew(due)}
@@ -642,7 +662,7 @@ const Dues = () => {
                                                                     onClick={() => handlePayPendingDue(due)}
                                                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-black font-bold rounded-lg text-[11px] uppercase tracking-wider hover:bg-amber-400 transition-all"
                                                                 >
-                                                                    <CircleDollarSign size={14} /> Pay ₹{pendingBalance}
+                                                                    Pay ₹{pendingBalance}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => setPendingAlertClientId(null)}
@@ -657,18 +677,18 @@ const Dues = () => {
                                                 </tr>
                                             );
                                         })()}
-                                        </React.Fragment>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={Math.ceil(filteredDues.length / 10)}
-                        onPageChange={setCurrentPage}
-                    />
+                                    </React.Fragment>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(filteredDues.length / 10)}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
 
             {showModal && selectedDue && (
                 <PaymentModal

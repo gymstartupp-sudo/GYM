@@ -136,6 +136,8 @@ exports.updateGymProfile = async (req, res, next) => {
         if (!phoneRegex.test(cleanOwnerData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid 10-digit Indian mobile number', field: 'ownerMobile' });
       }
 
+
+
       // Update Owner in Gym Document
       const gym = await Gym.findById(gymStrId);
       if (gym) {

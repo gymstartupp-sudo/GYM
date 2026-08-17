@@ -2,19 +2,33 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { Receipt, Plus, X, Edit2, Eye, FileText, Calendar, CreditCard, User, CheckCircle2, Phone, Mail, Printer, Download, MessageSquare } from 'lucide-react';
+import { Receipt, Plus, X, Edit2, Eye, FileText, Calendar, CreditCard, User, CheckCircle2, Phone, Mail, Printer, Download, MessageSquare, Send } from 'lucide-react';
 import Button from '../../components/Button';
 import { getPlanStatus, calculateEndDate, toLocalDateString } from '../../utils/membership';
 import PaymentModal from '../../components/PaymentModal';
 import ClientDetail from './ClientDetail';
 import Pagination from '../../components/Pagination';
 import { useAuth } from '../../context/AuthContext';
+import Tooltip from '../../components/Tooltip';
 
 const Transactions = () => {
     const { role } = useAuth();
     const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
     const location = useLocation();
     const navigate = useNavigate();
+    const getWhatsAppInvoiceTooltip = (payment) => {
+        const sentCount = payment.whatsappSendCount || 0;
+        const remaining = Math.max(0, 2 - sentCount);
+        if (remaining === 0) {
+            return "Send via WhatsApp (0 remaining - Limit Reached)";
+        }
+        return `Send via WhatsApp (${remaining} remaining)`;
+    };
+
+    const isWhatsAppInvoiceDisabled = (payment) => {
+        const sentCount = payment.whatsappSendCount || 0;
+        return sentCount >= 2;
+    };
     const [payments, setPayments] = useState([]);
     const [allPayments, setAllPayments] = useState([]);
     const [clients, setClients] = useState([]);
@@ -53,6 +67,11 @@ const Transactions = () => {
         try {
             await api.post(`/payment/${payment._id}/send-whatsapp`);
             toast.success("Invoice queued to send via WhatsApp");
+            setPayments(prev => prev.map(p => p._id === payment._id ? { ...p, whatsappSendCount: (p.whatsappSendCount || 0) + 1 } : p));
+            setAllPayments(prev => prev.map(p => p._id === payment._id ? { ...p, whatsappSendCount: (p.whatsappSendCount || 0) + 1 } : p));
+            if (selectedPayment && selectedPayment._id === payment._id) {
+                setSelectedPayment(prev => ({ ...prev, whatsappSendCount: (prev.whatsappSendCount || 0) + 1 }));
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to send invoice via WhatsApp");
         } finally {
@@ -323,13 +342,13 @@ const Transactions = () => {
                             <thead>
                                 <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
                                     <th className="p-5">Receipt Info</th>
-                                    <th className="p-5">Client Info</th>
-                                    <th className="p-5">Plan</th>
-                                    <th className="p-5">Mode</th>
-                                    <th className="p-5 text-right">Plan Amount</th>
-                                    <th className="p-5 text-right">Paid Now</th>
-                                    <th className="p-5 text-right">Total Paid</th>
-                                    <th className="p-5 text-right">Remaining Balance</th>
+                                    <th className="p-5 text-center">Client Info</th>
+                                    <th className="p-5 text-center">Plan</th>
+                                    <th className="p-5 text-center">Mode</th>
+                                    <th className="p-5 text-center">Plan Amount</th>
+                                    <th className="p-5 text-center">Paid Now</th>
+                                    <th className="p-5 text-center">Total Paid</th>
+                                    <th className="p-5 text-center">Remaining Balance</th>
                                     <th className="p-5 text-center">Status</th>
                                     <th className="p-5 text-center">Bill</th>
                                     <th className="p-5 text-center">Actions</th>
@@ -340,12 +359,13 @@ const Transactions = () => {
                                     [...Array(4)].map((_, i) => (
                                         <tr key={i} className="border-b border-border/50">
                                             <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-20 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-12 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse ml-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1 mx-auto"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-12 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
                                             <td className="p-5"><div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div></td>
                                             <td className="p-5"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse mx-auto"></div></td>
                                             <td className="p-5"><div className="flex gap-2 justify-center"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div></td>
@@ -360,11 +380,11 @@ const Transactions = () => {
                                                 <p className="font-bold text-text-primary text-sm">{payment.paymentId}</p>
                                                 <p className="text-[10px] text-text-muted mt-0.5">{new Date(payment.createdAt || payment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                             </td>
-                                            <td className="p-5">
+                                            <td className="p-5 text-center">
                                                 <p className="font-bold text-text-primary text-sm">{payment.clientName}</p>
                                                 <p className="text-[10px] font-black text-primary uppercase tracking-tighter">{getClientDisplayId(payment.clientId)}</p>
                                             </td>
-                                            <td className="p-5">
+                                            <td className="p-5 text-center">
                                                 <span className="text-text-secondary text-xs font-medium block">{payment.planName}</span>
                                                 {payment.startDate && (() => {
                                                     const period = getBillingPeriod(payment);
@@ -375,15 +395,15 @@ const Transactions = () => {
                                                     ) : null;
                                                 })()}
                                             </td>
-                                            <td className="p-5">
+                                            <td className="p-5 text-center">
                                                 <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${payment.paymentMethod === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
                                                     {payment.paymentMethod || payment.mode || 'cash'}
                                                 </span>
                                             </td>
-                                            <td className="p-5 text-right text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
-                                            <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
-                                            <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
-                                            <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
+                                            <td className="p-5 text-center text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
+                                            <td className="p-5 text-center text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
+                                            <td className="p-5 text-center text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
+                                            <td className="p-5 text-center text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
                                             <td className="p-5 text-center">
                                                 {getStatusBadge(payment)}
                                                 {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
@@ -394,46 +414,50 @@ const Transactions = () => {
                                             </td>
                                             <td className="p-5 text-center text-xs">
                                                 <div className="flex items-center justify-center gap-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
-                                                        className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
-                                                        title="View Invoice"
-                                                    >
-                                                        <FileText size={16} />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        disabled={downloadingId === payment._id}
-                                                        onClick={() => downloadInvoice(payment)}
-                                                        className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
-                                                        title="Download Invoice"
-                                                    >
-                                                        <Download size={16} />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        disabled={sendingWhatsAppId === payment._id}
-                                                        onClick={() => handleSendWhatsAppInvoice(payment)}
-                                                        className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
-                                                        title="Send via WhatsApp"
-                                                    >
-                                                        <MessageSquare size={16} />
-                                                    </button>
+                                                    <Tooltip content="View Invoice">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
+                                                            className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
+                                                        >
+                                                            <FileText size={16} />
+                                                        </button>
+                                                    </Tooltip>
+                                                    <Tooltip content="Download Invoice">
+                                                        <button
+                                                            type="button"
+                                                            disabled={downloadingId === payment._id}
+                                                            onClick={() => downloadInvoice(payment)}
+                                                            className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
+                                                        >
+                                                            <Download size={16} />
+                                                        </button>
+                                                    </Tooltip>
+                                                    <Tooltip content={getWhatsAppInvoiceTooltip(payment)}>
+                                                        <button
+                                                            type="button"
+                                                            disabled={sendingWhatsAppId === payment._id || isWhatsAppInvoiceDisabled(payment)}
+                                                            onClick={() => handleSendWhatsAppInvoice(payment)}
+                                                            className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            <Send size={16} />
+                                                        </button>
+                                                    </Tooltip>
                                                 </div>
                                             </td>
                                             <td className="p-5">
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            const client = clients.find(c => c._id === payment.clientId);
-                                                            if (client) { setSelectedClient(client); setShowClientDetailModal(true); }
-                                                        }}
-                                                        className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
-                                                        title="View Client"
-                                                    >
-                                                        <Eye size={16} />
-                                                    </button>
+                                                    <Tooltip content="View Client">
+                                                        <button
+                                                            onClick={() => {
+                                                                const client = clients.find(c => c._id === payment.clientId);
+                                                                if (client) { setSelectedClient(client); setShowClientDetailModal(true); }
+                                                            }}
+                                                            className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
+                                                        >
+                                                            <Eye size={16} />
+                                                        </button>
+                                                    </Tooltip>
  
                                                 </div>
                                             </td>
@@ -503,22 +527,6 @@ const Transactions = () => {
                                         Print
                                     </button>
                                     <button
-                                        type="button"
-                                        disabled={downloadingId === selectedPayment._id}
-                                        onClick={() => downloadInvoice(selectedPayment)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#10B981] text-white text-xs font-bold rounded-lg hover:bg-[#0e9f6e] transition-all shadow-sm disabled:opacity-50"
-                                    >
-                                        Download
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled={sendingWhatsAppId === selectedPayment._id}
-                                        onClick={() => handleSendWhatsAppInvoice(selectedPayment)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50"
-                                    >
-                                        Send WhatsApp
-                                    </button>
-                                    <button
                                         onClick={() => setShowReceiptModal(false)}
                                         className="p-1.5 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-200 transition-all"
                                     >
@@ -531,8 +539,7 @@ const Transactions = () => {
                             <div className="p-5 space-y-4">
                                 {/* Header: Gym & Invoice Details */}
                                 <div className="flex justify-between items-start gap-3 pb-4 border-b border-gray-200">
-                                    {/* Gym Details on Left */}
-                                    <div className="flex items-center gap-2.5">
+                                    <div className="flex items-start gap-2.5">
                                         {getLogoUrl() ? (
                                             <img
                                                 src={getLogoUrl()}
@@ -544,8 +551,11 @@ const Transactions = () => {
                                                 {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
                                             </div>
                                         )}
-                                        <div>
+                                        <div className="pt-0.5">
                                             <h2 className="text-base font-black uppercase tracking-tight text-gray-900 leading-none">{gymInfo?.gymName || "LIK GYM"}</h2>
+                                            {gymInfo?.tagline && (
+                                                <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{gymInfo.tagline}</p>
+                                            )}
                                             <p className="text-[9px] text-text-muted font-bold uppercase tracking-wider mt-1">Gym ID: {gymInfo?.gymId || "N/A"}</p>
                                             <p className="text-[10px] text-gray-600 max-w-[220px] leading-relaxed whitespace-pre-line mt-0.5">
                                                 {gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || ""}
@@ -649,7 +659,7 @@ const Transactions = () => {
                                 {/* Footer: Greetings & Contact info */}
                                 <div className="pt-3 border-t border-gray-200 text-center space-y-2">
                                     <div>
-                                        <p className="text-xs font-black text-gray-900">Thank you for your business!</p>
+                                        <p className="text-xs font-black text-gray-900">{gymInfo?.billingInfo?.regards || "Thank you for your business!"}</p>
                                         <p className="text-[10px] text-text-muted font-medium mt-0.5">
                                             For any inquiries regarding this invoice or your membership, please reach out to our dedicated support team.
                                         </p>

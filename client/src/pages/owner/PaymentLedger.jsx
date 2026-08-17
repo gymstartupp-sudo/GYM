@@ -28,6 +28,7 @@ import CustomDatePicker from '../../components/CustomDatePicker';
 import CustomDropdown from '../../components/CustomDropdown';
 import { DATE_RULES, getCurrentYear, validateExpenseDate } from '../../utils/dateInput';
 import ConfirmModal from '../../components/ConfirmModal';
+import Tooltip from '../../components/Tooltip';
 
 
 const CATEGORIES = ['Rent', 'Salary', 'Utilities', 'Equipment', 'Maintenance', 'Other'];
@@ -362,7 +363,7 @@ const PaymentLedger = () => {
             ['Online Gateway Fees (2% estimation)', `INR ${gatewayFee.toLocaleString()}`],
             ['Net Amount (After Gateway Fees)', `INR ${netAmount.toLocaleString()}`],
             ['Overall Expenses', `INR ${overallExpensesTotal.toLocaleString()}`],
-            ['Net Profit (Net Amount - Expenses)', `INR ${profit.toLocaleString()}`],
+            ['Net Profit (Net Amount - Overall Expenses)', `INR ${profit.toLocaleString()}`],
             ['Pending Payments in Period', `INR ${pendingPaymentsPeriod.toLocaleString()}`]
         ];
 
@@ -565,7 +566,6 @@ const PaymentLedger = () => {
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-border/50 pb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
-                        <TrendingUp className="text-primary h-8 w-8" />
                         Financial Ledger & Analytics
                     </h1>
                     <p className="text-text-secondary mt-1">Analyze historical gym revenue, expenses, and profitability trends.</p>
@@ -586,14 +586,15 @@ const PaymentLedger = () => {
                     />
 
                     {/* Reset button */}
-                    <button
-                        onClick={handleResetPeriod}
-                        className="flex items-center gap-1.5 bg-surface-secondary border border-border text-text-secondary hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm"
-                        title="Reset to Current Month"
-                    >
-                        <RefreshCw size={14} />
-                        Reset
-                    </button>
+                    <Tooltip content="Reset to Current Month">
+                        <button
+                            onClick={handleResetPeriod}
+                            className="flex items-center gap-1.5 bg-surface-secondary border border-border text-text-secondary hover:text-text-primary px-3 py-2 rounded-xl transition-all text-sm"
+                        >
+                            <RefreshCw size={14} />
+                            Reset
+                        </button>
+                    </Tooltip>
 
                     <div className="h-6 w-px bg-surface-divider mx-1 hidden sm:block"></div>
 
@@ -685,7 +686,7 @@ const PaymentLedger = () => {
                                     <TrendingUp size={28} />
                                 </div>
                                 <div>
-                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Net Amount</p>
+                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">AMOUNT RECEIVED</p>
                                     <h3 className="text-2xl font-black text-text-primary">₹{netAmount.toLocaleString()}</h3>
                                     <p className="text-xs text-text-muted">After ₹{gatewayFee.toLocaleString()} Gateway Fee</p>
                                 </div>
@@ -837,9 +838,9 @@ const PaymentLedger = () => {
                                 <thead className="sticky top-0 bg-surface-secondary z-10 border-b border-border">
                                     <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                                         <th className="p-4">Title / Name</th>
-                                        <th className="p-4">Category</th>
-                                        <th className="p-4">Date</th>
-                                        <th className="p-4">Amount</th>
+                                        <th className="p-4 text-center">Category</th>
+                                        <th className="p-4 text-center">Date</th>
+                                        <th className="p-4 text-center">Amount</th>
                                         <th className="p-4 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -855,18 +856,18 @@ const PaymentLedger = () => {
                                             <td className="p-4">
                                                 <span className="text-text-primary font-semibold">{exp.title}</span>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-4 text-center">
                                                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${CATEGORY_COLORS[exp.category] || CATEGORY_COLORS.Other}`}>
                                                     {exp.category}
                                                 </span>
                                             </td>
-                                            <td className="p-4 text-text-secondary text-sm">
-                                                <div className="flex items-center gap-2">
+                                            <td className="p-4 text-center text-text-secondary text-sm">
+                                                <div className="flex items-center justify-center gap-2">
                                                     <Calendar size={14} className="text-text-muted" />
                                                     {new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
                                                 </div>
                                             </td>
-                                            <td className="p-4">
+                                            <td className="p-4 text-center">
                                                 <span className="text-text-primary font-black">₹{exp.amount.toLocaleString()}</span>
                                             </td>
                                             <td className="p-4 text-right">

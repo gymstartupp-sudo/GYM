@@ -6,6 +6,7 @@ import { ChevronLeft } from 'lucide-react';
 import Button from '../../components/Button';
 import CustomDatePicker from '../../components/CustomDatePicker';
 import { DATE_RULES, getDobYearBounds, validateDob } from '../../utils/dateInput';
+import { STATES_LIST, getCitiesForState } from '../../utils/indianStatesCities';
 
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -43,6 +44,99 @@ const Field = ({ label, value, onChange, disabled = false, textarea = false, typ
   );
 };
 
+const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select', error, disabled }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSearch('');
+    }
+  }, [isOpen]);
+
+  const filteredOptions = options.filter(opt =>
+    String(opt).toLowerCase().startsWith(search.toLowerCase())
+  );
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
+        className={`input-field bg-surface-secondary border border-border text-text-primary rounded-xl text-left flex items-center justify-between w-full h-11 px-3 ${error ? errorInputClass : ''
+          } ${disabled ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed border-transparent' : 'cursor-pointer'} focus:outline-none`}
+      >
+        <span className={value ? 'text-text-primary' : 'text-text-muted'}>
+          {value || placeholder}
+        </span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`text-slate-500 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {isOpen && !disabled && (
+        <div className="absolute left-0 right-0 mt-1 bg-surface-card border border-border rounded-xl shadow-2xl z-50 max-h-56 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-2 py-1.5 border-b border-border shrink-0 bg-surface-card">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-surface-primary border border-border rounded px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-primary/50"
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto flex-1 max-h-40 py-1">
+            {filteredOptions.length === 0 ? (
+              <p className="text-center py-2 text-xs text-text-muted">No options found</p>
+            ) : (
+              filteredOptions.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors ${value === opt
+                    ? 'bg-primary text-black font-bold'
+                    : 'text-text-primary hover:bg-primary hover:text-black'
+                    }`}
+                >
+                  {opt}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ClientProfile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -73,7 +167,7 @@ const ClientProfile = () => {
     let errMsg = '';
     if (key === 'name') {
       if (!value?.trim()) errMsg = 'Full name is required';
-      else if (value.length > 25) errMsg = 'Max 25 characters';
+      else if (value.length > 35) errMsg = 'Max 35 characters';
     } else if (key === 'email') {
       if (!value?.trim()) errMsg = 'Email address is required';
       else if (!emailRegex.test(value)) errMsg = 'Enter a valid email address';
@@ -94,9 +188,9 @@ const ClientProfile = () => {
         errMsg = validateDob(value) || '';
       }
     } else if (key === 'city') {
-      // No max validation
+      // No validation
     } else if (key === 'state') {
-      // No max validation
+      // No validation
     } else if (key === 'pincode') {
       if (value && value.length !== 6) errMsg = 'Enter a valid 6-digit pincode';
     }
@@ -123,7 +217,7 @@ const ClientProfile = () => {
     const pi = formState.personalInfo || {};
 
     if (!pi.name?.trim()) newErrors.name = 'Full name is required';
-    else if (pi.name.length > 25) newErrors.name = 'Max 25 characters';
+    else if (pi.name.length > 35) newErrors.name = 'Max 35 characters';
 
     if (!pi.email?.trim()) newErrors.email = 'Email address is required';
     else if (!emailRegex.test(pi.email)) newErrors.email = 'Enter a valid email address';
@@ -147,7 +241,6 @@ const ClientProfile = () => {
       }
     }
 
-    // No max validation for city and state
     if (pi.pincode && pi.pincode.length !== 6) newErrors.pincode = 'Enter a valid 6-digit pincode';
 
     setErrors(newErrors);
@@ -168,15 +261,24 @@ const ClientProfile = () => {
 
     setSaving(true);
     try {
-      const res = await api.put('/client/profile', { personalInfo: formState.personalInfo });
+      const cleanPersonalInfo = {};
+      const allowed = [
+        'name', 'email', 'mobileNo', 'gender', 'dob', 'address',
+        'emergencyContact', 'city', 'state', 'pincode', 'medicalCondition', 'whatsappNumber'
+      ];
+      for (const key of allowed) {
+        if (formState.personalInfo?.[key] !== undefined) {
+          cleanPersonalInfo[key] = formState.personalInfo[key];
+        }
+      }
+
+      const res = await api.put('/client/profile', { personalInfo: cleanPersonalInfo });
       setProfile(res.data.data);
       setFormState(res.data.data);
       setEditing(false);
       setErrors({});
       toast.success('Profile updated successfully');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      window.dispatchEvent(new Event('profileUpdated'));
     } catch (error) {
       const serverError = error.response?.data;
       if (serverError?.field) {
@@ -235,7 +337,7 @@ const ClientProfile = () => {
             label="Full Name *"
             value={formState.personalInfo?.name}
             disabled={!editing}
-            maxLength={25}
+            maxLength={35}
             error={errors.name}
             onChange={e => setPersonalInfo('name', e.target.value)}
           />
@@ -265,13 +367,15 @@ const ClientProfile = () => {
 
           <Field
             label="Mobile Number *"
-            value={formState.personalInfo?.mobileNo}
+            value={formState.personalInfo?.mobileNo || ''}
             type="tel"
             disabled={!editing}
             error={errors.mobileNo}
             maxLength={10}
-            onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
-            onChange={e => setPersonalInfo('mobileNo', e.target.value)}
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+              setPersonalInfo('mobileNo', val);
+            }}
           />
 
           <label className="space-y-1 block group">
@@ -298,13 +402,15 @@ const ClientProfile = () => {
 
           <Field
             label="Emergency Contact"
-            value={formState.personalInfo?.emergencyContact}
+            value={formState.personalInfo?.emergencyContact || ''}
             type="tel"
             disabled={!editing}
             error={errors.emergencyContact}
             maxLength={10}
-            onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); }}
-            onChange={e => setPersonalInfo('emergencyContact', e.target.value)}
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+              setPersonalInfo('emergencyContact', val);
+            }}
           />
 
           <div className="md:col-span-2">
@@ -320,28 +426,62 @@ const ClientProfile = () => {
           </div>
 
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field
-              label="City"
-              value={formState.personalInfo?.city}
-              disabled={!editing}
-              error={errors.city}
-              onChange={e => setPersonalInfo('city', e.target.value)}
-            />
-            <Field
-              label="State"
-              value={formState.personalInfo?.state}
-              disabled={!editing}
-              error={errors.state}
-              onChange={e => setPersonalInfo('state', e.target.value)}
-            />
+            {editing ? (
+              <div className="space-y-1 block group">
+                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">State *</span>
+                <SearchableSelect
+                  value={formState.personalInfo?.state || ''}
+                  onChange={(newState) => {
+                    const cities = getCitiesForState(newState);
+                    const currentCity = formState.personalInfo?.city;
+                    const newCity = cities.includes(currentCity) ? currentCity : (cities[0] || '');
+                    setFormState(c => ({
+                      ...c,
+                      personalInfo: {
+                        ...c.personalInfo,
+                        state: newState,
+                        city: newCity
+                      }
+                    }));
+                    validateSingleField('state', newState);
+                    validateSingleField('city', newCity);
+                  }}
+                  options={STATES_LIST}
+                  placeholder="Select State"
+                  error={errors.state}
+                />
+                {errors.state && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.state}</p>}
+              </div>
+            ) : (
+              <Field label="State *" value={formState.personalInfo?.state} disabled />
+            )}
+
+            {editing ? (
+              <div className="space-y-1 block group">
+                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">City *</span>
+                <SearchableSelect
+                  value={formState.personalInfo?.city || ''}
+                  onChange={(newCity) => setPersonalInfo('city', newCity)}
+                  options={getCitiesForState(formState.personalInfo?.state)}
+                  placeholder={formState.personalInfo?.state ? "Select City" : "Select State First"}
+                  error={errors.city}
+                />
+                {errors.city && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.city}</p>}
+              </div>
+            ) : (
+              <Field label="City *" value={formState.personalInfo?.city} disabled />
+            )}
+
             <Field
               label="Pincode"
-              value={formState.personalInfo?.pincode}
+              value={formState.personalInfo?.pincode || ''}
               disabled={!editing}
               maxLength={6}
               error={errors.pincode}
-              onInput={(e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); }}
-              onChange={e => setPersonalInfo('pincode', e.target.value)}
+              onChange={e => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                setPersonalInfo('pincode', val);
+              }}
             />
           </div>
 

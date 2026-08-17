@@ -39,7 +39,11 @@ export default function ClientLayout() {
     };
     fetchProfile();
     const interval = setInterval(fetchProfile, 30000);
-    return () => clearInterval(interval);
+    window.addEventListener('profileUpdated', fetchProfile);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('profileUpdated', fetchProfile);
+    };
   }, [user?.personalInfo?.name, user?.personalInfo?.email]);
 
   return (

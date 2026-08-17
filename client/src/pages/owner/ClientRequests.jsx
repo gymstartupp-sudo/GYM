@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { UserPlus, Check, X, Clock } from 'lucide-react';
+import { UserPlus, Check, X, Clock, AlertTriangle } from 'lucide-react';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
 import Pagination from '../../components/Pagination';
@@ -21,6 +22,7 @@ const ClientRequests = () => {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [selectedPlan, setSelectedPlan] = useState(null);
+    const [rejectModalId, setRejectModalId] = useState(null);
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -78,8 +80,11 @@ const ClientRequests = () => {
         }
     };
 
-    const handleReject = async (id) => {
-        if (!window.confirm("Are you sure you want to reject this request? This will delete the request permanently.")) return;
+    const handleReject = (id) => {
+        setRejectModalId(id);
+    };
+
+    const handleRejectConfirm = async (id) => {
         setActionId(id);
         setActionType('reject');
         try {
@@ -96,29 +101,57 @@ const ClientRequests = () => {
 
     return (
         <div className="p-8 pt-10">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
-                        <UserPlus className="text-primary" size={32} /> Client Requests
-                    </h1>
-                    <p className="text-text-secondary mt-1">Review and approve new membership registrations.</p>
-                </div>
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
+                    Client Requests
+                </h1>
+                <p className="text-text-secondary mt-1">Review and approve new membership registrations.</p>
+            </div>
 
-                {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            {loading ? (
+                <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg animate-pulse">
+                    <div className="hidden md:grid grid-cols-[2.5fr_1.5fr_1.5fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                        <div>Client Info</div>
+                        <div className="text-center">Requested Plan</div>
+                        <div className="text-center">Requested Date</div>
+                        <div className="text-center">Status</div>
+                        <div className="text-right pr-4">Action</div>
                     </div>
-                ) : requests.length === 0 ? (
-                    <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
-                        <Clock size={48} className="mx-auto mb-4 opacity-20" />
-                        <p className="text-lg font-medium">No pending requests</p>
-                        <p className="text-sm mt-1 text-gray-600">New registration requests will appear here.</p>
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-border/50">
+                            <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
+                            <div className="flex-1 grid grid-cols-[1.5fr_1.5fr_1.5fr_1fr_2fr] gap-2 items-center">
+                                <div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div>
+                                <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                                <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                                <div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div>
+                                <div className="h-8 w-32 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : requests.length === 0 ? (
+                <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
+                    <Clock size={48} className="mx-auto mb-4 opacity-20" />
+                    <p className="text-lg font-medium">No pending requests</p>
+                    <p className="text-sm mt-1 text-gray-600">New registration requests will appear here.</p>
+                </div>
+            ) : (
+                <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
+                    {/* Table Header */}
+                    <div className="hidden md:grid grid-cols-[2.5fr_1.5fr_1.5fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+                        <div>Client Info</div>
+                        <div className="text-center">Requested Plan</div>
+                        <div className="text-center">Requested Date</div>
+                        <div className="text-center">Status</div>
+                        <div className="text-right pr-4">Action</div>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="flex flex-col">
                         {paginatedRequests.map((req) => (
-                            <div key={req._id} className="card bg-surface-secondary border-border hover:border-border transition-all">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                    <div className="flex items-center gap-4">
+                            <div key={req._id} className="bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group px-4 py-4">
+                                <div className="grid grid-cols-1 md:grid-cols-[2.5fr_1.5fr_1.5fr_1fr_2fr] gap-4 md:gap-2 items-center text-sm">
+                                    {/* Client Info */}
+                                    <div className="flex gap-3 items-center min-w-0">
                                         <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner overflow-hidden">
                                             {req.avatar && req.avatar.length > 1 ? (
                                                 <img src={req.avatar} alt={req.personalInfo.name} className="w-full h-full object-cover rounded-xl" />
@@ -126,65 +159,75 @@ const ClientRequests = () => {
                                                 (req.avatar || req.personalInfo.name.charAt(0)).toUpperCase()
                                             )}
                                         </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-text-primary">{req.personalInfo.name}</h3>
-                                            <p className="text-text-secondary text-sm">{req.personalInfo.mobileNo} • {req.personalInfo.email}</p>
+                                        <div className="min-w-0">
+                                            <h3 className="font-semibold text-text-primary truncate group-hover:text-primary transition-colors">{req.personalInfo.name}</h3>
+                                            <p className="text-xs text-text-muted truncate">{req.personalInfo.mobileNo} • {req.personalInfo.email}</p>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 md:flex items-center gap-8 text-sm">
-                                        <div>
-                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Requested Plan</p>
-                                            <p className="text-text-primary font-medium">{req.membership.planName || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Request Date</p>
-                                            <p className="text-text-primary font-medium">{new Date(req.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
-                                        </div>
-                                        <div className="hidden md:block">
-                                            <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-1">Status</p>
+                                    {/* Requested Plan */}
+                                    <div className="flex items-center md:block md:text-center md:justify-self-center">
+                                        <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Requested Plan: </span>
+                                        <p className="text-text-primary font-medium">{req.membership.planName || 'N/A'}</p>
+                                    </div>
+
+                                    {/* Requested Date */}
+                                    <div className="flex items-center md:block md:text-center md:justify-self-center">
+                                        <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Request Date: </span>
+                                        <p className="text-text-primary font-medium">{new Date(req.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="flex items-center md:block md:text-center md:justify-self-center">
+                                        <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Status: </span>
+                                        <div className="flex flex-col gap-1 md:items-center">
                                             <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase">
                                                 {req.membership.status}
                                             </span>
                                         </div>
                                     </div>
-                                    {!isReadOnly ? (
-                                        <div className="flex items-center gap-3">
-                                            <Button 
-                                                variant="secondary" 
-                                                onClick={() => handleReject(req._id)}
-                                                className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10"
-                                                isLoading={actionId === req._id && actionType === 'reject'}
-                                                disabled={actionId !== null}
-                                            >
-                                                <X size={16} className="mr-1" /> REJECT
-                                            </Button>
-                                            <Button 
-                                                onClick={() => {
-                                                    const plan = plans.find(p => p._id === req.membership?.planId);
-                                                    setSelectedRequest(req);
-                                                    setSelectedPlan(plan);
-                                                    setShowPaymentModal(true);
-                                                }}
-                                                className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20"
-                                                disabled={actionId !== null}
-                                            >
-                                                <Check size={16} className="mr-1" /> APPROVE
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <span className="text-text-muted text-xs italic">Read Only Mode</span>
-                                    )}
+
+                                    {/* Action */}
+                                    <div className="flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0">
+                                        {!isReadOnly ? (
+                                            <>
+                                                <Button
+                                                    variant="secondary"
+                                                    onClick={() => handleReject(req._id)}
+                                                    className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10 !px-3 !py-1.5 text-xs"
+                                                    isLoading={actionId === req._id && actionType === 'reject'}
+                                                    disabled={actionId !== null}
+                                                >
+                                                    <X size={14} className="mr-1" /> REJECT
+                                                </Button>
+                                                <Button
+                                                    onClick={() => {
+                                                        const plan = plans.find(p => p._id === req.membership?.planId);
+                                                        setSelectedRequest(req);
+                                                        setSelectedPlan(plan);
+                                                        setShowPaymentModal(true);
+                                                    }}
+                                                    className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20 !px-3 !py-1.5 text-xs"
+                                                    disabled={actionId !== null}
+                                                >
+                                                    <Check size={14} className="mr-1" /> APPROVE
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <span className="text-text-muted text-xs italic">Read Only Mode</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={Math.ceil(requests.length / 10)}
-                            onPageChange={setCurrentPage}
-                        />
                     </div>
-                )}
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={Math.ceil(requests.length / 10)}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            )}
 
             {showPaymentModal && selectedRequest && (
                 <PaymentModal
@@ -200,6 +243,67 @@ const ClientRequests = () => {
                     plans={plans}
                     lockClient={true}
                 />
+            )}
+
+            {rejectModalId && (
+                createPortal(
+                    <div
+                        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+                        style={{ background: 'var(--overlay)', backdropFilter: 'blur(6px)' }}
+                        onClick={() => setRejectModalId(null)}
+                    >
+                        <div
+                            className="relative w-full max-w-md rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-200 bg-surface-secondary border-border p-8 flex flex-col items-center text-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Close button */}
+                            <button
+                                onClick={() => setRejectModalId(null)}
+                                className="absolute top-4 right-4 p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-divider transition-all duration-200"
+                            >
+                                <X size={18} />
+                            </button>
+
+                            {/* Icon */}
+                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg bg-red-500/10 border border-red-500/20">
+                                <AlertTriangle size={30} className="text-red-400" />
+                            </div>
+
+                            {/* Title */}
+                            <h2 className="text-xl font-bold mb-3 text-text-primary">
+                                Reject Confirmation
+                            </h2>
+
+                            {/* Message */}
+                            <p className="text-sm leading-relaxed mb-6 text-text-secondary">
+                                Are you sure you want to reject this request? This will delete the request permanently.
+                            </p>
+
+                            {/* Divider */}
+                            <div className="w-full border-t border-border mb-6" />
+
+                            {/* Buttons */}
+                            <div className="flex gap-3 w-full">
+                                <button
+                                    onClick={() => setRejectModalId(null)}
+                                    className="flex-1 py-2.5 px-5 rounded-xl text-sm font-semibold border border-border text-text-secondary hover:bg-surface-divider hover:text-text-primary transition-all duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        handleRejectConfirm(rejectModalId);
+                                        setRejectModalId(null);
+                                    }}
+                                    className="flex-1 py-2.5 px-5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/20 transition-all duration-200"
+                                >
+                                    Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                )
             )}
         </div>
     );
