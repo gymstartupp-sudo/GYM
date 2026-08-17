@@ -1,6 +1,7 @@
 import React from 'react';
 import { Eye, RefreshCw, Trash2 } from 'lucide-react';
 import Button from './Button';
+import Tooltip from './Tooltip';
 import ReminderTimeline from './ReminderTimeline';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../utils/membership';
 import { planStatusStyles, paymentStatusStyles } from '../utils/statusStyles';
@@ -26,7 +27,10 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
 
   return (
     <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group">
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-4 md:gap-2 items-center text-sm">
+      <div className={showReactivate 
+        ? "grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1.8fr] gap-4 md:gap-2 items-center text-sm" 
+        : "grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-4 md:gap-2 items-center text-sm"
+      }>
 
         <div className="flex gap-3 items-center min-w-0">
           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
@@ -38,33 +42,37 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
           </div>
         </div>
 
-        <div className="flex items-center md:block">
+        <div className="flex items-center md:block md:text-center md:justify-self-center">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Mobile: </span>
           <p className="text-text-primary truncate">{client?.personalInfo?.mobileNo || '-'}</p>
         </div>
 
-        <div className="flex items-center md:block">
+        <div className="flex items-center md:block md:text-center md:justify-self-center">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Plan: </span>
           <p className="text-text-primary truncate">{currentPlan?.planName || 'No Active Plan'}</p>
         </div>
 
-        <div className="flex md:flex-col items-center md:items-start gap-2 md:gap-0">
+        <div className="flex md:flex-col items-center md:items-center gap-2 md:gap-0 md:justify-self-center">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Duration: </span>
-          <div className="flex flex-col">
-            <p className="text-text-secondary text-xs text-nowrap">Start: {formatDisplayDate(currentPlan?.startDate)}</p>
-            <p className="text-text-secondary text-xs text-nowrap">End: {formatDisplayDate(currentPlan?.endDate)}</p>
+          <div className="flex flex-col text-left">
+            <p className="text-text-secondary text-xs text-nowrap">
+              <span className="inline-block w-[32px]">Start</span> : {formatDisplayDate(currentPlan?.startDate)}
+            </p>
+            <p className="text-text-secondary text-xs text-nowrap">
+              <span className="inline-block w-[32px]">End</span> : {formatDisplayDate(currentPlan?.endDate)}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center md:block">
+        <div className="flex items-center md:block md:text-center md:justify-self-center">
           <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Days Left: </span>
           <p className="text-text-primary font-medium">{daysLeft}</p>
         </div>
 
         {!hideStatus && (
-          <div className="flex items-center md:block">
+          <div className="flex items-center md:block md:text-center md:justify-self-center">
             <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Status: </span>
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 md:items-center">
               <span className={`${planStatusStyles[planStatus] || 'badge-danger'}`}>
                 {planStatus}
               </span>
@@ -83,9 +91,11 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
         <div className={`flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
           {!hideReminders && <ReminderTimeline client={client} onCircleClick={isReadOnly ? undefined : onReminderClick} />}
 
-          <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border" title="View client">
-            <Eye size={16} />
-          </button>
+          <Tooltip content="View client">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border">
+              <Eye size={16} />
+            </button>
+          </Tooltip>
 
           {showReactivate && onReactivate && !isReadOnly && (
             <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 text-xs">
@@ -104,7 +114,6 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
               type="button"
               onClick={(e) => { e.stopPropagation(); onDelete(client); }}
               className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-danger rounded-lg transition-all duration-200 border border-border"
-              title={deleteLabel || 'Delete'}
             >
               <Trash2 size={14} />
             </button>

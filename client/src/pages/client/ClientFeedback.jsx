@@ -104,7 +104,7 @@ const ClientFeedback = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
-            <MessageSquare className="text-primary" /> Feedback History
+            Feedback History
           </h1>
           <p className="text-text-secondary mt-2 text-base md:text-lg">View and track your submitted feedback.</p>
         </div>
@@ -135,8 +135,8 @@ const ClientFeedback = () => {
               <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
                 <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Subject</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Status</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Subject</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-right">Action</th>
                 </tr>
               </thead>
@@ -146,18 +146,18 @@ const ClientFeedback = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                       {formatDate(item.createdAt)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md transition-colors">
+                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md transition-colors text-center">
                       {item.subject || <span className="text-text-muted italic">No Subject</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
                       {getStatusBadge(item.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
                       <button
                         onClick={() => handleOpenViewModal(item)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-surface-hover transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary hover:text-text-primary bg-surface-divider hover:bg-surface-hover transition-colors"
                       >
-                          <Eye size={14} /> View
+                        <Eye size={14} /> View
                       </button>
                     </td>
                   </tr>
@@ -279,7 +279,7 @@ const ClientFeedback = () => {
 
               <div>
                 <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Message</span>
-                <div className="bg-surface-divider/50 border border-border rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                <div className="bg-surface-divider/50 border border-border rounded-xl p-4 text-sm text-text-secondary whitespace-pre-wrap break-all leading-relaxed max-h-60 overflow-y-auto">
                   {selectedFeedback.message}
                 </div>
               </div>

@@ -108,14 +108,13 @@ const Expired = () => {
                     </div>
                 ) : (
                     <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* List Header */}
                         <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-hover/50 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
                             <div>Client Info</div>
-                            <div>Mobile</div>
-                            <div>Last Plan</div>
-                            <div>Ended On</div>
-                            <div>Days Ago</div>
-                            <div>Status</div>
+                            <div className="text-center">Mobile</div>
+                            <div className="text-center">Last Plan</div>
+                            <div className="text-center">Ended On</div>
+                            <div className="text-center">Days Ago</div>
+                            <div className="text-center">Status</div>
                             <div className="text-right pr-4">Actions</div>
                         </div>
 

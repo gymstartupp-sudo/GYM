@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { ChevronLeft, Phone, Mail, User, CreditCard, Calendar, CheckCircle2, AlertCircle, Clock, X, FileText, Trash2, Download, MessageSquare } from 'lucide-react';
+import { ChevronLeft, FileText, Calendar, CreditCard, User, CheckCircle2, Send, Download, AlertCircle, X } from 'lucide-react';
 import Button from '../../components/Button';
+import Tooltip from '../../components/Tooltip';
 import ConfirmModal from '../../components/ConfirmModal';
 import { formatDisplayDate, calculateDaysLeft, getPlanStatus, getPaymentStatus, getClientPlans } from '../../utils/membership';
 import ClientProfileHeader from '../../components/ClientProfileHeader';
@@ -22,11 +23,37 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     const [sendingWhatsAppId, setSendingWhatsAppId] = useState(null);
     const [downloadingId, setDownloadingId] = useState(null);
 
+    const getWhatsAppInvoiceTooltip = (payment) => {
+        const sentCount = payment.whatsappSendCount || 0;
+        const remaining = Math.max(0, 2 - sentCount);
+        if (remaining === 0) {
+            return "Send via WhatsApp (0 remaining - Limit Reached)";
+        }
+        return `Send via WhatsApp (${remaining} remaining)`;
+    };
+
+    const isWhatsAppInvoiceDisabled = (payment) => {
+        const sentCount = payment.whatsappSendCount || 0;
+        return sentCount >= 2;
+    };
+
     const handleSendWhatsAppInvoice = async (payment) => {
         setSendingWhatsAppId(payment._id);
         try {
             await api.post(`/payment/${payment._id}/send-whatsapp`);
             toast.success("Invoice queued to send via WhatsApp");
+            setClient(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    paymentHistory: prev.paymentHistory.map(p => 
+                        p._id === payment._id ? { ...p, whatsappSendCount: (p.whatsappSendCount || 0) + 1 } : p
+                    )
+                };
+            });
+            if (selectedPayment && selectedPayment._id === payment._id) {
+                setSelectedPayment(prev => ({ ...prev, whatsappSendCount: (prev.whatsappSendCount || 0) + 1 }));
+            }
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to send invoice via WhatsApp");
         } finally {
@@ -216,7 +243,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                 onClick={() => setShowDeactivateModal(true)}
                                 className="!px-4 !py-2.5 text-xs flex items-center gap-1.5"
                             >
-                                <Trash2 size={14} /> Deactivate Client
+                                Deactivate Client
                             </Button>
                         )}
                     </div>
@@ -433,12 +460,12 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                         <thead>
                                             <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
                                                 <th className="p-5">Receipt Info</th>
-                                                <th className="p-5">Plan</th>
-                                                <th className="p-5">Mode</th>
-                                                <th className="p-5 text-right">Plan Amount</th>
-                                                <th className="p-5 text-right">Paid Now</th>
-                                                <th className="p-5 text-right">Total Paid</th>
-                                                <th className="p-5 text-right">Remaining Balance</th>
+                                                <th className="p-5 text-center">Plan</th>
+                                                <th className="p-5 text-center">Mode</th>
+                                                <th className="p-5 text-center">Plan Amount</th>
+                                                <th className="p-5 text-center">Paid Now</th>
+                                                <th className="p-5 text-center">Total Paid</th>
+                                                <th className="p-5 text-center">Remaining Balance</th>
                                                 <th className="p-5 text-center">Status</th>
                                                 <th className="p-5 text-center">Bill</th>
                                             </tr>
@@ -450,18 +477,18 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                         <p className="font-bold text-text-primary text-sm">{payment.paymentId}</p>
                                                         <p className="text-[10px] text-text-muted mt-0.5">{new Date(payment.createdAt || payment.date || payment.paymentDate).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                                     </td>
-                                                    <td className="p-5">
+                                                    <td className="p-5 text-center">
                                                         <span className="text-text-secondary text-xs font-medium">{payment.planName}</span>
                                                     </td>
-                                                    <td className="p-5">
+                                                    <td className="p-5 text-center">
                                                         <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${(payment.paymentMethod || payment.mode || 'cash') === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
                                                             {payment.paymentMethod || payment.mode || 'cash'}
                                                         </span>
                                                     </td>
-                                                    <td className="p-5 text-right text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
-                                                    <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
-                                                    <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
-                                                    <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
+                                                    <td className="p-5 text-center text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
+                                                    <td className="p-5 text-center text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
+                                                    <td className="p-5 text-center text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
+                                                    <td className="p-5 text-center text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
                                                     <td className="p-5 text-center">
                                                         {getStatusBadge(payment)}
                                                         {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
@@ -489,15 +516,17 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                              >
                                                                  <Download size={16} />
                                                              </button>
-                                                             <button
-                                                                 type="button"
-                                                                 disabled={sendingWhatsAppId === payment._id}
-                                                                 onClick={() => handleSendWhatsAppInvoice(payment)}
-                                                                 className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
-                                                                 title="Send via WhatsApp"
-                                                             >
-                                                                 <MessageSquare size={16} />
-                                                             </button>
+                                                             <Tooltip content={getWhatsAppInvoiceTooltip(payment)}>
+                                                                 <button
+                                                                     type="button"
+                                                                     disabled={sendingWhatsAppId === payment._id || isWhatsAppInvoiceDisabled(payment)}
+                                                                     onClick={() => handleSendWhatsAppInvoice(payment)}
+                                                                     className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                     title="Send via WhatsApp"
+                                                                 >
+                                                                     <Send size={16} />
+                                                                 </button>
+                                                             </Tooltip>
                                                          </div>
                                                      </td>
                                                 </tr>
@@ -544,22 +573,6 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                     </button>
                                     <button
                                         type="button"
-                                        disabled={downloadingId === selectedPayment._id}
-                                        onClick={() => downloadInvoice(selectedPayment)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
-                                    >
-                                        Download
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled={sendingWhatsAppId === selectedPayment._id}
-                                        onClick={() => handleSendWhatsAppInvoice(selectedPayment)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50"
-                                    >
-                                        Send WhatsApp
-                                    </button>
-                                    <button
-                                        type="button"
                                         onClick={() => setShowReceiptModal(false)}
                                         className="p-1.5 text-text-secondary hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-all"
                                     >
@@ -572,7 +585,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                             <div className="p-8 space-y-6">
                                 {/* Header: Gym Info */}
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-gray-200">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-start gap-3">
                                         {getLogoUrl() ? (
                                             <img
                                                 src={getLogoUrl()}
@@ -584,10 +597,13 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                 {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
                                             </div>
                                         )}
-                                        <div>
-                                            <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
-                                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
-                                        </div>
+                                        <div className="pt-1">
+                                             <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
+                                             {gymInfo?.tagline && (
+                                                 <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{gymInfo.tagline}</p>
+                                             )}
+                                             <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                                         </div>
                                     </div>
 
                                     <div className="text-left sm:text-right text-xs text-gray-600 space-y-1">
@@ -677,14 +693,10 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
                                 {/* Footer: Greetings & Regards */}
                                 <div className="pt-8 border-t border-gray-200 text-center space-y-3">
-                                    {gymInfo?.billingInfo?.greetingText && (
-                                        <p className="text-xs text-text-muted font-medium italic">"{gymInfo.greetingText}"</p>
-                                    )}
-                                    <div className="text-[11px] text-text-secondary">
-                                        <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
-                                        <p className="mt-1 font-medium">Thank you for your business!</p>
-                                    </div>
-                                </div>
+                                     <div className="text-[11px] text-text-secondary">
+                                         <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
+                                     </div>
+                                 </div>
                             </div>
                         </div>
                     </div>

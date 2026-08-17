@@ -5,6 +5,7 @@ import { FileText, CheckCircle2, X, Download, Printer, Phone, Mail } from 'lucid
 import Button from '../../components/Button';
 import ClientRenewModal from '../../components/ClientRenewModal';
 import { calculateEndDate } from '../../utils/membership';
+import Tooltip from '../../components/Tooltip';
 
 const getPendingPayment = (clientDoc) => {
   if (!clientDoc || !clientDoc.paymentHistory || clientDoc.paymentHistory.length === 0) return null;
@@ -200,15 +201,15 @@ const ClientPayments = () => {
             <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
             <thead>
               <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
-                <th className="p-5">Receipt Info</th>
-                <th className="p-5">Plan</th>
-                <th className="p-5">Mode</th>
-                <th className="p-5 text-right">Plan Amount</th>
-                <th className="p-5 text-right">Paid Now</th>
-                <th className="p-5 text-right">Total Paid</th>
-                <th className="p-5 text-right">Remaining Balance</th>
-                <th className="p-5 text-center">Status</th>
-                <th className="p-5 text-center">Bill</th>
+               <th className="p-5">Receipt Info</th>
+               <th className="p-5 text-center">Plan</th>
+               <th className="p-5 text-center">Mode</th>
+               <th className="p-5 text-center">Plan Amount</th>
+               <th className="p-5 text-center">Paid Now</th>
+               <th className="p-5 text-center">Total Paid</th>
+               <th className="p-5 text-center">Remaining Balance</th>
+               <th className="p-5 text-center">Status</th>
+               <th className="p-5 text-center">Bill</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -226,8 +227,7 @@ const ClientPayments = () => {
                       <p className="text-[10px] text-text-muted mt-0.5">
                         {new Date(pmt.paymentDate || pmt.createdAt || pmt.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
                       </p>
-                    </td>
-                    <td className="p-5">
+                    </td>                     <td className="p-5 text-center">
                       <span className="text-text-secondary text-xs font-medium block">{pmt.planName || 'Custom'}</span>
                       {pmt.startDate && (() => {
                         const period = getBillingPeriod(pmt);
@@ -238,15 +238,15 @@ const ClientPayments = () => {
                         ) : null;
                       })()}
                     </td>
-                    <td className="p-5">
+                    <td className="p-5 text-center">
                       <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${pmt.paymentMethod === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
                         {pmt.paymentMethod || pmt.mode || 'cash'}
                       </span>
                     </td>
-                    <td className="p-5 text-right text-text-primary font-bold text-sm">₹{pmt.invoiceAmount || pmt.amount || 0}</td>
-                    <td className="p-5 text-right text-blue-400 font-bold text-sm">₹{pmt.paidNow || pmt.paidAmount || 0}</td>
-                    <td className="p-5 text-right text-emerald-400 font-bold text-sm">₹{pmt.totalPaid || pmt.paidAmount || 0}</td>
-                    <td className="p-5 text-right text-rose-500 font-bold text-sm">₹{pmt.remainingBalance !== undefined ? pmt.remainingBalance : (pmt.amount - (pmt.paidAmount || 0))}</td>
+                    <td className="p-5 text-center text-text-primary font-bold text-sm">₹{pmt.invoiceAmount || pmt.amount || 0}</td>
+                    <td className="p-5 text-center text-blue-400 font-bold text-sm">₹{pmt.paidNow || pmt.paidAmount || 0}</td>
+                    <td className="p-5 text-center text-emerald-400 font-bold text-sm">₹{pmt.totalPaid || pmt.paidAmount || 0}</td>
+                    <td className="p-5 text-center text-rose-500 font-bold text-sm">₹{pmt.remainingBalance !== undefined ? pmt.remainingBalance : (pmt.amount - (pmt.paidAmount || 0))}</td>
                     <td className="p-5 text-center">
                       {getStatusBadge(pmt)}
                       {pmt.status === 'partial' && !isPaymentCleared(pmt) && pmt.dueDate && (
@@ -257,23 +257,25 @@ const ClientPayments = () => {
                     </td>
                     <td className="p-5 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedPayment(pmt); setShowReceiptModal(true); }}
-                          className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
-                          title="View Invoice"
-                        >
-                          <FileText size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={downloadingId === pmt._id}
-                          onClick={() => downloadInvoice(pmt)}
-                          className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
-                          title="Download Invoice"
-                        >
-                          <Download size={16} />
-                        </button>
+                        <Tooltip content="View Invoice">
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedPayment(pmt); setShowReceiptModal(true); }}
+                            className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
+                          >
+                            <FileText size={16} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Download Invoice">
+                          <button
+                            type="button"
+                            disabled={downloadingId === pmt._id}
+                            onClick={() => downloadInvoice(pmt)}
+                            className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
+                          >
+                            <Download size={16} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </td>
                   </tr>
@@ -320,14 +322,6 @@ const ClientPayments = () => {
                   </button>
                   <button
                     type="button"
-                    disabled={downloadingId === selectedPayment._id}
-                    onClick={() => downloadInvoice(selectedPayment)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm disabled:opacity-50"
-                  >
-                    Download
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => setShowReceiptModal(false)}
                     className="p-1.5 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-200 transition-all"
                   >
@@ -341,7 +335,7 @@ const ClientPayments = () => {
                 {/* Header: Gym & Invoice Details */}
                 <div className="flex justify-between items-start gap-3 pb-4 border-b border-gray-200">
                   {/* Gym Details on Left */}
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-start gap-2.5">
                     {getLogoUrl() ? (
                       <img
                         src={getLogoUrl()}
@@ -353,8 +347,11 @@ const ClientPayments = () => {
                         {(gymInfo?.gymName || "G").charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div>
+                    <div className="pt-0.5">
                       <h2 className="text-base font-black uppercase tracking-tight text-gray-900 leading-none">{gymInfo?.gymName || "LIK GYM"}</h2>
+                      {gymInfo?.tagline && (
+                        <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{gymInfo.tagline}</p>
+                      )}
                       <p className="text-[9px] text-text-muted font-bold uppercase tracking-wider mt-1">Gym ID: {gymInfo?.gymId || "N/A"}</p>
                       <p className="text-[10px] text-gray-600 max-w-[220px] leading-relaxed whitespace-pre-line mt-0.5">
                         {gymInfo?.billingInfo?.addressOnBill || gymInfo?.address || ""}
@@ -458,7 +455,7 @@ const ClientPayments = () => {
                 {/* Footer: Greetings & Contact info */}
                 <div className="pt-3 border-t border-gray-200 text-center space-y-2">
                   <div>
-                    <p className="text-xs font-black text-gray-900">Thank you for your business!</p>
+                    <p className="text-xs font-black text-gray-900">{gymInfo?.billingInfo?.regards || "Thank you for your business!"}</p>
                     <p className="text-[10px] text-text-muted font-medium mt-0.5">
                       For any inquiries regarding this invoice or your membership, please reach out to our dedicated support team.
                     </p>

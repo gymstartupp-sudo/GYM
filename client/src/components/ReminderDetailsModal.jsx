@@ -1,17 +1,26 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { X, Check, AlertTriangle, Clock } from 'lucide-react';
+import { calculateDaysLeft, getPlanStatus } from '../utils/membership';
 
 const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   if (!isOpen || !client) return null;
 
+  const currentPlan = client?.memberships?.find(p => {
+    const s = getPlanStatus(p);
+    return s === 'active';
+  }) || (client?.membership?.startDate ? client.membership : null);
+
   const name = client?.personalInfo?.name || 'Client';
   const clientId = client?.clientId || 'N/A';
   const mobile = client?.personalInfo?.mobileNo || '-';
-  const planName = client?.membership?.planName || 'No Plan';
-  const daysLeft = client?.membership?.daysLeft ?? '-';
-  const startDate = client?.membership?.startDate;
-  const endDate = client?.membership?.endDate;
+  const planName = currentPlan?.planName || 'No Plan';
+  
+  const dynamicDaysLeft = calculateDaysLeft(currentPlan?.startDate, currentPlan?.endDate);
+  const daysLeft = dynamicDaysLeft !== null ? dynamicDaysLeft : '-';
+
+  const startDate = currentPlan?.startDate;
+  const endDate = currentPlan?.endDate;
 
   const expiryStatus = client?.expiryReminderStatus || 'none';
   const expirySentAt = client?.expiryReminderSentAt;
@@ -62,9 +71,9 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   const isMembershipActive = startDateNorm ? today >= startDateNorm : false;
 
   const getStepStatus = (stepObj) => {
-    if (stepObj?.status && stepObj.status !== 'none') return stepObj.status;
+    if (stepObj?.status === 'sent' || stepObj?.status === 'failed') return stepObj.status;
     if (client.overdueReminders?.workflowCompleted) return 'skipped';
-    return 'none';
+    return stepObj?.status || 'none';
   };
 
   const StatusBadge = ({ status }) => {

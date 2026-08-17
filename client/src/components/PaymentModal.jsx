@@ -514,8 +514,8 @@ const PaymentModal = ({
         }
 
         if (!isUpdateMode && paymentType === 'partial') {
-            if (paid <= 100) {
-                setFormError("You must pay an amount greater than ₹100 for partial payment.");
+            if (paid < 100) {
+                setFormError("Minimum partial payment amount is ₹100.");
                 return;
             }
         }

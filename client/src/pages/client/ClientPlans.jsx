@@ -98,7 +98,7 @@ const ClientPlans = () => {
                 </div>
             ) : plans.length === 0 ? (
                 <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
-                    No plans available at the moment.
+                    Your gym has no membership plans.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -178,15 +178,26 @@ const generatePaymentPDF = async (payment, client, gym) => {
       }
 
       const textX = hasLogoBox ? 95 : 40;
-
+      let currentY = 52;
       doc.fillColor('#1f2937')
         .fontSize(14)
         .font(fontBold)
-        .text(String(gym.gymName).toUpperCase(), textX, 50, { width: 280 });
+        .text(String(gym.gymName).toUpperCase(), textX, currentY, { width: 280 });
+      currentY += 16;
+
+      if (gym.tagline) {
+        doc.fontSize(8)
+          .fillColor('#4b5563')
+          .font(fontName)
+          .text(gym.tagline, textX, currentY, { width: 280 });
+        currentY += 12;
+      }
+
       doc.fontSize(8)
         .fillColor('#4b5563')
         .font(fontBold)
-        .text(`GYM ID: ${gym.gymId}`, textX, 66, { width: 280 });
+        .text(`GYM ID: ${gym.gymId}`, textX, currentY, { width: 280 });
+      currentY += 12;
 
       // Address below details (no tagline)
       const rawAddress = gym.billingInfo?.addressOnBill || gym.address || '';
@@ -199,7 +210,9 @@ const generatePaymentPDF = async (payment, client, gym) => {
         doc.fontSize(8)
           .font(fontName)
           .fillColor('#4b5563')
-          .text(gymAddress, textX, 78, { width: 280 });
+          .text(gymAddress, textX, currentY, { width: 280 });
+        const numLines = gymAddress.split('\n').length;
+        currentY += numLines * 10;
       }
 
       // Status Badge (Top-Right)
@@ -238,10 +251,11 @@ const generatePaymentPDF = async (payment, client, gym) => {
         .fontSize(9)
         .text(`Date: ${formattedDate}`, 350, 93, { width: 205, align: 'right' });
 
-      drawLine(115);
+      const lineY = Math.max(115, currentY + 10);
+      drawLine(lineY);
 
       // 2. Metadata Blocks: BILLED TO and PAYMENT DETAILS (Side-by-side)
-      let metaY = 135;
+      let metaY = lineY + 20;
       const memberSince = client.createdAt ? new Date(client.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A';
 
       // Column 1: BILLED TO
@@ -258,7 +272,7 @@ const generatePaymentPDF = async (payment, client, gym) => {
       doc.fontSize(9).fillColor('#4b5563').font(fontName).text(`Status: ${payStatus}`, 350, metaY + 28, { width: 205, align: 'right' });
 
       // 3. Table Header
-      let tableY = 205;
+      let tableY = Math.max(205, metaY + 70);
       doc.fontSize(8).fillColor('#9ca3af').font(fontBold).text('MEMBERSHIP DETAILS', 40, tableY);
       doc.text('PERIOD', 250, tableY, { width: 180, align: 'center' });
       doc.text('AMOUNT', 430, tableY, { width: 125, align: 'right' });
@@ -358,14 +372,15 @@ const generatePaymentPDF = async (payment, client, gym) => {
       }
 
       // 6. Footer Layout
-      let footerY = 480;
+      let footerY = Math.max(480, calcY + 30);
       doc.strokeColor('#e5e7eb').lineWidth(1).moveTo(40, footerY).lineTo(555, footerY).stroke();
 
       footerY += 15;
+      const regardsText = gym.billingInfo?.regards || 'Thank you for your business!';
       doc.fillColor('#111827')
         .font(fontBold)
         .fontSize(9)
-        .text('Thank you for your business!', 40, footerY, { width: 515, align: 'center' });
+        .text(regardsText, 40, footerY, { width: 515, align: 'center' });
 
       footerY += 14;
       doc.font(fontName)

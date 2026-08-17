@@ -44,8 +44,9 @@ const handlePhoneInput = (e) => {
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 const MINUTES = ['00', '15', '30', '45'];
 
-const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', className = '', buttonClassName = '' }) => {
+const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', className = '', buttonClassName = '', showSearch = false }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const containerRef = React.useRef(null);
 
   useEffect(() => {
@@ -57,6 +58,16 @@ const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', c
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSearch('');
+    }
+  }, [isOpen]);
+
+  const filteredOptions = showSearch
+    ? options.filter((opt) => String(opt).toLowerCase().startsWith(search.toLowerCase()))
+    : options;
 
   return (
     <div ref={containerRef} className={`relative flex-1 flex ${className}`}>
@@ -72,25 +83,39 @@ const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', c
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-slate-950 border border-slate-800 rounded-lg shadow-2xl z-50 max-h-48 overflow-y-auto py-1 animate-in fade-in slide-in-from-top-1 duration-100">
-          {options.length === 0 ? (
-            <p className="text-center py-2 text-xs text-text-secondary">No options available</p>
-          ) : (
-            options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => {
-                  onChange(opt);
-                  setIsOpen(false);
-                }}
-                className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-white'
-                  }`}
-              >
-                {opt}
-              </button>
-            ))
+        <div className="absolute left-0 right-0 top-full mt-1 bg-slate-950 border border-slate-800 rounded-lg shadow-2xl z-50 max-h-56 flex flex-col overflow-hidden py-1 animate-in fade-in slide-in-from-top-1 duration-100">
+          {showSearch && (
+            <div className="px-2 py-1.5 border-b border-slate-800 shrink-0">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-primary/50"
+                autoFocus
+              />
+            </div>
           )}
+          <div className="overflow-y-auto flex-1 max-h-40">
+            {filteredOptions.length === 0 ? (
+              <p className="text-center py-2 text-xs text-text-secondary">No options found</p>
+            ) : (
+              filteredOptions.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-white'
+                    }`}
+                >
+                  {opt}
+                </button>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -142,7 +167,7 @@ const optionalUrl = yup.string().trim().test(
 );
 
 const schema = yup.object({
-  gymName: yup.string().trim().required('Gym name is required').max(50, 'Max 50 chars'),
+  gymName: yup.string().trim().required('Gym name is required').max(35, 'Max 35 chars'),
   gymEmail: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Gym email is required'),
   gymContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   address: yup.string().trim().required('Address is required').max(100, 'Max 100 chars'),
@@ -150,8 +175,8 @@ const schema = yup.object({
   city: yup.string().trim().required('City is required'),
   pincode: yup.string().trim().matches(/^\d{6}$/, 'Pincode must be 6 digits').required('Pincode is required'),
   gst: yup.string().trim().nullable().max(15, 'Max 15 chars'),
-  gymType: yup.string().trim().nullable().max(35, 'Max 35 chars'),
-  tagline: yup.string().trim().nullable().max(50, 'Max 50 chars'),
+  gymType: yup.string().trim().nullable().max(50, 'Max 50 chars'),
+  tagline: yup.string().trim().nullable().max(30, 'Max 30 chars'),
   instagramUrl: optionalUrl,
   facebookUrl: optionalUrl,
   websiteUrl: optionalUrl,
@@ -167,26 +192,26 @@ const schema = yup.object({
   name: yup.string().trim().required('Owner name is required').matches(/^[a-zA-Z\s]+$/, 'Only letters and spaces are allowed').max(50, 'Max 50 chars'),
   mobileNo: yup.string().matches(phoneRegex, phoneError).required(phoneError),
   mailId: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
-  whatsappNumber: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  gmail: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Email is required'),
+  whatsappNumber: yup.string().nullable(),
+  gmail: yup.string().nullable(),
   billingIdPrefix: yup.string().trim().required('Billing prefix is required').max(5, 'Max 5 chars').matches(/^[A-Za-z0-9]+$/, 'Alphanumeric only'),
   helpContact: yup.string().matches(phoneRegex, phoneError).required(phoneError),
-  addressOnBill: yup.string().trim().required('Billing address is required').max(100, 'Max 100 chars'),
+  addressOnBill: yup.string().trim().required('Billing address is required').max(35, 'Max 35 chars'),
   regards: yup.string().trim().required('Regards text is required').max(35, 'Max 35 chars'),
-  greetingText: yup.string().trim().required('Greeting text is required').max(35, 'Max 35 chars'),
+  greetingText: yup.string().trim().nullable().max(35, 'Max 35 chars'),
   logo: yup.mixed().nullable()
 });
 
 const stepRequiredFields = {
   1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'password', 'confirmPassword', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm'],
-  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'gmail'],
-  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText']
+  2: ['name', 'mobileNo', 'mailId'],
+  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards']
 };
 
 const stepAllFields = {
   1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'gst', 'gymType', 'tagline', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm', 'password', 'confirmPassword'],
-  2: ['name', 'mobileNo', 'mailId', 'whatsappNumber', 'gmail'],
-  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'greetingText', 'logo']
+  2: ['name', 'mobileNo', 'mailId'],
+  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'logo']
 };
 
 const GymRegister = () => {
@@ -352,17 +377,14 @@ const GymRegister = () => {
     }
   }, [gymContact, syncHelpContact, setValue, isSubmitted]);
 
-  // Regards & Greeting Auto-Generation
+  // Regards Auto-Generation
   useEffect(() => {
     if (gymName) {
       if (!touchedFields.regards && !errors.regards) {
         setValue('regards', `Regards, Team ${gymName}`);
       }
-      if (!touchedFields.greetingText && !errors.greetingText) {
-        setValue('greetingText', `Thank you for training with ${gymName}.`);
-      }
     }
-  }, [gymName, setValue, touchedFields.regards, touchedFields.greetingText, errors.regards, errors.greetingText]);
+  }, [gymName, setValue, touchedFields.regards, errors.regards]);
 
   const showFieldError = (field) => Boolean(errors[field]);
 
@@ -487,7 +509,7 @@ const GymRegister = () => {
         helpContact: data.helpContact,
         addressOnBill: data.addressOnBill,
         regards: data.regards,
-        greetingText: data.greetingText,
+        greetingText: data.greetingText || '',
         socialMediaLinks: JSON.stringify(socialMediaLinks),
         operatingDays: JSON.stringify(data.operatingDays || []),
         operatingHours: JSON.stringify(operatingHours)
@@ -508,7 +530,7 @@ const GymRegister = () => {
       login(res.data.data.token, 'owner');
 
       toast.success('Registration successful');
-      navigate('/registration-success', { state: { gymId } });
+      navigate('/registration-success', { state: { gymId, email: data.mailId, phone: data.mobileNo } });
     } catch (error) {
       const apiError = error.response?.data;
       if (apiError?.errors && Array.isArray(apiError.errors) && apiError.errors.length > 0) {
@@ -599,7 +621,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-text-secondary font-medium">Gym Name <span className="text-red-500">*</span></p>
               </div>
-              <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="50" />
+              <input {...register('gymName')} placeholder="E.g. Titan Fitness" className={fieldClassName('gymName')} maxLength="35" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymName') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymName.message}</p>}
               </div>
@@ -610,7 +632,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.6">
                 <p className="text-xs text-text-secondary font-medium">Tagline <span className="text-text-secondary font-normal">(Optional)</span></p>
               </div>
-              <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="50" />
+              <input {...register('tagline')} placeholder="E.g. Unleash the beast" className={fieldClassName('tagline')} maxLength="30" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('tagline') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.tagline.message}</p>}
               </div>
@@ -664,7 +686,7 @@ const GymRegister = () => {
               <div className="flex items-center h-5 mb-1.5">
                 <p className="text-xs text-text-secondary font-medium">Gym Type <span className="text-text-secondary font-normal">(Optional)</span></p>
               </div>
-              <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="35" />
+              <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="50" />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('gymType') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymType.message}</p>}
               </div>
@@ -706,6 +728,7 @@ const GymRegister = () => {
                 }}
                 placeholder="Select State"
                 buttonClassName={fieldClassName('state', 'text-left justify-between')}
+                showSearch={true}
               />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('state') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.state.message}</p>}
@@ -723,6 +746,7 @@ const GymRegister = () => {
                 onChange={(val) => setValue('city', val, { shouldValidate: true, shouldDirty: true })}
                 placeholder={watch('state') ? "Select City" : "Select State First"}
                 buttonClassName={fieldClassName('city', 'text-left justify-between')}
+                showSearch={true}
               />
               <div className="min-h-[20px] mt-1">
                 {showFieldError('city') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.city.message}</p>}
@@ -881,25 +905,20 @@ const GymRegister = () => {
           </div>
         )}
 
-        {/* STEP 2: OWNER & COMMUNICATION */}
+        {/* STEP 2: OWNER DETAILS */}
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div>
-              <h3 className="text-lg font-bold text-text-primary mb-1">Owner & Communication</h3>
-              <p className="text-xs text-slate-400">Manage owner credentials and automated reminder settings.</p>
+              <h3 className="text-lg font-bold text-text-primary mb-1">Owner Details</h3>
+              <p className="text-xs text-slate-400">Manage owner credentials.</p>
             </div>
 
-            {/* SECTION A: OWNER DETAILS */}
+            {/* OWNER DETAILS FIELDS */}
             <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                <User className="w-4 h-4 text-primary" />
-                <span className="text-sm font-bold text-slate-200">Section A: Owner Details</span>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2">
                 <div>
                   <p className="text-xs text-text-secondary mb-1.5 font-medium">Owner Full Name <span className="text-red-500">*</span></p>
-                  <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="50" onInput={(e) => { e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ''); }} />
+                  <input {...register('name')} placeholder="E.g. Alexander Walker" className={fieldClassName('name')} maxLength="35" onInput={(e) => { e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, ''); }} />
                   <div className="min-h-[20px] mt-1">
                     {showFieldError('name') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.name.message}</p>}
                   </div>
@@ -946,95 +965,6 @@ const GymRegister = () => {
                     {showFieldError('mailId') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.mailId.message}</p>}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* SECTION B: COMMUNICATION SETTINGS */}
-            <div className="border border-slate-800/80 rounded-2xl p-5 bg-slate-900/10 space-y-4">
-              <div className="pb-1 border-b border-slate-800">
-                <div className="flex items-center gap-2 mb-1">
-                  <Mail className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-bold text-slate-200">Section B: Communication Settings</span>
-                </div>
-                <p className="text-[11px] text-slate-500 leading-normal">These details are used for automated reminders, membership expiry alerts, and payment notifications.</p>
-              </div>
-
-              <div className="space-y-4">
-
-                {/* WhatsApp Number Field */}
-                <div>
-                  <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-text-secondary font-medium">WhatsApp Business Number <span className="text-red-500">*</span></span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={syncWhatsapp}
-                        onChange={(e) => setSyncWhatsapp(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                      />
-                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                        [ Use Gym Contact Number ]
-                      </span>
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      {...register('whatsappNumber')}
-                      type="tel"
-                      placeholder="10-digit WhatsApp number"
-                      className={fieldClassName('whatsappNumber', syncWhatsapp ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : '')}
-                      onInput={handlePhoneInput}
-                      maxLength="10"
-                      readOnly={syncWhatsapp}
-                    />
-                    {syncWhatsapp && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                        <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                        SYNCED
-                      </div>
-                    )}
-                  </div>
-                  {syncWhatsapp && <p className="text-[10px] text-text-secondary mt-1">Using details from Gym Information</p>}
-                  {showFieldError('whatsappNumber') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.whatsappNumber.message}</p>}
-                </div>
-
-
-                {/* Sender Email Field */}
-                <div>
-                  <div className="flex justify-between items-center mb-1.5 select-none">
-                    <span className="text-xs text-text-secondary font-medium">Sender Email <span className="text-red-500">*</span></span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={syncEmail}
-                        onChange={(e) => setSyncEmail(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
-                      />
-                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                        [ Use Gym Email ]
-                      </span>
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      {...register('gmail')}
-                      type="email"
-                      placeholder="Email address used for reminders"
-                      className={fieldClassName('gmail', syncEmail ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : '')}
-                      readOnly={syncEmail}
-                      maxLength="25"
-                    />
-                    {syncEmail && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
-                        <Check className="w-2.5 h-2.5 stroke-[3px]" />
-                        SYNCED
-                      </div>
-                    )}
-                  </div>
-                  {syncEmail && <p className="text-[10px] text-text-secondary mt-1">Using details from Gym Information</p>}
-                  {showFieldError('gmail') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.gmail.message}</p>}
-                </div>
-
               </div>
             </div>
           </div>
@@ -1127,7 +1057,7 @@ const GymRegister = () => {
                   {...register('addressOnBill')}
                   placeholder="Billing address for invoices"
                   className={fieldClassName('addressOnBill', `h-20 resize-none ${syncAddress ? 'bg-slate-900/30 border-primary/20 text-text-secondary cursor-not-allowed pr-24' : ''}`)}
-                  maxLength="100"
+                  maxLength="35"
                   readOnly={syncAddress}
                 />
                 {syncAddress && (
@@ -1211,20 +1141,7 @@ const GymRegister = () => {
               </div>
             </div>
 
-            {/* Greeting Message */}
-            <div>
-              <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-text-secondary font-medium">Greeting Message <span className="text-red-500">*</span></p>
-              </div>
-              <input {...register('greetingText')} placeholder="E.g. Thank you for training with us" className={fieldClassName('greetingText')} maxLength="35" />
-              <div className="min-h-[20px] mt-1">
-                {showFieldError('greetingText') ? (
-                  <p className="text-red-500 text-xs font-medium leading-tight">{errors.greetingText.message}</p>
-                ) : (
-                  <p className="text-[10px] text-text-secondary leading-tight">Greeting shown at bottom of client dashboard.</p>
-                )}
-              </div>
-            </div>
+
 
           </div>
         )}

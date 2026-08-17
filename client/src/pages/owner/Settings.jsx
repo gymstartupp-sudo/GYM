@@ -177,7 +177,7 @@ const Settings = () => {
       {/* Page Header */}
       <div>
         <h1 className="page-heading text-3xl md:text-4xl flex items-center gap-3">
-          <SettingsIcon className="text-primary" /> Settings
+          Settings
         </h1>
         <p className="text-text-secondary mt-2 text-lg">Manage your gym platform options and security settings.</p>
       </div>

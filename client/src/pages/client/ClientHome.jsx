@@ -83,7 +83,7 @@ const ClientHome = () => {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
-            Client Dashboard <Sparkles className="text-primary animate-pulse" size={24} />
+            Client Dashboard
           </h1>
           <p className="text-text-secondary mt-2 text-base md:text-lg">Welcome back! Review your active gym memberships below.</p>
         </div>

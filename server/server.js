@@ -111,8 +111,8 @@ const connectDB = async () => {
 
 const seedSuperAdmin = async () => {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gymplatform.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@1234';
+    const adminEmail = process.env.ADMIN_EMAIL || 'rexfit.nexus@gmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'Ads@123';
 
     const adminExists = await Admin.findOne({ email: adminEmail });
     if (!adminExists) {

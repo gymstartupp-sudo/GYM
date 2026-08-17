@@ -8,6 +8,7 @@ import ClientDetail from './ClientDetail';
 import PaymentModal from '../../components/PaymentModal';
 import ClientCard from '../../components/ClientCard';
 import Pagination from '../../components/Pagination';
+import Tooltip from '../../components/Tooltip';
 import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../../utils/membership';
 import { useAuth } from '../../context/AuthContext';
 
@@ -26,8 +27,8 @@ const StatCard = ({ title, value, icon, accentClass = 'text-primary' }) => (
 );
 
 const ClientDashboardTable = ({ clients, onView }) => (
-    <div className="table-container border-0 rounded-none">
-        <table className="data-table min-w-[500px]">
+    <div className="table-container border-0 rounded-none overflow-x-hidden">
+        <table className="data-table w-full">
             <thead>
                 <tr>
                     <th>Client Info</th>
@@ -53,13 +54,14 @@ const ClientDashboardTable = ({ clients, onView }) => (
                             <span className="text-text-secondary text-sm font-medium">{client.personalInfo?.mobileNo || '-'}</span>
                         </td>
                         <td className="text-right">
-                            <button
-                                onClick={() => onView(client)}
-                                className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
-                                title="View Details"
-                            >
-                                <Eye size={16} />
-                            </button>
+                            <Tooltip content="View Details">
+                                <button
+                                    onClick={() => onView(client)}
+                                    className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border"
+                                >
+                                    <Eye size={16} />
+                                </button>
+                            </Tooltip>
                         </td>
                     </tr>
                 ))}
@@ -90,12 +92,7 @@ const Dashboard = () => {
     const modalScrollRef = useRef(null);
     const itemsPerPage = 10;
 
-    const closeAddModal = (force = false) => {
-        if (!force && isFormDirty) {
-            if (!window.confirm("You have unsaved changes. Are you sure you want to close?")) {
-                return;
-            }
-        }
+    const closeAddModal = () => {
         setShowAddModal(false);
         setFormInstanceKey((currentKey) => currentKey + 1);
         setIsFormDirty(false);
@@ -260,8 +257,8 @@ const Dashboard = () => {
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     {/* Expiring Soon */}
-                    <div className="card p-0 bg-surface-secondary/30 border-border rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                        <div className="flex justify-between items-center p-6 border-b border-border">
+                    <div className="card p-0 bg-surface-divider/80 border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+                        <div className="flex justify-between items-center p-6 border-b border-border/60 bg-surface-divider/50">
                             <h3 className="text-lg font-bold text-text-primary flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-warning"></div> Expiring Soon</h3>
                         </div>
                         {stats?.expiringSoonList?.length === 0 ? (
@@ -270,7 +267,7 @@ const Dashboard = () => {
                             <div>
                                 <ClientDashboardTable clients={stats?.expiringSoonList?.slice(0, 3) || []} onView={setViewClient} />
 
-                                {stats?.expiringSoonList?.length > 0 && (
+                                {stats?.stats?.expiringSoon > 3 && (
                                     <div className="p-4 border-t border-border">
                                         <button
                                             onClick={() => navigate('/owner/dues?tab=expiring')}
@@ -285,8 +282,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Expired List */}
-                    <div className="card p-0 bg-surface-secondary/30 border-border rounded-xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                        <div className="flex justify-between items-center p-6 border-b border-border">
+                    <div className="card p-0 bg-surface-divider/80 border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+                        <div className="flex justify-between items-center p-6 border-b border-border/60 bg-surface-divider/50">
                             <h3 className="text-lg font-bold text-text-primary flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-alert"></div> Expired</h3>
                         </div>
                         {stats?.expiredList?.length === 0 ? (
@@ -295,7 +292,7 @@ const Dashboard = () => {
                             <div>
                                 <ClientDashboardTable clients={stats?.expiredList?.slice(0, 3) || []} onView={setViewClient} />
 
-                                {stats?.expiredList?.length > 0 && (
+                                {stats?.stats?.expiredClients > 3 && (
                                     <div className="p-4 border-t border-border">
                                         <button
                                             onClick={() => navigate('/owner/dues?tab=expired')}
@@ -313,27 +310,29 @@ const Dashboard = () => {
             {/* Add Client Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative bg-surface-primary border border-border/50 rounded-xl p-6 w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
-                        <button type="button" onClick={() => closeAddModal(false)} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
+                    <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200">
+                        <button type="button" onClick={() => closeAddModal()} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
                             <X size={24} />
                         </button>
-                        <h2 className="text-2xl font-bold text-text-primary mb-6">Add New Client</h2>
-                        <ClientForm
-                            key={formInstanceKey}
-                            mode="owner"
-                            showCancel
-                            onCancel={() => closeAddModal(false)}
-                            onDirtyChange={setIsFormDirty}
-                            onSuccess={(client, actionType) => {
-                                closeAddModal(true);
-                                if (actionType === 'restore') {
-                                    toast.success('Client restored successfully');
-                                } else {
-                                    toast.success('Client added successfully');
-                                }
-                                fetchStats();
-                            }}
-                        />
+                        <div className="p-8">
+                            <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Enroll New Client</h2>
+                            <ClientForm
+                                key={formInstanceKey}
+                                mode="owner"
+                                showCancel
+                                onCancel={() => closeAddModal()}
+                                onDirtyChange={setIsFormDirty}
+                                onSuccess={(client, actionType) => {
+                                    closeAddModal();
+                                    if (actionType === 'restore') {
+                                        toast.success('Client restored successfully');
+                                    } else {
+                                        toast.success('Client added successfully');
+                                    }
+                                    fetchStats();
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
             )}

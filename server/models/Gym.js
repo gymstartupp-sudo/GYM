@@ -8,7 +8,7 @@ const gymSchema = new mongoose.Schema({
   gymContact: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   owner: {
-    name: { type: String, required: true, maxlength: 50 },
+    name: { type: String, required: true, maxlength: 35 },
     email: { type: String, required: true, trim: true },
     mobile: { type: String, trim: true },
     phone: { type: String, trim: true }
@@ -19,8 +19,8 @@ const gymSchema = new mongoose.Schema({
   pincode: { type: String, required: true, maxlength: 6 },
   gst: { type: String, default: "", maxlength: 15 },
   gymLogo: { type: String, default: "" },
-  tagline: { type: String, default: "", maxlength: 35 },
-  gymType: { type: String, default: "", maxlength: 35 },
+  tagline: { type: String, default: "", maxlength: 30 },
+  gymType: { type: String, default: "", maxlength: 50 },
   operatingDays: [{ type: String }],
   operatingHours: {
     open: { type: String, default: "" },
@@ -29,7 +29,7 @@ const gymSchema = new mongoose.Schema({
   billingInfo: {
     billingIdPrefix: { type: String, default: 'BILL', maxlength: 5 },
     helpContact: { type: String, default: "" },
-    addressOnBill: { type: String, default: "", maxlength: 100 },
+    addressOnBill: { type: String, default: "", maxlength: 35 },
     regards: { type: String, default: "", maxlength: 35 },
     greetingText: { type: String, default: "", maxlength: 35 },
     allowPartialPayments: { type: Boolean, default: true }
