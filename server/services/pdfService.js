@@ -242,7 +242,7 @@ const generatePaymentPDF = async (payment, client, gym) => {
       doc.fillColor('#111827')
         .font(fontBold)
         .fontSize(10)
-        .text(`Invoice #${payment.paymentId}`, 350, 78, { width: 205, align: 'right' });
+        .text(`Invoice No : ${payment.paymentId}`, 350, 78, { width: 205, align: 'right' });
 
       const pDate = payment.paymentDate ? new Date(payment.paymentDate) : new Date();
       const formattedDate = pDate.toLocaleDateString('en-GB').replace(/\//g, '-');

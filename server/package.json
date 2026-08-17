@@ -8,7 +8,6 @@
     "reset-gym-password": "node scripts/reset_gym_password.js",
     "migrate-clients": "node scripts/migrateClients.js",
     "drop-feedback-index": "node scripts/dropFeedbackIndex.js",
-    "test-workflow": "node scripts/testWorkflow.js",
     "check-braces": "node scripts/check_braces.js"
   },
   "keywords": [],
@@ -32,7 +31,6 @@
     "node-cron": "^4.2.1",
     "nodemon": "^3.1.14",
     "pdfkit": "^0.19.1",
-    "razorpay": "^2.9.6",
-    "twilio": "^5.13.1"
+    "razorpay": "^2.9.6"
   }
 }

@@ -127,8 +127,44 @@ const uploadPDFToCloudinary = async (filePath) => {
   }
 };
 
+const uploadIssueAttachmentToCloudinary = async (filePath, type = 'image') => {
+  if (!filePath) {
+    throw new Error('File path is required for Cloudinary upload');
+  }
+
+  try {
+    // Check if file exists locally
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Local file not found at: ${filePath}`);
+    }
+
+    // Upload to Cloudinary under folder "gym_issues"
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: 'gym_issues',
+      resource_type: type === 'video' ? 'video' : 'image'
+    });
+
+    // Clean up local temp file asynchronously
+    fs.unlink(filePath, (err) => {
+      if (err) console.error(`Failed to delete local issue file at ${filePath}:`, err);
+    });
+
+    return result.secure_url;
+  } catch (error) {
+    // Ensure we attempt to clean up local file even if upload fails
+    if (fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) console.error(`Failed to delete local issue file on error at ${filePath}:`, err);
+      });
+    }
+    console.error('Cloudinary issue upload error:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   uploadLogoToCloudinary,
   uploadBillToCloudinary,
-  uploadPDFToCloudinary
+  uploadPDFToCloudinary,
+  uploadIssueAttachmentToCloudinary
 };

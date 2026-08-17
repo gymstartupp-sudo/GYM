@@ -61,8 +61,13 @@ exports.submitIssue = async (req, res, next) => {
     const screenshotFiles = files.screenshots || [];
     const videoFile = files.video ? files.video[0] : null;
 
-    const screenshots = screenshotFiles.map(f => toPublicUrl(f.path));
-    const video = videoFile ? toPublicUrl(videoFile.path) : null;
+    const { uploadIssueAttachmentToCloudinary } = require('../utils/cloudinary');
+
+    const screenshotPromises = screenshotFiles.map(f =>
+      uploadIssueAttachmentToCloudinary(f.path, 'image')
+    );
+    const screenshots = await Promise.all(screenshotPromises);
+    const video = videoFile ? await uploadIssueAttachmentToCloudinary(videoFile.path, 'video') : null;
 
     // Ensure unique ticket ID
     let ticketId;

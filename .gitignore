@@ -16,3 +16,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Admin Scripts
+server/scripts/reset_gym_password.js
+server/scripts/db_audit_runner.js
+server/scripts/cleanup_duplicates.js
+

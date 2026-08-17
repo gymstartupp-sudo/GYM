@@ -298,13 +298,13 @@ const Transactions = () => {
     const getInvoicePeriod = (payment) => {
         if (!payment.startDate) return '—';
         const clientObj = clients.find(c => c._id === payment.clientId);
-        const relatedM = clientObj?.memberships?.find(m => 
+        const relatedM = clientObj?.memberships?.find(m =>
             (m.planId?._id || m.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
             new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
         ) || (
-            (clientObj?.membership?.planId?._id || clientObj?.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
-            new Date(clientObj?.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? clientObj.membership : null
-        );
+                (clientObj?.membership?.planId?._id || clientObj?.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+                    new Date(clientObj?.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? clientObj.membership : null
+            );
         const startStr = new Date(payment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-');
         if (relatedM?.endDate) {
             return `${startStr} to ${new Date(relatedM.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
@@ -324,155 +324,155 @@ const Transactions = () => {
 
     return (
         <div className="p-4 md:p-8 md:pt-10">
-                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients Payment</h1>
-                        <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
-                    </div>
-                    {!isReadOnly && (
-                        <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
-                            <Plus size={18} /> Record Payment
-                        </Button>
-                    )}
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
+                <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Clients Payment</h1>
+                    <p className="text-text-secondary mt-1 text-sm md:text-base">Manage and track all member transactions.</p>
                 </div>
+                {!isReadOnly && (
+                    <Button onClick={() => setShowModal(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                        <Plus size={18} /> Record Payment
+                    </Button>
+                )}
+            </div>
 
-                <div className="bg-surface-divider/80 rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
-                            <thead>
-                                <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
-                                    <th className="p-5">Receipt Info</th>
-                                    <th className="p-5 text-center">Client Info</th>
-                                    <th className="p-5 text-center">Plan</th>
-                                    <th className="p-5 text-center">Mode</th>
-                                    <th className="p-5 text-center">Plan Amount</th>
-                                    <th className="p-5 text-center">Paid Now</th>
-                                    <th className="p-5 text-center">Total Paid</th>
-                                    <th className="p-5 text-center">Remaining Balance</th>
-                                    <th className="p-5 text-center">Status</th>
-                                    <th className="p-5 text-center">Bill</th>
-                                    <th className="p-5 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/50">
-                                {loading ? (
-                                    [...Array(4)].map((_, i) => (
-                                        <tr key={i} className="border-b border-border/50">
-                                            <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-20 bg-surface-divider rounded animate-pulse"></div></td>
-                                            <td className="p-5"><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1 mx-auto"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-12 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse mx-auto"></div></td>
-                                            <td className="p-5"><div className="flex gap-2 justify-center"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div></td>
-                                        </tr>
-                                    ))
-                                ) : payments.length === 0 ? (
-                                    <tr><td colSpan="10" className="text-center py-20 text-text-muted">No payment records found.</td></tr>
-                                ) : (
-                                    paginatedPayments.map(payment => (
-                                        <tr key={payment._id} className="hover:bg-surface-divider/80 transition-all group">
-                                            <td className="p-5">
-                                                <p className="font-bold text-text-primary text-sm">{payment.paymentId}</p>
-                                                <p className="text-[10px] text-text-muted mt-0.5">{new Date(payment.createdAt || payment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
-                                            </td>
-                                            <td className="p-5 text-center">
-                                                <p className="font-bold text-text-primary text-sm">{payment.clientName}</p>
-                                                <p className="text-[10px] font-black text-primary uppercase tracking-tighter">{getClientDisplayId(payment.clientId)}</p>
-                                            </td>
-                                            <td className="p-5 text-center">
-                                                <span className="text-text-secondary text-xs font-medium block">{payment.planName}</span>
-                                                {payment.startDate && (() => {
-                                                    const period = getBillingPeriod(payment);
-                                                    return period ? (
-                                                        <span className="text-[10px] text-text-muted mt-0.5 block font-medium">
-                                                            {period}
-                                                        </span>
-                                                    ) : null;
-                                                })()}
-                                            </td>
-                                            <td className="p-5 text-center">
-                                                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${payment.paymentMethod === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
-                                                    {payment.paymentMethod || payment.mode || 'cash'}
-                                                </span>
-                                            </td>
-                                            <td className="p-5 text-center text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
-                                            <td className="p-5 text-center text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
-                                            <td className="p-5 text-center text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
-                                            <td className="p-5 text-center text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
-                                            <td className="p-5 text-center">
-                                                {getStatusBadge(payment)}
-                                                {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
-                                                    <div className="mt-1 text-[10px] text-text-muted font-medium">
-                                                        Due: {new Date(payment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="p-5 text-center text-xs">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Tooltip content="View Invoice">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
-                                                            className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
-                                                        >
-                                                            <FileText size={16} />
-                                                        </button>
-                                                    </Tooltip>
-                                                    <Tooltip content="Download Invoice">
-                                                        <button
-                                                            type="button"
-                                                            disabled={downloadingId === payment._id}
-                                                            onClick={() => downloadInvoice(payment)}
-                                                            className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
-                                                        >
-                                                            <Download size={16} />
-                                                        </button>
-                                                    </Tooltip>
-                                                    <Tooltip content={getWhatsAppInvoiceTooltip(payment)}>
-                                                        <button
-                                                            type="button"
-                                                            disabled={sendingWhatsAppId === payment._id || isWhatsAppInvoiceDisabled(payment)}
-                                                            onClick={() => handleSendWhatsAppInvoice(payment)}
-                                                            className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                        >
-                                                            <Send size={16} />
-                                                        </button>
-                                                    </Tooltip>
+            <div className="bg-surface-divider/80 rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse whitespace-nowrap min-w-[900px]">
+                        <thead>
+                            <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
+                                <th className="p-5">Receipt Info</th>
+                                <th className="p-5 text-center">Client Info</th>
+                                <th className="p-5 text-center">Plan</th>
+                                <th className="p-5 text-center">Mode</th>
+                                <th className="p-5 text-center">Plan Amount</th>
+                                <th className="p-5 text-center">Paid Now</th>
+                                <th className="p-5 text-center">Total Paid</th>
+                                <th className="p-5 text-center">Remaining Balance</th>
+                                <th className="p-5 text-center">Status</th>
+                                <th className="p-5 text-center">Bill</th>
+                                <th className="p-5 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                            {loading ? (
+                                [...Array(4)].map((_, i) => (
+                                    <tr key={i} className="border-b border-border/50">
+                                        <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-20 bg-surface-divider rounded animate-pulse"></div></td>
+                                        <td className="p-5"><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1 mx-auto"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-4 w-12 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-4 w-14 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse mx-auto"></div></td>
+                                        <td className="p-5"><div className="flex gap-2 justify-center"><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div><div className="h-7 w-7 bg-surface-divider rounded-lg animate-pulse"></div></div></td>
+                                    </tr>
+                                ))
+                            ) : payments.length === 0 ? (
+                                <tr><td colSpan="10" className="text-center py-20 text-text-muted">No payment records found.</td></tr>
+                            ) : (
+                                paginatedPayments.map(payment => (
+                                    <tr key={payment._id} className="hover:bg-surface-divider/80 transition-all group">
+                                        <td className="p-5">
+                                            <p className="font-bold text-text-primary text-sm">{payment.paymentId}</p>
+                                            <p className="text-[10px] text-text-muted mt-0.5">{new Date(payment.createdAt || payment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <p className="font-bold text-text-primary text-sm">{payment.clientName}</p>
+                                            <p className="text-[10px] font-black text-primary uppercase tracking-tighter">{getClientDisplayId(payment.clientId)}</p>
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <span className="text-text-secondary text-xs font-medium block">{payment.planName}</span>
+                                            {payment.startDate && (() => {
+                                                const period = getBillingPeriod(payment);
+                                                return period ? (
+                                                    <span className="text-[10px] text-text-muted mt-0.5 block font-medium">
+                                                        {period}
+                                                    </span>
+                                                ) : null;
+                                            })()}
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${payment.paymentMethod === 'cash' ? 'text-emerald-400 bg-emerald-400/5' : 'text-blue-400 bg-blue-400/5'}`}>
+                                                {payment.paymentMethod || payment.mode || 'cash'}
+                                            </span>
+                                        </td>
+                                        <td className="p-5 text-center text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
+                                        <td className="p-5 text-center text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
+                                        <td className="p-5 text-center text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
+                                        <td className="p-5 text-center text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
+                                        <td className="p-5 text-center">
+                                            {getStatusBadge(payment)}
+                                            {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
+                                                <div className="mt-1 text-[10px] text-text-muted font-medium">
+                                                    Due: {new Date(payment.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-')}
                                                 </div>
-                                            </td>
-                                            <td className="p-5">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Tooltip content="View Client">
-                                                        <button
-                                                            onClick={() => {
-                                                                const client = clients.find(c => c._id === payment.clientId);
-                                                                if (client) { setSelectedClient(client); setShowClientDetailModal(true); }
-                                                            }}
-                                                            className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
-                                                        >
-                                                            <Eye size={16} />
-                                                        </button>
-                                                    </Tooltip>
- 
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={Math.ceil(payments.length / 10)}
-                        onPageChange={setCurrentPage}
-                    />
+                                            )}
+                                        </td>
+                                        <td className="p-5 text-center text-xs">
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Tooltip content="View Invoice">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
+                                                        className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
+                                                    >
+                                                        <FileText size={16} />
+                                                    </button>
+                                                </Tooltip>
+                                                <Tooltip content="Download Invoice">
+                                                    <button
+                                                        type="button"
+                                                        disabled={downloadingId === payment._id}
+                                                        onClick={() => downloadInvoice(payment)}
+                                                        className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
+                                                    >
+                                                        <Download size={16} />
+                                                    </button>
+                                                </Tooltip>
+                                                <Tooltip content={getWhatsAppInvoiceTooltip(payment)}>
+                                                    <button
+                                                        type="button"
+                                                        disabled={sendingWhatsAppId === payment._id || isWhatsAppInvoiceDisabled(payment)}
+                                                        onClick={() => handleSendWhatsAppInvoice(payment)}
+                                                        className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        <Send size={16} />
+                                                    </button>
+                                                </Tooltip>
+                                            </div>
+                                        </td>
+                                        <td className="p-5">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Tooltip content="View Client">
+                                                    <button
+                                                        onClick={() => {
+                                                            const client = clients.find(c => c._id === payment.clientId);
+                                                            if (client) { setSelectedClient(client); setShowClientDetailModal(true); }
+                                                        }}
+                                                        className="p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-text-primary rounded-lg transition-all"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                </Tooltip>
+
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(payments.length / 10)}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
 
             {/* Modals */}
             <PaymentModal
@@ -501,16 +501,16 @@ const Transactions = () => {
                     dueDate: toLocalDateString(new Date())
                 }}
             />
-                      {showReceiptModal && selectedPayment && (
+            {showReceiptModal && selectedPayment && (
                 <div className="fixed inset-0 z-50 overflow-y-auto">
                     {/* Backdrop overlay */}
-                    <div 
+                    <div
                         className="fixed inset-0 bg-black/80 backdrop-blur-md print:hidden"
                         onClick={() => setShowReceiptModal(false)}
                     />
-                    
+
                     {/* Modal content wrapper */}
-                    <div 
+                    <div
                         className="flex min-h-full items-start justify-center p-4"
                         onClick={(e) => { if (e.target === e.currentTarget) setShowReceiptModal(false); }}
                     >
@@ -572,7 +572,7 @@ const Transactions = () => {
                                                 <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">Partially Paid</span>
                                             )}
                                         </div>
-                                        <h3 className="text-sm font-black text-gray-900">Invoice #{selectedPayment.paymentId}</h3>
+                                        <h3 className="text-sm font-black text-gray-900">Invoice No : {selectedPayment.paymentId}</h3>
                                         <p className="text-[10px] text-text-muted mt-0.5">Date: {new Date(selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                     </div>
                                 </div>

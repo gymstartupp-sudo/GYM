@@ -114,7 +114,7 @@ const seedSuperAdmin = async () => {
     const adminEmail = process.env.ADMIN_EMAIL || 'rexfit.nexus@gmail.com';
     const adminPassword = process.env.ADMIN_PASSWORD || 'Ads@123';
 
-    const adminExists = await Admin.findOne({ email: adminEmail });
+    const adminExists = await Admin.findOne({ role: 'superadmin' });
     if (!adminExists) {
       await Admin.create({
         email: adminEmail,
