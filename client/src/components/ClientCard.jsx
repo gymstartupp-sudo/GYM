@@ -89,7 +89,7 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
         )}
 
         <div className={`flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
-          {!hideReminders && <ReminderTimeline client={client} onCircleClick={isReadOnly ? undefined : onReminderClick} />}
+          {!hideReminders && <ReminderTimeline client={client} onCircleClick={onReminderClick} />}
 
           <Tooltip content="View client">
             <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border">

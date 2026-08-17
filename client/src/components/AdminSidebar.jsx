@@ -65,23 +65,7 @@ export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
           <span className="leading-none">Support Tickets</span>
         </NavLink>
 
-        {(role === 'superadmin' || role === 'developer') && (
-          <>
-            <div className="px-5 py-2 mt-4 text-[10px] font-black uppercase text-text-muted tracking-widest border-t border-border/50">
-              Developer Tools
-            </div>
-            <NavLink
-              to="/admin/reminder-testing"
-              onClick={() => isMobile && onClose()}
-              className={({ isActive }) => `sidebar-nav-link ${isActive ? 'sidebar-nav-link-active' : ''}`}
-            >
-              <span className="flex items-center justify-center w-5 h-5 shrink-0">
-                <Wrench size={20} />
-              </span>
-              <span className="leading-none">Reminder Testing</span>
-            </NavLink>
-          </>
-        )}
+
       </div>
 
       <div className="p-4 border-t border-border">

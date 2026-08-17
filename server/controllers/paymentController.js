@@ -699,7 +699,13 @@ exports.downloadInvoicePDF = async (req, res, next) => {
 
     const absolutePath = path.join(__dirname, '..', payment.invoicePDFUrl);
     if (fs.existsSync(absolutePath)) {
-      return res.download(absolutePath, `Invoice_${payment.paymentId}.pdf`);
+      return res.download(absolutePath, `Invoice_${payment.paymentId}.pdf`, (err) => {
+        if (fs.existsSync(absolutePath)) {
+          fs.unlink(absolutePath, (unlinkErr) => {
+            if (unlinkErr) console.error('[DOWNLOAD INVOICE] Error unlinking temp PDF:', unlinkErr);
+          });
+        }
+      });
     } else {
       return res.status(404).json({ success: false, message: 'Generated PDF file not found' });
     }

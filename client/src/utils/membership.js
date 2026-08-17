@@ -133,7 +133,7 @@ export const getClientPlans = (memberships, today = new Date()) => {
       paymentStatus: pStatus 
     };
 
-    if (mStatus === 'active') {
+    if (mStatus === 'active' || mStatus === 'expiring_soon') {
       currentPlan = enrichedPlan;
     } else if (mStatus === 'upcoming' && !nextPlan) {
       nextPlan = enrichedPlan;

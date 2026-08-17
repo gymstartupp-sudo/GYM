@@ -325,11 +325,21 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                 <div>
                                                     <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Current Plan</p>
                                                     {currentPlan ? (
-                                                        <div className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                                                        <div className={`p-4 rounded-xl border ${
+                                                            currentPlan.status === 'expiring_soon'
+                                                                ? 'bg-amber-500/5 border-amber-500/10'
+                                                                : 'bg-emerald-500/5 border-emerald-500/10'
+                                                        }`}>
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <div>
-                                                                    <p className="text-xl font-bold text-emerald-400">{currentPlan.planName}</p>
-                                                                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase">Active</span>
+                                                                    <p className={`text-xl font-bold ${
+                                                                        currentPlan.status === 'expiring_soon' ? 'text-amber-400' : 'text-emerald-400'
+                                                                    }`}>{currentPlan.planName}</p>
+                                                                    {currentPlan.status === 'expiring_soon' ? (
+                                                                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase">Expiring Soon</span>
+                                                                    ) : (
+                                                                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase">Active</span>
+                                                                    )}
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${getPaymentBadgeStyle(currentPlan.paymentStatus)}`}>
@@ -361,9 +371,13 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                                 </div>
                                                             </div>
 
-                                                            <div className="mt-4 pt-4 border-t border-emerald-500/10 flex justify-between items-center">
+                                                            <div className={`mt-4 pt-4 border-t flex justify-between items-center ${
+                                                                currentPlan.status === 'expiring_soon' ? 'border-amber-500/10' : 'border-emerald-500/10'
+                                                            }`}>
                                                                 <span className="text-text-secondary text-xs">Days Remaining:</span>
-                                                                <span className="text-emerald-400 font-bold">{calculateDaysLeft(currentPlan.startDate, currentPlan.endDate)} Days</span>
+                                                                <span className={`font-bold ${
+                                                                    currentPlan.status === 'expiring_soon' ? 'text-amber-400' : 'text-emerald-400'
+                                                                }`}>{calculateDaysLeft(currentPlan.startDate, currentPlan.endDate)} Days</span>
                                                             </div>
                                                         </div>
                                                     ) : (
