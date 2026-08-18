@@ -88,6 +88,14 @@ const runOverdueReminders = async (options = {}) => {
               continue;
             }
 
+            // Skip if the membership is expired to prevent sending dues reminders (like due_third_reminder)
+            // as they will instead receive or have received membership_expired_pending.
+            const isExpired = updatedClient.membership?.daysLeft <= 0 || updatedClient.membership?.status === 'expired';
+            if (isExpired) {
+              stats.skippedClients++;
+              continue;
+            }
+
             // Find the membership with remaining balance
             const m = [...(updatedClient.memberships || [])]
               .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
