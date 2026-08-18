@@ -8,7 +8,7 @@ import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
 import ReminderTimeline from '../../components/ReminderTimeline';
 import ReminderDetailsModal from '../../components/ReminderDetailsModal';
-import { calculateEndDate, toLocalDateString } from '../../utils/membership';
+import { calculateEndDate, toLocalDateString, calculateDaysLeft, getPlanStatus, getPaymentStatus } from '../../utils/membership';
 import Pagination from '../../components/Pagination';
 import Tooltip from '../../components/Tooltip';
 
@@ -134,13 +134,9 @@ const Dues = () => {
                 const balance = finalPrice - totalPaid;
 
                 if (balance > 0) {
-                    const dueDate = m.dueDate ? new Date(m.dueDate) : null;
-                    const endDate = m.endDate ? new Date(m.endDate) : null;
-
-                    // Calculate flags
-                    const isExpired = endDate && endDate < today;
-                    const isOverdue = (dueDate && dueDate < today) || (isExpired && balance > 0);
-                    const isPending = !isOverdue && !isExpired;
+                    const payStatus = getPaymentStatus(m, today);
+                    const isOverdue = payStatus === 'overdue';
+                    const isPending = payStatus === 'pending';
 
                     dues.push({
                         ...m,
@@ -150,7 +146,7 @@ const Dues = () => {
                         finalPrice,
                         totalPaid,
                         balance,
-                        isExpired,
+                        isExpired: getPlanStatus(m, today) === 'expired',
                         isOverdue,
                         isPending,
                         rawClient: client
@@ -165,27 +161,30 @@ const Dues = () => {
         let list = [];
         if (activeTab === 'expired') {
             list = expiredClients.map(c => {
-                const membership = c.memberships?.[0] || c.membership;
-                const endDate = membership?.endDate ? new Date(membership.endDate) : null;
-                const daysAgo = endDate ? Math.floor((today - endDate) / (1000 * 60 * 60 * 24)) : 0;
+                const allM = [...(c.memberships || [])];
+                if (c.membership && c.membership.startDate) {
+                    const alreadyExists = allM.some(m =>
+                        new Date(m.startDate).getTime() === new Date(c.membership.startDate).getTime()
+                    );
+                    if (!alreadyExists) allM.push(c.membership);
+                }
+                const latestM = allM.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0] || null;
+                const daysLeft = latestM ? calculateDaysLeft(latestM.startDate, latestM.endDate) : 0;
 
                 return {
                     clientId: c._id,
                     clientIdDisplay: c.clientId,
                     clientName: c.personalInfo?.name,
                     mobile: c.personalInfo?.mobileNo,
-                    planName: membership?.planName || 'No Active Plan',
-                    startDate: membership?.startDate,
-                    endDate: membership?.endDate,
-                    daysAgo: daysAgo,
+                    planName: latestM?.planName || 'No Active Plan',
+                    startDate: latestM?.startDate,
+                    endDate: latestM?.endDate,
+                    daysLeft: daysLeft,
                     isExpiredTab: true,
                     rawClient: c
                 };
             });
         } else if (activeTab === 'expiring') {
-            const threeDaysFromNow = new Date(today);
-            threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-
             clients.forEach(client => {
                 const allMemberships = [...(client.memberships || [])];
                 if (client.membership && client.membership.startDate) {
@@ -199,14 +198,8 @@ const Dues = () => {
                 }
 
                 allMemberships.forEach(m => {
-                    const endDate = m.endDate ? new Date(m.endDate) : null;
-                    if (!endDate) return;
-
-                    const isExpired = endDate < today;
-                    const isExpiringSoon = !isExpired && endDate >= today && endDate <= threeDaysFromNow;
-
-                    if (isExpiringSoon) {
-                        const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                    if (getPlanStatus(m, today) === 'expiring_soon') {
+                        const daysLeft = calculateDaysLeft(m.startDate, m.endDate);
 
                         list.push({
                             clientId: client._id,
@@ -505,7 +498,7 @@ const Dues = () => {
                                     </>
                                 )}
                                 <th className="p-4 font-bold text-center">{(activeTab === 'expired' || activeTab === 'expiring') ? 'Ended On' : 'Due Date'}</th>
-                                {activeTab === 'expired' && <th className="p-4 font-bold text-center">Days Ago</th>}
+                                {activeTab === 'expired' && <th className="p-4 font-bold text-center">Days Left</th>}
                                 {activeTab === 'expiring' && <th className="p-4 font-bold text-center">Days Left</th>}
                                 <th className="p-4 font-bold text-right">Action</th>
                             </tr>
@@ -579,7 +572,7 @@ const Dues = () => {
                                             </td>
                                             {activeTab === 'expired' && (
                                                 <td className="p-4 text-center">
-                                                    <span className="text-text-primary font-black text-sm">-{due.daysAgo}</span>
+                                                    <span className="text-text-primary font-black text-sm">{due.daysLeft}</span>
                                                 </td>
                                             )}
                                             {activeTab === 'expiring' && (
