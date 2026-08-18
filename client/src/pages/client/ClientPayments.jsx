@@ -136,18 +136,18 @@ const ClientPayments = () => {
 
   const getInvoicePeriod = (payment) => {
     if (!payment.startDate) return '—';
-    const relatedM = profile.memberships?.find(m => 
-        (m.planId?._id || m.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
-        new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
+    const relatedM = profile.memberships?.find(m =>
+      (m.planId?._id || m.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+      new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
     ) || (
         (profile.membership?.planId?._id || profile.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
-        new Date(profile.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? profile.membership : null
-    );
+          new Date(profile.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? profile.membership : null
+      );
     const startStr = new Date(payment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-');
     if (relatedM?.endDate) {
-        return `${startStr} to ${new Date(relatedM.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
+      return `${startStr} to ${new Date(relatedM.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
     }
-    
+
     // Fallback: calculate using calculateEndDate
     try {
       const duration = payment.planDurationMonths || 1;
@@ -198,18 +198,18 @@ const ClientPayments = () => {
       {/* Payment History Ledger */}
       <div className="bg-surface-divider/80 rounded-2xl border border-border overflow-hidden shadow-2xl backdrop-blur-sm">
         <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
+          <table className="w-full text-left border-collapse whitespace-nowrap min-w-[800px]">
             <thead>
               <tr className="bg-surface-divider/80 border-b border-border text-text-secondary text-[11px] font-black tracking-widest uppercase">
-               <th className="p-5">Receipt Info</th>
-               <th className="p-5 text-center">Plan</th>
-               <th className="p-5 text-center">Mode</th>
-               <th className="p-5 text-center">Plan Amount</th>
-               <th className="p-5 text-center">Paid Now</th>
-               <th className="p-5 text-center">Total Paid</th>
-               <th className="p-5 text-center">Remaining Balance</th>
-               <th className="p-5 text-center">Status</th>
-               <th className="p-5 text-center">Bill</th>
+                <th className="p-5">Receipt Info</th>
+                <th className="p-5 text-center">Plan</th>
+                <th className="p-5 text-center">Mode</th>
+                <th className="p-5 text-center">Plan Amount</th>
+                <th className="p-5 text-center">Paid Now</th>
+                <th className="p-5 text-center">Total Paid</th>
+                <th className="p-5 text-center">Remaining Balance</th>
+                <th className="p-5 text-center">Status</th>
+                <th className="p-5 text-center">Bill</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -297,13 +297,13 @@ const ClientPayments = () => {
       {showReceiptModal && selectedPayment && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           {/* Backdrop overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/80 backdrop-blur-md print:hidden"
             onClick={() => setShowReceiptModal(false)}
           />
-          
+
           {/* Modal content wrapper */}
-          <div 
+          <div
             className="flex min-h-full items-start justify-center p-4"
             onClick={(e) => { if (e.target === e.currentTarget) setShowReceiptModal(false); }}
           >
@@ -368,7 +368,7 @@ const ClientPayments = () => {
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">Partially Paid</span>
                       )}
                     </div>
-                    <h3 className="text-sm font-black text-gray-900">Invoice #{selectedPayment.paymentId}</h3>
+                    <h3 className="text-sm font-black text-gray-900">Invoice No : {selectedPayment.paymentId}</h3>
                     <p className="text-[10px] text-text-muted mt-0.5">Date: {new Date(selectedPayment.paymentDate || selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                   </div>
                 </div>
