@@ -15,8 +15,8 @@ export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
         : 'w-64'
         } h-screen bg-surface-secondary border-r border-border flex flex-col shrink-0`}
     >
-      <div className="p-5 border-b border-border">
-        <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="h-[64px] px-5 border-b border-border flex items-center shrink-0">
+        <div className="flex items-center justify-between gap-3 w-full">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary flex justify-center items-center font-bold text-sm text-[var(--btn-primary-text)]">
               SA
@@ -29,7 +29,6 @@ export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
             </button>
           )}
         </div>
-        {!isMobile && <ThemeToggle className="w-full h-9" />}
       </div>
 
       <div className="flex-1 py-3 overflow-y-auto">

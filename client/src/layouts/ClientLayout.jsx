@@ -47,31 +47,7 @@ export default function ClientLayout() {
   }, [user?.personalInfo?.name, user?.personalInfo?.email]);
 
   return (
-    <div className={`flex h-screen bg-surface-primary overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-      {isMobile && (
-        <header className="h-16 bg-surface-secondary border-b border-border flex items-center justify-between px-6 z-40 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent flex justify-center items-center font-bold text-sm text-text-primary shadow-md">
-              {user?.avatar || 'C'}
-            </div>
-            <div>
-              <span className="text-text-primary font-bold text-base tracking-tight truncate max-w-[120px] inline-block">
-                {clientName}
-              </span>
-              <span className="text-xs text-text-muted block -mt-1 uppercase tracking-wider truncate max-w-[120px]">
-                {user?.gymName}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 border border-border rounded-lg text-text-primary hover:bg-surface-divider transition-colors"
-          >
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </header>
-      )}
-
+    <div className="flex flex-col w-full h-screen bg-surface-primary overflow-hidden">
       {isMobile && isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -79,13 +55,22 @@ export default function ClientLayout() {
         />
       )}
 
-      <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
+      <div className={`flex flex-1 overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
+        <ClientSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {!isMobile && <ClientHeader clientName={clientName} clientEmail={clientEmail} isMobile={isMobile} profile={profile} />}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10 space-y-8 scrollbar-hide">
-          <Outlet />
-        </main>
+        <div className="flex-1 flex flex-col overflow-hidden bg-surface-primary text-text-primary w-full max-w-full">
+          <ClientHeader
+            clientName={clientName}
+            clientEmail={clientEmail}
+            isMobile={isMobile}
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            profile={profile}
+          />
+          <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full p-4 md:p-8 md:pt-10 space-y-8 scrollbar-hide">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );

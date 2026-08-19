@@ -11,8 +11,7 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const [isMobile, setIsMobile] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
     const [runningCheck, setRunningCheck] = useState(false);
     const [checkResults, setCheckResults] = useState(null);
@@ -222,18 +221,7 @@ const AdminDashboard = () => {
         document.body.removeChild(link);
     };
 
-    useEffect(() => {
-        const handleResize = () => {
-            const mobile = window.innerWidth < 1024;
-            setIsMobile(mobile);
-            if (!mobile) {
-                setIsSidebarOpen(false);
-            }
-        };
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -249,34 +237,7 @@ const AdminDashboard = () => {
     }, []);
 
     return (
-        <div className={`flex bg-surface-primary h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-            {/* MOBILE HEADER BAR */}
-            {isMobile && (
-                <header className="h-16 bg-surface-secondary border-b border-border flex items-center justify-between px-6 z-40 shrink-0">
-                    <span className="text-primary font-bold text-base tracking-tight">Super Admin</span>
-                    <div className="flex items-center gap-2">
-                        <ThemeToggle className="w-9 h-9" />
-                        <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="p-2 border border-border rounded-lg text-text-primary hover:bg-surface-hover transition-colors duration-200"
-                        >
-                            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                        </button>
-                    </div>
-                </header>
-            )}
-
-            {/* MOBILE DRAWER BACKDROP */}
-            {isMobile && isSidebarOpen && (
-                <div
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
-                />
-            )}
-
-            <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+        <>
                 <h1 className="page-heading text-2xl md:text-[36px] mb-8">Platform Overview</h1>
 
                 {loading ? <div className="text-text-muted">Loading data...</div> : (
@@ -400,7 +361,6 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 )}
-            </div>
 
             {/* BULK IMPORT MODAL */}
             {showImportModal && (
@@ -619,7 +579,7 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

@@ -173,7 +173,7 @@ const Settings = () => {
   }
 
   return (
-    <div className="p-8 pt-10 space-y-8">
+    <div className="p-4 sm:p-8 pt-10 space-y-8">
       {/* Page Header */}
       <div>
         <h1 className="page-heading text-3xl md:text-4xl flex items-center gap-3">
@@ -185,16 +185,16 @@ const Settings = () => {
 
 
       {/* Appearance */}
-      <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-6 md:p-8">
+      <div className="card space-y-5 bg-surface-secondary border border-border rounded-2xl p-5 sm:p-6 md:p-8">
         <div className="border-b border-border pb-4">
           <h2 className="section-heading text-xl">Appearance</h2>
         </div>
-        <div className="flex items-center justify-between p-4 bg-surface-divider/50 border border-border rounded-xl">
-          <div className="space-y-1 pr-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-surface-divider/50 border border-border rounded-xl">
+          <div className="space-y-1">
             <span className="text-sm font-semibold text-text-primary block">Theme</span>
             <span className="text-xs text-text-secondary">Switch between light and dark mode. Your preference is saved automatically.</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setTheme('light')}

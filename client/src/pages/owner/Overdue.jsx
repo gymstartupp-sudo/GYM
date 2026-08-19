@@ -56,7 +56,7 @@ const Overdue = () => {
     }, [clients, currentPage]);
 
     return (
-        <div className="p-8 pt-10">
+        <div className="p-4 sm:p-8 pt-10">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                         <AlertOctagon className="text-alert" size={32} /> Payment Overdue

@@ -45,6 +45,7 @@ const ClientSettings = lazy(() => import('./pages/client/ClientSettings'));
 const RenewalRedirect = lazy(() => import('./pages/client/RenewalRedirect'));
 
 // Admin - Lazy loaded for code splitting
+const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminGyms = lazy(() => import('./pages/admin/AdminGyms'));
 const AdminClients = lazy(() => import('./pages/admin/AdminClients'));
@@ -92,7 +93,7 @@ const AppContent = () => {
 
   return (
     <>
-      <div className="bg-surface-primary min-h-screen text-text-primary">
+      <div className="bg-surface-primary min-h-screen text-text-primary w-full overflow-x-hidden">
         <Suspense fallback={
           <div className="flex h-screen items-center justify-center bg-surface-primary">
             <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -138,12 +139,14 @@ const AppContent = () => {
               <Route path="/client/renew/:clientId" element={<RenewalRedirect />} />
               
               {/* Admin Routes */}
-              <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/admin/gyms" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminGyms /></ProtectedRoute>} />
-              <Route path="/admin/gyms/:gymId/view" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><GymViewRedirect /></ProtectedRoute>} />
-              <Route path="/admin/gyms/:gymId/clients" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminClients /></ProtectedRoute>} />
-              <Route path="/admin/issues" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminIssues /></ProtectedRoute>} />
-              <Route path="/admin/reminder-testing" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminReminderTesting /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="gyms" element={<AdminGyms />} />
+                <Route path="gyms/:gymId/view" element={<GymViewRedirect />} />
+                <Route path="gyms/:gymId/clients" element={<AdminClients />} />
+                <Route path="issues" element={<AdminIssues />} />
+                <Route path="reminder-testing" element={<AdminReminderTesting />} />
+              </Route>
 
             </Routes>
         </Suspense>

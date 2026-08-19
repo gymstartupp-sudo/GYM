@@ -252,13 +252,13 @@ const Clients = () => {
 
       {/* ── Add Client Modal ── */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200">
-            <button type="button" onClick={() => closeAddModal()} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
-              <X size={24} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200 p-5 sm:p-6 md:p-8">
+            <button type="button" onClick={() => closeAddModal()} className="absolute top-5 right-5 text-text-secondary hover:text-text-primary transition-colors z-10">
+              <X size={20} />
             </button>
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Enroll New Client</h2>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4 pr-8">Enroll New Client</h2>
               <ClientForm
                 key={formInstanceKey}
                 mode="owner"
@@ -427,8 +427,8 @@ const Clients = () => {
         const balance = finalPrice - totalPaid;
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
+            <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-sm p-5 sm:p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
               <button onClick={() => setDuesClient(null)} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary transition-colors">
                 <X size={20} />
               </button>

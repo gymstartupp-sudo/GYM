@@ -16,21 +16,9 @@ const AdminClients = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
 
-    const [isMobile, setIsMobile] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    useEffect(() => {
-        const handleResize = () => {
-            const mobile = window.innerWidth < 1024;
-            setIsMobile(mobile);
-            if (!mobile) {
-                setIsSidebarOpen(false);
-            }
-        };
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -59,33 +47,7 @@ const AdminClients = () => {
     }, [clients, currentPage]);
 
     return (
-        <div className={`flex bg-surface-primary h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-            {/* MOBILE HEADER BAR */}
-            {isMobile && (
-                <header className="h-16 bg-surface-secondary border-b border-border flex items-center justify-between px-6 z-40 shrink-0">
-                    <div className="flex items-center gap-3">
-                        <span className="text-purple-500 font-bold text-base tracking-tight">Super Admin</span>
-                    </div>
-                    <button
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="p-2 border border-border rounded-lg text-text-primary hover:bg-surface-divider transition-colors"
-                    >
-                        {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button>
-                </header>
-            )}
-
-            {/* MOBILE DRAWER BACKDROP */}
-            {isMobile && isSidebarOpen && (
-                <div 
-                    onClick={() => setIsSidebarOpen(false)}
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity"
-                />
-            )}
-
-            <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-            
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+        <>
                 <div className="mb-8 flex items-center gap-4">
                    <Button variant="secondary" onClick={() => navigate(-1)} className="!p-2 rounded-full"><ArrowLeft size={20}/></Button>
                    <div>
@@ -137,9 +99,8 @@ const AdminClients = () => {
                         onPageChange={setCurrentPage}
                     />
                 </div>
-            </div>
-        </div>
-    );
-};
+            </>
+        );
+    };
 
 export default AdminClients;

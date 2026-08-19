@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, Eye, Users, Power, Trash2, AlertTriangle, Building2, Calendar, Phone, Mail, MapPin, Tag, Clock } from 'lucide-react';
+import { Menu, X, Eye, Users, Power, Trash2, AlertTriangle, Building2, Calendar, Phone, Mail, MapPin, Tag, Clock, Search } from 'lucide-react';
+import Pagination from '../../components/Pagination';
 import { sortOperatingDays } from '../../utils/membership';
 
 // ─── Shared style tokens ──────────────────────────────────────────────────────
@@ -49,7 +51,7 @@ const GymProfileModal = ({ gymId, onClose }) => {
     ? new Date(gym.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
     : '—';
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
       <div
         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border shadow-2xl"
@@ -117,10 +119,12 @@ const GymProfileModal = ({ gymId, onClose }) => {
               <InfoRow icon={<Clock size={14} />} label="Open Time" value={openTime} />
               <InfoRow icon={<Clock size={14} />} label="Close Time" value={closeTime} />
             </Section>
+
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -254,8 +258,25 @@ const ActionBtn = ({ onClick, color, outline, children, title }) => {
 const AdminGyms = () => {
   const [gyms, setGyms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
+
+  const filteredGyms = useMemo(() => {
+    return gyms.filter(gym => {
+      const q = searchQuery.toLowerCase();
+      return gym.gymName.toLowerCase().includes(q) || gym.gymId.toLowerCase().includes(q);
+    });
+  }, [gyms, searchQuery]);
+
+  const paginatedGyms = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredGyms.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredGyms, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Modals
   const [profileGym, setProfileGym] = useState(null);            // full gym object
@@ -265,16 +286,7 @@ const AdminGyms = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (!mobile) setIsSidebarOpen(false);
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+
 
   const fetchGyms = useCallback(async () => {
     try {
@@ -327,28 +339,19 @@ const AdminGyms = () => {
   };
 
   return (
-    <div className={`flex bg-surface-primary h-screen overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-      {/* MOBILE HEADER */}
-      {isMobile && (
-        <header className="h-16 bg-surface-secondary border-b border-border flex items-center justify-between px-6 z-40 shrink-0">
-          <span className="text-primary font-bold text-base tracking-tight">Super Admin</span>
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 border border-border rounded-lg text-text-primary hover:bg-surface-divider transition-colors"
-          >
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </header>
-      )}
-
-      {isMobile && isSidebarOpen && (
-        <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-45 transition-opacity" />
-      )}
-
-      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 md:pt-10">
+    <>
         <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-8 tracking-tight">All Vendor Gyms</h1>
+
+        <div className="mb-6 max-w-md relative">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
+          <input
+            type="text"
+            placeholder="Search gym by name or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-surface-secondary border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none text-text-primary focus:border-primary transition-colors"
+          />
+        </div>
 
         <div className="bg-card rounded-xl border border-border overflow-x-auto shadow-lg">
           <table className="w-full text-left border-collapse min-w-[620px]">
@@ -363,9 +366,9 @@ const AdminGyms = () => {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr><td colSpan="4" className="text-center p-10 text-text-muted">Loading...</td></tr>
-              ) : gyms.length === 0 ? (
+              ) : filteredGyms.length === 0 ? (
                 <tr><td colSpan="4" className="text-center p-10 text-text-muted">No gyms found.</td></tr>
-              ) : gyms.map(gym => (
+              ) : paginatedGyms.map(gym => (
                 <tr key={gym._id} className="hover:bg-surface-divider/40 transition-colors">
                   {/* Gym Details */}
                   <td className="p-4">
@@ -405,7 +408,10 @@ const AdminGyms = () => {
                         title="View profile"
                         onClick={() => setProfileGym(gym)}
                       >
-                        <span className="flex items-center gap-1"><Eye size={11} />Profile</span>
+                        <span className="flex items-center gap-1">
+                          <Eye size={11} />
+                          <span className="hidden lg:inline">Profile</span>
+                        </span>
                       </ActionBtn>
 
                       {/* View Gym Dashboard read-only — yellow outline */}
@@ -415,7 +421,10 @@ const AdminGyms = () => {
                         title="View Gym Dashboard"
                         onClick={() => navigate(`/admin/gyms/${gym.gymId}/view`)}
                       >
-                        <span className="flex items-center gap-1"><Eye size={11} />View</span>
+                        <span className="flex items-center gap-1">
+                          <Eye size={11} />
+                          <span className="hidden lg:inline">View</span>
+                        </span>
                       </ActionBtn>
 
                       {/* Deactivate/Activate */}
@@ -426,7 +435,9 @@ const AdminGyms = () => {
                       >
                         <span className="flex items-center gap-1">
                           <Power size={11} />
-                          {gym.isActive ? 'Deactivate' : 'Activate'}
+                          <span className="hidden lg:inline">
+                            {gym.isActive ? 'Deactivate' : 'Activate'}
+                          </span>
                         </span>
                       </ActionBtn>
 
@@ -436,7 +447,10 @@ const AdminGyms = () => {
                         title="Delete gym permanently"
                         onClick={() => openDeleteModal(gym)}
                       >
-                        <span className="flex items-center gap-1"><Trash2 size={11} />Delete</span>
+                        <span className="flex items-center gap-1">
+                          <Trash2 size={11} />
+                          <span className="hidden lg:inline">Delete</span>
+                        </span>
                       </ActionBtn>
                     </div>
                   </td>
@@ -445,7 +459,12 @@ const AdminGyms = () => {
             </tbody>
           </table>
         </div>
-      </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredGyms.length / itemsPerPage)}
+          onPageChange={setCurrentPage}
+        />
 
       {/* Gym Profile Modal */}
       {profileGym && (
@@ -462,7 +481,7 @@ const AdminGyms = () => {
           isDeleting={isDeleting}
         />
       )}
-    </div>
+    </>
   );
 };
 

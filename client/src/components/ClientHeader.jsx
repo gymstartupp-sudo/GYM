@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, LogOut, Sunrise, Sun, Sunset, Moon, X, Camera, AlertTriangle, Info, Trash2 } from 'lucide-react';
+import { Bell, LogOut, Sunrise, Sun, Sunset, Moon, X, Camera, AlertTriangle, Info, Trash2, Menu, Dumbbell } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -14,7 +14,7 @@ const HEADER_BORDER = 'var(--header-border)';
  * ClientHeader — Global top navigation bar for client dashboard pages.
  * Shows: Brand | Client Name  ···  [Bell] [Profile Avatar]
  */
-const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = false, profile = null }) => {
+const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = false, isSidebarOpen = false, onToggleSidebar = null, profile = null }) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -172,22 +172,41 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
 
   const greetingData = getGreetingData();
 
-  if (isMobile) return null; // Mobile already has its own header in each client page
-
   return (
     <>
       <header
-        className="h-[64px] flex items-center justify-between px-6 shrink-0 z-30"
+        className="h-[64px] flex items-center justify-between px-4 md:px-6 shrink-0 z-30"
         style={{
           background: HEADER_BG,
           borderBottom: `1px solid ${HEADER_BORDER}`,
         }}
       >
-        <div className="flex items-center gap-2 text-sm font-medium text-text-secondary select-none animate-in fade-in slide-in-from-left-2 duration-300">
-          {greetingData.icon}
-          <span>
-            {greetingData.text}, <span className="font-bold text-text-primary">{clientName}</span>
-          </span>
+        <div className="flex items-center gap-3 text-sm font-medium text-text-secondary select-none animate-in fade-in slide-in-from-left-2 duration-300">
+          {isMobile && (
+            <button
+              onClick={onToggleSidebar}
+              className="p-2 rounded-lg border border-border text-text-primary hover:bg-surface-hover transition-colors duration-200 mr-1"
+              aria-label="Toggle sidebar"
+            >
+              {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          )}
+
+          {isMobile && (
+            <div className="flex items-center gap-2 mr-2">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-[var(--btn-primary-text)] shrink-0">
+                <Dumbbell size={15} className="rotate-45" />
+              </div>
+              <span className="text-text-primary font-bold text-base tracking-wide whitespace-nowrap">RexFit</span>
+            </div>
+          )}
+
+          <div className={`${isMobile ? 'hidden sm:flex' : 'flex'} items-center gap-2`}>
+            {greetingData.icon}
+            <span>
+              {greetingData.text}, <span className="font-bold text-text-primary">{clientName}</span>
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -234,7 +253,7 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
             {/* Notification Dropdown Panel */}
             {showNotifDropdown && (
               <div
-                className="absolute right-0 top-12 w-[340px] md:w-[380px] rounded-2xl border shadow-2xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-200"
+                className="fixed left-4 right-4 sm:absolute sm:left-auto sm:right-0 top-[70px] sm:top-12 w-auto sm:w-96 rounded-2xl border shadow-2xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-200"
                 style={{
                   borderColor: 'var(--border-color)',
                   background: 'var(--bg-elevated)',

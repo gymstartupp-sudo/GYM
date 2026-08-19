@@ -169,6 +169,11 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
   useEffect(() => {
     // Dynamically load Razorpay Checkout script
     if (isOpen && !document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+      const isInsideIframe = window.self !== window.top;
+      if (isInsideIframe) {
+        // Do not load Razorpay script inside emulator iframe to avoid frame-busting top-level redirects
+        return;
+      }
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
@@ -410,6 +415,14 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
   const handleRealRazorpayPayment = async (paidValue) => {
     if (!window.Razorpay) {
       toast.error("Razorpay SDK failed to load. Please refresh the page.");
+      return;
+    }
+
+    // Security check: Payment gateways block iframe clickjacking, which causes blank pages in responsive emulators
+    const isInsideIframe = window.self !== window.top;
+    if (isInsideIframe) {
+      toast.warning("Online payment gateways cannot load inside emulator iframes due to security rules. Please open http://localhost:5173 directly in a browser tab to test Razorpay checkout, or choose the 'Cash' payment method.");
+      setIsPaying(false);
       return;
     }
 

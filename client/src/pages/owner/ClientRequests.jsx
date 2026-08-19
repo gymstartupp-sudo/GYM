@@ -100,7 +100,7 @@ const ClientRequests = () => {
     };
 
     return (
-        <div className="p-8 pt-10">
+        <div className="p-4 sm:p-8 pt-10">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-text-primary tracking-tight flex items-center gap-3">
                     Client Requests
@@ -194,11 +194,12 @@ const ClientRequests = () => {
                                                 <Button
                                                     variant="secondary"
                                                     onClick={() => handleReject(req._id)}
-                                                    className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10 !px-3 !py-1.5 text-xs"
+                                                    className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10 px-3 py-1.5 md:!p-2 lg:px-3 lg:py-1.5 text-xs flex items-center justify-center gap-1"
                                                     isLoading={actionId === req._id && actionType === 'reject'}
                                                     disabled={actionId !== null}
                                                 >
-                                                    <X size={14} className="mr-1" /> REJECT
+                                                    <X size={14} />
+                                                    <span className="inline md:hidden lg:inline">REJECT</span>
                                                 </Button>
                                                 <Button
                                                     onClick={() => {
@@ -207,10 +208,11 @@ const ClientRequests = () => {
                                                         setSelectedPlan(plan);
                                                         setShowPaymentModal(true);
                                                     }}
-                                                    className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20 !px-3 !py-1.5 text-xs"
+                                                    className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20 px-3 py-1.5 md:!p-2 lg:px-3 lg:py-1.5 text-xs flex items-center justify-center gap-1"
                                                     disabled={actionId !== null}
                                                 >
-                                                    <Check size={14} className="mr-1" /> APPROVE
+                                                    <Check size={14} />
+                                                    <span className="inline md:hidden lg:inline">APPROVE</span>
                                                 </Button>
                                             </>
                                         ) : (

@@ -98,15 +98,21 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
           </Tooltip>
 
           {showReactivate && onReactivate && !isReadOnly && (
-            <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 text-xs">
-              <RefreshCw size={14} /> Reactivate
-            </Button>
+            <Tooltip content="Reactivate client">
+              <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 md:!p-2 lg:!px-3 lg:!py-1.5 text-xs flex items-center justify-center gap-1">
+                <RefreshCw size={14} />
+                <span className="inline md:hidden lg:inline">Reactivate</span>
+              </Button>
+            </Tooltip>
           )}
 
           {showRenew && onRenew && !isReadOnly && (
-            <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 text-xs">
-              <RefreshCw size={14} /> Renew
-            </Button>
+            <Tooltip content="Renew membership">
+              <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 md:!p-2 lg:!px-3 lg:!py-1.5 text-xs flex items-center justify-center gap-1">
+                <RefreshCw size={14} />
+                <span className="inline md:hidden lg:inline">Renew</span>
+              </Button>
+            </Tooltip>
           )}
 
           {onDelete && !isReadOnly && (

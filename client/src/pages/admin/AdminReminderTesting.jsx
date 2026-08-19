@@ -17,8 +17,7 @@ const AdminReminderTesting = () => {
   const [loadingClients, setLoadingClients] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
 
   const [sendingType, setSendingType] = useState('');
   const [runningCron, setRunningCron] = useState('');
@@ -42,18 +41,7 @@ const AdminReminderTesting = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (!mobile) {
-        setIsSidebarOpen(false);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+
 
   // Helper functions for client multi-select dropdown
   const getClientDisplayLabel = () => {
@@ -246,21 +234,10 @@ const AdminReminderTesting = () => {
   });
 
   return (
-    <div className="flex h-screen bg-surface-primary overflow-hidden">
-      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} isMobile={isMobile} />
-
-      <div className="flex-1 flex flex-col overflow-y-auto p-4 md:p-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            {isMobile && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="text-text-muted hover:text-text-primary p-2 transition-colors border border-border rounded-xl bg-surface-secondary"
-              >
-                <Menu size={20} />
-              </button>
-            )}
+    <>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-text-primary tracking-tight">Reminder Testing</h1>
               <p className="text-text-muted text-xs md:text-sm mt-1">
@@ -639,8 +616,7 @@ const AdminReminderTesting = () => {
             )}
           </div>
         )}
-      </div>
-    </div>
+      </>
   );
 };
 

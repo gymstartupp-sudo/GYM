@@ -306,7 +306,7 @@ const runOverdueReminders = async (options = {}) => {
 };
 
 // Run every day at 04:30 PM
-cron.schedule('42 0 * * *', async () => {
+cron.schedule('35 14 * * *', async () => {
   console.log('Running daily automated overdueReminderJob...');
   await runOverdueReminders();
 });

@@ -341,7 +341,7 @@ exports.universalLogin = async (req, res, next) => {
             return res.json({
               success: true,
               data: { email: admin.email, role: admin.role },
-              token: generateToken(admin._id, 'superadmin'),
+              token: generateToken(admin._id, admin.role || 'superadmin', { email: admin.email }),
               role: admin.role
             });
           }
@@ -404,7 +404,7 @@ exports.universalLogin = async (req, res, next) => {
         return res.json({
           success: true,
           data: { email: admin.email, role: admin.role },
-          token: generateToken(admin._id, 'superadmin'),
+          token: generateToken(admin._id, admin.role || 'superadmin', { email: admin.email }),
           role: admin.role
         });
       }

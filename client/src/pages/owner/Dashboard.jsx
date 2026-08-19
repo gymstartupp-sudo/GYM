@@ -27,8 +27,8 @@ const StatCard = ({ title, value, icon, accentClass = 'text-primary' }) => (
 );
 
 const ClientDashboardTable = ({ clients, onView }) => (
-    <div className="table-container border-0 rounded-none overflow-x-hidden">
-        <table className="data-table w-full">
+    <div className="table-container border-0 rounded-none overflow-x-auto md:overflow-x-hidden">
+        <table className="data-table w-full min-w-[500px] md:min-w-0">
             <thead>
                 <tr>
                     <th>Client Info</th>
@@ -187,11 +187,11 @@ const Dashboard = () => {
                         <p className="text-text-secondary mt-1 text-sm md:text-base">Here is what's happening in your Gym today.</p>
                     </div>
                     {!isReadOnly && (
-                        <div className="flex gap-3 w-full sm:w-auto">
-                            <button onClick={() => setShowAddModal(true)} className="btn-primary flex-1 sm:flex-none text-sm md:text-base">
+                        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                            <button onClick={() => setShowAddModal(true)} className="btn-primary w-full sm:w-auto text-sm md:text-base">
                                 + Add Client
                             </button>
-                            <button onClick={() => setShowPaymentModal(true)} className="btn-success flex-1 sm:flex-none text-sm md:text-base">
+                            <button onClick={() => setShowPaymentModal(true)} className="btn-success w-full sm:w-auto text-sm md:text-base">
                                 Record Payment
                             </button>
                         </div>
@@ -309,13 +309,13 @@ const Dashboard = () => {
 
             {/* Add Client Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200">
-                        <button type="button" onClick={() => closeAddModal()} className="absolute top-6 right-6 text-text-secondary hover:text-text-primary transition-colors z-10">
-                            <X size={24} />
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
+                    <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl animate-in zoom-in-95 duration-200 p-5 sm:p-6 md:p-8">
+                        <button type="button" onClick={() => closeAddModal()} className="absolute top-5 right-5 text-text-secondary hover:text-text-primary transition-colors z-10">
+                            <X size={20} />
                         </button>
-                        <div className="p-8">
-                            <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Enroll New Client</h2>
+                        <div>
+                            <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4 pr-8">Enroll New Client</h2>
                             <ClientForm
                                 key={formInstanceKey}
                                 mode="owner"
