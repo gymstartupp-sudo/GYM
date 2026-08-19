@@ -311,7 +311,7 @@ const IssueDetailModal = ({ ticket, isOpen, onClose, onStatusChange }) => {
 
 // ─── Main Support Tickets Page ────────────────────────────────────────────────
 const AdminIssues = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [tickets, setTickets] = useState([]);
   const [stats, setStats] = useState({ total: 0, resolved: 0 });
   const [loading, setLoading] = useState(true);
@@ -380,43 +380,21 @@ const AdminIssues = () => {
     }
   };
 
-  const isMobile = window.innerWidth < 768;
   const hasFilters = filters.category || filters.status || filters.search;
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} isMobile={isMobile} />
-
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b shrink-0"
-          style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}>
-          <div className="flex items-center gap-3">
-            {isMobile && (
-              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg text-text-muted hover:text-text-primary">
-                <Filter size={18} />
-              </button>
-            )}
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)' }}>
-              <Ticket size={18} className="text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-text-primary">Support Tickets</h1>
-              <p className="text-[11px] text-text-muted">{total} ticket{total !== 1 ? 's' : ''} total</p>
-            </div>
-          </div>
-          <button onClick={() => { fetchTickets(); fetchStats(); }}
-            className="p-2 rounded-xl text-text-muted hover:text-text-primary transition-colors"
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-            onMouseLeave={e => e.currentTarget.style.background = ''}
-            title="Refresh">
-            <RefreshCw size={16} />
-          </button>
+    <>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-text-primary tracking-tight">Support Tickets</h1>
+          <p className="text-xs text-text-muted mt-1">{total} ticket{total !== 1 ? 's' : ''} total</p>
         </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <button onClick={() => { fetchTickets(); fetchStats(); }}
+          className="p-2 rounded-xl text-text-muted hover:text-text-primary transition-colors border border-border bg-surface-secondary"
+          title="Refresh">
+          <RefreshCw size={16} />
+        </button>
+      </div>
           
           {/* Stats Header */}
           <div className="grid grid-cols-2 gap-4 mb-6">
@@ -479,7 +457,7 @@ const AdminIssues = () => {
           {/* Table */}
           <div className="rounded-2xl border bg-[var(--bg-secondary)] overflow-hidden" style={{ borderColor: 'var(--border-color)' }}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[850px]">
                 <thead>
                   <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-color)' }}>
                     {['Ticket ID', 'Gym ID & Name', 'Issue Title', 'Category', 'Status', 'Date', 'Actions'].map(h => (
@@ -570,8 +548,6 @@ const AdminIssues = () => {
               onPageChange={setPage}
             />
           </div>
-        </div>
-      </main>
 
       {/* Centered Ticket Modal */}
       <IssueDetailModal
@@ -580,7 +556,7 @@ const AdminIssues = () => {
         onClose={() => setModalOpen(false)}
         onStatusChange={handleStatusChange}
       />
-    </div>
+    </>
   );
 };
 

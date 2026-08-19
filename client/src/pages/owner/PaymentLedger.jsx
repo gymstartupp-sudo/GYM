@@ -561,7 +561,7 @@ const PaymentLedger = () => {
     const maxDateStr = formatYYYYMMDD(maxExpenseDate);
 
     return (
-        <div className="p-8 pt-10">
+        <div className="p-4 sm:p-8 pt-10">
             {/* Header and Toolbar */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 border-b border-border/50 pb-6">
                 <div>
@@ -802,14 +802,16 @@ const PaymentLedger = () => {
                     {/* EXPENSES LIST */}
                     <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
                         <div className="p-6 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <FileText size={20} className="text-primary" />
-                                <div>
-                                    <h3 className="text-lg font-bold text-text-primary">Expenses List</h3>
-                                    <p className="text-xs text-text-muted">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                <div className="flex items-center gap-3">
+                                    <FileText size={20} className="text-primary" />
+                                    <div>
+                                        <h3 className="text-lg font-bold text-text-primary">Expenses List</h3>
+                                        <p className="text-xs text-text-muted">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
+                                    </div>
                                 </div>
                                 {/* Category Filter Pills */}
-                                <div className="flex flex-wrap items-center gap-1 bg-surface-divider p-1 rounded-xl border border-border self-start lg:self-auto">
+                                <div className="flex flex-wrap items-center gap-1 bg-surface-divider p-1 rounded-xl border border-border">
                                     {['All', ...CATEGORIES].map(cat => (
                                         <button
                                             key={cat}
@@ -822,7 +824,8 @@ const PaymentLedger = () => {
                                             {cat}
                                         </button>
                                     ))}
-                                </div>                      </div>
+                                </div>
+                            </div>
 
                             {!isReadOnly && (
                                 <button
@@ -834,7 +837,7 @@ const PaymentLedger = () => {
                             )}
                         </div>
                         <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
-                            <table className="w-full text-left">
+                            <table className="w-full text-left min-w-[600px]">
                                 <thead className="sticky top-0 bg-surface-secondary z-10 border-b border-border">
                                     <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                                         <th className="p-4">Title / Name</th>

@@ -101,14 +101,14 @@ const ClientFeedback = () => {
   return (
     <>
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
             Feedback History
           </h1>
           <p className="text-text-secondary mt-2 text-base md:text-lg">View and track your submitted feedback.</p>
         </div>
-        <Button onClick={() => setIsSendModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => setIsSendModalOpen(true)} className="flex items-center justify-center gap-2 w-full sm:w-auto">
           <Plus size={16} /> Send Feedback
         </Button>
       </div>
@@ -135,7 +135,7 @@ const ClientFeedback = () => {
               <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
                 <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Subject</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-left">Subject</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-right">Action</th>
                 </tr>
@@ -146,7 +146,7 @@ const ClientFeedback = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                       {formatDate(item.createdAt)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md transition-colors text-center">
+                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md transition-colors text-left">
                       {item.subject || <span className="text-text-muted italic">No Subject</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, HelpCircle, X, Mail, Phone, MessageSquare, ChevronRight, LogOut, UserPlus, Sunrise, Sun, Sunset, Moon, Trash2, AlertTriangle, Receipt, Camera, Bug } from 'lucide-react';
+import { Bell, HelpCircle, X, Mail, Phone, MessageSquare, ChevronRight, LogOut, UserPlus, Sunrise, Sun, Sunset, Moon, Trash2, AlertTriangle, Receipt, Camera, Bug, Menu, Dumbbell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import ThemeToggle from './ThemeToggle';
@@ -250,7 +250,16 @@ const ConfirmModal = ({ isOpen, title, message, cancelText = 'Cancel', confirmTe
   );
 };
 
-const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', ownerName = '', ownerPhone = '', isMobile = false }) => {
+const OwnerHeader = ({
+  gymName = 'Gym Owner',
+  gymLogo = null,
+  gymEmail = '',
+  ownerName = '',
+  ownerPhone = '',
+  isMobile = false,
+  isSidebarOpen = false,
+  onToggleSidebar = () => {}
+}) => {
   const navigate = useNavigate();
   const { user, logout, role } = useAuth();
   const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
@@ -448,22 +457,41 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', own
     navigate('/login');
   };
 
-  if (isMobile) return null; // Mobile header is already handled in OwnerLayout
-
   return (
     <>
       <header
-        className="h-[64px] flex items-center justify-between px-6 shrink-0 z-30"
+        className="h-[64px] flex items-center justify-between px-4 md:px-6 shrink-0 z-30"
         style={{
           background: HEADER_BG,
           borderBottom: `1px solid ${HEADER_BORDER}`,
         }}
       >
-        <div className="flex items-center gap-2 text-sm font-medium text-text-secondary select-none animate-in fade-in slide-in-from-left-2 duration-300">
-          {greetingData.icon}
-          <span>
-            {greetingData.text}, <span className="font-bold text-text-primary">{gymName}</span>
-          </span>
+        <div className="flex items-center gap-3 text-sm font-medium text-text-secondary select-none animate-in fade-in slide-in-from-left-2 duration-300">
+          {isMobile && (
+            <button
+              onClick={onToggleSidebar}
+              className="p-2 rounded-lg border border-border text-text-primary hover:bg-surface-hover transition-colors duration-200 mr-1"
+              aria-label="Toggle sidebar"
+            >
+              {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          )}
+
+          {isMobile && (
+            <div className="flex items-center gap-2 mr-2">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-[var(--btn-primary-text)] shrink-0">
+                <Dumbbell size={15} className="rotate-45" />
+              </div>
+              <span className="text-text-primary font-bold text-base tracking-wide whitespace-nowrap">RexFit</span>
+            </div>
+          )}
+
+          <div className={`${isMobile ? 'hidden sm:flex' : 'flex'} items-center gap-2`}>
+            {greetingData.icon}
+            <span>
+              {greetingData.text}, <span className="font-bold text-text-primary">{gymName}</span>
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -510,7 +538,7 @@ const OwnerHeader = ({ gymName = 'Gym Owner', gymLogo = null, gymEmail = '', own
             {/* Notifications Dropdown */}
             {showNotifDropdown && (
               <div
-                className="absolute right-0 top-12 w-80 md:w-96 rounded-2xl border bg-surface-secondary shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+                className="fixed left-4 right-4 sm:absolute sm:left-auto sm:right-0 top-[70px] sm:top-12 w-auto sm:w-96 rounded-2xl border bg-surface-secondary shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
                 style={{ borderColor: 'var(--border-color)', background: 'var(--bg-elevated)' }}
               >
                 {/* Header */}

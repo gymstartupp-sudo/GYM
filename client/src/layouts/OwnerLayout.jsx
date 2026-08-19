@@ -102,17 +102,7 @@ export default function OwnerLayout() {
         </div>
       )}
       <div className={`flex flex-1 overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
-      {/* Mobile header */}
-      {isMobile && (
-        <header className="h-[60px] bg-surface-secondary border-b border-border flex items-center justify-end px-5 z-40 shrink-0">
-          <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 rounded-lg border border-border text-text-primary hover:bg-surface-hover transition-colors duration-200"
-          >
-            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </header>
-      )}
+
 
       {/* Mobile backdrop */}
       {isMobile && isSidebarOpen && (
@@ -211,17 +201,17 @@ export default function OwnerLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-surface-primary text-text-primary">
-        {!isMobile && (
-          <OwnerHeader
-            gymName={gymName}
-            gymLogo={gymProfile?.gym?.gymLogo || gymProfile?.gym?.billingInfo?.logo}
-            gymEmail={gymEmail}
-            ownerName={ownerName}
-            isMobile={isMobile}
-          />
-        )}
-        <main className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-hidden bg-surface-primary text-text-primary w-full max-w-full">
+        <OwnerHeader
+          gymName={gymName}
+          gymLogo={gymProfile?.gym?.gymLogo || gymProfile?.gym?.billingInfo?.logo}
+          gymEmail={gymEmail}
+          ownerName={ownerName}
+          isMobile={isMobile}
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full">
           <Outlet />
         </main>
       </div>

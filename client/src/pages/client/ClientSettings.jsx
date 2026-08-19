@@ -92,8 +92,8 @@ const ClientSettings = () => {
         <div className="border-b border-border pb-4">
           <h2 className="section-heading text-xl">Appearance</h2>
         </div>
-        <div className="flex items-center justify-between p-4 bg-surface-divider/50 border border-border rounded-xl">
-          <div className="space-y-1 pr-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-surface-divider/50 border border-border rounded-xl gap-4">
+          <div className="space-y-1">
             <span className="text-sm font-semibold text-text-primary block">Theme</span>
             <span className="text-xs text-text-secondary">Switch between light and dark mode.</span>
           </div>

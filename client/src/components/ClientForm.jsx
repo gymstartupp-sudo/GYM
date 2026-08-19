@@ -912,21 +912,21 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
         {(!isOwner && step === 1) || isOwner ? renderPersonalInfo() : null}
         {(!isOwner && step === 2) || isOwner ? renderMembershipInfo() : null}
 
-        <div className="flex justify-between pt-6 border-t border-border mt-6 !mt-8">
+        <div className="flex justify-between items-center gap-3 pt-6 border-t border-border mt-6 !mt-8 w-full">
           {!isOwner && step === 2 ? (
-            <Button type="button" variant="secondary" onClick={() => setStep(1)}>Back</Button>
+            <Button type="button" variant="secondary" onClick={() => setStep(1)} className="px-4 py-2 text-sm flex-none">Back</Button>
           ) : showCancel ? (
-            <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={onCancel} className="px-4 py-2 text-sm flex-none">Cancel</Button>
           ) : (
             <div></div>
           )}
 
           {!isOwner && step === 1 ? (
-            <Button type="button" onClick={handleNextStep} className="ml-auto" isLoading={loading}>
+            <Button type="button" onClick={handleNextStep} className="px-4 py-2 text-sm ml-auto flex-none" isLoading={loading}>
               Next
             </Button>
           ) : (
-            <Button type="button" isLoading={loading} className="ml-auto w-full md:w-auto" onClick={isOwner ? handleOwnerSubmit : () => { handleSubmit(onSubmit, onInvalid)() }}>
+            <Button type="button" isLoading={loading} className="px-4 py-2 text-sm ml-auto flex-none" onClick={isOwner ? handleOwnerSubmit : () => { handleSubmit(onSubmit, onInvalid)() }}>
               {isOwner ? 'Add Client' : 'Submit Membership Request'}
             </Button>
           )}

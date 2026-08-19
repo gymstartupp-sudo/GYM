@@ -302,7 +302,7 @@ const InactiveClients = () => {
   const clearAll = () => { setFilterStatus('All'); setFilterPlan('All'); };
 
   return (
-    <div className="p-8 pt-10">
+    <div className="p-4 sm:p-8 pt-10">
 
       {/* ── Page Header ── */}
       <div className="flex justify-between items-center mb-8">
