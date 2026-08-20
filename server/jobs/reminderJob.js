@@ -506,11 +506,11 @@ const runReminders = async (options = {}) => {
   return stats;
 };
 
-// Run every day at 11:40 PM
-cron.schedule('00 11 * * *', async () => {
+// Run every day at 11:00 AM IST
+cron.schedule('40 11 * * *', async () => {
   console.log('Running daily automated reminderJob...');
   await runReminders();
-});
+}, { timezone: 'Asia/Kolkata' });
 
 module.exports = {
   runReminders

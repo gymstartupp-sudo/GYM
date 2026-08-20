@@ -89,8 +89,8 @@ const runOverdueCheck = async () => {
   }
 };
 
-// Run every day at 00:05
-cron.schedule('00 11 * * *', async () => {
+// Run every day at 11:00 AM IST
+cron.schedule('40 11 * * *', async () => {
   console.log('Running statusUpdater job...');
   try {
     await runOverdueCheck();
@@ -98,7 +98,7 @@ cron.schedule('00 11 * * *', async () => {
   } catch (err) {
     console.error('Error in statusUpdater job:', err);
   }
-});
+}, { timezone: 'Asia/Kolkata' });
 
 module.exports = { runOverdueCheck };
 

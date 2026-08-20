@@ -316,11 +316,11 @@ const runOverdueReminders = async (options = {}) => {
   return stats;
 };
 
-// Run every day at 04:30 PM
-cron.schedule('00 11 * * *', async () => {
+// Run every day at 11:00 AM IST
+cron.schedule('40 11 * * *', async () => {
   console.log('Running daily automated overdueReminderJob...');
   await runOverdueReminders();
-});
+}, { timezone: 'Asia/Kolkata' });
 
 module.exports = {
   runOverdueReminders
