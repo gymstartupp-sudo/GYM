@@ -190,6 +190,11 @@
     color: var(--btn-primary-text) !important;
   }
 
+  /* Native date picker accent color — overrides browser's default blue */
+  input[type="date"] {
+    accent-color: var(--color-primary);
+  }
+
   /* Cards */
   .card {
     @apply bg-surface-card p-6 rounded-xl border border-border transition-all duration-200;

@@ -616,63 +616,6 @@ exports.sendTestReminder = async (req, res, next) => {
         messageId: result.messageId,
         sentBy: 'Super Admin'
       });
-
-      // Send secondary due reminder if client has outstanding balance
-      if (reminderType === 'expiring_soon' || reminderType === 'expired') {
-        let remainingBalance = 0;
-        const activeMembership = [...(updatedClient.memberships || [])]
-          .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
-          .find(m => (m.finalPrice - m.totalPaid) > 0);
-        if (activeMembership) {
-          remainingBalance = (activeMembership.finalPrice || 0) - (activeMembership.totalPaid || 0);
-        }
-
-        if (remainingBalance > 0 && activeMembership.dueDate && logReminderType !== 'Expiring Soon Pending' && logReminderType !== 'Expired Pending') {
-          const dueDateString = new Date(activeMembership.dueDate).toLocaleDateString('en-GB').replace(/\//g, '-');
-          const paymentLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/client/renew/${updatedClient.clientId}?balance=true`;
-          
-          const dueResult = await metaWhatsAppService.sendDueReminder({
-            phone: formattedWhatsApp,
-            clientName: updatedClient.personalInfo.name,
-            pendingAmount: remainingBalance,
-            dueDate: dueDateString,
-            renewalLink: paymentLink,
-            clientId: updatedClient.clientId,
-            gymId: gym.gymId,
-            stage: 3
-          });
-
-          if (dueResult && dueResult.success) {
-            updatedClient.overdueReminders.manualReminders.push({
-              sentAt: new Date(),
-              status: 'sent',
-              error: null,
-              reminderType: 'Due Reminder 3',
-              templateName: process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder',
-              executionSource: 'Manual Trigger',
-              messageId: dueResult.messageId,
-              sentBy: 'Super Admin'
-            });
-            if (!updatedClient.overdueReminders.reminder3) {
-              updatedClient.overdueReminders.reminder3 = {};
-            }
-            updatedClient.overdueReminders.reminder3.status = 'sent';
-            updatedClient.overdueReminders.reminder3.sentAt = new Date();
-            updatedClient.overdueReminders.reminder3.error = null;
-          } else {
-            updatedClient.overdueReminders.manualReminders.push({
-              sentAt: new Date(),
-              status: 'failed',
-              error: dueResult ? dueResult.error : 'Meta send error',
-              reminderType: 'Due Reminder 3',
-              templateName: process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder',
-              executionSource: 'Manual Trigger',
-              messageId: null,
-              sentBy: 'Super Admin'
-            });
-          }
-        }
-      }
       
       // Update the specific production flag/status for visual circles:
       if (reminderType === 'expiring_soon') {
@@ -722,7 +665,7 @@ exports.sendTestReminder = async (req, res, next) => {
         updatedClient.membership.expiredReminderStatus = 'failed';
         updatedClient.expiredReminderStatus = 'failed';
         updatedClient.membership.expiredReminderError = errorStr;
-        updatedClient.expiredReminderError = errorStr;
+        updatedClient.expiryReminderError = errorStr;
       } else if (reminderType.startsWith('due_')) {
         const stage = parseInt(reminderType.split('_')[1]);
         updatedClient.overdueReminders[`reminder${stage}`] = {

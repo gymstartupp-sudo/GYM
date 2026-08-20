@@ -897,11 +897,6 @@ Thank you.`;
     }
 
     if (result && result.success) {
-      client.overdueReminders[reminderKey] = {
-        status: 'sent',
-        sentAt: new Date(),
-        error: null
-      };
       client.overdueReminders.manualReminders.push({
         sentAt: new Date(),
         status: 'sent',
@@ -915,11 +910,6 @@ Thank you.`;
       await client.save();
       res.status(200).json({ success: true, message: 'Reminder sent successfully' });
     } else {
-      client.overdueReminders[reminderKey] = {
-        status: 'failed',
-        sentAt: new Date(),
-        error: result?.error || 'Unknown error'
-      };
       client.overdueReminders.manualReminders.push({
         sentAt: new Date(),
         status: 'failed',

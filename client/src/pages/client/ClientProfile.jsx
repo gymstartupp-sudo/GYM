@@ -302,27 +302,27 @@ const ClientProfile = () => {
 
   return (
     <>
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-row items-center justify-between gap-4 border-b border-border pb-6">
+        <div className="flex flex-row items-center gap-3 min-w-0 flex-1">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors"
+            className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors shrink-0"
           >
             <ChevronLeft size={20} />
           </button>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight">Client Profile</h1>
-            <p className="text-text-secondary mt-2 text-base md:text-lg">Manage your personal identity details.</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight truncate">{profile?.personalInfo?.name || 'Client Profile'}</h1>
+            <p className="text-text-secondary mt-1 text-xs sm:text-sm md:text-base leading-relaxed truncate">{profile?.personalInfo?.email || 'Manage profile'}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0 self-center">
           {editing ? (
             <>
-              <Button type="button" variant="secondary" onClick={handleCancel}>Cancel</Button>
-              <Button type="button" onClick={handleSave} isLoading={saving}>Save Changes</Button>
+              <Button type="button" variant="secondary" onClick={handleCancel} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Cancel</Button>
+              <Button type="button" onClick={handleSave} isLoading={saving} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Save</Button>
             </>
           ) : (
-            <Button type="button" variant="secondary" onClick={() => setEditing(true)}>Edit Profile</Button>
+            <Button type="button" variant="secondary" onClick={() => setEditing(true)} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Edit Profile</Button>
           )}
         </div>
       </div>

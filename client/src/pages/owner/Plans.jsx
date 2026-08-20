@@ -129,9 +129,6 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => {
 
     {/* Header info */}
     <div className="flex items-center gap-2 mb-4">
-      <span className="inline-block text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 w-fit">
-        {plan.durationMonths}M Plan
-      </span>
       <span className="text-xs font-medium text-text-secondary bg-surface-divider border border-border px-2.5 py-1 rounded-full flex items-center gap-1.5" title="Clients using this plan">
         <Users size={12} className="text-primary" /> {plan.clientCount || 0} client{plan.clientCount !== 1 ? 's' : ''}
       </span>
@@ -140,7 +137,7 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => {
     <h3 className="text-xl font-bold text-text-primary mb-1">{plan.name}</h3>
     <p className="text-primary text-3xl font-black mb-6">
       ₹{plan.price?.toLocaleString('en-IN')}
-      <span className="text-sm text-text-secondary font-normal"> / {plan.durationMonths} mo</span>
+      <span className="text-sm text-text-secondary font-normal"> / {plan.durationMonths} mon</span>
     </p>
 
     {/* View Details button — description hidden by default */}
@@ -420,9 +417,9 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Duration (Months) *</label>
+              <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Duration (Mon) *</label>
               <input 
                 name="durationMonths" 
                 value={formData.durationMonths} 
@@ -557,13 +554,13 @@ const Plans = () => {
 
   return (
     <div className="p-4 sm:p-8 pt-10">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-text-primary tracking-tight">Gym Plans</h1>
             <p className="text-text-secondary mt-1">Manage your membership packages.</p>
           </div>
           {!isReadOnly && (
-            <Button onClick={handleCreateNew} className="gap-2">
+            <Button onClick={handleCreateNew} className="gap-2 w-full sm:w-auto justify-center">
               <Plus size={18} /> Create Plan
             </Button>
           )}

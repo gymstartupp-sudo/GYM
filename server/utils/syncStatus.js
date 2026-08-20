@@ -87,8 +87,14 @@ const syncClientStatus = async (clientId) => {
         daysLeft: daysLeft,
         status: status,
         requestApproved: true,
-        expiryReminderSent: client.membership?.expiryReminderSent || false,
-        expiredReminderSent: client.membership?.expiredReminderSent || false
+        expiryReminderSent: client.membership?.expiryReminderSent || client.expiryReminderSent || false,
+        expiredReminderSent: client.membership?.expiredReminderSent || client.expiredReminderSent || false,
+        expiryReminderStatus: client.membership?.expiryReminderStatus || client.expiryReminderStatus || 'none',
+        expiredReminderStatus: client.membership?.expiredReminderStatus || client.expiredReminderStatus || 'none',
+        expiryReminderError: client.membership?.expiryReminderError || client.expiryReminderError || null,
+        expiredReminderError: client.membership?.expiredReminderError || client.expiredReminderError || null,
+        expiryReminderSentAt: client.membership?.expiryReminderSentAt || client.expiryReminderSentAt || null,
+        expiredReminderSentAt: client.membership?.expiredReminderSentAt || client.expiredReminderSentAt || null
       };
     }
 
