@@ -23,7 +23,7 @@ const STATUS_OPTIONS = [
 ];
 
 // ─── Custom Dropdown (replaces native <select> for Dark-theme compatibility) ──
-const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...' }) => {
+const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', className = '' }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -38,24 +38,24 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...' })
   const isFiltered = value !== 'All' && value !== options[0]?.value;
 
   return (
-    <div ref={ref} className="relative min-w-[160px]">
+    <div ref={ref} className={`relative ${className || 'min-w-[150px]'}`}>
       {/* Trigger */}
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md border text-sm font-medium transition-all cursor-pointer
+        className={`w-full flex items-center justify-between gap-2 px-3.5 py-2 rounded-md border text-sm font-medium transition-all cursor-pointer whitespace-nowrap
           ${isFiltered
             ? 'bg-primary/10 border-primary/50 text-primary'
             : 'bg-surface-divider border-border text-text-secondary hover:border-gray-500 hover:text-text-primary'
           }`}
       >
-        <span className="flex items-center gap-2 truncate">
+        <span className="flex items-center gap-1.5 truncate">
           {selected?.dot && <span className={`w-2 h-2 rounded-full shrink-0 ${selected.dot}`} />}
           {selected?.label || placeholder}
         </span>
         <ChevronDown
           size={14}
-          className={`shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`shrink-0 transition-transform duration-200 ml-1 ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -282,7 +282,7 @@ const Clients = () => {
 
       {/* ── Search + Filter Bar ── */}
       <div className="card mb-3 flex flex-col gap-3 bg-surface-secondary border-border relative z-20 overflow-visible">
-        <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
+        <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center">
 
           {/* Search */}
           <div className="relative flex-1 min-w-0">
@@ -297,32 +297,35 @@ const Clients = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <Filter size={15} className="text-text-muted" />
+          <div className="flex items-center gap-2 flex-wrap shrink-0 w-full lg:w-auto">
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              <Filter size={15} className="text-text-muted shrink-0" />
+              <div className="flex flex-1 sm:flex-none gap-2 min-w-0 w-full sm:w-auto">
+                {/* Status */}
+                <CustomDropdown
+                  value={filterStatus}
+                  onChange={setFilterStatus}
+                  options={STATUS_OPTIONS}
+                  placeholder="All Status"
+                  className="flex-1 sm:flex-none w-full sm:w-[150px] min-w-0"
+                />
 
-            {/* Status */}
-            <CustomDropdown
-              value={filterStatus}
-              onChange={setFilterStatus}
-              options={STATUS_OPTIONS}
-              placeholder="All Status"
-            />
-
-            {/* Plan */}
-            <CustomDropdown
-              value={filterPlan}
-              onChange={setFilterPlan}
-              options={planOptions}
-              placeholder="All Plans"
-            />
-
-
+                {/* Plan */}
+                <CustomDropdown
+                  value={filterPlan}
+                  onChange={setFilterPlan}
+                  options={planOptions}
+                  placeholder="All Plans"
+                  className="flex-1 sm:flex-none w-full sm:w-[150px] min-w-0"
+                />
+              </div>
+            </div>
 
             {/* Clear all */}
             {activeFilterCount > 0 && (
               <button
                 onClick={clearAll}
-                className="text-xs text-text-secondary hover:text-text-primary transition-colors underline underline-offset-2 whitespace-nowrap"
+                className="text-xs text-text-secondary hover:text-text-primary transition-colors underline underline-offset-2 whitespace-nowrap ml-7 lg:ml-0"
               >
                 Clear filters
               </button>
@@ -384,9 +387,9 @@ const Clients = () => {
           <p className="text-sm mt-1 text-gray-600">Try adjusting your filters or search.</p>
         </div>
       ) : (
-        <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
+        <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-x-auto shadow-lg">
           {/* Table header */}
-          <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
+          <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm md:min-w-[850px]">
             <div>Client Info</div>
             <div className="text-center">Mobile No</div>
             <div className="text-center">Plan</div>

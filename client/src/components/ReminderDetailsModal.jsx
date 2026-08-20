@@ -70,6 +70,29 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
   const isMembershipExpired = endDateNorm ? today > endDateNorm : false;
   const isMembershipActive = startDateNorm ? today >= startDateNorm : false;
 
+  // Derive historical reminder conditions to prevent post-payment condition erasure
+  const expiryCondition = client?.membership?.expiryReminderCondition || client?.expiryReminderCondition;
+  const historicalExpiryEntry = client?.overdueReminders?.manualReminders?.slice().reverse().find(
+    r => r.status === 'sent' && (r.reminderType === 'Expiring Soon Pending' || r.reminderType === 'Expiring Soon')
+  );
+  const isExpiringSoonPending = expiryCondition === 'EXPIRING_SOON_PENDING' || expiryCondition === 'Expiring Soon Pending' || historicalExpiryEntry?.reminderType === 'Expiring Soon Pending';
+  const isExpiringSoonNormal = expiryCondition === 'EXPIRING_SOON' || expiryCondition === 'Expiring Soon' || historicalExpiryEntry?.reminderType === 'Expiring Soon';
+
+  const expiringSoonLabel = (expiryStatus === 'sent' || expiryStatus === 'failed')
+    ? (isExpiringSoonPending ? 'Expiring Soon Reminder + Pending Balance' : (isExpiringSoonNormal ? 'Expiring Soon Reminder' : (hasDues ? 'Expiring Soon Reminder + Pending Balance' : 'Expiring Soon Reminder')))
+    : (hasDues ? 'Expiring Soon Reminder + Pending Balance' : 'Expiring Soon Reminder');
+
+  const expiredCondition = client?.membership?.expiredReminderCondition || client?.expiredReminderCondition;
+  const historicalExpiredEntry = client?.overdueReminders?.manualReminders?.slice().reverse().find(
+    r => r.status === 'sent' && (r.reminderType === 'Expired Pending' || r.reminderType === 'Expired')
+  );
+  const isExpiredPending = expiredCondition === 'EXPIRED_PENDING' || expiredCondition === 'Expired Pending' || historicalExpiredEntry?.reminderType === 'Expired Pending';
+  const isExpiredNormal = expiredCondition === 'EXPIRED' || expiredCondition === 'Expired' || historicalExpiredEntry?.reminderType === 'Expired';
+
+  const expiredLabel = (expiredStatus === 'sent' || expiredStatus === 'failed')
+    ? (isExpiredPending ? 'Expired Reminder + Pending Balance' : (isExpiredNormal ? 'Expired Reminder' : (hasDues ? 'Expired Reminder + Pending Balance' : 'Expired Reminder')))
+    : (hasDues ? 'Expired Reminder + Pending Balance' : 'Expired Reminder');
+
   const getStepStatus = (stepObj) => {
     if (stepObj?.status === 'sent' || stepObj?.status === 'failed') return stepObj.status;
     if (client.overdueReminders?.workflowCompleted) return 'skipped';
@@ -328,16 +351,17 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
                 </div>
 
                 {/* Manual Reminders Section */}
-                {client.overdueReminders?.manualReminders?.filter(r => r.executionSource === 'Manual Reminder').length > 0 && (
+                {client.overdueReminders?.manualReminders?.filter(r => r.executionSource === 'Manual Reminder' || r.executionSource === 'Manual Trigger').length > 0 && (
                   <div className="mt-6 border-t border-border pt-4">
                     <h4 className="text-[10px] font-black uppercase text-text-muted mb-3 tracking-widest">Manual Reminders History</h4>
                     <div className="space-y-2">
                       {client.overdueReminders.manualReminders
-                        .filter(r => r.executionSource === 'Manual Reminder')
+                        .filter(r => r.executionSource === 'Manual Reminder' || r.executionSource === 'Manual Trigger')
                         .map((r, i) => (
                           <div key={i} className="flex justify-between items-center bg-surface-divider/40 p-2.5 rounded-lg border border-border/50 text-xs">
                             <div className="flex items-center gap-2">
                               <StatusBadge status={r.status} />
+                              <span className="text-[11px] font-medium text-text-secondary">{r.reminderType || 'Manual Reminder'}</span>
                               {r.error && <span className="text-[10px] text-red-400 font-medium ml-1">{r.error}</span>}
                             </div>
                             <span className="text-text-muted">{formatDate(r.sentAt)} {fmt(r.sentAt)?.time}</span>
@@ -400,7 +424,7 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-bold text-text-primary">
-                      {hasDues ? 'Expiring Soon Reminder + Pending Balance' : 'Expiring Soon Reminder'}
+                      {expiringSoonLabel}
                     </p>
                     <StatusBadge status={expiryStatus} />
                   </div>
@@ -455,7 +479,7 @@ const ReminderDetailsModal = ({ isOpen, onClose, client, activeTab }) => {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-bold text-text-primary">
-                      {hasDues ? 'Expired Reminder + Pending Balance' : 'Expired Reminder'}
+                      {expiredLabel}
                     </p>
                     <StatusBadge status={expiredStatus} />
                   </div>

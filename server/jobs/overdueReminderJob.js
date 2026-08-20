@@ -96,6 +96,17 @@ const runOverdueReminders = async (options = {}) => {
               continue;
             }
 
+            // Skip if the membership is expiring soon (daysLeft 1-7).
+            // Rule: daysLeft 3 → reminderJob sends membership_expiring_soon or membership_expiring_soon_pending.
+            // daysLeft -1 → reminderJob sends membership_expired_pending.
+            // overdueReminderJob only fires due_first/second/third when membership is healthy (daysLeft > 7).
+            const membershipDaysLeft = updatedClient.membership?.daysLeft;
+            const isExpiringSoon = typeof membershipDaysLeft === 'number' && membershipDaysLeft >= 1 && membershipDaysLeft <= 7;
+            if (isExpiringSoon) {
+              stats.skippedClients++;
+              continue;
+            }
+
             // Find the membership with remaining balance
             const m = [...(updatedClient.memberships || [])]
               .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
@@ -306,7 +317,7 @@ const runOverdueReminders = async (options = {}) => {
 };
 
 // Run every day at 04:30 PM
-cron.schedule('35 14 * * *', async () => {
+cron.schedule('00 11 * * *', async () => {
   console.log('Running daily automated overdueReminderJob...');
   await runOverdueReminders();
 });

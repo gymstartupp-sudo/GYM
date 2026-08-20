@@ -689,8 +689,8 @@ const Profile = () => {
 
   return (
     <div className="p-4 sm:p-8 pt-10 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 border-b border-border pb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
+      <div className="flex flex-row items-center justify-between gap-4 border-b border-border pb-6 w-full">
+        <div className="flex flex-row items-center gap-3 sm:gap-4 min-w-0 flex-1">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
@@ -699,11 +699,11 @@ const Profile = () => {
               <ChevronLeft size={20} />
             </button>
           </div>
-          <div className="flex items-center gap-4 sm:gap-5">
+          <div className="flex items-center gap-3 sm:gap-5 min-w-0 flex-1">
             {/* Logo Preview */}
             <div
               onClick={isReadOnly ? undefined : handleLogoClick}
-              className={`relative w-20 h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 ${isReadOnly ? 'cursor-default' : 'cursor-pointer group'}`}
+              className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 ${isReadOnly ? 'cursor-default' : 'cursor-pointer group'}`}
               title={isReadOnly ? undefined : "Click to change logo"}
             >
               {formState.gym.gymLogo || formState.gym.billingInfo?.logo ? (
@@ -717,7 +717,7 @@ const Profile = () => {
                   className={`w-full h-full object-cover ${isReadOnly ? '' : 'transition-transform duration-200 group-hover:scale-105'}`}
                 />
               ) : (
-                <div className={`w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-2xl ${isReadOnly ? '' : 'transition-transform duration-200 group-hover:scale-105'}`}>
+                <div className={`w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-xl sm:text-2xl ${isReadOnly ? '' : 'transition-transform duration-200 group-hover:scale-105'}`}>
                   {formState.gym.gymName?.charAt(0).toUpperCase() || 'G'}
                 </div>
               )}
@@ -740,21 +740,21 @@ const Profile = () => {
               accept="image/jpeg,image/jpg,image/png,image/webp"
               className="hidden"
             />
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight truncate">{formState.gym.gymName || 'Gym Settings'}</h1>
-              <p className="text-text-secondary mt-1 sm:mt-2 text-sm sm:text-base leading-relaxed">{formState.gym.gymEmail || 'Manage your gym establishment, ownership, and platform configuration.'}</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight truncate">{formState.gym.gymName || 'Gym Settings'}</h1>
+              <p className="text-text-secondary mt-1 text-xs sm:text-sm md:text-base leading-relaxed truncate">{formState.gym.gymEmail || 'Manage settings'}</p>
             </div>
           </div>
         </div>
-        <div className="flex gap-2 shrink-0 self-start md:self-center">
+        <div className="flex gap-2 shrink-0 self-center">
           {!isReadOnly && (
             isEditing ? (
               <>
-                <Button type="button" variant="secondary" onClick={cancelEditing} disabled={isSaving}>Cancel</Button>
-                <Button type="button" onClick={saveAllProfile} isLoading={isSaving}>Save Changes</Button>
+                <Button type="button" variant="secondary" onClick={cancelEditing} disabled={isSaving} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Cancel</Button>
+                <Button type="button" onClick={saveAllProfile} isLoading={isSaving} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Save</Button>
               </>
             ) : (
-              <Button type="button" onClick={() => setIsEditing(true)}>Edit Profile</Button>
+              <Button type="button" onClick={() => setIsEditing(true)} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Edit Profile</Button>
             )
           )}
         </div>

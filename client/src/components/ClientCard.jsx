@@ -26,7 +26,7 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
   const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
 
   return (
-    <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group">
+    <div className="grid-table-row bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group md:min-w-[850px]">
       <div className={showReactivate 
         ? "grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1.8fr] gap-4 md:gap-2 items-center text-sm" 
         : "grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1fr] gap-4 md:gap-2 items-center text-sm"

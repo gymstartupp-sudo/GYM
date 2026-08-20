@@ -13,13 +13,13 @@ import { calculateDaysLeft, formatDisplayDate, getPlanStatus } from '../../utils
 import { useAuth } from '../../context/AuthContext';
 
 const StatCard = ({ title, value, icon, accentClass = 'text-primary' }) => (
-    <div className="kpi-card">
-        <div className="flex justify-between items-start">
-            <div>
-                <p className="kpi-card-label">{title}</p>
-                <h3 className="kpi-card-value mt-1">{value}</h3>
+    <div className="kpi-card p-3 sm:p-5">
+        <div className="flex justify-between items-start gap-1 sm:gap-3">
+            <div className="min-w-0 flex-1">
+                <p className="kpi-card-label text-[11px] sm:text-xs truncate">{title}</p>
+                <h3 className="kpi-card-value mt-1 text-xl sm:text-3xl font-black truncate">{value}</h3>
             </div>
-            <div className={`p-2.5 rounded-lg bg-surface-divider ${accentClass}`}>
+            <div className={`p-2 sm:p-2.5 rounded-lg bg-surface-divider shrink-0 ${accentClass}`}>
                 {icon}
             </div>
         </div>
@@ -187,18 +187,18 @@ const Dashboard = () => {
                         <p className="text-text-secondary mt-1 text-sm md:text-base">Here is what's happening in your Gym today.</p>
                     </div>
                     {!isReadOnly && (
-                        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                            <button onClick={() => setShowAddModal(true)} className="btn-primary w-full sm:w-auto text-sm md:text-base">
+                        <div className="flex flex-row gap-2 w-full sm:w-auto">
+                            <button onClick={() => setShowAddModal(true)} className="btn-primary flex-1 sm:flex-none sm:w-auto text-sm md:text-base">
                                 + Add Client
                             </button>
-                            <button onClick={() => setShowPaymentModal(true)} className="btn-success w-full sm:w-auto text-sm md:text-base">
+                            <button onClick={() => setShowPaymentModal(true)} className="btn-success flex-1 sm:flex-none sm:w-auto text-sm md:text-base">
                                 Record Payment
                             </button>
                         </div>
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-10">
                     {loading ? (
                         <>
                             <SkeletonCard /><SkeletonCard /><SkeletonCard />

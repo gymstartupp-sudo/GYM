@@ -314,11 +314,6 @@ const runReminders = async (options = {}) => {
 
                     await updatedClient.save();
                     stats.successfulMessages++;
-
-                    // Send secondary due reminder if client has outstanding balance
-                    if (remainingBalance > 0 && reminderType !== 'Expiring Soon Pending') {
-                      await sendSecondaryDueReminder(updatedClient, formattedWhatsApp, gym.gymId, options.executionSource);
-                    }
                   } else {
                     twilioStatus = 'Failed';
                     failureReason = result ? result.error : 'Meta send error';
@@ -450,11 +445,6 @@ const runReminders = async (options = {}) => {
 
                     await updatedClient.save();
                     stats.successfulMessages++;
-
-                    // Send secondary due reminder if client has outstanding balance
-                    if (remainingBalance > 0 && reminderType !== 'Expired Pending') {
-                      await sendSecondaryDueReminder(updatedClient, formattedWhatsApp, gym.gymId, options.executionSource);
-                    }
                   } else {
                     twilioStatus = 'Failed';
                     failureReason = result ? result.error : 'Meta send error';
@@ -517,7 +507,7 @@ const runReminders = async (options = {}) => {
 };
 
 // Run every day at 11:40 PM
-cron.schedule('35 14 * * *', async () => {
+cron.schedule('00 11 * * *', async () => {
   console.log('Running daily automated reminderJob...');
   await runReminders();
 });

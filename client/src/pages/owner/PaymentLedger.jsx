@@ -619,14 +619,14 @@ const PaymentLedger = () => {
             {loading ? (
                 <>
                     {/* Skeleton for dashboard cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
                         {[...Array(4)].map((_, i) => (
-                            <div key={i} className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 bg-surface-divider rounded-xl animate-pulse"></div>
-                                    <div>
-                                        <div className="h-3 w-20 bg-surface-divider rounded animate-pulse mb-2"></div>
-                                        <div className="h-7 w-24 bg-surface-divider rounded animate-pulse"></div>
+                            <div key={i} className="card bg-surface-divider/80 border-border backdrop-blur-md p-3.5 sm:p-6 rounded-2xl shadow-lg border border-border/50">
+                                <div className="flex items-center gap-2.5 sm:gap-4">
+                                    <div className="w-10 h-10 sm:w-14 sm:h-14 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="h-3 w-16 sm:w-20 bg-surface-divider rounded animate-pulse mb-2"></div>
+                                        <div className="h-5 sm:h-7 w-20 sm:w-24 bg-surface-divider rounded animate-pulse"></div>
                                     </div>
                                 </div>
                             </div>
@@ -667,91 +667,80 @@ const PaymentLedger = () => {
             ) : (
                 <>
                     {/* TOP DASHBOARD CARDS */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                            <div className="flex items-center gap-4">
-                                <div className="p-4 rounded-xl bg-blue-500/10 text-blue-400">
-                                    <CircleDollarSign size={28} />
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-3.5 sm:p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-2.5 sm:gap-4">
+                                <div className="p-2.5 sm:p-4 rounded-xl bg-blue-500/10 text-blue-400 shrink-0">
+                                    <CircleDollarSign size={20} className="sm:w-7 sm:h-7" />
                                 </div>
-                                <div>
-                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Total Revenue</p>
-                                    <h3 className="text-2xl font-black text-text-primary">₹{totalRevenue.toLocaleString()}</h3>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                            <div className="flex items-center gap-4">
-                                <div className="p-4 rounded-xl bg-primary/10 text-primary">
-                                    <TrendingUp size={28} />
-                                </div>
-                                <div>
-                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">AMOUNT RECEIVED</p>
-                                    <h3 className="text-2xl font-black text-text-primary">₹{netAmount.toLocaleString()}</h3>
-                                    <p className="text-xs text-text-muted">After ₹{gatewayFee.toLocaleString()} Gateway Fee</p>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Total Revenue</p>
+                                    <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{totalRevenue.toLocaleString()}</h3>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                            <div className="flex items-center gap-4">
-                                <div className="p-4 rounded-xl bg-rose-500/10 text-rose-400">
-                                    <TrendingDown size={28} />
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-3.5 sm:p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-2.5 sm:gap-4">
+                                <div className="p-2.5 sm:p-4 rounded-xl bg-primary/10 text-primary shrink-0">
+                                    <TrendingUp size={20} className="sm:w-7 sm:h-7" />
                                 </div>
-                                <div>
-                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Overall Expenses</p>
-                                    <h3 className="text-2xl font-black text-text-primary">₹{overallExpensesTotal.toLocaleString()}</h3>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Amount Received</p>
+                                    <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{netAmount.toLocaleString()}</h3>
+                                    <p className="text-[10px] text-text-muted truncate hidden sm:block">After ₹{gatewayFee.toLocaleString()} Fee</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-6 rounded-2xl shadow-lg border border-border/50">
-                            <div className="flex items-center gap-4">
-                                <div className="p-4 rounded-xl bg-emerald-500/10 text-emerald-400">
-                                    <CreditCard size={28} />
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-3.5 sm:p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-2.5 sm:gap-4">
+                                <div className="p-2.5 sm:p-4 rounded-xl bg-rose-500/10 text-rose-400 shrink-0">
+                                    <TrendingDown size={20} className="sm:w-7 sm:h-7" />
                                 </div>
-                                <div>
-                                    <p className="text-text-secondary text-xs font-semibold uppercase tracking-wider mb-1">Profit</p>
-                                    <h3 className="text-2xl font-black text-text-primary">₹{profit.toLocaleString()}</h3>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Overall Expenses</p>
+                                    <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{overallExpensesTotal.toLocaleString()}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-3.5 sm:p-6 rounded-2xl shadow-lg border border-border/50">
+                            <div className="flex items-center gap-2.5 sm:gap-4">
+                                <div className="p-2.5 sm:p-4 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0">
+                                    <CreditCard size={20} className="sm:w-7 sm:h-7" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Profit</p>
+                                    <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{profit.toLocaleString()}</h3>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Month-over-Month Comparison Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Revenue MoM Change</span>
-
-
-
-                            </div>
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-lg font-bold text-text-primary">₹{totalRevenue.toLocaleString()}</span>
-                                <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.revenue.toLocaleString()} last month</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5 mb-8">
+                        <div className="card bg-surface-secondary/50 border border-border/60 p-3.5 sm:p-4 rounded-2xl flex flex-col gap-2 backdrop-blur-sm shadow-md">
+                            <span className="text-text-secondary text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider leading-tight">Revenue MoM Change</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-base sm:text-xl font-bold text-text-primary">₹{totalRevenue.toLocaleString()}</span>
+                                <span className="text-[10px] text-text-muted leading-snug">vs ₹{previousMonthMetrics.revenue.toLocaleString()} last month</span>
                             </div>
                         </div>
 
-                        <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Expenses MoM Change</span>
-
-                            </div>
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-lg font-bold text-text-primary">₹{overallExpensesTotal.toLocaleString()}</span>
-                                <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.expenses.toLocaleString()} last month</span>
+                        <div className="card bg-surface-secondary/50 border border-border/60 p-3.5 sm:p-4 rounded-2xl flex flex-col gap-2 backdrop-blur-sm shadow-md">
+                            <span className="text-text-secondary text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider leading-tight">Expenses MoM Change</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-base sm:text-xl font-bold text-text-primary">₹{overallExpensesTotal.toLocaleString()}</span>
+                                <span className="text-[10px] text-text-muted leading-snug">vs ₹{previousMonthMetrics.expenses.toLocaleString()} last month</span>
                             </div>
                         </div>
 
-                        <div className="card bg-surface-secondary/50 border border-border/60 p-5 rounded-2xl flex flex-col justify-between backdrop-blur-sm shadow-md">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-text-secondary text-xs font-semibold uppercase tracking-wider">Profit MoM Change</span>
-
-                            </div>
-                            <div className="flex items-baseline justify-between">
-                                <span className="text-lg font-bold text-text-primary">₹{profit.toLocaleString()}</span>
-                                <span className="text-[11px] text-text-muted">vs ₹{previousMonthMetrics.profit.toLocaleString()} last month</span>
+                        <div className="card col-span-2 sm:col-span-1 bg-surface-secondary/50 border border-border/60 p-3.5 sm:p-4 rounded-2xl flex flex-col gap-2 backdrop-blur-sm shadow-md">
+                            <span className="text-text-secondary text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider leading-tight">Profit MoM Change</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-base sm:text-xl font-bold text-text-primary">₹{profit.toLocaleString()}</span>
+                                <span className="text-[10px] text-text-muted leading-snug">vs ₹{previousMonthMetrics.profit.toLocaleString()} last month</span>
                             </div>
                         </div>
                     </div>
@@ -801,40 +790,43 @@ const PaymentLedger = () => {
 
                     {/* EXPENSES LIST */}
                     <div className="bg-surface-secondary/30 border border-border rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
-                        <div className="p-6 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="p-4 sm:p-6 border-b border-border space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div className="flex items-center gap-3">
-                                    <FileText size={20} className="text-primary" />
+                                    <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
+                                        <FileText size={20} />
+                                    </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-text-primary">Expenses List</h3>
+                                        <h3 className="text-base sm:text-lg font-bold text-text-primary">Expenses List</h3>
                                         <p className="text-xs text-text-muted">Showing expenses for {MONTHS[selectedMonth]} {selectedYear}</p>
                                     </div>
                                 </div>
-                                {/* Category Filter Pills */}
-                                <div className="flex flex-wrap items-center gap-1 bg-surface-divider p-1 rounded-xl border border-border">
-                                    {['All', ...CATEGORIES].map(cat => (
-                                        <button
-                                            key={cat}
-                                            onClick={() => setSelectedCategory(cat)}
-                                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${selectedCategory === cat
-                                                ? 'bg-primary text-text-primary shadow-md'
-                                                : 'text-text-secondary hover:text-text-primary hover:bg-surface-secondary'
-                                                }`}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
-                                </div>
+
+                                {!isReadOnly && (
+                                    <button
+                                        onClick={() => handleOpenModal('add')}
+                                        className="flex items-center justify-center gap-2 bg-primary hover:brightness-95 text-text-primary px-4 py-2 rounded-xl shadow-lg shadow-primary/30 font-medium transition-all text-sm w-full sm:w-auto"
+                                    >
+                                        <Plus size={16} /> Add Expense
+                                    </button>
+                                )}
                             </div>
 
-                            {!isReadOnly && (
-                                <button
-                                    onClick={() => handleOpenModal('add')}
-                                    className="flex items-center gap-2 bg-primary hover:brightness-95 text-text-primary px-4 py-2 rounded-lg shadow-lg shadow-primary/30 font-medium transition-all text-sm self-start lg:self-auto"
-                                >
-                                    <Plus size={16} /> Add Expense
-                                </button>
-                            )}
+                            {/* Category Filter Pills */}
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                                {['All', ...CATEGORIES].map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setSelectedCategory(cat)}
+                                        className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 cursor-pointer ${selectedCategory === cat
+                                            ? 'bg-primary text-text-primary shadow-md font-bold'
+                                            : 'bg-surface-divider text-text-secondary hover:text-text-primary hover:bg-surface-secondary border border-border/50'
+                                            }`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                         <div className="overflow-x-auto max-h-[400px] overflow-y-auto custom-scrollbar">
                             <table className="w-full text-left min-w-[600px]">
@@ -865,10 +857,7 @@ const PaymentLedger = () => {
                                                 </span>
                                             </td>
                                             <td className="p-4 text-center text-text-secondary text-sm">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <Calendar size={14} className="text-text-muted" />
-                                                    {new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
-                                                </div>
+                                                {new Date(exp.date).toLocaleDateString('en-GB').replace(/\//g, '-')}
                                             </td>
                                             <td className="p-4 text-center">
                                                 <span className="text-text-primary font-black">₹{exp.amount.toLocaleString()}</span>

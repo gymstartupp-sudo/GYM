@@ -108,36 +108,42 @@ const ClientHome = () => {
         </div>
       )}
 
-      <div className="card space-y-6 bg-surface-secondary border-border shadow-xl rounded-2xl p-6 md:p-8 mt-6">
-        <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4 flex items-center gap-2">
+      <div className="card space-y-6 bg-surface-secondary border-border shadow-xl rounded-2xl p-4 sm:p-6 md:p-8 mt-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-text-primary border-b border-border pb-4 flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Membership Info
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <div className="bg-surface-divider/80 rounded-xl p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
-            <p className="text-xs text-text-muted uppercase font-bold tracking-widest mb-2">Active Plan</p>
-            <p className="text-text-primary text-lg font-semibold">{profile.membership?.planName || 'N/A'}</p>
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
+          {/* 1. Active Plan */}
+          <div className="bg-surface-divider/80 rounded-xl p-3.5 sm:p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
+            <p className="text-[10px] sm:text-xs text-text-muted uppercase font-bold tracking-widest mb-1.5 sm:mb-2 truncate">Active Plan</p>
+            <p className="text-text-primary text-sm sm:text-lg font-semibold truncate">{profile.membership?.planName || 'N/A'}</p>
           </div>
-          <div className="bg-surface-divider/80 rounded-xl p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
-            <p className="text-xs text-text-muted uppercase font-bold tracking-widest mb-2">Total Duration</p>
-            <p className="text-text-primary text-lg font-semibold">{profile.membership?.durationMonths ? `${profile.membership.durationMonths} Months` : 'N/A'}</p>
+          {/* 2. Total Duration */}
+          <div className="bg-surface-divider/80 rounded-xl p-3.5 sm:p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
+            <p className="text-[10px] sm:text-xs text-text-muted uppercase font-bold tracking-widest mb-1.5 sm:mb-2 truncate">Total Duration</p>
+            <p className="text-text-primary text-sm sm:text-lg font-semibold truncate">{profile.membership?.durationMonths ? `${profile.membership.durationMonths} Months` : 'N/A'}</p>
           </div>
-          <div className="bg-primary/5 rounded-xl p-5 border border-primary/20 shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
-            <p className="text-xs text-text-muted uppercase font-bold tracking-widest mb-2 text-primary/70">Remaining Days</p>
-            <p className="text-text-primary text-lg font-bold">{getDaysLeftDisplay()}</p>
-          </div>
-          <div className="bg-surface-divider/80 rounded-xl p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
-            <p className="text-xs text-text-secondary uppercase font-bold tracking-widest mb-2">Start Date</p>
-            <p className="text-text-primary text-lg font-semibold">{formatDisplayDate(profile.membership?.startDate)}</p>
-          </div>
-          <div className="bg-surface-divider/80 rounded-xl p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
-            <p className="text-xs text-text-secondary uppercase font-bold tracking-widest mb-2">End Date</p>
-            <p className="text-text-primary text-lg font-semibold">{formatDisplayDate(profile.membership?.endDate)}</p>
-          </div>
-          <div className="bg-surface-divider/80 rounded-xl p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
-            <p className="text-xs text-text-secondary uppercase font-bold tracking-widest mb-2">Member Status</p>
-            <p className={`text-lg font-bold uppercase ${profile.membership?.status === 'active' ? 'text-emerald-400' : 'text-orange-400'}`}>
+          {/* 3. Member Status */}
+          <div className="bg-surface-divider/80 rounded-xl p-3.5 sm:p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
+            <p className="text-[10px] sm:text-xs text-text-secondary uppercase font-bold tracking-widest mb-1.5 sm:mb-2 truncate">Member Status</p>
+            <p className={`text-sm sm:text-lg font-bold uppercase truncate ${profile.membership?.status === 'active' ? 'text-emerald-400' : 'text-orange-400'}`}>
               {profile.membership?.status?.replace('_', ' ') || 'N/A'}
             </p>
+          </div>
+          {/* 4. Remaining Days */}
+          <div className="bg-surface-divider/80 rounded-xl p-3.5 sm:p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
+            <p className="text-[10px] sm:text-xs text-text-muted uppercase font-bold tracking-widest mb-1.5 sm:mb-2 truncate">Remaining Days</p>
+            <p className="text-text-primary text-sm sm:text-lg font-bold truncate">{getDaysLeftDisplay()}</p>
+          </div>
+          {/* 5. Start Date */}
+          <div className="bg-surface-divider/80 rounded-xl p-3.5 sm:p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
+            <p className="text-[10px] sm:text-xs text-text-secondary uppercase font-bold tracking-widest mb-1.5 sm:mb-2 truncate">Start Date</p>
+            <p className="text-text-primary text-sm sm:text-lg font-semibold truncate">{formatDisplayDate(profile.membership?.startDate)}</p>
+          </div>
+          {/* 6. End Date */}
+          <div className="bg-surface-divider/80 rounded-xl p-3.5 sm:p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
+            <p className="text-[10px] sm:text-xs text-text-secondary uppercase font-bold tracking-widest mb-1.5 sm:mb-2 truncate">End Date</p>
+            <p className="text-text-primary text-sm sm:text-lg font-semibold truncate">{formatDisplayDate(profile.membership?.endDate)}</p>
           </div>
         </div>
       </div>
