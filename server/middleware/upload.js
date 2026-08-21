@@ -30,6 +30,9 @@ const fileFilter = (req, file, cb) => {
   if (!file.mimetype.startsWith('image/')) {
     return cb(new Error('Only image files are allowed'));
   }
+  if (file.mimetype === 'image/svg+xml') {
+    return cb(new Error('SVG files are not allowed'), false);
+  }
 
   cb(null, true);
 };
@@ -75,6 +78,9 @@ const issueFileFilter = (req, file, cb) => {
   const isImage = file.mimetype.startsWith('image/');
   const isVideo = file.mimetype.startsWith('video/');
   if (!isImage && !isVideo) return cb(new Error('Only image or video files are allowed'));
+  if (file.mimetype === 'image/svg+xml') {
+    return cb(new Error('SVG files are not allowed'), false);
+  }
   cb(null, true);
 };
 

@@ -72,7 +72,12 @@ app.use((req, res, next) => {
   next();
 });
 app.use(mongoSanitize());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res) => {
+    res.setHeader('Content-Disposition', 'attachment');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
 
 // Database Connection
 const connectDB = async () => {
