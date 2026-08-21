@@ -296,25 +296,30 @@ exports.addClient = async (req, res, next) => {
       });
     }
 
+    // Run plan lookup, gym lookup, and client ID generation in parallel
+    const isCustom = membership?.planType === 'Custom';
+    const [plan, gym, clientId] = await Promise.all([
+      isCustom ? Promise.resolve(null) : Plan.findOne({ _id: membership?.planId, isActive: true }),
+      Gym.findOne({ gymId: gymIdStr }),
+      generateClientId(gymIdStr)
+    ]);
+
     let planName = membership?.planType;
     let planDurationMonths = 1;
     let planId = membership?.planId;
     let planPrice = 0;
 
-    let plan = null;
-    if (membership?.planType === 'Custom') {
+    if (isCustom) {
       planDurationMonths = membership.customMonths;
       planId = null;
       planPrice = payment.amount || 0;
     } else {
-      plan = await Plan.findOne({ _id: membership?.planId, isActive: true });
       if (!plan) return res.status(400).json({ success: false, message: 'Selected plan not found' });
       planName = plan.name;
       planDurationMonths = plan.durationMonths;
       planPrice = plan.price;
     }
 
-    const clientId = await generateClientId(gymIdStr);
     const membershipWindow = buildMembershipWindow({ startDate: membership?.startDate || Date.now(), durationMonths: planDurationMonths });
 
     const planPriceVal = Number(planPrice) || 0;
@@ -326,7 +331,6 @@ exports.addClient = async (req, res, next) => {
       if (paidAmountVal < 100) {
         return res.status(400).json({ success: false, message: 'Minimum partial payment amount is ₹100.' });
       }
-
       const dueDays = plan ? (plan.partialPaymentDueDays ?? 15) : 15;
       const startVal = new Date(membership?.startDate || Date.now());
       startVal.setHours(0, 0, 0, 0);
@@ -335,11 +339,7 @@ exports.addClient = async (req, res, next) => {
       resolvedDueDate.setHours(0, 0, 0, 0);
     }
 
-    // ── Pre-generate payment ID BEFORE creating the client ──────────────────
-    // This ensures if gym lookup or ID generation fails, no orphaned client is left in DB
-    const gym = await Gym.findOne({ gymId: gymIdStr });
     const paymentId = await generatePaymentId(gymIdStr, gym?.billingInfo?.billingIdPrefix || 'BILL');
-    // ────────────────────────────────────────────────────────────────────────
 
     // Now create the client
     const client = await Client.create({
@@ -385,26 +385,31 @@ exports.addClient = async (req, res, next) => {
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    await Client.updateOne(
-      { _id: client._id },
-      { $set: { paymentHistory: [paymentRecord._id] } }
-    );
-
-    // Trigger WhatsApp notification with bill PDF in the background
-    const gymDoc = await Gym.findOne({ gymId: gymIdStr });
-    if (gymDoc && gymDoc.dbName) {
-      const { sendPaymentNotification } = require('../services/whatsappNotificationService');
-      sendPaymentNotification(paymentRecord._id, client._id, gymDoc.gymId, gymDoc.dbName).catch(err => {
-        console.error('Error triggering payment notification in createClient:', err);
-      });
-    }
-
+    // Respond immediately — paymentHistory link and WhatsApp run in background
     const enriched = calculateBalances(client, [paymentRecord]);
     res.status(201).json({ success: true, data: enriched });
+
+    setImmediate(async () => {
+      try {
+        await Client.updateOne(
+          { _id: client._id },
+          { $set: { paymentHistory: [paymentRecord._id] } }
+        );
+      } catch (err) {
+        console.error('Background paymentHistory update error:', err);
+      }
+      if (gym && gym.dbName) {
+        const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+        sendPaymentNotification(paymentRecord._id, client._id, gym.gymId, gym.dbName).catch(err => {
+          console.error('Error triggering payment notification in createClient:', err);
+        });
+      }
+    });
   } catch (err) {
     next(err);
   }
 };
+
 
 
 // @desc    Get Client by ID (For Owner)

@@ -73,62 +73,148 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
 
     const notifs = [];
     const getTs = (d) => d ? new Date(d).getTime() : 0;
-    const formatDateStr = (d) => {
-      if (!d) return 'N/A';
-      return new Date(d).toLocaleDateString('en-GB').replace(/\//g, '-');
-    };
+    const fmt = (d) => d ? new Date(d).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A';
 
-    // 1. Plan Active Check
-    if (profile.membership && (profile.membership.status === 'active' || profile.membership.status === 'expiring_soon')) {
-      const planName = profile.membership.planName || 'Membership Plan';
-      const startStr = formatDateStr(profile.membership.startDate);
-      const endStr = formatDateStr(profile.membership.endDate);
+    const mem = profile.membership;
+    const endStr = fmt(mem?.endDate);
+    const startStr = fmt(mem?.startDate);
+    const planName = mem?.planName || 'Membership Plan';
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Calculate real-time daysLeft from endDate
+    let daysLeft = mem?.daysLeft;
+    if (mem?.endDate) {
+      const endD = new Date(mem.endDate);
+      endD.setHours(0, 0, 0, 0);
+      daysLeft = Math.ceil((endD.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    const isExpired = mem?.status === 'expired' || (typeof daysLeft === 'number' && daysLeft < 0);
+    const isExpiringSoon = mem?.status === 'expiring_soon' || (typeof daysLeft === 'number' && daysLeft <= 3);
+
+    // Calculate pending balance from memberships
+    let pendingBal = 0;
+    let targetDueDate = mem?.dueDate || null;
+    (profile.memberships || []).forEach(m => {
+      const bal = Math.max(0, (m.finalPrice || 0) - (m.totalPaid || 0));
+      if (bal > 0) {
+        pendingBal += bal;
+        if (!targetDueDate && m.dueDate) targetDueDate = m.dueDate;
+      }
+    });
+    const hasPendingBalance = pendingBal > 0 || profile.paymentStatus === 'partial' || profile.paymentStatus === 'overdue';
+
+    // 1. Plan Activated — always show when membership exists
+    if (mem?.startDate) {
       notifs.push({
-        id: `plan-active-${getTs(profile.membership.startDate)}`,
+        id: `plan-active-${getTs(mem.startDate)}`,
+        timestamp: getTs(mem.startDate),
         type: 'info',
-        title: 'Plan Active',
-        message: `Your membership plan "${planName}" is active (Start: ${startStr}, Valid until: ${endStr}).`,
+        title: 'Plan Activated',
+        message: `Your "${planName}" plan started on ${startStr} and is valid until ${endStr}.`,
       });
     }
 
-    // 2. WhatsApp Reminders Check (Expiring Soon, Expired, Due Reminders)
-    const sortedReminders = [...(profile.overdueReminders?.manualReminders || [])]
-      .filter(r => r.status === 'sent')
-      .sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
+    // 2. Expiring Soon (Triggered at Days Left = 3 milestone)
+    if ((isExpiringSoon || isExpired) && mem?.endDate) {
+      const expSoonTs = getTs(mem.endDate) - 3 * 24 * 60 * 60 * 1000;
 
-    sortedReminders.forEach((r, idx) => {
-      const typeStr = String(r.reminderType || '').toLowerCase();
-      const sentStr = formatDateStr(r.sentAt);
-
-      if (typeStr.includes('expiring soon')) {
+      if (hasPendingBalance) {
         notifs.push({
-          id: `whatsapp-expiring-${getTs(r.sentAt)}-${idx}`,
+          id: `status-expiring-soon-pending-${getTs(mem.endDate)}`,
+          timestamp: expSoonTs,
+          type: 'danger',
+          title: 'Membership Expiring Soon & Payment Pending',
+          message: `Your "${planName}" plan is expiring on ${endStr} with pending balance${pendingBal > 0 ? ` of ₹${pendingBal}` : ''}. Please clear your dues and renew soon.`,
+        });
+      } else {
+        notifs.push({
+          id: `status-expiring-soon-${getTs(mem.endDate)}`,
+          timestamp: expSoonTs,
           type: 'warning',
           title: 'Membership Expiring Soon',
-          message: `An expiry warning was sent to your WhatsApp on ${sentStr}. Please renew soon.`,
-        });
-      } else if (typeStr.includes('expired')) {
-        notifs.push({
-          id: `whatsapp-expired-${getTs(r.sentAt)}-${idx}`,
-          type: 'danger',
-          title: 'Membership Expired',
-          message: `Your membership expired. An alert was sent to your WhatsApp on ${sentStr}. Please renew to continue.`,
-        });
-      } else if (typeStr.includes('due reminder') || typeStr.includes('payment reminder')) {
-        notifs.push({
-          id: `whatsapp-due-${getTs(r.sentAt)}-${idx}`,
-          type: 'danger',
-          title: 'Payment Reminder Received',
-          message: `A payment reminder for outstanding balance was sent to your WhatsApp on ${sentStr}.`,
+          message: `Your "${planName}" plan is expiring on ${endStr}. Please renew soon to avoid service interruption.`,
         });
       }
-    });
+    }
+
+    // 3. Expired (Triggered at Days Left = -1 milestone)
+    if (isExpired && mem?.endDate) {
+      const expTs = getTs(mem.endDate);
+
+      if (hasPendingBalance) {
+        notifs.push({
+          id: `status-expired-pending-${getTs(mem.endDate)}`,
+          timestamp: expTs,
+          type: 'danger',
+          title: 'Membership Expired & Payment Pending',
+          message: `Your "${planName}" plan expired on ${endStr} with pending dues${pendingBal > 0 ? ` of ₹${pendingBal}` : ''}. Please clear your balance and renew to continue.`,
+        });
+      } else {
+        notifs.push({
+          id: `status-expired-${getTs(mem.endDate)}`,
+          timestamp: expTs,
+          type: 'danger',
+          title: 'Membership Expired',
+          message: `Your "${planName}" plan expired on ${endStr}. Please renew to continue accessing the gym.`,
+        });
+      }
+    }
+
+    // 4. Due Reminders (Milestones: 3 days before, on due date, 3 days after)
+    if (hasPendingBalance && targetDueDate) {
+      const dueD = new Date(targetDueDate);
+      dueD.setHours(0, 0, 0, 0);
+      const daysUntilDue = Math.round((dueD.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      // Due Reminder 1: 3 days before due date
+      if (daysUntilDue <= 3) {
+        const ts1 = dueD.getTime() - 3 * 24 * 60 * 60 * 1000;
+        notifs.push({
+          id: `overdue-reminder1-${getTs(targetDueDate)}`,
+          timestamp: ts1,
+          type: 'danger',
+          title: 'Due Reminder 1',
+          message: `Due Reminder 1: Your payment${pendingBal > 0 ? ` of ₹${pendingBal}` : ''} is due on ${fmt(targetDueDate)}. Please clear your balance on or before the due date.`,
+        });
+      }
+
+      // Due Reminder 2: On due date
+      if (daysUntilDue <= 0) {
+        const ts2 = dueD.getTime();
+        notifs.push({
+          id: `overdue-reminder2-${getTs(targetDueDate)}`,
+          timestamp: ts2,
+          type: 'danger',
+          title: 'Due Reminder 2',
+          message: `Due Reminder 2: Your payment${pendingBal > 0 ? ` of ₹${pendingBal}` : ''} is due today (${fmt(targetDueDate)}). Please clear your balance immediately.`,
+        });
+      }
+
+      // Due Reminder 3: 3 days after due date
+      if (daysUntilDue <= -3) {
+        const ts3 = dueD.getTime() + 3 * 24 * 60 * 60 * 1000;
+        notifs.push({
+          id: `overdue-reminder3-${getTs(targetDueDate)}`,
+          timestamp: ts3,
+          type: 'danger',
+          title: 'Due Reminder 3',
+          message: `Due Reminder 3: Your payment${pendingBal > 0 ? ` of ₹${pendingBal}` : ''} is overdue since ${fmt(targetDueDate)}. Please clear immediately to avoid membership suspension.`,
+        });
+      }
+    }
+
+    // Sort newest first (highest timestamp on top)
+    notifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
     const deletedIds = JSON.parse(localStorage.getItem('client_deleted_notification_ids') || '[]');
-    const activeNotifs = notifs.filter(n => !deletedIds.includes(n.id));
-
-    setNotifications(activeNotifs);
+    setNotifications(notifs.filter(n => !deletedIds.includes(n.id)));
   }, [profile]);
+
+
+
 
   useEffect(() => {
     if (showNotifDropdown && notifications.length > 0) {

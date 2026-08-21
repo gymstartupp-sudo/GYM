@@ -12,9 +12,9 @@ const { getPlanStatus, getPaymentStatus, getClientPlans, normalizeDate } = requi
  * This is the ONLY function that should write to `client.membership` and `client.paymentStatus`.
  * No other cron job or controller should directly modify these fields.
  */
-const syncClientStatus = async (clientId) => {
+const syncClientStatus = async (clientId, preloadedClient = null) => {
   try {
-    const client = await Client.findById(clientId);
+    const client = preloadedClient || await Client.findById(clientId);
     if (!client) return null;
 
     const today = new Date();

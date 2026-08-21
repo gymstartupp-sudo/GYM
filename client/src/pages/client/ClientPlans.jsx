@@ -45,9 +45,6 @@ const PlanDetailModal = ({ plan, onClose }) => {
 const PlanCard = ({ plan, onViewDetails }) => (
     <div className="card relative flex flex-col group border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-primary/10 hover:shadow-xl">
         <div className="flex items-center gap-2 mb-4">
-            <span className="inline-block text-xs font-semibold bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 w-fit">
-                {plan.durationMonths}M Plan
-            </span>
             <span className="text-xs font-medium text-text-secondary bg-surface-divider border border-border px-2.5 py-1 rounded-full flex items-center gap-1.5" title="Clients using this plan">
                 <Users size={12} className="text-primary" /> {plan.clientCount || 0} client{plan.clientCount !== 1 ? 's' : ''}
             </span>

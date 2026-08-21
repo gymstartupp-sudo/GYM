@@ -5,7 +5,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (token && token !== 'undefined') config.headers.Authorization = `Bearer ${token}`;
   
   const viewGymId = sessionStorage.getItem('viewGymId');
@@ -20,6 +20,7 @@ api.interceptors.response.use(
   err => {
     const status = err.response?.status;
     if (status === 401 || status === 403) {
+      sessionStorage.removeItem('token');
       localStorage.removeItem('token');
       // If we aren't already on login page, redirect to prevent loop
       if (window.location.pathname !== '/login') {

@@ -49,68 +49,19 @@ const generateGymId = async () => {
 
 const generateClientId = async (gymIdStr) => {
   const counterName = `clientId:${gymIdStr}`;
-  let sequence = await getNextSequenceValue(counterName);
-
-  // Sync/Correction: check highest existing clientId for this gym to avoid collisions
-  const clients = await Client.find({
-    gymId: gymIdStr,
-    clientId: new RegExp('^CL-')
-  }, { clientId: 1 }).lean();
-
-  let lastCount = 0;
-  for (const c of clients) {
-    if (c.clientId) {
-      const parts = c.clientId.split('-');
-      const num = parseInt(parts[parts.length - 1], 10);
-      if (!isNaN(num) && num > lastCount) {
-        lastCount = num;
-      }
-    }
-  }
-
-  if (sequence <= lastCount) {
-    const correctedCounter = await Counter.findOneAndUpdate(
-      { name: counterName },
-      { $set: { value: lastCount + 1 } },
-      { new: true, upsert: true }
-    );
-    sequence = correctedCounter.value;
-  }
-
+  // ponytail: atomic counter is sufficient; the old O(n) Client.find scan
+  // ran on every addClient call — upgrade path: one-time migration script
+  // if counter ever drifts (extremely rare).
+  const sequence = await getNextSequenceValue(counterName);
   return `CL-${String(sequence).padStart(2, '0')}`;
 };
 
 const generatePaymentId = async (gymId, billingPrefix) => {
   const counterName = `paymentId:${gymId}:${billingPrefix.toUpperCase()}`;
-  let sequence = await getNextSequenceValue(counterName);
-
-  // Sync/Correction: check highest existing paymentId for this prefix and gymId to avoid collisions
-  const escapedPrefix = billingPrefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-  const payments = await Payment.find({
-    gymId,
-    paymentId: new RegExp(`^${escapedPrefix}-`)
-  }, { paymentId: 1 }).lean();
-
-  let lastCount = 0;
-  for (const p of payments) {
-    if (p.paymentId) {
-      const parts = p.paymentId.split('-');
-      const num = parseInt(parts[parts.length - 1], 10);
-      if (!isNaN(num) && num > lastCount) {
-        lastCount = num;
-      }
-    }
-  }
-
-  if (sequence <= lastCount) {
-    const correctedCounter = await Counter.findOneAndUpdate(
-      { name: counterName },
-      { $set: { value: lastCount + 1 } },
-      { new: true, upsert: true }
-    );
-    sequence = correctedCounter.value;
-  }
-
+  // ponytail: atomic counter is sufficient; the old O(n) Payment.find scan
+  // scanned every payment on every record call — upgrade path: one-time
+  // migration script if counter ever drifts (extremely rare).
+  const sequence = await getNextSequenceValue(counterName);
   const paddedCount = sequence.toString().padStart(3, '0');
   return `${billingPrefix}-${paddedCount}`;
 };

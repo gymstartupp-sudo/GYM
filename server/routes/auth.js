@@ -104,6 +104,8 @@ const checkExistsValidation = [
   phoneValidation('phone', true)
 ];
 
+const { protect } = require('../middleware/authMiddleware');
+
 // Routes
 router.post('/check-exists', checkExistsValidation, validate, authController.checkExists);
 router.post('/find-gyms', findGymsLimiter, authController.findGyms);
@@ -116,5 +118,8 @@ router.post('/gym/register', uploadLogo.single('logo'), gymRegisterValidation, v
 router.post('/client/register', clientRegisterValidation, validate, authController.registerClient);
 
 router.post('/login', loginLimiter, universalLoginValidation, validate, authController.universalLogin);
+router.post('/heartbeat', protect, authController.heartbeat);
+router.post('/logout', protect, authController.logoutSession);
 
 module.exports = router;
+
