@@ -81,4 +81,45 @@ router.post('/', async (req, res) => {
   }
 });
 
+// External Cron Trigger (GET /api/webhook/cron-trigger?secret=...)
+const { runReminders } = require('../jobs/reminderJob');
+const { runOverdueReminders } = require('../jobs/overdueReminderJob');
+const { runOverdueCheck } = require('../jobs/statusUpdater');
+
+router.get('/cron-trigger', async (req, res) => {
+  const secret = req.query.secret || req.headers['x-cron-secret'];
+  const expectedSecret = process.env.CRON_SECRET || 'gym_cron_secret_123';
+
+  if (secret !== expectedSecret) {
+    logger.warn('[CRON TRIGGER] Unauthorized access attempt.');
+    return res.status(401).json({ success: false, message: 'Unauthorized: Invalid cron secret' });
+  }
+
+  try {
+    logger.info('[CRON TRIGGER] Cron trigger initiated by external scheduler...');
+    
+    // 1. Mark past-due to overdue
+    const overdueCheckStats = await runOverdueCheck();
+
+    // 2. Send Expiry & Expired reminders
+    const reminderStats = await runReminders({ executionSource: 'External Cron Trigger' });
+
+    // 3. Send Payment Overdue reminders
+    const overdueStats = await runOverdueReminders({ executionSource: 'External Cron Trigger' });
+
+    logger.info('[CRON TRIGGER] Cron jobs execution finished successfully.');
+    return res.status(200).json({
+      success: true,
+      message: 'All reminder & overdue jobs executed successfully',
+      overdueCheckStats,
+      reminderStats,
+      overdueStats
+    });
+  } catch (err) {
+    logger.error('[CRON TRIGGER ERROR]:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;
+
