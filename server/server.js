@@ -24,8 +24,6 @@ const logger = require('./utils/logger');
 const { errorHandler } = require('./middleware/errorHandler');
 const { blockNoSqlInjection } = require('./middleware/security');
 
-// Import Models
-const Admin = require('./models/Admin');
 
 const app = express();
 // Trust Render's reverse proxy (required for express-rate-limit)
@@ -100,31 +98,9 @@ const connectDB = async () => {
       connectTimeoutMS: 10000
     });
     logger.info('MongoDB Connected to database:', mongoose.connection.name);
-
-    // Seed Super Admin on first run
-    await seedSuperAdmin();
   } catch (error) {
     logger.error(`Database Connection Error: ${error.message}`);
     process.exit(1);
-  }
-};
-
-const seedSuperAdmin = async () => {
-  try {
-    const adminEmail = process.env.ADMIN_EMAIL || 'rexfit.nexus@gmail.com';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'Ads@123';
-
-    const adminExists = await Admin.findOne({ role: 'superadmin' });
-    if (!adminExists) {
-      await Admin.create({
-        email: adminEmail,
-        password: adminPassword,
-        role: 'superadmin'
-      });
-      logger.info('Super Admin Seeded Successfully');
-    }
-  } catch (err) {
-    logger.error('Error seeding admin:', err.message);
   }
 };
 

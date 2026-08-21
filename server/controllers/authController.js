@@ -181,7 +181,7 @@ exports.checkExists = async (req, res, next) => {
         if (gym) {
           const conn = await getTenantConnection(gym.dbName);
           const TenantClient = conn.model('Client');
-          
+
           let emailConflict = null;
           let phoneConflict = null;
 
@@ -234,7 +234,7 @@ exports.checkExists = async (req, res, next) => {
           phoneExists = true;
         }
       }
-      
+
       if (emailExists || phoneExists) {
         const duplicateFields = [];
         if (emailExists) duplicateFields.push('email');
@@ -360,7 +360,7 @@ exports.universalLogin = async (req, res, next) => {
           }
           return res.json({
             success: true,
-            data: gym,
+            data: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
             token: generateToken(gym._id, 'owner', { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }),
             role: 'owner'
           });
@@ -386,7 +386,7 @@ exports.universalLogin = async (req, res, next) => {
 
             return res.json({
               success: true,
-              data: client,
+              data: { clientId: client.clientId, gymId: client.gymId, personalInfo: { name: client.personalInfo?.name } },
               token: generateToken(client._id, 'client', { gymId: client.gymId, dbName: clientGym.dbName }),
               role: 'client'
             });
@@ -422,7 +422,7 @@ exports.universalLogin = async (req, res, next) => {
       }
       return res.json({
         success: true,
-        data: gym,
+        data: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
         token: generateToken(gym._id, 'owner', { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }),
         role: 'owner'
       });
@@ -472,7 +472,7 @@ exports.universalLogin = async (req, res, next) => {
 
       return res.json({
         success: true,
-        data: foundClient,
+        data: { clientId: foundClient.clientId, gymId: foundClient.gymId, personalInfo: { name: foundClient.personalInfo?.name } },
         token: generateToken(foundClient._id, 'client', { gymId: foundClient.gymId, dbName: clientGym.dbName }),
         role: 'client'
       });
@@ -661,8 +661,7 @@ exports.forgotPassword = async (req, res, next) => {
       otpHash,
       expiresAt
     });
-    console.log(`[TEST DEBUG] Generated OTP for ${email}: ${otp}`);
-    console.log(`\n↓\n\nOTP Generated`);
+
 
     // Send OTP via Nodemailer
     const sendEmail = require('../utils/sendEmail');
@@ -808,7 +807,7 @@ exports.resendResetOtp = async (req, res, next) => {
 
     // Store new OTP
     await PasswordResetOTP.create({ email, otpHash, expiresAt });
-    console.log(`[TEST DEBUG] Resent OTP for ${email}: ${otp}`);
+
 
     const genericMessage = 'If an account exists with this email, a verification code has been sent.';
 

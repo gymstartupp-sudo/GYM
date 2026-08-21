@@ -51,7 +51,7 @@ const AdminHeader = ({ isMobile = false, isSidebarOpen = false, onToggleSidebar 
 
   const greetingData = getGreetingData();
 
-  const adminEmail = user?.email || user?.personalInfo?.email || 'rexfit.nexus@gmail.com';
+  const adminEmail = user?.email || user?.personalInfo?.email || 'admin@gym.com';
   const adminName = user?.personalInfo?.name || user?.name || 'Super Admin';
 
   return (
