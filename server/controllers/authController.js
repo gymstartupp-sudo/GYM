@@ -6,7 +6,53 @@ const { generateGymId, generateClientId } = require('../utils/generateId');
 const Plan = require('../models/Plan');
 const { isValidExternalUrl } = require('../middleware/validate');
 
+const ActiveSession = require('../models/ActiveSession');
+const crypto = require('crypto');
+
+const LEASE_DURATION_MS = 15000; // 15 seconds active lease
+
+const checkAndAcquireActiveSession = async ({ userId, role, gymId, requestedSessionId }) => {
+  const normalizedUserId = String(userId);
+  const now = new Date();
+
+  // Check for an existing unexpired lease for this exact user and role
+  const existingSession = await ActiveSession.findOne({
+    userId: normalizedUserId,
+    role,
+    expiresAt: { $gt: now }
+  });
+
+  const sessionId = requestedSessionId || crypto.randomUUID();
+
+  // If another active unexpired session exists with a DIFFERENT sessionId, reject login
+  if (existingSession && existingSession.sessionId !== sessionId) {
+    const accountLabel = role === 'owner' ? 'gym account' : (role === 'client' ? 'client account' : 'admin account');
+    return {
+      allowed: false,
+      message: `This ${accountLabel} is already active in another browser tab. Please log out there before logging in here.`
+    };
+  }
+
+  // Claim or renew the active lease
+  const expiresAt = new Date(Date.now() + LEASE_DURATION_MS);
+  await ActiveSession.findOneAndUpdate(
+    { userId: normalizedUserId, role },
+    {
+      userId: normalizedUserId,
+      role,
+      sessionId,
+      gymId: gymId || null,
+      lastSeen: now,
+      expiresAt
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+
+  return { allowed: true, sessionId };
+};
+
 const parseJsonField = (value, fallback) => {
+
   if (!value) {
     return fallback;
   }
@@ -328,9 +374,40 @@ exports.registerClient = async (req, res, next) => {
 // @access  Public
 exports.universalLogin = async (req, res, next) => {
   try {
-    const { loginId, password, gymId, role } = req.body;
+    const { loginId, password, gymId, role, sessionId } = req.body;
     const isEmail = loginId.includes('@');
     const { getTenantConnection } = require('../utils/connectionManager');
+
+    // Helper to process session acquisition and successful response
+    const completeLogin = async ({ userId, userRole, gymIdStr, responseData, extraTokenData = {} }) => {
+      const sessionResult = await checkAndAcquireActiveSession({
+        userId,
+        role: userRole,
+        gymId: gymIdStr,
+        requestedSessionId: sessionId
+      });
+
+      if (!sessionResult.allowed) {
+        return res.status(409).json({
+          success: false,
+          code: 'ACCOUNT_ALREADY_ACTIVE',
+          message: sessionResult.message
+        });
+      }
+
+      const token = generateToken(userId, userRole, {
+        ...extraTokenData,
+        sessionId: sessionResult.sessionId
+      });
+
+      return res.json({
+        success: true,
+        data: responseData,
+        token,
+        sessionId: sessionResult.sessionId,
+        role: userRole
+      });
+    };
 
     // If gymId and role are provided, perform direct, optimized lookup
     if (gymId && role) {
@@ -338,11 +415,12 @@ exports.universalLogin = async (req, res, next) => {
         if (isEmail) {
           const admin = await Admin.findOne({ email: loginId });
           if (admin && (await admin.matchPassword(password))) {
-            return res.json({
-              success: true,
-              data: { email: admin.email, role: admin.role },
-              token: generateToken(admin._id, admin.role || 'superadmin', { email: admin.email }),
-              role: admin.role
+            return await completeLogin({
+              userId: admin._id,
+              userRole: admin.role || 'superadmin',
+              gymIdStr: null,
+              responseData: { email: admin.email, role: admin.role },
+              extraTokenData: { email: admin.email }
             });
           }
         }
@@ -358,11 +436,12 @@ exports.universalLogin = async (req, res, next) => {
               message: 'Your gym account has been deactivated. Please contact the administrator.'
             });
           }
-          return res.json({
-            success: true,
-            data: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
-            token: generateToken(gym._id, 'owner', { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }),
-            role: 'owner'
+          return await completeLogin({
+            userId: gym._id,
+            userRole: 'owner',
+            gymIdStr: gym.gymId,
+            responseData: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
+            extraTokenData: { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }
           });
         }
       } else if (role === 'client') {
@@ -384,11 +463,12 @@ exports.universalLogin = async (req, res, next) => {
               return res.status(401).json({ success: false, message: 'Your membership is pending approval by the gym owner' });
             }
 
-            return res.json({
-              success: true,
-              data: { clientId: client.clientId, gymId: client.gymId, personalInfo: { name: client.personalInfo?.name } },
-              token: generateToken(client._id, 'client', { gymId: client.gymId, dbName: clientGym.dbName }),
-              role: 'client'
+            return await completeLogin({
+              userId: client._id,
+              userRole: 'client',
+              gymIdStr: client.gymId,
+              responseData: { clientId: client.clientId, gymId: client.gymId, personalInfo: { name: client.personalInfo?.name } },
+              extraTokenData: { gymId: client.gymId, dbName: clientGym.dbName }
             });
           }
         }
@@ -401,11 +481,12 @@ exports.universalLogin = async (req, res, next) => {
     if (isEmail) {
       const admin = await Admin.findOne({ email: loginId });
       if (admin && (await admin.matchPassword(password))) {
-        return res.json({
-          success: true,
-          data: { email: admin.email, role: admin.role },
-          token: generateToken(admin._id, admin.role || 'superadmin', { email: admin.email }),
-          role: admin.role
+        return await completeLogin({
+          userId: admin._id,
+          userRole: admin.role || 'superadmin',
+          gymIdStr: null,
+          responseData: { email: admin.email, role: admin.role },
+          extraTokenData: { email: admin.email }
         });
       }
     }
@@ -420,11 +501,12 @@ exports.universalLogin = async (req, res, next) => {
           message: 'Your gym account has been deactivated. Please contact the administrator.'
         });
       }
-      return res.json({
-        success: true,
-        data: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
-        token: generateToken(gym._id, 'owner', { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }),
-        role: 'owner'
+      return await completeLogin({
+        userId: gym._id,
+        userRole: 'owner',
+        gymIdStr: gym.gymId,
+        responseData: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
+        extraTokenData: { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }
       });
     }
 
@@ -470,11 +552,12 @@ exports.universalLogin = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Your membership is pending approval by the gym owner' });
       }
 
-      return res.json({
-        success: true,
-        data: { clientId: foundClient.clientId, gymId: foundClient.gymId, personalInfo: { name: foundClient.personalInfo?.name } },
-        token: generateToken(foundClient._id, 'client', { gymId: foundClient.gymId, dbName: clientGym.dbName }),
-        role: 'client'
+      return await completeLogin({
+        userId: foundClient._id,
+        userRole: 'client',
+        gymIdStr: foundClient.gymId,
+        responseData: { clientId: foundClient.clientId, gymId: foundClient.gymId, personalInfo: { name: foundClient.personalInfo?.name } },
+        extraTokenData: { gymId: foundClient.gymId, dbName: clientGym.dbName }
       });
     }
 
@@ -483,6 +566,65 @@ exports.universalLogin = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Heartbeat to extend active session lease
+// @route   POST /api/auth/heartbeat
+// @access  Private
+exports.heartbeat = async (req, res, next) => {
+  try {
+    const userId = String(req.user._id);
+    const role = req.userRole;
+    const sessionId = req.body.sessionId || req.user.sessionId;
+
+    if (!sessionId) {
+      return res.status(400).json({ success: false, message: 'Session ID is required' });
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(Date.now() + LEASE_DURATION_MS);
+
+    const updated = await ActiveSession.findOneAndUpdate(
+      { userId, role, sessionId },
+      { $set: { lastSeen: now, expiresAt } },
+      { new: true }
+    );
+
+    if (!updated) {
+      // Session lease was expired or replaced
+      return res.status(409).json({
+        success: false,
+        code: 'SESSION_EXPIRED_OR_REPLACED',
+        message: 'Session lease expired or replaced in another tab'
+      });
+    }
+
+    res.json({ success: true, expiresAt });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Logout and release active session lease
+// @route   POST /api/auth/logout
+// @access  Private
+exports.logoutSession = async (req, res, next) => {
+  try {
+    const userId = String(req.user._id);
+    const role = req.userRole;
+    const sessionId = req.body.sessionId || req.user.sessionId;
+
+    const query = { userId, role };
+    if (sessionId) {
+      query.sessionId = sessionId;
+    }
+
+    await ActiveSession.deleteMany(query);
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 // @desc    Find Gyms/Portals matching loginId
 // @route   POST /api/auth/find-gyms

@@ -68,7 +68,7 @@ const CustomPortalDropdown = ({ selectedGym, onSelect, gyms }) => {
 const LoginPage = () => {
     const [formData, setFormData] = useState({});
     const [errors, setErrors] = useState({});
-    const { login } = useAuth();
+    const { login, sessionId } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(false);
@@ -333,12 +333,13 @@ const LoginPage = () => {
                 loginId, 
                 password,
                 gymId: gym?.gymId,
-                role: gym?.role
+                role: gym?.role,
+                sessionId
             });
-            const { token, role, data } = res.data;
+            const { token, role, data, sessionId: serverSessionId } = res.data;
 
             const roleForApp = role === 'superadmin' ? 'superadmin' : role;
-            login(token, roleForApp, data);
+            login(token, roleForApp, data, serverSessionId);
 
             if (gym) {
                 localStorage.setItem('lastLoginGym', JSON.stringify({ gymId: gym.gymId, role: gym.role }));
@@ -360,6 +361,8 @@ const LoginPage = () => {
         } catch (error) {
             if (!error.response) {
                 toast.error("Network error: Server is unreachable. Please try again.");
+            } else if (error.response.status === 409 || error.response.data?.code === 'ACCOUNT_ALREADY_ACTIVE') {
+                toast.warning(error.response.data?.message || "This gym account is already active in another browser tab. Please log out there before logging in here.");
             } else {
                 toast.error(error.response.data?.message || "Invalid credentials");
             }

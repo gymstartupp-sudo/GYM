@@ -17,9 +17,11 @@ if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
 
 
 // Helper to assign or renew a plan
-const assignOrRenewPlan = async (client, planId, startDateStr, paymentData = {}) => {
-  const Plan = require('../models/Plan');
-  const planDetails = await Plan.findById(planId);
+const assignOrRenewPlan = async (client, planId, startDateStr, paymentData = {}, planDetails = null) => {
+  if (!planDetails) {
+    const Plan = require('../models/Plan');
+    planDetails = await Plan.findById(planId);
+  }
   if (!planDetails) return;
 
   const today = new Date();
@@ -201,49 +203,42 @@ exports.recordPayment = async (req, res, next) => {
     }
 
     // FIX: Idempotency key check (replaces fragile 5-second window)
-    if (idempotencyKey) {
-      const existingPayment = await Payment.findOne({ idempotencyKey });
-      if (existingPayment) {
-        // Return the existing payment — idempotent response
-        return res.status(200).json({ success: true, data: existingPayment, message: 'Payment already recorded (idempotent)' });
-      }
-    } else {
-      // Fallback: 5-second duplicate prevention for clients without idempotency keys
-      const recentPayment = await Payment.findOne({
-        clientId: client._id,
-        planId: planId,
-        createdAt: { $gt: new Date(Date.now() - 5000) }
-      });
-
-      if (recentPayment) {
-        return res.status(400).json({ success: false, message: 'Duplicate payment detected. Please wait.' });
-      }
-    }
-
-    // Check if a payment for the same client, plan, and start date already exists
     const targetStartDate = startDate ? new Date(startDate) : new Date();
     const startValForDup = new Date(targetStartDate);
     startValForDup.setHours(0, 0, 0, 0);
     const endValForDup = new Date(targetStartDate);
     endValForDup.setHours(23, 59, 59, 999);
 
-    const duplicatePayment = await Payment.findOne({
-      clientId: client._id,
-      planId: planId,
-      startDate: {
-        $gte: startValForDup,
-        $lte: endValForDup
-      }
-    });
+    // Run idempotency/duplicate checks and Gym fetch in parallel
+    const dupFilter = idempotencyKey
+      ? Payment.findOne({ idempotencyKey })
+      : Payment.findOne({ clientId: client._id, planId, startDate: { $gte: startValForDup, $lte: endValForDup } });
 
-    if (duplicatePayment) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'A payment record for this plan and start date already exists.' 
-      });
+    const [dupOrIdempotent, gym] = await Promise.all([
+      dupFilter,
+      Gym.findOne({ gymId: gymIdStr })
+    ]);
+
+    if (dupOrIdempotent) {
+      if (idempotencyKey) {
+        // Idempotent: return existing payment
+        return res.status(200).json({ success: true, data: dupOrIdempotent, message: 'Payment already recorded (idempotent)' });
+      }
+      return res.status(400).json({ success: false, message: 'A payment record for this plan and start date already exists.' });
     }
 
-    const gym = await Gym.findOne({ gymId: gymIdStr });
+    // Without idempotency key: also check last-5-seconds window
+    if (!idempotencyKey) {
+      const recentPayment = await Payment.findOne({
+        clientId: client._id,
+        planId,
+        createdAt: { $gt: new Date(Date.now() - 5000) }
+      });
+      if (recentPayment) {
+        return res.status(400).json({ success: false, message: 'Duplicate payment detected. Please wait.' });
+      }
+    }
+
     const paymentId = await generatePaymentId(gymIdStr, gym?.billingInfo?.billingIdPrefix || 'BILL');
 
     // Status logic for the Payment record itself
@@ -260,7 +255,7 @@ exports.recordPayment = async (req, res, next) => {
       amount: numAmount,
       paidAmount: safePaidAmount,
       dueDate: computedDueDate
-    });
+    }, planDetails);
 
     const payment = await Payment.create({
       paymentId,
@@ -288,54 +283,54 @@ exports.recordPayment = async (req, res, next) => {
       razorpay_payment_id: razorpay_payment_id || null
     });
 
-    // Reset reminder flags and set overdueReminders
-    client.expiryReminderSent = false;
-    client.expiredReminderSent = false;
-    client.expiryReminderStatus = 'none';
-    client.expiredReminderStatus = 'none';
-    client.expiryReminderError = null;
-    client.expiredReminderError = null;
-    client.expiryReminderSentAt = null;
-    client.expiredReminderSentAt = null;
-    if (client.membership) {
-      client.membership.expiryReminderSent = false;
-      client.membership.expiredReminderSent = false;
-      client.membership.expiryReminderStatus = 'none';
-      client.membership.expiredReminderStatus = 'none';
-      client.membership.expiryReminderError = null;
-      client.membership.expiredReminderError = null;
-      client.membership.expiryReminderSentAt = null;
-      client.membership.expiredReminderSentAt = null;
-    }
-
-    client.overdueReminders = {
-      reminder1: { status: 'none', sentAt: null, error: null },
-      reminder2: { status: 'none', sentAt: null, error: null },
-      reminder3: { status: 'none', sentAt: null, error: null },
-      manualReminders: [],
-      workflowCompleted: (safePaidAmount >= numAmount)
-    };
-
-    if (safePaidAmount < numAmount) client.hasPartialPayment = true;
-
-    client.paymentHistory.push(payment._id);
-    await client.save();
-
-
-
-    await syncClientStatus(client._id);
-
-    // Trigger WhatsApp notification with bill PDF in the background
-    if (gym && gym.dbName) {
-      const { sendPaymentNotification } = require('../services/whatsappNotificationService');
-      sendPaymentNotification(payment._id, client._id, gym.gymId, gym.dbName).catch(err => {
-        console.error('Error triggering payment notification: ', err);
-      });
-    }
-
+    // Respond immediately — client sees success without waiting for status sync
     res.status(201).json({ success: true, data: payment });
+
+    // Background: sync client status and trigger WhatsApp (non-blocking)
+    setImmediate(async () => {
+      try {
+        client.expiryReminderSent = false;
+        client.expiredReminderSent = false;
+        client.expiryReminderStatus = 'none';
+        client.expiredReminderStatus = 'none';
+        client.expiryReminderError = null;
+        client.expiredReminderError = null;
+        client.expiryReminderSentAt = null;
+        client.expiredReminderSentAt = null;
+        if (client.membership) {
+          client.membership.expiryReminderSent = false;
+          client.membership.expiredReminderSent = false;
+          client.membership.expiryReminderStatus = 'none';
+          client.membership.expiredReminderStatus = 'none';
+          client.membership.expiryReminderError = null;
+          client.membership.expiredReminderError = null;
+          client.membership.expiryReminderSentAt = null;
+          client.membership.expiredReminderSentAt = null;
+        }
+        client.overdueReminders = {
+          reminder1: { status: 'none', sentAt: null, error: null },
+          reminder2: { status: 'none', sentAt: null, error: null },
+          reminder3: { status: 'none', sentAt: null, error: null },
+          manualReminders: [],
+          workflowCompleted: (safePaidAmount >= numAmount)
+        };
+        if (safePaidAmount < numAmount) client.hasPartialPayment = true;
+        client.paymentHistory.push(payment._id);
+        await syncClientStatus(client._id, client);
+      } catch (err) {
+        console.error('Background syncClientStatus error:', err);
+      }
+
+      if (gym && gym.dbName) {
+        const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+        sendPaymentNotification(payment._id, client._id, gym.gymId, gym.dbName).catch(err => {
+          console.error('Error triggering payment notification: ', err);
+        });
+      }
+    });
   } catch (err) {
     next(err);
+
   } finally {
     if (lockKey) await releaseLock(lockKey);
   }

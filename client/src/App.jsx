@@ -52,6 +52,9 @@ const AdminClients = lazy(() => import('./pages/admin/AdminClients'));
 const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
 const AdminReminderTesting = lazy(() => import('./pages/admin/AdminReminderTesting'));
 
+// 404 Page - Lazy loaded
+const NotFound = lazy(() => import('./pages/NotFound'));
+
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, role, loading } = useAuth();
@@ -62,7 +65,14 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     </div>
   );
 
-  if (!user || !allowedRoles.includes(role)) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    if (role === 'owner') return <Navigate to="/owner/dashboard" replace />;
+    if (role === 'client') return <Navigate to="/client" replace />;
+    if (role === 'superadmin' || role === 'developer') return <Navigate to="/admin" replace />;
+    return <Navigate to="/login" replace />;
+  }
   
   return children;
 };
@@ -148,6 +158,8 @@ const AppContent = () => {
                 <Route path="reminder-testing" element={<AdminReminderTesting />} />
               </Route>
 
+              {/* Catch-all 404 Route (Clean Full Screen without Layout/Sidebars) */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
         </Suspense>
       </div>

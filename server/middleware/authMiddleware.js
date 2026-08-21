@@ -63,6 +63,8 @@ const protect = async (req, res, next) => {
          return res.status(401).json({ success: false, message: 'Not authorized, user not found' });
       }
 
+      user.sessionId = decoded.sessionId || null;
+
       // Block write operations on gym-specific APIs for Super Admin / Developer
       if ((role === 'superadmin' || role === 'developer') && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
         const isAllowedAdminPath = req.originalUrl.startsWith('/api/admin') || 
