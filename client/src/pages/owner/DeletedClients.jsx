@@ -176,14 +176,17 @@ const DeletedClients = () => {
                     </div>
 
                     {/* Action Button */}
-                    <div className="flex items-center justify-start md:justify-end gap-2 shrink-0 mt-2 md:mt-0">
-                      <Button
-                        type="button"
-                        onClick={() => handleRestore(client)}
-                        className="!px-4 !py-2 text-xs flex items-center gap-1.5 font-bold shadow-md shadow-primary/10"
-                      >
-                        <RotateCcw size={13} /> Restore
-                      </Button>
+                    <div className="flex items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0">
+                      <span className="w-28 md:hidden text-text-muted text-xs font-semibold uppercase">Actions: </span>
+                      <div className="flex gap-2 items-center flex-wrap">
+                        <Button
+                          type="button"
+                          onClick={() => handleRestore(client)}
+                          className="!px-4 !py-2 text-xs flex items-center gap-1.5 font-bold shadow-md shadow-primary/10"
+                        >
+                          <RotateCcw size={13} /> Restore
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

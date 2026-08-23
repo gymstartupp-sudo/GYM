@@ -48,6 +48,10 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Webhook Route (bypass sanitization and tenant middleware)
+app.use('/api/webhook', require('./routes/webhook'));
+
 app.use(blockNoSqlInjection);
 // Shadow req.query and req.params to make them writable for express-mongo-sanitize in Express 5
 app.use((req, res, next) => {
@@ -116,9 +120,6 @@ require('./jobs/overdueReminderJob');
 
 // Health Check
 app.get("/", (req, res) => res.send("API running"));
-
-// Webhook Route (bypass tenant middleware)
-app.use('/api/webhook', require('./routes/webhook'));
 
 // Global Tenant DB Middleware
 const { tenantDbMiddleware } = require('./middleware/tenantDbMiddleware');

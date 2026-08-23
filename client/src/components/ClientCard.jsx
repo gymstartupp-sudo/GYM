@@ -88,42 +88,45 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
           </div>
         )}
 
-        <div className={`flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
-          {!hideReminders && <ReminderTimeline client={client} onCircleClick={onReminderClick} />}
+        <div className={`flex items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0 ${hideStatus ? 'md:col-span-2' : ''}`}>
+          <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Actions: </span>
+          <div className="flex gap-2 items-center flex-wrap">
+            {!hideReminders && <ReminderTimeline client={client} onCircleClick={onReminderClick} />}
 
-          <Tooltip content="View client">
-            <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border">
-              <Eye size={16} />
-            </button>
-          </Tooltip>
-
-          {showReactivate && onReactivate && !isReadOnly && (
-            <Tooltip content="Reactivate client">
-              <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 md:!p-2 lg:!px-3 lg:!py-1.5 text-xs flex items-center justify-center gap-1">
-                <RefreshCw size={14} />
-                <span className="inline md:hidden lg:inline">Reactivate</span>
-              </Button>
+            <Tooltip content="View client">
+              <button type="button" onClick={(e) => { e.stopPropagation(); onView?.(client); }} className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-primary rounded-lg transition-all duration-200 border border-border">
+                <Eye size={16} />
+              </button>
             </Tooltip>
-          )}
 
-          {showRenew && onRenew && !isReadOnly && (
-            <Tooltip content="Renew membership">
-              <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 md:!p-2 lg:!px-3 lg:!py-1.5 text-xs flex items-center justify-center gap-1">
-                <RefreshCw size={14} />
-                <span className="inline md:hidden lg:inline">Renew</span>
-              </Button>
-            </Tooltip>
-          )}
+            {showReactivate && onReactivate && !isReadOnly && (
+              <Tooltip content="Reactivate client">
+                <Button type="button" variant="success" onClick={(e) => { e.stopPropagation(); onReactivate?.(client); }} className="!px-3 !py-1.5 md:!p-2 lg:!px-3 lg:!py-1.5 text-xs flex items-center justify-center gap-1">
+                  <RefreshCw size={14} />
+                  <span className="inline md:hidden lg:inline">Reactivate</span>
+                </Button>
+              </Tooltip>
+            )}
 
-          {onDelete && !isReadOnly && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onDelete(client); }}
-              className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-danger rounded-lg transition-all duration-200 border border-border"
-            >
-              <Trash2 size={14} />
-            </button>
-          )}
+            {showRenew && onRenew && !isReadOnly && (
+              <Tooltip content="Renew membership">
+                <Button type="button" variant="primary" onClick={(e) => { e.stopPropagation(); onRenew?.(client); }} className="!px-3 !py-1.5 md:!p-2 lg:!px-3 lg:!py-1.5 text-xs flex items-center justify-center gap-1">
+                  <RefreshCw size={14} />
+                  <span className="inline md:hidden lg:inline">Renew</span>
+                </Button>
+              </Tooltip>
+            )}
+
+            {onDelete && !isReadOnly && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onDelete(client); }}
+                className="p-2 bg-surface-divider text-text-secondary hover:text-[var(--btn-primary-text)] hover:bg-danger rounded-lg transition-all duration-200 border border-border"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
       </div>

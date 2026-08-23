@@ -70,16 +70,16 @@ const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', c
     : options;
 
   return (
-    <div ref={containerRef} className={`relative flex-1 flex ${className}`}>
+    <div ref={containerRef} className={`relative flex-1 flex min-w-0 ${className}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer text-center py-2 select-none flex items-center justify-between px-3 gap-1 hover:bg-slate-800/40 transition-colors ${buttonClassName}`}
+        className={`w-full bg-transparent text-text-primary text-sm focus:outline-none cursor-pointer text-center py-2 select-none flex items-center justify-between px-2 gap-0.5 hover:bg-slate-800/40 transition-colors min-w-0 ${buttonClassName}`}
       >
         <span className={value ? 'text-text-primary font-medium truncate' : 'text-text-secondary font-normal truncate'}>
           {value || placeholder}
         </span>
-        <ChevronDown size={14} className={`text-text-secondary transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
+        <ChevronDown size={12} className={`text-text-secondary transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : ''}`} />
       </button>
 
       {isOpen && (
@@ -134,28 +134,30 @@ const TimeInput = ({ fieldHour, fieldMinute, fieldAmpm, register, setValue, watc
   }, [register, fieldHour, fieldMinute, fieldAmpm]);
 
   return (
-    <div className="flex items-stretch bg-surface-card border border-border rounded-input overflow-visible hover:border-border/80 focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-[var(--focus-ring)] focus-within:border-[var(--focus-ring)] transition-all duration-200">
+    <div className="flex items-stretch bg-surface-card border border-border rounded-input overflow-visible hover:border-border/80 focus-within:ring-2 focus-within:ring-offset-0 focus-within:ring-[var(--focus-ring)] focus-within:border-[var(--focus-ring)] transition-all duration-200 w-full min-w-0">
       <CustomSelect
         options={HOURS}
         value={hourVal}
         onChange={val => setValue(fieldHour, val, { shouldValidate: true, shouldDirty: true })}
-        className="border-r border-border"
-        buttonClassName="rounded-l-input justify-center"
+        className="border-r border-border min-w-0"
+        buttonClassName="rounded-l-input justify-center px-1.5"
       />
-      <span className="text-text-muted font-bold select-none flex items-center px-0.5">:</span>
+      <span className="text-text-muted font-bold select-none flex items-center px-1 shrink-0">:</span>
       <CustomSelect
         options={MINUTES}
         value={minuteVal}
         onChange={val => setValue(fieldMinute, val, { shouldValidate: true, shouldDirty: true })}
-        className="border-r border-border"
-        buttonClassName="justify-center"
+        className="border-r border-border min-w-0"
+        buttonClassName="justify-center px-1.5"
       />
-      <CustomSelect
-        options={['AM', 'PM']}
-        value={ampmVal}
-        onChange={val => setValue(fieldAmpm, val, { shouldValidate: true, shouldDirty: true })}
-        buttonClassName="bg-primary/15 text-primary font-bold hover:bg-primary/25 rounded-r-input w-14 justify-center"
-      />
+      <button
+        type="button"
+        onClick={() => setValue(fieldAmpm, ampmVal === 'AM' ? 'PM' : 'AM', { shouldValidate: true, shouldDirty: true })}
+        className="px-3 py-2 bg-primary/15 text-primary text-xs font-bold hover:bg-primary/25 rounded-r-input shrink-0 flex items-center justify-center transition-colors cursor-pointer select-none min-w-[44px]"
+        title="Click to toggle AM / PM"
+      >
+        {ampmVal}
+      </button>
     </div>
   );
 };
@@ -831,9 +833,9 @@ const GymRegister = () => {
                 <Clock className="w-3.5 h-3.5 text-primary" />
                 <span>Operating Hours <span className="text-red-500">*</span></span>
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <span className="text-[10px] text-text-secondary block mb-0.5">Opening</span>
+                  <span className="text-[10px] text-text-secondary block mb-0.5 font-medium">Opening</span>
                   <TimeInput
                     fieldHour="operatingOpenHour"
                     fieldMinute="operatingOpenMinute"
@@ -844,7 +846,7 @@ const GymRegister = () => {
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-text-secondary block mb-0.5">Closing</span>
+                  <span className="text-[10px] text-text-secondary block mb-0.5 font-medium">Closing</span>
                   <TimeInput
                     fieldHour="operatingCloseHour"
                     fieldMinute="operatingCloseMinute"
@@ -924,17 +926,17 @@ const GymRegister = () => {
                   </div>
                 </div>
                 <div>
-                  <div className="flex justify-between items-center mb-1.5 select-none">
+                  <div className="flex justify-between items-center flex-wrap gap-1.5 mb-1.5 select-none">
                     <span className="text-xs text-text-secondary font-medium">Personal Mobile Number <span className="text-red-500">*</span></span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
+                    <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/25 hover:bg-primary/20 transition-colors cursor-pointer shrink-0">
                       <input
                         type="checkbox"
                         checked={syncOwnerMobile}
                         onChange={(e) => setSyncOwnerMobile(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                        className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-950 text-primary focus:ring-0 accent-primary cursor-pointer"
                       />
-                      <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                        [ Same as Gym ]
+                      <span className="text-[10px] text-primary font-bold tracking-wider uppercase whitespace-nowrap">
+                        Same as Gym
                       </span>
                     </label>
                   </div>
@@ -949,14 +951,19 @@ const GymRegister = () => {
                       readOnly={syncOwnerMobile}
                     />
                     {syncOwnerMobile && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest pointer-events-none">
                         <Check className="w-2.5 h-2.5 stroke-[3px]" />
                         SYNCED
                       </div>
                     )}
                   </div>
-                  {syncOwnerMobile && <p className="text-[10px] text-text-secondary mt-1">Using Gym Contact Number</p>}
-                  {showFieldError('mobileNo') && <p className="text-red-500 text-xs mt-1 font-medium">{errors.mobileNo.message}</p>}
+                  <div className="min-h-[20px] mt-1">
+                    {showFieldError('mobileNo') ? (
+                      <p className="text-red-500 text-xs font-medium leading-tight">{errors.mobileNo.message}</p>
+                    ) : syncOwnerMobile ? (
+                      <p className="text-[10px] text-text-secondary leading-tight">Using Gym Contact Number</p>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="md:col-span-2">
                   <p className="text-xs text-text-secondary mb-1.5 font-medium">Personal Email <span className="text-red-500">*</span></p>
@@ -1000,17 +1007,17 @@ const GymRegister = () => {
 
             {/* Helpdesk Contact */}
             <div>
-              <div className="flex justify-between items-center h-5 mb-1.5 select-none">
+              <div className="flex justify-between items-center flex-wrap gap-1.5 min-h-[20px] mb-1.5 select-none">
                 <span className="text-xs text-text-secondary font-medium">Helpdesk Contact <span className="text-red-500">*</span></span>
-                <label className="flex items-center gap-1.5 cursor-pointer">
+                <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/25 hover:bg-primary/20 transition-colors cursor-pointer shrink-0">
                   <input
                     type="checkbox"
                     checked={syncHelpContact}
                     onChange={(e) => setSyncHelpContact(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                    className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-950 text-primary focus:ring-0 accent-primary cursor-pointer"
                   />
-                  <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                    [ Use Gym Contact ]
+                  <span className="text-[10px] text-primary font-bold tracking-wider uppercase whitespace-nowrap">
+                    Use Gym Contact
                   </span>
                 </label>
               </div>
@@ -1025,7 +1032,7 @@ const GymRegister = () => {
                   readOnly={syncHelpContact}
                 />
                 {syncHelpContact && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest pointer-events-none">
                     <Check className="w-2.5 h-2.5 stroke-[3px]" />
                     SYNCED
                   </div>
@@ -1038,17 +1045,17 @@ const GymRegister = () => {
 
             {/* Address on Invoice */}
             <div>
-              <div className="flex justify-between items-center h-5 mb-1.5 select-none">
+              <div className="flex justify-between items-center flex-wrap gap-1.5 min-h-[20px] mb-1.5 select-none">
                 <span className="text-xs text-text-secondary font-medium">Address on Invoice <span className="text-red-500">*</span></span>
-                <label className="flex items-center gap-1.5 cursor-pointer">
+                <label className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/25 hover:bg-primary/20 transition-colors cursor-pointer shrink-0">
                   <input
                     type="checkbox"
                     checked={syncAddress}
                     onChange={(e) => setSyncAddress(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border-slate-800 bg-slate-950 text-primary focus:ring-primary/50 accent-primary"
+                    className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-950 text-primary focus:ring-0 accent-primary cursor-pointer"
                   />
-                  <span className="text-[10px] text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-wider">
-                    [ Same as Gym Address ]
+                  <span className="text-[10px] text-primary font-bold tracking-wider uppercase whitespace-nowrap">
+                    Same as Gym Address
                   </span>
                 </label>
               </div>
@@ -1061,7 +1068,7 @@ const GymRegister = () => {
                   readOnly={syncAddress}
                 />
                 {syncAddress && (
-                  <div className="absolute right-3 top-4 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest">
+                  <div className="absolute right-3 top-4 flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary text-[9px] font-extrabold px-2 py-0.5 rounded-full select-none tracking-widest pointer-events-none">
                     <Check className="w-2.5 h-2.5 stroke-[3px]" />
                     SYNCED
                   </div>
@@ -1147,14 +1154,14 @@ const GymRegister = () => {
         )}
 
         {/* Form Actions Button Row */}
-        <div className="flex items-center justify-between pt-6 border-t border-slate-800/80 mt-8">
+        <div className="flex items-center justify-between gap-3 pt-6 border-t border-slate-800/80 mt-8">
           {step > 1 ? (
             <Button
               type="button"
               variant="secondary"
               onClick={handlePrev}
               disabled={loading}
-              className="px-5 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg"
+              className="px-4 sm:px-5 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shrink-0"
             >
               Back
             </Button>
@@ -1166,7 +1173,7 @@ const GymRegister = () => {
             <Button
               type="button"
               onClick={handleNext}
-              className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-lg"
+              className="px-5 sm:px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-lg shrink-0"
               isLoading={loading}
             >
               Save & Continue
@@ -1202,7 +1209,7 @@ const GymRegister = () => {
                 }
               }}
               isLoading={loading}
-              className="px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-xl"
+              className="px-4 sm:px-6 py-2.5 text-xs uppercase tracking-wider font-bold rounded-lg shadow-xl shrink-0 text-center"
             >
               Launch Gym Dashboard
             </Button>
