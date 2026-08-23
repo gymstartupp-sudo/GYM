@@ -4,8 +4,8 @@ const Gym = require('../models/Gym');
 const { getTenantConnection } = require('../utils/connectionManager');
 const logger = require('../utils/logger');
 
-// Meta Webhook Verification (GET /api/webhook)
-router.get('/', (req, res) => {
+// Meta Webhook Verification (GET /api/webhook and GET /api/webhook/whatsapp)
+router.get(['/', '/whatsapp'], (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
@@ -24,8 +24,8 @@ router.get('/', (req, res) => {
   return res.sendStatus(400);
 });
 
-// Meta Webhook Status Updates (POST /api/webhook)
-router.post('/', async (req, res) => {
+// Meta Webhook Status Updates (POST /api/webhook and POST /api/webhook/whatsapp)
+router.post(['/', '/whatsapp'], async (req, res) => {
   try {
     const body = req.body;
     logger.info('[META WEBHOOK] Received payload:', logger.redact(body));
