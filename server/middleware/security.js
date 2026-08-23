@@ -31,6 +31,9 @@ const hasMongoOperatorOrPrototypePollution = (obj) => {
 };
 
 const blockNoSqlInjection = (req, res, next) => {
+  if (req.originalUrl && req.originalUrl.startsWith('/api/webhook')) {
+    return next();
+  }
   if (
     hasMongoOperatorOrPrototypePollution(req.body) ||
     hasMongoOperatorOrPrototypePollution(req.query) ||
