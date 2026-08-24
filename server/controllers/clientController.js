@@ -871,9 +871,9 @@ Thank you.`;
     const result = await metaWhatsAppService.sendDueReminder({
       phone,
       clientName,
+      gymName: client.gymName || gym?.gymName || 'Gym',
       pendingAmount: balance,
       dueDate,
-      renewalLink: paymentLink,
       clientId: client.clientId,
       gymId: gym?.gymId,
       stage

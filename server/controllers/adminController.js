@@ -596,9 +596,9 @@ exports.sendTestReminder = async (req, res, next) => {
       result = await metaWhatsAppService.sendDueReminder({
         phone: formattedWhatsApp,
         clientName: updatedClient.personalInfo.name,
+        gymName: updatedClient.gymName || gym.gymName || 'Gym',
         pendingAmount: balance,
         dueDate: dueDateString,
-        renewalLink: paymentLink,
         clientId: updatedClient.clientId,
         gymId: gym.gymId,
         stage

@@ -231,9 +231,9 @@ const runOverdueReminders = async (options = {}) => {
                 const result = await metaWhatsAppService.sendDueReminder({
                   phone: formattedWhatsApp,
                   clientName: updatedClient.personalInfo.name,
+                  gymName: updatedClient.gymName || gym.gymName || 'Gym',
                   pendingAmount: balance,
                   dueDate: dueDateString,
-                  renewalLink: paymentLink,
                   clientId: updatedClient.clientId,
                   gymId: gym.gymId,
                   stage: reminderToTrigger
@@ -317,7 +317,7 @@ const runOverdueReminders = async (options = {}) => {
 };
 
 // Run every day at 11:00 AM IST
-cron.schedule('00 20 * * *', async () => {
+cron.schedule('00 22 * * *', async () => {
   console.log('Running daily automated overdueReminderJob...');
   await runOverdueReminders();
 }, { timezone: 'Asia/Kolkata' });
