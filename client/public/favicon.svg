@@ -1,17 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <!-- Transparent background by default, with primary yellow rounded card -->
-  <rect x="0" y="0" width="24" height="24" rx="6" fill="#FFD54F" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Solid Black Background -->
+  <rect width="512" height="512" fill="#000000" />
   
-  <!-- Exact Lucide Dumbbell stroke paths rotated by -45 degrees to be horizontal -->
-  <g transform="rotate(-45 12 12)" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <path d="m6.5 6.5 11 11"/>
-    <path d="m21 21-1-1"/>
-    <path d="m3 3 1 1"/>
-    <path d="m18 22 4-4"/>
-    <path d="m2 6 4-4"/>
-    <path d="m3 10 7-7"/>
-    <path d="m14 21 7-7"/>
-    <path d="M6.5 12.5 12.5 6.5"/>
-    <path d="m11.5 17.5 6-6"/>
+  <!-- Dumbbell -->
+  <!-- Group scaled and centered to fill the space nicely -->
+  <g transform="translate(18, 18) scale(0.93)">
+    <!-- Light gray/cream outline with yellow fill -->
+    <g fill="#FACC15" stroke="#E5E5E5" stroke-width="14" stroke-linejoin="round">
+      <!-- Center Bar -->
+      <rect x="156" y="226" width="200" height="40" rx="8" />
+      
+      <!-- Left side weights -->
+      <rect x="110" y="150" width="56" height="192" rx="20" />
+      <rect x="66" y="174" width="36" height="144" rx="16" />
+      <rect x="40" y="200" width="20" height="92" rx="10" />
+      <rect x="22" y="218" width="12" height="56" rx="6" />
+      
+      <!-- Right side weights -->
+      <rect x="346" y="150" width="56" height="192" rx="20" />
+      <rect x="410" y="174" width="36" height="144" rx="16" />
+      <rect x="452" y="200" width="20" height="92" rx="10" />
+      <rect x="478" y="218" width="12" height="56" rx="6" />
+    </g>
   </g>
 </svg>

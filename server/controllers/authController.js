@@ -162,50 +162,20 @@ exports.registerGymOwner = async (req, res, next) => {
         phoneNumber: phoneNumber || ""
       },
       socialMediaLinks: parsedSocialMediaLinks,
-      status: 'Active',
+      requestApproved: false,
+      status: 'Pending',
       subscription: 'Premium',
-      isActive: true
-    });
-
-    // Automatically create database and initialize collections
-    const { getTenantConnection } = require('../utils/connectionManager');
-    const conn = await getTenantConnection(dbName);
-
-    await conn.createCollection('clients');
-    await conn.createCollection('plans');
-    await conn.createCollection('payments');
-    await conn.createCollection('expenses');
-    await conn.createCollection('feedbacks');
-    await conn.createCollection('counters');
-    await conn.createCollection('settings');
-
-    const TenantSetting = conn.model('Setting');
-    await TenantSetting.create({
-      partialPayment: {
-        enabled: true,
-        minimumPercentage: 50
-      },
-      dueSettings: {
-        defaultDaysFor1To6Months: 15,
-        defaultDaysAbove6Months: 30,
-        allowCustomDueDays: true,
-        customPlanDueDays: {
-          "1 Month": 15,
-          "2 Months": 15,
-          "3 Months": 15,
-          "6 Months": 15,
-          "12 Months": 30
-        }
-      }
+      isActive: false
     });
 
     res.status(201).json({
       success: true,
-      message: 'Gym registered successfully',
+      message: 'Gym registration submitted successfully. Please wait for Super Admin approval.',
       data: {
         gymId: newGymId,
         gymName: gym.gymName,
-        token: generateToken(gym._id, 'owner', { gymId: newGymId, gymName: gym.gymName, dbName })
+        email: mailId || gymEmail,
+        phone: mobileNo || gymContact
       }
     });
   } catch (err) {
@@ -430,6 +400,12 @@ exports.universalLogin = async (req, res, next) => {
           : { gymContact: loginId, gymId };
         const gym = await Gym.findOne(gymQuery);
         if (gym && (await gym.matchPassword(password))) {
+          if (!gym.requestApproved || gym.status === 'Pending') {
+            return res.status(403).json({
+              success: false,
+              message: 'Your gym registration is pending approval by the Super Admin.'
+            });
+          }
           if (!gym.isActive) {
             return res.status(403).json({
               success: false,
@@ -495,6 +471,12 @@ exports.universalLogin = async (req, res, next) => {
     const gymQuery = isEmail ? { gymEmail: loginId } : { gymContact: loginId };
     const gym = await Gym.findOne(gymQuery);
     if (gym && (await gym.matchPassword(password))) {
+      if (!gym.requestApproved || gym.status === 'Pending') {
+        return res.status(403).json({
+          success: false,
+          message: 'Your gym registration is pending approval by the Super Admin.'
+        });
+      }
       if (!gym.isActive) {
         return res.status(403).json({
           success: false,

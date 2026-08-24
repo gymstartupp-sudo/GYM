@@ -20,6 +20,9 @@ const devEnvGuard = (req, res, next) => {
 };
 
 router.get('/dashboard', adminController.getDashboardStats);
+router.get('/requests', adminController.getGymRequests);
+router.put('/gym/:id/approve', adminController.approveGym);
+router.delete('/gym/:id/reject', adminController.rejectGym);
 router.get('/gyms', adminController.getAllGyms);
 router.get('/gym/:id/profile', adminController.getGymProfile);
 router.put('/gym/:id/status', adminController.toggleGymStatus);

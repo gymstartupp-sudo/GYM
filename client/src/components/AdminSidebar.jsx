@@ -1,12 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, LayoutDashboard, Building2, X, Ticket, Wrench } from 'lucide-react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { LogOut, LayoutDashboard, Building2, X, Ticket, Wrench, UserPlus } from 'lucide-react';
+import api from '../utils/api';
 import ThemeToggle from './ThemeToggle';
 
 export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
   const { logout, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPending = async () => {
+      try {
+        const res = await api.get('/admin/requests');
+        if (isMounted) {
+          setPendingCount(res.data?.data?.length || 0);
+        }
+      } catch {
+        // silent fail on sidebar counter
+      }
+    };
+    fetchPending();
+    return () => { isMounted = false; };
+  }, [location.pathname]);
 
   return (
     <div
@@ -42,6 +61,21 @@ export const AdminSidebar = ({ isOpen, onClose, isMobile }) => {
             <LayoutDashboard size={20} />
           </span>
           <span className="leading-none">Dashboard</span>
+        </NavLink>
+        <NavLink
+          to="/admin/requests"
+          onClick={() => isMobile && onClose()}
+          className={({ isActive }) => `sidebar-nav-link ${isActive ? 'sidebar-nav-link-active' : ''}`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 shrink-0">
+            <UserPlus size={20} />
+          </span>
+          <span className="leading-none flex-1">Gym Requests</span>
+          {pendingCount > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              {pendingCount}
+            </span>
+          )}
         </NavLink>
         <NavLink
           to="/admin/gyms"

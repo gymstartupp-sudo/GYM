@@ -7,107 +7,75 @@ const RegistrationSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const gymId = location.state?.gymId;
+  const gymName = location.state?.gymName;
   const email = location.state?.email;
   const phone = location.state?.phone;
-
-  // Onboarding items configuration
-  const checklist = [
-    { title: 'Add Membership Plans', desc: 'Create monthly, quarterly, or customized fitness plans.', icon: Dumbbell, color: 'text-primary bg-primary/10' },
-
-    { title: 'Add Your Client', desc: 'Onboard members and activate their gym memberships.', icon: UserPlus, color: 'text-emerald-400 bg-emerald-500/10' },
-
-  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black py-16 px-4">
       <div className="card w-full max-w-xl relative z-10 backdrop-blur-xl bg-slate-950/80 border border-slate-800/80 shadow-2xl p-8 rounded-2xl text-center">
 
         {/* Decorative ambient lighting */}
-        <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl -z-10"></div>
         <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10"></div>
 
         {/* Success Header */}
         <div className="flex justify-center mb-5 animate-bounce-slow">
-          <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+          <div className="w-16 h-16 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
             <CheckCircle2 size={36} className="stroke-[2.5px]" />
           </div>
         </div>
 
-        <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">Gym Created Successfully!</h2>
-        <p className="text-sm text-slate-400 max-w-sm mx-auto mb-8">Your enterprise workspace is ready. Save your credentials below to get started.</p>
+        <h2 className="text-3xl font-extrabold text-text-primary tracking-tight mb-2">Registration Submitted!</h2>
+        <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
+          Your gym registration for <span className="text-white font-bold">{gymName || 'your gym'}</span> has been sent to the Super Admin for verification and approval.
+        </p>
 
-        {/* Credentials Display Badge */}
-        <div className="relative overflow-hidden p-6 bg-slate-900/50 border border-slate-800 rounded-xl max-w-sm mx-auto mb-8 group hover:border-slate-700/80 transition-all duration-300 space-y-4">
-          <div className="absolute -right-6 -bottom-6 w-20 h-20 bg-primary/5 rounded-full blur-xl group-hover:bg-primary/10 transition-colors"></div>
+        {/* Information Notice Box */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-5 text-left mb-6 space-y-2.5">
+          <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+            <Sparkles className="w-4 h-4" />
+            <span>Account Activation Pending</span>
+          </div>
+          <p className="text-slate-300 text-xs leading-relaxed">
+            The administrator will review your registration details and provision your isolated gym database. You will be able to log in as soon as your account is approved.
+          </p>
+        </div>
+
+        {/* Submitted Credentials Card */}
+        <div className="relative overflow-hidden p-5 bg-slate-900/50 border border-slate-800 rounded-xl max-w-md mx-auto mb-8 space-y-3 text-center">
           <div>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold mb-1">Your Gym ID</p>
-            <div className="text-2xl font-black text-primary tracking-widest mb-1.5 select-all uppercase">
-              {gymId || 'G-ERROR'}
-            </div>
-
-            <div className="w-fit mx-auto flex items-center gap-1 text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700/50">
-              <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-              <span>Use this ID for user and client logins</span>
+            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold mb-1">Assigned Gym ID</p>
+            <div className="text-2xl font-black text-primary tracking-widest select-all uppercase">
+              {gymId || 'PENDING'}
             </div>
           </div>
 
           {(email || phone) && (
-            <div className="border-t border-slate-800/80 pt-4 text-center">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold mb-2">Login User ID</p>
-              <div className="space-y-1.5">
-                {email && (
-                  <div className="text-xs text-slate-300 font-medium select-all">
-                    <span className="text-slate-500 text-[10px] block mb-0.5">Email:</span>
-                    {email}
-                  </div>
-                )}
-                {phone && (
-                  <div className="text-xs text-slate-300 font-medium select-all">
-                    <span className="text-slate-500 text-[10px] block mb-0.5">Phone Number:</span>
-                    {phone}
-                  </div>
-                )}
-              </div>
+            <div className="border-t border-slate-800/80 pt-3 flex items-center justify-around text-xs text-slate-400">
+              {email && (
+                <div>
+                  <span className="text-slate-500 text-[10px] block uppercase font-bold">Login Email</span>
+                  <span className="text-slate-200 font-medium">{email}</span>
+                </div>
+              )}
+              {phone && (
+                <div>
+                  <span className="text-slate-500 text-[10px] block uppercase font-bold">Login Phone</span>
+                  <span className="text-slate-200 font-medium">{phone}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Onboarding Checklist Header */}
-        <div className="text-left mb-4">
-          <span className="text-xs text-slate-500 font-extrabold uppercase tracking-wider block">Recommended Onboarding Checklist</span>
-        </div>
-
-        {/* Onboarding Checklist Grid */}
-        <div className="grid grid-cols-1 gap-3.5 mb-8">
-          {checklist.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={idx}
-                className="flex items-start gap-4 p-4 rounded-xl border border-slate-900 bg-slate-900/30 text-left hover:border-slate-800/80 hover:bg-slate-900/50 transition-all duration-300 group"
-              >
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${item.color} border border-slate-800 group-hover:scale-105 transition-transform`}>
-                  <Icon className="w-4.5 h-4.5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-200">{item.title}</span>
-                    <span className="text-[9px] bg-slate-800 text-slate-400 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">Pending</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-normal mt-0.5">{item.desc}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Primary Action Button */}
+        {/* Return to Login Action Button */}
         <Button
-          onClick={() => navigate('/owner/dashboard')}
+          onClick={() => navigate('/login')}
           className="w-full text-sm font-extrabold py-3.5 rounded-xl uppercase tracking-wider shadow-lg shadow-primary/10 hover:shadow-primary/20 active:scale-[0.99] transition-all"
         >
           <div className="flex items-center justify-center gap-2">
-            <span>Go to Dashboard</span>
+            <span>Return to Login</span>
             <ArrowRight className="w-4 h-4" />
           </div>
         </Button>
