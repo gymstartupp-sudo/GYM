@@ -5,7 +5,6 @@ import {
   Users,
   Calendar,
   BellRing,
-  CreditCard,
   TrendingUp,
   AlertCircle,
   CheckCircle2,
@@ -45,18 +44,18 @@ const LandingPage = () => {
     },
     {
       icon: BellRing,
-      title: "WhatsApp & SMS Autopilot",
-      description: "Daily automated background scans dispatch Meta WhatsApp template messages and Twilio SMS before and after memberships expire."
+      title: "Meta WhatsApp Autopilot",
+      description: "Daily automated background scans dispatch official Meta WhatsApp template messages before and after memberships expire — no manual follow-ups needed."
     },
     {
       icon: DollarSign,
       title: "Financial Ledger & Expenses",
-      description: "Log expenses (rent, salary, maintenance) and track monthly net revenue, Razorpay gateway fees, and total profit automatically."
+      description: "Log expenses (rent, salary, maintenance) and track monthly net revenue and total profit automatically."
     },
     {
-      icon: CreditCard,
-      title: "Razorpay Online Payments",
-      description: "Clients can pay directly inside their portal. Server verifies HMAC-SHA256 payment signatures, extends plans, and emails/whatsapps PDF receipts."
+      icon: FileText,
+      title: "Automated PDF Invoicing",
+      description: "Every payment instantly generates a branded PDF receipt, uploads it to Cloudinary, and delivers it to the client via Meta WhatsApp — zero manual effort."
     },
     {
       icon: AlertCircle,
@@ -68,15 +67,15 @@ const LandingPage = () => {
   const faqs = [
     {
       q: "How does the automated reminder system work?",
-      a: "RexFit runs scheduled daily cron jobs to scan all clients. When a client's plan is set to expire soon (under 3 days) or has expired, it dispatches official Meta WhatsApp templates and Twilio SMS alerts automatically."
+      a: "RexFit runs scheduled daily cron jobs to scan all clients. When a client's plan is set to expire soon (under 3 days) or has expired, it dispatches official Meta WhatsApp template messages automatically — covering expiry reminders, overdue dues, and payment confirmations."
     },
     {
-      q: "Can clients renew their memberships online?",
-      a: "Yes! RexFit integrates with Razorpay. Clients log into their Client Portal, select a plan, and pay online. The system verifies HMAC-SHA256 signatures, generates PDF receipts, and extends the membership automatically."
+      q: "How are payment receipts delivered to clients?",
+      a: "Every successful payment instantly triggers an automated workflow: a branded PDF invoice is generated, uploaded to Cloudinary for a permanent URL, and delivered directly to the client's WhatsApp via an official Meta template message — all without any manual action from the gym owner."
     },
     {
-      q: "Does RexFit support multi-tenant database routing?",
-      a: "Yes! RexFit is built with a multi-tenant database architecture. Each registered gym operates with its own isolated database key (dbName), keeping member data and financial ledgers strictly partitioned."
+      q: "What's the difference between the Owner Dashboard and the Client Portal?",
+      a: "The Owner Dashboard gives gym staff full control — register clients, manage plans, track dues, log expenses, run manual reminders, and audit monthly revenue. The Client Portal is a read-only self-service view where members check their plan status, submit feedback, and receive automated WhatsApp alerts."
     },
     {
       q: "How does the Partial Payment and Dues system work?",
@@ -103,13 +102,12 @@ const LandingPage = () => {
           <nav className="hidden md:flex items-center gap-8 font-medium">
             <a href="#features" className="text-text-secondary hover:text-text-primary transition-colors">Features</a>
             <a href="#workflows" className="text-text-secondary hover:text-text-primary transition-colors">Workflows</a>
-            <a href="#pricing" className="text-text-secondary hover:text-text-primary transition-colors">Pricing</a>
+
             <a href="#faqs" className="text-text-secondary hover:text-text-primary transition-colors">FAQs</a>
           </nav>
 
           {/* Action CTAs & Theme Toggle */}
           <div className="hidden md:flex items-center gap-4">
-            <ThemeToggle className="w-10 h-10" />
             <Link
               to="/login"
               className="px-4 py-2 border border-border text-text-primary rounded-xl font-semibold hover:bg-surface-hover transition-colors"
@@ -198,7 +196,7 @@ const LandingPage = () => {
             Gym Management <span className="text-primary">Simplified.</span>
           </h1>
           <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
-            Manage memberships, automate Whatsapp alerts, log custom plan revenue, track expenses, and accept online payments via Razorpay — all in one visual system.
+            Manage memberships, automate Whatsapp alerts, log custom plan revenue, track expenses all in one visual system.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -381,26 +379,7 @@ const LandingPage = () => {
       </section>
 
       {/* 3. Trusted Metrics Section */}
-      <section className="bg-surface-secondary border-y border-border py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div className="flex flex-col gap-1">
-            <span className="text-3xl sm:text-4xl font-extrabold text-primary">100k+</span>
-            <span className="text-xs sm:text-sm text-text-secondary uppercase font-bold tracking-wider">Members Managed</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-3xl sm:text-4xl font-extrabold text-primary">₹5.2M+</span>
-            <span className="text-xs sm:text-sm text-text-secondary uppercase font-bold tracking-wider">Payments Collected</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-3xl sm:text-4xl font-extrabold text-primary">94%</span>
-            <span className="text-xs sm:text-sm text-text-secondary uppercase font-bold tracking-wider">Payment Recovery</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-3xl sm:text-4xl font-extrabold text-primary">99.9%</span>
-            <span className="text-xs sm:text-sm text-text-secondary uppercase font-bold tracking-wider">Reminder Delivery</span>
-          </div>
-        </div>
-      </section>
+
 
       {/* 4. Feature Showcase */}
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -459,10 +438,7 @@ const LandingPage = () => {
                   <CheckCircle2 size={16} className="text-primary flex-shrink-0" />
                   Approve client registration requests dynamically
                 </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 size={16} className="text-primary flex-shrink-0" />
-                  Define billing templates & billing prefixes
-                </li>
+
                 <li className="flex items-center gap-3">
                   <CheckCircle2 size={16} className="text-primary flex-shrink-0" />
                   Track pending, upcoming, active, and expired memberships
@@ -490,10 +466,6 @@ const LandingPage = () => {
                 </li>
                 <li className="flex items-center gap-3">
                   <CheckCircle2 size={16} className="text-primary flex-shrink-0" />
-                  Secure online subscription renewal via Razorpay
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 size={16} className="text-primary flex-shrink-0" />
                   Submit direct feedback to the gym owner
                 </li>
                 <li className="flex items-center gap-3">
@@ -506,90 +478,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* 6. Pricing & Plans Section */}
-      <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
-            Transparent Pricing
-          </h2>
-          <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-            Choose the plan that fits your gym's size and needs. No hidden charges.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-8">
-          {/* Starter Plan */}
-          <div className="bg-surface-card border border-border p-8 rounded-2xl shadow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-text-primary mb-2">Starter</h3>
-              <p className="text-text-secondary text-sm mb-6">Best for small gyms, boutique trainers, and clubs.</p>
-              <div className="text-3xl font-extrabold mb-6">₹1,999 <span className="text-xs text-text-muted font-normal">/ month</span></div>
-              <ul className="flex flex-col gap-3 text-sm text-text-secondary border-t border-border pt-6">
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Up to 150 Active Members
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Unlimited Custom Plans
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Manual Payment Logging
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Email & SMS Reminders
-                </li>
-              </ul>
-            </div>
-            <div className="pt-8">
-              <Link to="/register" className="block w-full py-2.5 text-center border border-border rounded-xl font-bold hover:bg-surface-hover transition-colors">
-                Get Started
-              </Link>
-            </div>
-          </div>
-
-          {/* Premium Plan */}
-          <div className="bg-surface-card border-2 border-primary p-8 rounded-2xl shadow-md flex flex-col justify-between relative">
-            <div className="absolute top-0 right-8 -translate-y-1/2 bg-primary text-dark font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wider">
-              Most Popular
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-text-primary mb-2">Professional Pro</h3>
-              <p className="text-text-secondary text-sm mb-6">Ideal for growing fitness centers and active gym owners.</p>
-              <div className="text-3xl font-extrabold mb-6">₹3,999 <span className="text-xs text-text-muted font-normal">/ month</span></div>
-              <ul className="flex flex-col gap-3 text-sm text-text-secondary border-t border-border pt-6">
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Unlimited Members
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Razorpay Online Payments
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  WhatsApp Autopilot Alerts
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Revenue vs Expense Splits
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check size={16} className="text-primary" />
-                  Advanced Reports Export (PDF/XLS)
-                </li>
-              </ul>
-            </div>
-            <div className="pt-8">
-              <Link to="/register" className="block w-full py-2.5 text-center bg-primary text-dark rounded-xl font-bold hover:brightness-95 transition-all shadow-md shadow-primary/15">
-                Onboard With Pro
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* 7. FAQ Section */}
       <section id="faqs" className="bg-surface-secondary border-y border-border py-24 px-4 sm:px-6 lg:px-8">
