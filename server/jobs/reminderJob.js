@@ -3,6 +3,7 @@ const Client = require('../models/Client');
 const Gym = require('../models/Gym');
 const metaWhatsAppService = require('../services/metaWhatsAppService');
 const { syncClientStatus } = require('../utils/syncStatus');
+const { getClientPlans } = require('../utils/membership');
 const { getTenantConnection } = require('../utils/connectionManager');
 const { runWithTenantContext } = require('../utils/tenantContext');
 
@@ -163,6 +164,14 @@ const runReminders = async (options = {}) => {
 
             // 2. Read daysLeft from the synced membership field
             const daysLeft = updatedClient.membership.daysLeft;
+
+            // Skip clients who already have an upcoming renewed plan
+            const { nextPlan } = getClientPlans(updatedClient.memberships || [], today);
+            if (nextPlan) {
+              console.log(`[CLIENT SKIPPED] ${updatedClient.personalInfo?.name || 'Client'} has an upcoming renewed plan (${nextPlan.planName || 'Plan'}, starts ${new Date(nextPlan.startDate).toLocaleDateString('en-GB')}). Skipping expiry reminders.`);
+              stats.skippedClients++;
+              continue;
+            }
 
             // Flag Reset Rules:
             // If renewed, reset expiryReminderSent (daysLeft > 3)
@@ -343,7 +352,7 @@ const runReminders = async (options = {}) => {
                   }
                 }
               }
-            } else if (daysLeft <= 0) {
+            } else if (daysLeft === -1) {
               if (remainingBalance > 0) {
                 reminderType = 'Expired Pending';
                 templateName = process.env.META_TEMPLATE_EXPIRED_PENDING || 'membership_expired_pending';
