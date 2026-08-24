@@ -47,6 +47,7 @@ const RenewalRedirect = lazy(() => import('./pages/client/RenewalRedirect'));
 // Admin - Lazy loaded for code splitting
 const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminGymRequests = lazy(() => import('./pages/admin/AdminGymRequests'));
 const AdminGyms = lazy(() => import('./pages/admin/AdminGyms'));
 const AdminClients = lazy(() => import('./pages/admin/AdminClients'));
 const AdminIssues = lazy(() => import('./pages/admin/AdminIssues'));
@@ -151,6 +152,7 @@ const AppContent = () => {
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['superadmin', 'developer']}><AdminLayout /></ProtectedRoute>}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="requests" element={<AdminGymRequests />} />
                 <Route path="gyms" element={<AdminGyms />} />
                 <Route path="gyms/:gymId/view" element={<GymViewRedirect />} />
                 <Route path="gyms/:gymId/clients" element={<AdminClients />} />

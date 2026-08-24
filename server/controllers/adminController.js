@@ -11,8 +11,9 @@ const Counter = require('../models/Counter');
 // @access  Private (SuperAdmin)
 exports.getDashboardStats = async (req, res, next) => {
   try {
-    const totalGyms = await Gym.countDocuments();
-    const gyms = await Gym.find({ isActive: true });
+    const totalGyms = await Gym.countDocuments({ requestApproved: true });
+    const pendingGyms = await Gym.countDocuments({ requestApproved: false });
+    const gyms = await Gym.find({ isActive: true, requestApproved: true });
     let totalClients = 0;
     let totalPayments = 0;
     const { getTenantConnection } = require('../utils/connectionManager');
@@ -31,19 +32,23 @@ exports.getDashboardStats = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: { totalGyms, totalClients, totalPayments }
+      data: { totalGyms, totalClients, totalPayments, pendingGyms }
     });
   } catch (err) {
     next(err);
   }
 };
 
-// @desc    Get All Gyms
+// @desc    Get All Approved Gyms
 // @route   GET /api/admin/gyms
 // @access  Private (SuperAdmin)
 exports.getAllGyms = async (req, res, next) => {
   try {
-    const gyms = await Gym.find().select('-password').lean();
+    const query = req.query.status === 'pending'
+      ? { requestApproved: false }
+      : (req.query.status === 'all' ? {} : { requestApproved: { $ne: false } });
+
+    const gyms = await Gym.find(query).select('-password').sort({ createdAt: -1 }).lean();
 
     const data = gyms.map(gym => ({
       ...gym,
@@ -51,6 +56,112 @@ exports.getAllGyms = async (req, res, next) => {
     }));
 
     res.status(200).json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Pending Gym Registration Requests
+// @route   GET /api/admin/requests
+// @access  Private (SuperAdmin)
+exports.getGymRequests = async (req, res, next) => {
+  try {
+    const requests = await Gym.find({ requestApproved: false }).select('-password').sort({ createdAt: -1 }).lean();
+
+    const data = requests.map(gym => ({
+      ...gym,
+      ownerName: gym.owner?.name || 'N/A',
+      ownerEmail: gym.owner?.email || gym.gymEmail,
+      ownerPhone: gym.owner?.mobile || gym.owner?.phone || gym.gymContact
+    }));
+
+    res.status(200).json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Approve Pending Gym Request
+// @route   PUT /api/admin/gym/:id/approve
+// @access  Private (SuperAdmin)
+exports.approveGym = async (req, res, next) => {
+  try {
+    const gym = await Gym.findById(req.params.id);
+    if (!gym) return res.status(404).json({ success: false, message: 'Gym request not found' });
+
+    if (gym.requestApproved) {
+      return res.status(400).json({ success: false, message: 'Gym is already approved' });
+    }
+
+    // Activate Gym
+    gym.requestApproved = true;
+    gym.status = 'Active';
+    gym.isActive = true;
+    await gym.save();
+
+    // Provision isolated tenant database & collections
+    const { getTenantConnection } = require('../utils/connectionManager');
+    const conn = await getTenantConnection(gym.dbName);
+
+    await conn.createCollection('clients');
+    await conn.createCollection('plans');
+    await conn.createCollection('payments');
+    await conn.createCollection('expenses');
+    await conn.createCollection('feedbacks');
+    await conn.createCollection('counters');
+    await conn.createCollection('settings');
+
+    const TenantSetting = conn.model('Setting');
+    const existingSetting = await TenantSetting.findOne();
+    if (!existingSetting) {
+      await TenantSetting.create({
+        partialPayment: {
+          enabled: true,
+          minimumPercentage: 50
+        },
+        dueSettings: {
+          defaultDaysFor1To6Months: 15,
+          defaultDaysAbove6Months: 30,
+          allowCustomDueDays: true,
+          customPlanDueDays: {
+            "1 Month": 15,
+            "2 Months": 15,
+            "3 Months": 15,
+            "6 Months": 15,
+            "12 Months": 30
+          }
+        }
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Gym "${gym.gymName}" approved and workspace initialized successfully.`,
+      data: gym
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Reject Pending Gym Request
+// @route   DELETE /api/admin/gym/:id/reject
+// @access  Private (SuperAdmin)
+exports.rejectGym = async (req, res, next) => {
+  try {
+    const gym = await Gym.findById(req.params.id);
+    if (!gym) return res.status(404).json({ success: false, message: 'Gym request not found' });
+
+    if (gym.requestApproved) {
+      return res.status(400).json({ success: false, message: 'Cannot reject an already approved gym. Use delete gym instead.' });
+    }
+
+    await Gym.deleteOne({ _id: gym._id });
+
+    res.status(200).json({
+      success: true,
+      message: `Gym request for "${gym.gymName}" rejected and removed successfully.`
+    });
   } catch (err) {
     next(err);
   }

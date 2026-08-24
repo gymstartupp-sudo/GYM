@@ -241,17 +241,28 @@ const AdminDashboard = () => {
                 <h1 className="page-heading text-2xl md:text-[36px] mb-8">Platform Overview</h1>
 
                 {loading ? <div className="text-text-muted">Loading data...</div> : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="kpi-card">
-                            <p className="kpi-card-label">Total Gyms Onboarded</p>
+                            <p className="kpi-card-label">Active Gyms</p>
                             <h3 className="kpi-card-value">{stats?.totalGyms || 0}</h3>
                         </div>
+                        <Link to="/admin/requests" className="kpi-card hover:border-amber-500/50 transition-colors group">
+                            <div className="flex items-center justify-between">
+                                <p className="kpi-card-label group-hover:text-amber-400 transition-colors">Pending Requests</p>
+                                {stats?.pendingGyms > 0 && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                        Review
+                                    </span>
+                                )}
+                            </div>
+                            <h3 className="kpi-card-value text-amber-400">{stats?.pendingGyms || 0}</h3>
+                        </Link>
                         <div className="kpi-card">
                             <p className="kpi-card-label">Total Active Clients</p>
                             <h3 className="kpi-card-value">{stats?.totalClients || 0}</h3>
                         </div>
                         <div className="kpi-card">
-                            <p className="kpi-card-label">Platform Revenue/Payments</p>
+                            <p className="kpi-card-label">Total Transactions</p>
                             <h3 className="kpi-card-value">{stats?.totalPayments || 0} Trx</h3>
                         </div>
                     </div>

@@ -41,9 +41,10 @@ const gymSchema = new mongoose.Schema({
   },
   socialMediaLinks: [{ platform: String, url: String }],
   dbName: { type: String, required: true },
-  status: { type: String, default: 'Active' },
+  requestApproved: { type: Boolean, default: false },
+  status: { type: String, default: 'Pending' },
   subscription: { type: String, default: 'Premium' },
-  isActive: { type: Boolean, default: true }
+  isActive: { type: Boolean, default: false }
 }, { timestamps: true });
 
 gymSchema.pre('save', async function (next) {

@@ -112,13 +112,13 @@ const LandingPage = () => {
               to="/login"
               className="px-4 py-2 border border-border text-text-primary rounded-xl font-semibold hover:bg-surface-hover transition-colors"
             >
-              Client Portal
+              Login
             </Link>
             <Link
               to="/register"
               className="px-5 py-2 bg-primary text-dark rounded-xl font-bold hover:brightness-95 transition-all shadow-sm shadow-primary/10"
             >
-              Register Gym
+              Register
             </Link>
           </div>
 
@@ -172,7 +172,7 @@ const LandingPage = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full py-2.5 text-center border border-border text-text-primary rounded-xl font-semibold hover:bg-surface-hover"
               >
-                Client Portal
+                Login
               </Link>
               <Link
                 to="/register"
@@ -209,7 +209,7 @@ const LandingPage = () => {
               to="/login"
               className="w-full sm:w-auto px-8 py-3.5 border border-border bg-surface-secondary text-text-primary font-bold rounded-xl text-center hover:bg-surface-hover transition-all"
             >
-              Client Login
+              Login
             </Link>
           </div>
         </div>
@@ -550,8 +550,8 @@ const LandingPage = () => {
           </div>
 
           <div className="flex items-center gap-6 text-xs text-text-muted font-medium">
-            <a href="mailto:support@rexfit.com" className="flex items-center gap-1.5 hover:text-text-primary transition-colors">
-              <Mail size={14} /> support@rexfit.com
+            <a href="mailto:rexfit.nexus@gmail.com" className="flex items-center gap-1.5 hover:text-text-primary transition-colors">
+              <Mail size={14} /> rexfit.nexus@gmail.com
             </a>
             <span className="hover:text-text-primary transition-colors cursor-pointer flex items-center gap-1"><FileText size={14} /> Privacy Policy</span>
             <span className="hover:text-text-primary transition-colors cursor-pointer flex items-center gap-1"><FileText size={14} /> Terms & Conditions</span>

@@ -526,13 +526,18 @@ const GymRegister = () => {
       const res = await api.post('/auth/gym/register', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const { gymId } = res.data.data;
+      const { gymId, gymName } = res.data.data || {};
 
-      // Automatically authenticate the session
-      login(res.data.data.token, 'owner');
-
-      toast.success('Registration successful');
-      navigate('/registration-success', { state: { gymId, email: data.mailId, phone: data.mobileNo } });
+      toast.success('Registration submitted for approval');
+      navigate('/registration-success', {
+        state: {
+          gymId,
+          gymName: gymName || data.gymName,
+          email: data.mailId || data.gymEmail,
+          phone: data.mobileNo || data.gymContact,
+          isPendingApproval: true
+        }
+      });
     } catch (error) {
       const apiError = error.response?.data;
       if (apiError?.errors && Array.isArray(apiError.errors) && apiError.errors.length > 0) {
