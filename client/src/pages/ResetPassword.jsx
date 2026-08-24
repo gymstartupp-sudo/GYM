@@ -90,10 +90,10 @@ const ResetPassword = () => {
       <div className="absolute top-4 right-4">
         <ThemeToggle className="w-10 h-10" />
       </div>
-      <div className="max-w-md w-full space-y-8 backdrop-blur-md bg-surface-card/90 p-10 rounded-2xl border border-border shadow-2xl">
+      <div className="max-w-md w-full space-y-8 backdrop-blur-md bg-surface-card/90 p-6 sm:p-10 rounded-2xl border border-border shadow-2xl">
         <div>
-          <h2 className="mt-2 text-center text-4xl font-extrabold text-text-primary tracking-tight flex items-center justify-center gap-3">
-            <Lock className="text-primary" size={36} /> Reset Password
+          <h2 className="mt-2 text-center text-2xl sm:text-4xl font-extrabold text-text-primary tracking-tight flex items-center justify-center gap-2.5 sm:gap-3 whitespace-nowrap">
+            <Lock className="text-primary shrink-0 w-7 h-7 sm:w-9 sm:h-9" /> Reset Password
           </h2>
           <p className="mt-3 text-center text-sm text-text-secondary">
             Set your new login credentials below.
