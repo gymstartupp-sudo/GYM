@@ -280,49 +280,34 @@ const sendExpiredPendingReminder = async ({ phone, clientName, gymName, expiryDa
 };
 
 /**
- * Helper to build components for due templates (which all have the same body/button variables: Client Name, Pending Amount, Due Date, Renewal Link)
+ * Helper to build components for due templates (matches approved Meta templates):
+ * - Stage 1 (due_first_reminder): 4 body params (Client Name {{1}}, Gym Name {{2}}, Pending Amount {{3}}, Due Date {{4}})
+ * - Stage 2 (due_second_reminder): 4 body params (Client Name {{1}}, Gym Name {{2}}, Pending Amount {{3}}, Due Date {{4}})
+ * - Stage 3 (due_third_reminder): 3 body params (Client Name {{1}}, Gym Name {{2}}, Pending Amount {{3}})
  */
-const buildDueComponents = (clientName, pendingAmount, dueDate, renewalLink, stage) => {
-  const isButton = process.env.META_DUE_LINK_AS_BUTTON === 'true';
+const buildDueComponents = (clientName, gymName, pendingAmount, dueDate, stage) => {
+  const gym = gymName || 'Gym';
+
   if (stage === 1 || stage === 2) {
-    if (isButton) {
-      return [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: String(clientName) },
-            { type: 'text', text: String(pendingAmount) },
-            { type: 'text', text: String(dueDate) }
-          ]
-        },
-        {
-          type: 'button',
-          sub_type: 'url',
-          index: '0',
-          parameters: [
-            { type: 'text', text: getButtonParam(renewalLink) }
-          ]
-        }
-      ];
-    } else {
-      return [
-        {
-          type: 'body',
-          parameters: [
-            { type: 'text', text: String(clientName) },
-            { type: 'text', text: String(pendingAmount) },
-            { type: 'text', text: String(dueDate) }
-          ]
-        }
-      ];
-    }
-  } else {
-    // Stage 3 (due_third_reminder) expects exactly 2 parameters (Client Name, Pending Amount)
     return [
       {
         type: 'body',
         parameters: [
           { type: 'text', text: String(clientName) },
+          { type: 'text', text: String(gym) },
+          { type: 'text', text: String(pendingAmount) },
+          { type: 'text', text: String(dueDate) }
+        ]
+      }
+    ];
+  } else {
+    // Stage 3 (due_third_reminder) expects 3 parameters (Client Name, Gym Name, Pending Amount)
+    return [
+      {
+        type: 'body',
+        parameters: [
+          { type: 'text', text: String(clientName) },
+          { type: 'text', text: String(gym) },
           { type: 'text', text: String(pendingAmount) }
         ]
       }
@@ -333,9 +318,9 @@ const buildDueComponents = (clientName, pendingAmount, dueDate, renewalLink, sta
 /**
  * 3a. Due First Reminder (3 days before due date)
  */
-const sendDueFirstReminder = async ({ phone, clientName, pendingAmount, dueDate, renewalLink, clientId, gymId }) => {
+const sendDueFirstReminder = async ({ phone, clientName, gymName, pendingAmount, dueDate, clientId, gymId }) => {
   const templateName = process.env.META_TEMPLATE_DUE_FIRST || 'due_first_reminder';
-  const components = buildDueComponents(clientName, pendingAmount, dueDate, renewalLink, 1);
+  const components = buildDueComponents(clientName, gymName, pendingAmount, dueDate, 1);
   return sendMetaWhatsApp({
     to: phone,
     templateName,
@@ -349,9 +334,9 @@ const sendDueFirstReminder = async ({ phone, clientName, pendingAmount, dueDate,
 /**
  * 3b. Due Second Reminder (On due date)
  */
-const sendDueSecondReminder = async ({ phone, clientName, pendingAmount, dueDate, renewalLink, clientId, gymId }) => {
+const sendDueSecondReminder = async ({ phone, clientName, gymName, pendingAmount, dueDate, clientId, gymId }) => {
   const templateName = process.env.META_TEMPLATE_DUE_SECOND || 'due_second_reminder';
-  const components = buildDueComponents(clientName, pendingAmount, dueDate, renewalLink, 2);
+  const components = buildDueComponents(clientName, gymName, pendingAmount, dueDate, 2);
   return sendMetaWhatsApp({
     to: phone,
     templateName,
@@ -365,9 +350,9 @@ const sendDueSecondReminder = async ({ phone, clientName, pendingAmount, dueDate
 /**
  * 3c. Due Third Reminder (3 days after due date)
  */
-const sendDueThirdReminder = async ({ phone, clientName, pendingAmount, dueDate, renewalLink, clientId, gymId }) => {
+const sendDueThirdReminder = async ({ phone, clientName, gymName, pendingAmount, clientId, gymId }) => {
   const templateName = process.env.META_TEMPLATE_DUE_THIRD || 'due_third_reminder';
-  const components = buildDueComponents(clientName, pendingAmount, dueDate, renewalLink, 3);
+  const components = buildDueComponents(clientName, gymName, pendingAmount, null, 3);
   return sendMetaWhatsApp({
     to: phone,
     templateName,
@@ -381,13 +366,13 @@ const sendDueThirdReminder = async ({ phone, clientName, pendingAmount, dueDate,
 /**
  * Unified Due Reminder wrapper that selects template based on reminder stage
  */
-const sendDueReminder = async ({ phone, clientName, pendingAmount, dueDate, renewalLink, clientId, gymId, stage = 3 }) => {
+const sendDueReminder = async ({ phone, clientName, gymName, pendingAmount, dueDate, clientId, gymId, stage = 3 }) => {
   if (stage === 1) {
-    return sendDueFirstReminder({ phone, clientName, pendingAmount, dueDate, renewalLink, clientId, gymId });
+    return sendDueFirstReminder({ phone, clientName, gymName, pendingAmount, dueDate, clientId, gymId });
   } else if (stage === 2) {
-    return sendDueSecondReminder({ phone, clientName, pendingAmount, dueDate, renewalLink, clientId, gymId });
+    return sendDueSecondReminder({ phone, clientName, gymName, pendingAmount, dueDate, clientId, gymId });
   } else {
-    return sendDueThirdReminder({ phone, clientName, pendingAmount, dueDate, renewalLink, clientId, gymId });
+    return sendDueThirdReminder({ phone, clientName, gymName, pendingAmount, clientId, gymId });
   }
 };
 
