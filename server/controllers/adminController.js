@@ -478,6 +478,15 @@ exports.sendTestReminder = async (req, res, next) => {
     let logReminderType = '';
     let templateName = '';
 
+    const { getClientPlans } = require('../utils/membership');
+    const { nextPlan } = getClientPlans(updatedClient.memberships || [], new Date());
+    if ((reminderType === 'expiring_soon' || reminderType === 'expired') && nextPlan) {
+      return res.status(400).json({
+        success: false,
+        message: 'Client has an upcoming renewed membership plan. Expiry reminders cannot be sent.'
+      });
+    }
+
     // Find remaining balance first to select templates correctly
     let remainingBalance = 0;
     const activeMembership = [...(updatedClient.memberships || [])]
