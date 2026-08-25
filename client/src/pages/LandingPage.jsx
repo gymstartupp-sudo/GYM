@@ -89,7 +89,7 @@ const LandingPage = () => {
       {/* 1. Header Navigation */}
       <header className="sticky top-0 z-50 bg-surface-secondary/80 backdrop-blur-md border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:flex-1">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-dark shadow-md shadow-primary/20">
               <Dumbbell className="w-6 h-6 stroke-[2.5]" />
             </div>
@@ -107,7 +107,7 @@ const LandingPage = () => {
           </nav>
 
           {/* Action CTAs & Theme Toggle */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center justify-end gap-4 md:flex-1">
             <Link
               to="/login"
               className="px-4 py-2 border border-border text-text-primary rounded-xl font-semibold hover:bg-surface-hover transition-colors"
@@ -123,8 +123,7 @@ const LandingPage = () => {
           </div>
 
           {/* Mobile Menu Buttons */}
-          <div className="flex items-center gap-3 md:hidden">
-            <ThemeToggle className="w-10 h-10" />
+          <div className="flex items-center justify-end gap-3 md:hidden flex-1">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="w-10 h-10 rounded-lg border border-border flex items-center justify-center text-text-secondary hover:text-text-primary bg-surface-card"
@@ -218,7 +217,7 @@ const LandingPage = () => {
         <div className="w-full relative flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 pt-8">
 
           {/* Main Desktop Mockup (RexFit Dashboard) */}
-          <div className="w-full max-w-4xl bg-surface-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col aspect-video select-none z-10">
+          <div className="w-full max-w-4xl bg-surface-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col aspect-[4/3] sm:aspect-video select-none z-10">
             {/* Window control header */}
             <div className="bg-surface-secondary px-4 py-3 border-b border-border flex items-center justify-between">
               <div className="flex gap-1.5">
@@ -233,7 +232,7 @@ const LandingPage = () => {
             </div>
 
             {/* Dashboard Content Mockup */}
-            <div className="flex-1 bg-surface-primary flex">
+            <div className="flex-1 bg-surface-primary flex overflow-hidden">
               {/* Sidebar */}
               <div className="w-1/5 border-r border-border bg-surface-secondary p-2.5 hidden sm:flex flex-col gap-2">
                 <div className="h-5 bg-primary/20 border border-primary/30 rounded-lg flex items-center px-2 text-[9px] font-bold text-primary">Dashboard</div>
@@ -247,39 +246,39 @@ const LandingPage = () => {
               </div>
 
               {/* Central View */}
-              <div className="flex-1 p-4 flex flex-col gap-4 overflow-hidden">
+              <div className="flex-1 p-2 sm:p-4 flex flex-col gap-3 sm:gap-4 overflow-hidden">
                 {/* Stats cards row */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-surface-card p-3 rounded-xl border border-border shadow-sm flex flex-col justify-between">
-                    <span className="text-[10px] text-text-muted font-medium uppercase">Active Clients</span>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-lg font-bold">342</span>
-                      <span className="text-[9px] text-success font-semibold">+12%</span>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="bg-surface-card p-2 sm:p-3 rounded-xl border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+                    <span className="text-[8px] sm:text-[10px] text-text-muted font-medium uppercase truncate">Active Clients</span>
+                    <div className="flex flex-wrap items-baseline gap-1 mt-1">
+                      <span className="text-sm sm:text-lg font-bold">342</span>
+                      <span className="text-[7px] sm:text-[9px] text-success font-semibold">+12%</span>
                     </div>
                   </div>
-                  <div className="bg-surface-card p-3 rounded-xl border border-border shadow-sm flex flex-col justify-between">
-                    <span className="text-[10px] text-text-muted font-medium uppercase">Total Dues</span>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-lg font-bold text-danger">₹45,200</span>
-                      <span className="text-[8px] bg-danger/10 text-danger px-1 rounded">14 pending</span>
+                  <div className="bg-surface-card p-2 sm:p-3 rounded-xl border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+                    <span className="text-[8px] sm:text-[10px] text-text-muted font-medium uppercase truncate">Total Dues</span>
+                    <div className="flex flex-wrap items-baseline gap-1 mt-1">
+                      <span className="text-sm sm:text-lg font-bold text-danger">₹45,200</span>
+                      <span className="text-[6px] sm:text-[8px] bg-danger/10 text-danger px-1 rounded whitespace-nowrap">14 pending</span>
                     </div>
                   </div>
-                  <div className="bg-surface-card p-3 rounded-xl border border-border shadow-sm flex flex-col justify-between">
-                    <span className="text-[10px] text-text-muted font-medium uppercase">Monthly Profit</span>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-lg font-bold text-success">₹1,85,400</span>
-                      <span className="text-[9px] text-success font-semibold">8.2%</span>
+                  <div className="bg-surface-card p-2 sm:p-3 rounded-xl border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+                    <span className="text-[8px] sm:text-[10px] text-text-muted font-medium uppercase truncate">Monthly Profit</span>
+                    <div className="flex flex-wrap items-baseline gap-1 mt-1">
+                      <span className="text-sm sm:text-lg font-bold text-success">₹1,85,400</span>
+                      <span className="text-[7px] sm:text-[9px] text-success font-semibold">8.2%</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Simulated Chart */}
-                <div className="bg-surface-card border border-border rounded-xl p-3 flex-1 flex flex-col gap-2 min-h-0">
+                <div className="bg-surface-card border border-border rounded-xl p-2 sm:p-3 flex-1 flex flex-col gap-2 min-h-0">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold">Revenue vs Expenses</span>
-                    <div className="flex gap-2">
-                      <span className="text-[8px] flex items-center gap-1 font-semibold"><div className="w-1.5 h-1.5 bg-primary rounded-full"></div> Revenue</span>
-                      <span className="text-[8px] flex items-center gap-1 font-semibold"><div className="w-1.5 h-1.5 bg-danger rounded-full"></div> Expense</span>
+                    <span className="text-[10px] sm:text-xs font-bold truncate pr-2">Revenue vs Expenses</span>
+                    <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+                      <span className="text-[6px] sm:text-[8px] flex items-center gap-1 font-semibold"><div className="w-1.5 h-1.5 bg-primary rounded-full"></div> Rev</span>
+                      <span className="text-[6px] sm:text-[8px] flex items-center gap-1 font-semibold"><div className="w-1.5 h-1.5 bg-danger rounded-full"></div> Exp</span>
                     </div>
                   </div>
                   {/* CSS Chart mockup */}
@@ -540,7 +539,7 @@ const LandingPage = () => {
       <footer className="bg-surface-secondary border-t border-border py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:flex-1">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-dark shadow-sm shadow-primary/10">
               <Dumbbell className="w-5 h-5 stroke-[2.5]" />
             </div>
@@ -549,15 +548,14 @@ const LandingPage = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-6 text-xs text-text-muted font-medium">
+          <div className="flex items-center justify-center gap-6 text-xs text-text-muted font-medium md:flex-1">
             <a href="mailto:rexfit.nexus@gmail.com" className="flex items-center gap-1.5 hover:text-text-primary transition-colors">
               <Mail size={14} /> rexfit.nexus@gmail.com
             </a>
-            <span className="hover:text-text-primary transition-colors cursor-pointer flex items-center gap-1"><FileText size={14} /> Privacy Policy</span>
-            <span className="hover:text-text-primary transition-colors cursor-pointer flex items-center gap-1"><FileText size={14} /> Terms & Conditions</span>
+
           </div>
 
-          <div className="text-xs text-text-muted">
+          <div className="text-xs text-text-muted md:flex-1 text-center md:text-right">
             © {new Date().getFullYear()} RexFit. All rights reserved.
           </div>
 
