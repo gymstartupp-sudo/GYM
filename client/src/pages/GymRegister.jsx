@@ -533,8 +533,8 @@ const GymRegister = () => {
         state: {
           gymId,
           gymName: gymName || data.gymName,
-          email: data.mailId || data.gymEmail,
-          phone: data.mobileNo || data.gymContact,
+          gymEmail: res.data?.data?.email || data.gymEmail,
+          gymContact: res.data?.data?.phone || data.gymContact,
           isPendingApproval: true
         }
       });

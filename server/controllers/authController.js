@@ -174,8 +174,8 @@ exports.registerGymOwner = async (req, res, next) => {
       data: {
         gymId: newGymId,
         gymName: gym.gymName,
-        email: mailId || gymEmail,
-        phone: mobileNo || gymContact
+        email: gymEmail,
+        phone: gymContact
       }
     });
   } catch (err) {

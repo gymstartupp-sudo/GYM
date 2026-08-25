@@ -8,8 +8,8 @@ const RegistrationSuccess = () => {
   const navigate = useNavigate();
   const gymId = location.state?.gymId;
   const gymName = location.state?.gymName;
-  const email = location.state?.email;
-  const phone = location.state?.phone;
+  const gymEmail = location.state?.gymEmail;
+  const gymContact = location.state?.gymContact;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-black py-16 px-4">
@@ -51,18 +51,18 @@ const RegistrationSuccess = () => {
             </div>
           </div>
 
-          {(email || phone) && (
+          {(gymEmail || gymContact) && (
             <div className="border-t border-slate-800/80 pt-3 flex items-center justify-around text-xs text-slate-400">
-              {email && (
+              {gymEmail && (
                 <div>
                   <span className="text-slate-500 text-[10px] block uppercase font-bold">Login Email</span>
-                  <span className="text-slate-200 font-medium">{email}</span>
+                  <span className="text-slate-200 font-medium">{gymEmail}</span>
                 </div>
               )}
-              {phone && (
+              {gymContact && (
                 <div>
                   <span className="text-slate-500 text-[10px] block uppercase font-bold">Login Phone</span>
-                  <span className="text-slate-200 font-medium">{phone}</span>
+                  <span className="text-slate-200 font-medium">{gymContact}</span>
                 </div>
               )}
             </div>
