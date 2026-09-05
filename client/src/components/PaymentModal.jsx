@@ -44,7 +44,8 @@ const PaymentModal = ({
     plans = [],
     payments = [],
     initialData = {},
-    lockClient = false
+    lockClient = false,
+    isEditPlanOverride = false
 }) => {
     const [selectedClient, setSelectedClient] = useState(clientData);
     const [selectedPlan, setSelectedPlan] = useState(planData);
@@ -229,7 +230,7 @@ const PaymentModal = ({
     }, []);
 
     // Determine if we're in update mode (either from initialData or auto-detected)
-    const isUpdateMode = !!(initialData.id || detectedPendingPayment);
+    const isUpdateMode = (!!(initialData.id || detectedPendingPayment)) && !isEditPlanOverride;
     const activePaymentId = initialData.id || detectedPendingPayment?._id;
 
     const originalPlanPrice = isUpdateMode
@@ -569,6 +570,7 @@ const PaymentModal = ({
                 status: realStatus,
                 balance: realStatus === 'paid' ? 0 : balance,
                 _isUpdate: isUpdateMode,
+                _isOverride: isEditPlanOverride,
                 _paymentId: activePaymentId
             });
             onClose();
@@ -588,7 +590,7 @@ const PaymentModal = ({
                 <div className="p-6 border-b border-border flex justify-between items-center bg-surface-divider/80 shrink-0">
                     <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
                         <Receipt className="text-primary" />
-                        {isUpdateMode ? 'Update Payment' : (lockClient ? ((selectedClient?.membership?.requestApproved === false || selectedClient?.membership?.status === 'pending') ? 'Record Payment' : 'Renew Membership') : 'Record Payment')}
+                        {isEditPlanOverride ? 'Edit Plan Details' : (isUpdateMode ? 'Update Payment' : (lockClient ? ((selectedClient?.membership?.requestApproved === false || selectedClient?.membership?.status === 'pending') ? 'Record Payment' : 'Renew Membership') : 'Record Payment'))}
                     </h2>
                     <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors" disabled={isSubmitting}>
                         <X size={24} />
@@ -656,7 +658,7 @@ const PaymentModal = ({
                                                         key={c._id}
                                                         type="button"
                                                         className="w-full flex items-center justify-between p-3.5 hover:bg-surface-hover/50 transition-colors text-left border-b border-border/50 last:border-0 group"
-                                                        onClick={() => handleClientSelect(c)}
+                                                        onMouseDown={(e) => { e.preventDefault(); handleClientSelect(c); }}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center text-text-secondary group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
@@ -682,7 +684,7 @@ const PaymentModal = ({
                         {/* Plan Selection (Searchable) */}
                         <div className="relative" ref={planDropdownRef}>
                             <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
-                            {(planData || detectedPendingPayment) ? (
+                            {((planData || detectedPendingPayment) && !isEditPlanOverride) ? (
                                 <div className={`flex flex-col gap-2.5 p-3.5 bg-surface-hover/50 border rounded-xl ${detectedPendingPayment ? 'border-amber-500/30' : 'border-border'}`}>
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
@@ -757,7 +759,7 @@ const PaymentModal = ({
                                                         key={p._id}
                                                         type="button"
                                                         className="w-full flex items-center justify-between p-3.5 hover:bg-surface-hover/50 transition-colors text-left border-b border-border/50 last:border-0 group"
-                                                        onClick={() => handlePlanSelect(p)}
+                                                        onMouseDown={(e) => { e.preventDefault(); handlePlanSelect(p); }}
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center text-text-secondary group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
@@ -779,8 +781,8 @@ const PaymentModal = ({
                             )}
                         </div>
 
-                        {/* Membership Scheduling (ONLY for NEW memberships) */}
-                        {!isUpdateMode && selectedPlan && (
+                        {/* Membership Scheduling (ONLY for NEW memberships or overrides) */}
+                        {(!isUpdateMode || isEditPlanOverride) && selectedPlan && (
                             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 space-y-4 animate-in fade-in zoom-in-95 duration-300">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Calendar className="text-primary" size={16} />
@@ -892,7 +894,7 @@ const PaymentModal = ({
                                     required
                                     min="0"
                                     max={outstandingBalance}
-                                    className={`w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-border' : 'border-border'}`}
+                                    className={` w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'}`}
                                     value={formData.paidAmount}
                                     onChange={(e) => {
                                         const val = e.target.value;
@@ -900,6 +902,7 @@ const PaymentModal = ({
                                             setFormData({ ...formData, paidAmount: val });
                                         }
                                     }}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     disabled={isSubmitting || paymentType === 'full'}
                                     placeholder="Enter amount"
                                 />

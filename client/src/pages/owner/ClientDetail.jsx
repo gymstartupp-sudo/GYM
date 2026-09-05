@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { ChevronLeft, FileText, Calendar, CreditCard, User, CheckCircle2, Send, Download, AlertCircle, X } from 'lucide-react';
+import { ChevronLeft, FileText, Calendar, CreditCard, User, CheckCircle2, Send, Download, AlertCircle, X, Edit2 } from 'lucide-react';
 import Button from '../../components/Button';
 import Tooltip from '../../components/Tooltip';
 import ConfirmModal from '../../components/ConfirmModal';
-import { formatDisplayDate, calculateDaysLeft, getPlanStatus, getPaymentStatus, getClientPlans } from '../../utils/membership';
+import { formatDisplayDate, calculateDaysLeft, getPlanStatus, getPaymentStatus, getClientPlans, toLocalDateString } from '../../utils/membership';
 import ClientProfileHeader from '../../components/ClientProfileHeader';
+import PaymentModal from '../../components/PaymentModal';
 
 const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) => {
     const { id: paramId } = useParams();
@@ -22,6 +23,10 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     const [gymInfo, setGymInfo] = useState(null);
     const [sendingWhatsAppId, setSendingWhatsAppId] = useState(null);
     const [downloadingId, setDownloadingId] = useState(null);
+    const [showEditPlanModal, setShowEditPlanModal] = useState(false);
+    const [plans, setPlans] = useState([]);
+    const [allPayments, setAllPayments] = useState([]);
+    const [editPaymentData, setEditPaymentData] = useState(null);
 
     const getWhatsAppInvoiceTooltip = (payment) => {
         const sentCount = payment.whatsappSendCount || 0;
@@ -46,7 +51,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                 if (!prev) return prev;
                 return {
                     ...prev,
-                    paymentHistory: prev.paymentHistory.map(p => 
+                    paymentHistory: prev.paymentHistory.map(p =>
                         p._id === payment._id ? { ...p, whatsappSendCount: (p.whatsappSendCount || 0) + 1 } : p
                     )
                 };
@@ -94,13 +99,13 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
     const getInvoicePeriod = (payment) => {
         if (!payment.startDate) return '—';
-        const relatedM = client.memberships?.find(m => 
+        const relatedM = client.memberships?.find(m =>
             (m.planId?._id || m.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
             new Date(m.startDate).getTime() === new Date(payment.startDate).getTime()
         ) || (
-            (client.membership?.planId?._id || client.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
-            new Date(client.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? client.membership : null
-        );
+                (client.membership?.planId?._id || client.membership?.planId)?.toString() === (payment.planId?._id || payment.planId)?.toString() &&
+                    new Date(client.membership?.startDate).getTime() === new Date(payment.startDate).getTime() ? client.membership : null
+            );
         const startStr = new Date(payment.startDate).toLocaleDateString('en-GB').replace(/\//g, '-');
         if (relatedM?.endDate) {
             return `${startStr} to ${new Date(relatedM.endDate).toLocaleDateString('en-GB').replace(/\//g, '-')}`;
@@ -163,6 +168,20 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
             }
         };
         fetchGymProfile();
+
+        const fetchPlansAndPayments = async () => {
+            try {
+                const [plansRes, paymentsRes] = await Promise.all([
+                    api.get('/plan'),
+                    api.get('/payment')
+                ]);
+                setPlans(plansRes.data.data);
+                setAllPayments(paymentsRes.data.data);
+            } catch (e) {
+                console.error("Failed to load plans or payments", e);
+            }
+        };
+        fetchPlansAndPayments();
     }, []);
 
     const getLogoUrl = () => {
@@ -325,16 +344,36 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                 <div>
                                                     <p className="text-text-muted uppercase text-[10px] font-bold tracking-wider mb-3">Current Plan</p>
                                                     {currentPlan ? (
-                                                        <div className={`p-4 rounded-xl border ${
-                                                            currentPlan.status === 'expiring_soon'
-                                                                ? 'bg-amber-500/5 border-amber-500/10'
-                                                                : 'bg-emerald-500/5 border-emerald-500/10'
-                                                        }`}>
+                                                        <div className={`p-4 rounded-xl border ${currentPlan.status === 'expiring_soon'
+                                                            ? 'bg-amber-500/5 border-amber-500/10'
+                                                            : 'bg-emerald-500/5 border-emerald-500/10'
+                                                            }`}>
                                                             <div className="flex justify-between items-start mb-2">
                                                                 <div>
-                                                                    <p className={`text-xl font-bold ${
-                                                                        currentPlan.status === 'expiring_soon' ? 'text-amber-400' : 'text-emerald-400'
-                                                                    }`}>{currentPlan.planName}</p>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className={`text-xl font-bold ${currentPlan.status === 'expiring_soon' ? 'text-amber-400' : 'text-emerald-400'
+                                                                            }`}>{currentPlan.planName}</p>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                // Find the corresponding payment to edit
+                                                                                const payment = client.paymentHistory?.find(p =>
+                                                                                    (p.planId?._id || p.planId)?.toString() === (currentPlan.planId?._id || currentPlan.planId)?.toString() &&
+                                                                                    new Date(p.startDate).getTime() === new Date(currentPlan.startDate).getTime()
+                                                                                );
+                                                                                if (payment) {
+                                                                                    setEditPaymentData(payment);
+                                                                                    setShowEditPlanModal(true);
+                                                                                } else {
+                                                                                    toast.error("Could not find the original payment record for this plan.");
+                                                                                }
+                                                                            }}
+                                                                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-hover/50 border border-border/50 text-text-secondary hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-all shadow-sm"
+                                                                            title="Edit Plan"
+                                                                        >
+                                                                            <Edit2 size={12} />
+                                                                            <span className="text-[10px] font-bold uppercase tracking-wider">Edit</span>
+                                                                        </button>
+                                                                    </div>
                                                                     {currentPlan.status === 'expiring_soon' ? (
                                                                         <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[9px] font-bold uppercase">Expiring Soon</span>
                                                                     ) : (
@@ -371,13 +410,11 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                                 </div>
                                                             </div>
 
-                                                            <div className={`mt-4 pt-4 border-t flex justify-between items-center ${
-                                                                currentPlan.status === 'expiring_soon' ? 'border-amber-500/10' : 'border-emerald-500/10'
-                                                            }`}>
+                                                            <div className={`mt-4 pt-4 border-t flex justify-between items-center ${currentPlan.status === 'expiring_soon' ? 'border-amber-500/10' : 'border-emerald-500/10'
+                                                                }`}>
                                                                 <span className="text-text-secondary text-xs">Days Remaining:</span>
-                                                                <span className={`font-bold ${
-                                                                    currentPlan.status === 'expiring_soon' ? 'text-amber-400' : 'text-emerald-400'
-                                                                }`}>{calculateDaysLeft(currentPlan.startDate, currentPlan.endDate)} Days</span>
+                                                                <span className={`font-bold ${currentPlan.status === 'expiring_soon' ? 'text-amber-400' : 'text-emerald-400'
+                                                                    }`}>{calculateDaysLeft(currentPlan.startDate, currentPlan.endDate)} Days</span>
                                                             </div>
                                                         </div>
                                                     ) : (
@@ -457,10 +494,10 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                         );
                                     })()}
 
-                                    </div>
                                 </div>
                             </div>
-                        ) : (
+                        </div>
+                    ) : (
                         <div className="card bg-surface-divider/80 border-border p-0 overflow-hidden shadow-2xl backdrop-blur-sm">
                             <div className="p-6 border-b border-border flex justify-between items-center bg-surface-divider/80">
                                 <h3 className="text-lg font-bold text-text-primary flex items-center gap-2">
@@ -512,37 +549,37 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                                         )}
                                                     </td>
                                                     <td className="p-5 text-center text-xs">
-                                                         <div className="flex items-center justify-center gap-1">
-                                                             <button
-                                                                 type="button"
-                                                                 onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
-                                                                 className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
-                                                                 title="View Invoice"
-                                                             >
-                                                                 <FileText size={16} />
-                                                             </button>
-                                                             <button
-                                                                 type="button"
-                                                                 disabled={downloadingId === payment._id}
-                                                                 onClick={() => downloadInvoice(payment)}
-                                                                 className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
-                                                                 title="Download Invoice"
-                                                             >
-                                                                 <Download size={16} />
-                                                             </button>
-                                                             <Tooltip content={getWhatsAppInvoiceTooltip(payment)}>
-                                                                 <button
-                                                                     type="button"
-                                                                     disabled={sendingWhatsAppId === payment._id || isWhatsAppInvoiceDisabled(payment)}
-                                                                     onClick={() => handleSendWhatsAppInvoice(payment)}
-                                                                     className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                                                     title="Send via WhatsApp"
-                                                                 >
-                                                                     <Send size={16} />
-                                                                 </button>
-                                                             </Tooltip>
-                                                         </div>
-                                                     </td>
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { setSelectedPayment(payment); setShowReceiptModal(true); }}
+                                                                className="p-2 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all"
+                                                                title="View Invoice"
+                                                            >
+                                                                <FileText size={16} />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled={downloadingId === payment._id}
+                                                                onClick={() => downloadInvoice(payment)}
+                                                                className="p-2 rounded-lg text-text-secondary hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-50"
+                                                                title="Download Invoice"
+                                                            >
+                                                                <Download size={16} />
+                                                            </button>
+                                                            <Tooltip content={getWhatsAppInvoiceTooltip(payment)}>
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={sendingWhatsAppId === payment._id || isWhatsAppInvoiceDisabled(payment)}
+                                                                    onClick={() => handleSendWhatsAppInvoice(payment)}
+                                                                    className="p-2 rounded-lg text-text-secondary hover:text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                    title="Send via WhatsApp"
+                                                                >
+                                                                    <Send size={16} />
+                                                                </button>
+                                                            </Tooltip>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -560,16 +597,63 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                 </div>
             </div>
 
+            {showEditPlanModal && editPaymentData && (
+                <PaymentModal
+                    isOpen={showEditPlanModal}
+                    onClose={() => {
+                        setShowEditPlanModal(false);
+                        setEditPaymentData(null);
+                    }}
+                    onSave={async (paymentData) => {
+                        try {
+                            await api.put(`/payment/${paymentData._paymentId}/override`, {
+                                planId: paymentData.planId,
+                                amount: paymentData.amount,
+                                paidAmount: paymentData.paidAmount,
+                                startDate: paymentData.startDate,
+                                dueDate: paymentData.dueDate,
+                                paymentMethod: paymentData.paymentMethod
+                            });
+                            toast.success("Payment plan updated successfully");
+                            setShowEditPlanModal(false);
+                            setEditPaymentData(null);
+                            // Refresh client
+                            const res = await api.get(`/client/${id}`);
+                            setClient(res.data.data);
+                        } catch (error) {
+                            toast.error(error.response?.data?.message || "Failed to update payment plan");
+                            throw error;
+                        }
+                    }}
+                    clientData={client}
+                    planData={plans.find(p => p._id === editPaymentData.planId)}
+                    clients={[client]}
+                    plans={plans}
+                    payments={allPayments}
+                    lockClient={true}
+                    isEditPlanOverride={true}
+                    initialData={{
+                        amount: editPaymentData.invoiceAmount || editPaymentData.amount || 0,
+                        totalPaidSoFar: editPaymentData.totalPaid || editPaymentData.paidAmount || 0,
+                        paidAmount: editPaymentData.paidNow || editPaymentData.paidAmount || 0,
+                        dueDate: editPaymentData.dueDate ? toLocalDateString(editPaymentData.dueDate) : '',
+                        startDate: editPaymentData.startDate ? toLocalDateString(editPaymentData.startDate) : '',
+                        paymentMethod: editPaymentData.paymentMethod || 'cash',
+                        id: editPaymentData._id
+                    }}
+                />
+            )}
+
             {showReceiptModal && selectedPayment && (
                 <div className="fixed inset-0 z-[100] overflow-y-auto">
                     {/* Backdrop overlay */}
-                    <div 
+                    <div
                         className="fixed inset-0 bg-black/80 backdrop-blur-md print:hidden"
                         onClick={() => setShowReceiptModal(false)}
                     />
-                    
+
                     {/* Modal content wrapper */}
-                    <div 
+                    <div
                         className="flex min-h-full items-center justify-center p-4"
                         onClick={(e) => { if (e.target === e.currentTarget) setShowReceiptModal(false); }}
                     >
@@ -612,12 +696,12 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                             </div>
                                         )}
                                         <div className="pt-1">
-                                             <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
-                                             {gymInfo?.tagline && (
-                                                 <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{gymInfo.tagline}</p>
-                                             )}
-                                             <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
-                                         </div>
+                                            <h2 className="text-xl font-black uppercase tracking-tight text-gray-900">{gymInfo?.gymName || "Gym Workspace"}</h2>
+                                            {gymInfo?.tagline && (
+                                                <p className="text-[10px] text-gray-500 mt-0.5 font-medium">{gymInfo.tagline}</p>
+                                            )}
+                                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-wider">Gym ID: {gymInfo?.gymId || "N/A"}</p>
+                                        </div>
                                     </div>
 
                                     <div className="text-left sm:text-right text-xs text-gray-600 space-y-1">
@@ -641,7 +725,12 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                                     </div>
                                     <div className="text-left sm:text-right">
                                         <h4 className="font-black text-text-secondary uppercase tracking-widest mb-1.5">Invoice Info</h4>
-                                        <p className="font-bold text-gray-900">Invoice No: {selectedPayment.paymentId}</p>
+                                        <p className="font-bold text-gray-900 flex items-center justify-start sm:justify-end gap-2">
+                                            Invoice No: {selectedPayment.paymentId}
+                                            {selectedPayment.isEdited && (
+                                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-purple-500/10 text-purple-600 border border-purple-500/20 uppercase tracking-widest">Edited</span>
+                                            )}
+                                        </p>
                                         <p className="text-text-muted font-medium mt-1">Date: {new Date(selectedPayment.createdAt || selectedPayment.date || selectedPayment.paymentDate).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                         <p className="mt-1.5">{getStatusBadge(selectedPayment)}</p>
                                     </div>
@@ -707,10 +796,10 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
 
                                 {/* Footer: Greetings & Regards */}
                                 <div className="pt-8 border-t border-gray-200 text-center space-y-3">
-                                     <div className="text-[11px] text-text-secondary">
-                                         <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
-                                     </div>
-                                 </div>
+                                    <div className="text-[11px] text-text-secondary">
+                                        <p className="font-bold text-gray-900">{gymInfo?.billingInfo?.regards || `Regards, Team ${gymInfo?.gymName || 'GymPro'}`}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

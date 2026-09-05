@@ -19,8 +19,8 @@ const ContactUsPanel = ({ isOpen, onClose, onReportIssue, gymEmail, ownerName, o
 
   if (!isOpen) return null;
 
-  const SUPPORT_EMAIL = 'support@rexfit.in';
-  const SUPPORT_PHONE = '+91 98765 43210';
+  const SUPPORT_EMAIL = 'rexfit.nexus@gmail.com';
+  const SUPPORT_PHONE = '+91 9345164608';
 
   return (
     <>
@@ -258,7 +258,7 @@ const OwnerHeader = ({
   ownerPhone = '',
   isMobile = false,
   isSidebarOpen = false,
-  onToggleSidebar = () => {}
+  onToggleSidebar = () => { }
 }) => {
   const navigate = useNavigate();
   const { user, logout, role } = useAuth();

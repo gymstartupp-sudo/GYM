@@ -390,6 +390,138 @@ exports.getPayments = async (req, res, next) => {
 
 const { sanitizePayload } = require('../utils/allowlist');
 
+// @desc    Override payment and plan details (Admin Edit)
+// @route   PUT /api/payment/:id/override
+// @access  Private (Owner)
+exports.overridePaymentPlan = async (req, res, next) => {
+  let lockKey = null;
+  const { acquireLock, releaseLock } = require('../utils/lock');
+
+  try {
+    const { id } = req.params;
+    const { planId, amount, paidAmount, startDate, dueDate, paymentMethod } = req.body;
+
+    const payment = await Payment.findById(id);
+    if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
+
+    lockKey = `payment-${payment.clientId.toString()}`;
+    const acquired = await acquireLock(lockKey);
+    if (!acquired) {
+      return res.status(409).json({ success: false, message: 'Another payment transaction is already in progress for this client' });
+    }
+
+    const Plan = require('../models/Plan');
+    const newPlanDetails = await Plan.findById(planId);
+    if (!newPlanDetails) return res.status(404).json({ success: false, message: 'Selected plan not found' });
+
+    const client = await Client.findById(payment.clientId);
+    if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
+
+    const oldPlanId = payment.planId;
+    const oldStartDate = payment.startDate;
+
+    const invoiceAmt = Number(amount) || 0;
+    const paidAmt = Number(paidAmount) || 0;
+    
+    // Check if valid override
+    if (paidAmt > invoiceAmt) {
+        return res.status(400).json({ success: false, message: 'Paid amount cannot exceed plan price' });
+    }
+
+    const finalStartDate = new Date(startDate);
+    const { endDate } = buildMembershipWindow({
+      startDate: finalStartDate,
+      durationMonths: newPlanDetails.durationMonths
+    });
+    
+    const remainingBalance = Math.max(0, invoiceAmt - paidAmt);
+    const realStatus = remainingBalance === 0 ? 'paid' : 'partial';
+
+    // 1. Update Payment
+    payment.planId = planId;
+    payment.planName = newPlanDetails.name;
+    payment.invoiceAmount = invoiceAmt;
+    payment.paidAmount = paidAmt;
+    payment.paidNow = paidAmt;
+    payment.totalPaid = paidAmt;
+    payment.amount = invoiceAmt; // backward compat
+    payment.remainingBalance = remainingBalance;
+    payment.status = realStatus;
+    payment.paymentMethod = paymentMethod || payment.paymentMethod;
+    payment.startDate = finalStartDate;
+    payment.dueDate = dueDate ? new Date(dueDate) : null;
+    payment.isEdited = true;
+    
+    await payment.save();
+
+    // 2. Update Client Membership Array
+    let updatedMembership = false;
+    if (client.memberships && client.memberships.length > 0) {
+      // Find the specific membership
+      const membershipIndex = client.memberships.findIndex(m => 
+        (m.planId?.toString() === oldPlanId?.toString() || m.planName === payment.planName) &&
+        (!oldStartDate || !m.startDate || new Date(m.startDate).getTime() === new Date(oldStartDate).getTime())
+      );
+      
+      if (membershipIndex !== -1) {
+        client.memberships[membershipIndex].planId = planId;
+        client.memberships[membershipIndex].planName = newPlanDetails.name;
+        client.memberships[membershipIndex].planDurationMonths = newPlanDetails.durationMonths;
+        client.memberships[membershipIndex].startDate = finalStartDate;
+        client.memberships[membershipIndex].endDate = endDate;
+        client.memberships[membershipIndex].finalPrice = invoiceAmt;
+        client.memberships[membershipIndex].totalPaid = paidAmt;
+        client.memberships[membershipIndex].dueDate = payment.dueDate;
+        updatedMembership = true;
+      }
+    }
+    
+    // If somehow not found in array but client has a single membership object
+    if (!updatedMembership && client.membership && (client.membership.planId?.toString() === oldPlanId?.toString())) {
+        client.membership.planId = planId;
+        client.membership.planName = newPlanDetails.name;
+        client.membership.startDate = finalStartDate;
+        client.membership.endDate = endDate;
+        client.membership.totalPaid = paidAmt;
+        client.membership.finalPrice = invoiceAmt;
+    }
+
+    if (realStatus === 'paid') {
+        client.hasPartialPayment = false;
+    }
+
+    await client.save();
+    
+    // Background tasks: sync status & send notifications
+    process.nextTick(async () => {
+      try {
+        await syncClientStatus(client._id, client);
+      } catch (err) {
+        console.error('Background syncClientStatus error:', err);
+      }
+
+      try {
+        const gym = await Gym.findOne({ gymId: payment.gymId });
+        if (gym && gym.dbName) {
+          const { sendPaymentNotification } = require('../services/whatsappNotificationService');
+          sendPaymentNotification(payment._id, client._id, gym.gymId, gym.dbName).catch(err => {
+            console.error('Error triggering payment notification: ', err);
+          });
+        }
+      } catch (e) {
+          console.error(e);
+      }
+    });
+
+    res.status(200).json({ success: true, data: payment, message: 'Payment plan overridden successfully' });
+
+  } catch (err) {
+    next(err);
+  } finally {
+    if (lockKey) await releaseLock(lockKey);
+  }
+};
+
 // @desc    Update a payment (partial payments)
 // @route   PUT /api/payment/:id
 // @access  Private (Owner)

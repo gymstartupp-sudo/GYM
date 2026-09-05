@@ -109,26 +109,45 @@ const ClientRequests = () => {
             </div>
 
             {loading ? (
-                <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg animate-pulse">
-                    <div className="hidden md:grid grid-cols-[2.5fr_1.5fr_1.5fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                        <div>Client Info</div>
-                        <div className="text-center">Requested Plan</div>
-                        <div className="text-center">Requested Date</div>
-                        <div className="text-center">Status</div>
-                        <div className="text-right pr-4">Action</div>
-                    </div>
-                    {[...Array(5)].map((_, i) => (
-                        <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-border/50">
-                            <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
-                            <div className="flex-1 grid grid-cols-[1.5fr_1.5fr_1.5fr_1fr_2fr] gap-2 items-center">
-                                <div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div>
-                                <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
-                                <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
-                                <div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div>
-                                <div className="h-8 w-32 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
-                            </div>
-                        </div>
-                    ))}
+                <div className="bg-card rounded-xl border border-border overflow-x-auto shadow-lg animate-pulse">
+                    <table className="w-full text-left border-collapse min-w-[700px]">
+                        <thead>
+                            <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
+                                <th className="p-4 font-medium">Client Info</th>
+                                <th className="p-4 font-medium text-center">Requested Plan</th>
+                                <th className="p-4 font-medium text-center">Requested Date</th>
+                                <th className="p-4 font-medium text-center">Status</th>
+                                <th className="p-4 font-medium text-right pr-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                            {[...Array(5)].map((_, i) => (
+                                <tr key={i}>
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
+                                            <div>
+                                                <div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div>
+                                                <div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-4 text-center">
+                                        <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                                    </td>
+                                    <td className="p-4 text-center">
+                                        <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                                    </td>
+                                    <td className="p-4 text-center">
+                                        <div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div>
+                                    </td>
+                                    <td className="p-4 text-right">
+                                        <div className="h-8 w-32 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             ) : requests.length === 0 ? (
                 <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
@@ -137,97 +156,99 @@ const ClientRequests = () => {
                     <p className="text-sm mt-1 text-gray-600">New registration requests will appear here.</p>
                 </div>
             ) : (
-                <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
-                    {/* Table Header */}
-                    <div className="hidden md:grid grid-cols-[2.5fr_1.5fr_1.5fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
-                        <div>Client Info</div>
-                        <div className="text-center">Requested Plan</div>
-                        <div className="text-center">Requested Date</div>
-                        <div className="text-center">Status</div>
-                        <div className="text-right pr-4">Action</div>
-                    </div>
-                    <div className="flex flex-col">
-                        {paginatedRequests.map((req) => (
-                            <div key={req._id} className="bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group px-4 py-4">
-                                <div className="grid grid-cols-1 md:grid-cols-[2.5fr_1.5fr_1.5fr_1fr_2fr] gap-4 md:gap-2 items-center text-sm">
+                <div className="md:bg-card md:rounded-xl md:border md:border-border overflow-x-auto md:shadow-lg">
+                    <table className="w-full text-left border-collapse md:min-w-[760px]">
+                        <thead>
+                            <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
+                                <th className="p-4 font-medium">Client Info</th>
+                                <th className="p-4 font-medium text-center">Requested Plan</th>
+                                <th className="p-4 font-medium text-center">Requested Date</th>
+                                <th className="p-4 font-medium text-center">Status</th>
+                                <th className="p-4 font-medium text-right pr-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {paginatedRequests.map((req) => (
+                                <tr key={req._id} className="hover:bg-surface-divider/40 transition-colors group">
                                     {/* Client Info */}
-                                    <div className="flex gap-3 items-center min-w-0">
-                                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner overflow-hidden">
-                                            {req.avatar && req.avatar.length > 1 ? (
-                                                <img src={req.avatar} alt={req.personalInfo.name} className="w-full h-full object-cover rounded-xl" />
-                                            ) : (
-                                                (req.avatar || req.personalInfo.name.charAt(0)).toUpperCase()
-                                            )}
+                                    <td className="p-4">
+                                        <div className="flex gap-3 items-center min-w-0">
+                                            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner overflow-hidden">
+                                                {req.avatar && req.avatar.length > 1 ? (
+                                                    <img src={req.avatar} alt={req.personalInfo.name} className="w-full h-full object-cover rounded-xl" />
+                                                ) : (
+                                                    (req.avatar || req.personalInfo.name.charAt(0)).toUpperCase()
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-semibold text-text-primary truncate group-hover:text-primary transition-colors">{req.personalInfo.name}</h3>
+                                                <p className="text-xs text-text-muted truncate">{req.personalInfo.mobileNo}</p>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <h3 className="font-semibold text-text-primary truncate group-hover:text-primary transition-colors">{req.personalInfo.name}</h3>
-                                            <p className="text-xs text-text-muted truncate">{req.personalInfo.mobileNo} • {req.personalInfo.email}</p>
-                                        </div>
-                                    </div>
+                                    </td>
 
                                     {/* Requested Plan */}
-                                    <div className="flex items-center md:block md:text-center md:justify-self-center">
-                                        <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Requested Plan: </span>
+                                    <td className="p-4 text-center">
                                         <p className="text-text-primary font-medium">{req.membership.planName || 'N/A'}</p>
-                                    </div>
+                                    </td>
 
                                     {/* Requested Date */}
-                                    <div className="flex items-center md:block md:text-center md:justify-self-center">
-                                        <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Request Date: </span>
+                                    <td className="p-4 text-center">
                                         <p className="text-text-primary font-medium">{new Date(req.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
-                                    </div>
+                                    </td>
 
                                     {/* Status */}
-                                    <div className="flex items-center md:block md:text-center md:justify-self-center">
-                                        <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Status: </span>
-                                        <div className="flex flex-col gap-1 md:items-center">
-                                            <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase">
-                                                {req.membership.status}
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <td className="p-4 text-center">
+                                        <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase inline-block">
+                                            {req.membership.status}
+                                        </span>
+                                    </td>
 
                                     {/* Action */}
-                                    <div className="flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0">
-                                        {!isReadOnly ? (
-                                            <>
-                                                <Button
-                                                    variant="secondary"
-                                                    onClick={() => handleReject(req._id)}
-                                                    className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10 px-3 py-1.5 md:!p-2 lg:px-3 lg:py-1.5 text-xs flex items-center justify-center gap-1"
-                                                    isLoading={actionId === req._id && actionType === 'reject'}
-                                                    disabled={actionId !== null}
-                                                >
-                                                    <X size={14} />
-                                                    <span className="inline md:hidden lg:inline">REJECT</span>
-                                                </Button>
-                                                <Button
-                                                    onClick={() => {
-                                                        const plan = plans.find(p => p._id === req.membership?.planId);
-                                                        setSelectedRequest(req);
-                                                        setSelectedPlan(plan);
-                                                        setShowPaymentModal(true);
-                                                    }}
-                                                    className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20 px-3 py-1.5 md:!p-2 lg:px-3 lg:py-1.5 text-xs flex items-center justify-center gap-1"
-                                                    disabled={actionId !== null}
-                                                >
-                                                    <Check size={14} />
-                                                    <span className="inline md:hidden lg:inline">APPROVE</span>
-                                                </Button>
-                                            </>
-                                        ) : (
-                                            <span className="text-text-muted text-xs italic">Read Only Mode</span>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                                    <td className="p-4 text-right">
+                                        <div className="flex gap-2 items-center justify-end shrink-0">
+                                            {!isReadOnly ? (
+                                                <>
+                                                    <Button
+                                                        variant="secondary"
+                                                        onClick={() => handleReject(req._id)}
+                                                        className="!text-red-400 !border-red-500/20 hover:!bg-red-500/10 px-3 py-1.5 text-xs flex items-center justify-center gap-1"
+                                                        isLoading={actionId === req._id && actionType === 'reject'}
+                                                        disabled={actionId !== null}
+                                                    >
+                                                        <X size={14} />
+                                                        <span className="hidden xl:inline">REJECT</span>
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => {
+                                                            const plan = plans.find(p => p._id === req.membership?.planId);
+                                                            setSelectedRequest(req);
+                                                            setSelectedPlan(plan);
+                                                            setShowPaymentModal(true);
+                                                        }}
+                                                        className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20 px-3 py-1.5 text-xs flex items-center justify-center gap-1"
+                                                        disabled={actionId !== null}
+                                                    >
+                                                        <Check size={14} />
+                                                        <span className="hidden xl:inline">APPROVE</span>
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <span className="text-text-muted text-xs italic">Read Only Mode</span>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <div className="p-4 border-t border-border">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={Math.ceil(requests.length / 10)}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={Math.ceil(requests.length / 10)}
-                        onPageChange={setCurrentPage}
-                    />
                 </div>
             )}
 

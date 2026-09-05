@@ -25,6 +25,14 @@ const updatePaymentValidation = [
   stringValidation('paymentMethod', true)
 ];
 
+const overridePaymentValidation = [
+  mongoIdValidation('id', 'param'),
+  mongoIdValidation('planId', 'body'),
+  numberValidation('amount', true),
+  numberValidation('paidAmount', true),
+  stringValidation('paymentMethod', true)
+];
+
 router.route('/')
   .post(protect, authorize('owner', 'client'), recordPaymentValidation, validate, paymentController.recordPayment)
   .get(protect, authorize('owner', 'superadmin'), [query('gymId').optional().isString().trim()], validate, paymentController.getPayments);
@@ -36,6 +44,8 @@ router.post('/create-order', protect, authorize('owner', 'client'), [
 
 router.route('/:id')
   .put(protect, authorize('owner', 'client'), updatePaymentValidation, validate, paymentController.updatePayment);
+
+router.put('/:id/override', protect, authorize('owner'), overridePaymentValidation, validate, paymentController.overridePaymentPlan);
 
 router.get('/:id/pdf', protect, authorize('owner', 'client'), paymentController.downloadInvoicePDF);
 router.post('/:id/send-whatsapp', protect, authorize('owner'), paymentController.resendWhatsAppInvoice);

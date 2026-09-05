@@ -392,24 +392,41 @@ const InactiveClients = () => {
 
       {/* ── Client list ── */}
       {loading ? (
-        <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
-          <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1.8fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            <div>Client Info</div><div className="text-center">Mobile No</div><div className="text-center">Plan</div><div className="text-center">Duration</div><div className="text-center">Days Left</div><div className="text-center">Status</div><div className="text-right">Actions</div>
-          </div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-border/50">
-              <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
-              <div className="flex-1 grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1.8fr] gap-2 items-center">
-                <div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div>
-                <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
-                <div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div>
-                <div className="h-4 w-28 bg-surface-divider rounded animate-pulse mx-auto"></div>
-                <div className="h-4 w-10 bg-surface-divider rounded animate-pulse mx-auto"></div>
-                <div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div>
-                <div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
-              </div>
-            </div>
-          ))}
+        <div className="bg-card rounded-xl border border-border overflow-x-auto shadow-lg animate-pulse">
+          <table className="w-full text-left border-collapse min-w-[850px]">
+            <thead>
+              <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
+                <th className="p-4 font-medium">Client Info</th>
+                <th className="p-4 font-medium text-center">Mobile No</th>
+                <th className="p-4 font-medium text-center">Plan</th>
+                <th className="p-4 font-medium text-center">Duration</th>
+                <th className="p-4 font-medium text-center">Days Left</th>
+                <th className="p-4 font-medium text-center">Status</th>
+                <th className="p-4 font-medium text-right pr-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {[...Array(5)].map((_, i) => (
+                <tr key={i}>
+                  <td className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
+                      <div>
+                        <div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div>
+                        <div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 text-center"><div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                  <td className="p-4 text-center"><div className="h-4 w-16 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                  <td className="p-4 text-center"><div className="h-4 w-28 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                  <td className="p-4 text-center"><div className="h-4 w-10 bg-surface-divider rounded animate-pulse mx-auto"></div></td>
+                  <td className="p-4 text-center"><div className="h-5 w-14 bg-surface-divider rounded-full animate-pulse mx-auto"></div></td>
+                  <td className="p-4 text-right"><div className="h-7 w-16 bg-surface-divider rounded-lg animate-pulse ml-auto"></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : filteredClients.length === 0 ? (
         <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
@@ -418,37 +435,42 @@ const InactiveClients = () => {
           <p className="text-sm mt-1 text-gray-600">Try adjusting your filters or search.</p>
         </div>
       ) : (
-        <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-x-auto shadow-lg">
-          {/* Table header */}
-          <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_2fr_1fr_1fr_1.8fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm md:min-w-[850px]">
-            <div>Client Info</div>
-            <div className="text-center">Mobile No</div>
-            <div className="text-center">Plan</div>
-            <div className="text-center">Duration</div>
-            <div className="text-center">Days Left</div>
-            <div className="text-center">Status</div>
-            <div className="text-right">Actions</div>
+        <div className="md:bg-card md:rounded-xl md:border md:border-border overflow-x-auto md:shadow-lg">
+          <table className="w-full text-left border-collapse md:min-w-[850px]">
+            <thead className="hidden md:table-header-group">
+              <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
+                <th className="p-4 font-medium">Client Info</th>
+                <th className="p-4 font-medium text-center">Mobile No</th>
+                <th className="p-4 font-medium text-center">Plan</th>
+                <th className="p-4 font-medium text-center">Duration</th>
+                <th className="p-4 font-medium text-center">Days Left</th>
+                <th className="p-4 font-medium text-center">Status</th>
+                <th className="p-4 font-medium text-right pr-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/0 md:divide-border block md:table-row-group">
+              {paginatedClients.map(client => (
+                <ClientCard
+                  key={client._id}
+                  client={client}
+                  onView={(c) => setViewClientId(c._id)}
+                  showReactivate={true}
+                  onReactivate={handleReactivate}
+                  onDuesClick={setDuesClient}
+                  onDelete={handleDelete}
+                  deleteLabel="Delete"
+                  hideReminders
+                />
+              ))}
+            </tbody>
+          </table>
+          <div className="p-4 border-t border-border">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredClients.length / itemsPerPage)}
+              onPageChange={setCurrentPage}
+            />
           </div>
-          <div className="flex flex-col">
-            {paginatedClients.map(client => (
-              <ClientCard
-                key={client._id}
-                client={client}
-                onView={(c) => setViewClientId(c._id)}
-                showReactivate={true}
-                onReactivate={handleReactivate}
-                onDuesClick={setDuesClient}
-                onDelete={handleDelete}
-                deleteLabel="Delete"
-                hideReminders
-              />
-            ))}
-          </div>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={Math.ceil(filteredClients.length / itemsPerPage)}
-            onPageChange={setCurrentPage}
-          />
         </div>
       )}
 

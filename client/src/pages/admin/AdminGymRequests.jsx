@@ -246,26 +246,45 @@ const AdminGymRequests = () => {
       </div>
 
       {loading ? (
-        <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg animate-pulse">
-          <div className="hidden md:grid grid-cols-[2.5fr_2fr_1.2fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            <div>Gym Info</div>
-            <div>Owner Contact</div>
-            <div className="text-center">Request Date</div>
-            <div className="text-center">Status</div>
-            <div className="text-right pr-4">Action</div>
-          </div>
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-4 border-b border-border/50">
-              <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
-              <div className="flex-1 grid grid-cols-[1.5fr_1.5fr_1.5fr_1fr_2fr] gap-2 items-center">
-                <div><div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div><div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div></div>
-                <div className="h-4 w-24 bg-surface-divider rounded animate-pulse"></div>
-                <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
-                <div className="h-5 w-16 bg-surface-divider rounded-full animate-pulse mx-auto"></div>
-                <div className="h-8 w-32 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
-              </div>
-            </div>
-          ))}
+        <div className="bg-card rounded-xl border border-border overflow-x-auto shadow-lg animate-pulse">
+          <table className="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
+                <th className="p-4 font-medium">Gym Info</th>
+                <th className="p-4 font-medium">Owner Contact</th>
+                <th className="p-4 font-medium text-center">Request Date</th>
+                <th className="p-4 font-medium text-center">Status</th>
+                <th className="p-4 font-medium text-right pr-4">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {[...Array(5)].map((_, i) => (
+                <tr key={i}>
+                  <td className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-surface-divider rounded-xl animate-pulse shrink-0"></div>
+                      <div>
+                        <div className="h-4 w-24 bg-surface-divider rounded animate-pulse mb-1"></div>
+                        <div className="h-3 w-16 bg-surface-divider rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="h-4 w-24 bg-surface-divider rounded animate-pulse"></div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <div className="h-4 w-20 bg-surface-divider rounded animate-pulse mx-auto"></div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <div className="h-5 w-16 bg-surface-divider rounded-full animate-pulse mx-auto"></div>
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="h-8 w-48 bg-surface-divider rounded-lg animate-pulse ml-auto"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : filteredRequests.length === 0 ? (
         <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
@@ -276,100 +295,106 @@ const AdminGymRequests = () => {
           </p>
         </div>
       ) : (
-        <div className="card p-0 bg-surface-secondary border border-border rounded-xl overflow-hidden shadow-lg">
-          {/* Table Header */}
-          <div className="hidden md:grid grid-cols-[2.5fr_2fr_1.2fr_1fr_2fr] gap-2 px-4 py-4 bg-surface-secondary/80 border-b border-border text-xs font-semibold text-text-secondary uppercase tracking-wider sticky top-0 z-10 backdrop-blur-sm">
-            <div>Gym Info</div>
-            <div>Owner Contact</div>
-            <div className="text-center">Request Date</div>
-            <div className="text-center">Status</div>
-            <div className="text-right pr-4">Action</div>
-          </div>
-
-          <div className="flex flex-col">
-            {paginatedRequests.map((gym) => (
-              <div key={gym._id} className="bg-surface-card border-b border-border hover:bg-white/[0.02] transition-colors group px-4 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-[2.5fr_2fr_1.2fr_1fr_2fr] gap-4 md:gap-2 items-center text-sm">
+        <div className="bg-card rounded-xl border border-border overflow-x-auto shadow-lg">
+          <table className="w-full text-left border-collapse min-w-[760px]">
+            <thead>
+              <tr className="bg-surface-hover/50 border-b border-border text-text-secondary text-xs tracking-wider uppercase">
+                <th className="p-4 font-medium">Gym Info</th>
+                <th className="p-4 font-medium">Owner Contact</th>
+                <th className="p-4 font-medium text-center">Request Date</th>
+                <th className="p-4 font-medium text-center">Status</th>
+                <th className="p-4 font-medium text-right pr-4">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {paginatedRequests.map((gym) => (
+                <tr key={gym._id} className="hover:bg-surface-divider/40 transition-colors group">
                   {/* Gym Info */}
-                  <div className="flex gap-3 items-center min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20 shrink-0 shadow-inner overflow-hidden">
-                      {gym.gymLogo ? (
-                        <img src={gym.gymLogo} alt={gym.gymName} className="w-full h-full object-cover rounded-xl" />
-                      ) : (
-                        gym.gymName?.charAt(0) || 'G'
-                      )}
+                  <td className="p-4">
+                    <div className="flex gap-3 items-center min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-black text-lg border border-amber-500/20 shrink-0 shadow-inner overflow-hidden">
+                        {gym.gymLogo ? (
+                          <img src={gym.gymLogo} alt={gym.gymName} className="w-full h-full object-cover rounded-xl" />
+                        ) : (
+                          gym.gymName?.charAt(0) || 'G'
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-text-primary truncate group-hover:text-primary transition-colors">{gym.gymName}</h3>
+                        <p className="text-xs text-text-muted truncate">
+                          ID: <span className="font-mono text-amber-400">{gym.gymId}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-text-primary truncate group-hover:text-primary transition-colors">{gym.gymName}</h3>
-                      <p className="text-xs text-text-muted truncate">
-                        ID: <span className="font-mono text-amber-400">{gym.gymId}</span> • {gym.city}, {gym.state}
-                      </p>
-                    </div>
-                  </div>
+                  </td>
 
                   {/* Owner Contact */}
-                  <div className="min-w-0">
-                    <p className="font-medium text-text-primary truncate">{gym.ownerName || '—'}</p>
-                    <p className="text-xs text-text-muted truncate">{gym.ownerPhone} • {gym.ownerEmail}</p>
-                  </div>
+                  <td className="p-4">
+                    <div className="min-w-0">
+                      <p className="font-medium text-text-primary truncate">{gym.ownerName || '—'}</p>
+                      <p className="text-xs text-text-muted truncate">{gym.ownerPhone}</p>
+                    </div>
+                  </td>
 
                   {/* Request Date */}
-                  <div className="flex items-center md:block md:text-center md:justify-self-center">
-                    <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Request Date: </span>
-                    <p className="text-text-primary font-medium">
+                  <td className="p-4 text-center">
+                    <p className="text-text-primary font-medium text-sm">
                       {new Date(gym.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}
                     </p>
-                  </div>
+                  </td>
 
                   {/* Status */}
-                  <div className="flex items-center md:block md:text-center md:justify-self-center">
-                    <span className="w-24 md:hidden text-text-muted text-xs font-semibold uppercase">Status: </span>
+                  <td className="p-4 text-center">
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[10px] font-bold uppercase tracking-wider">
                       Pending
                     </span>
-                  </div>
+                  </td>
 
                   {/* Actions */}
-                  <div className="flex gap-2 items-center justify-start md:justify-end shrink-0 mt-2 md:mt-0">
-                    <button
-                      onClick={() => setSelectedGym(gym)}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-surface-card hover:bg-surface-divider text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1"
-                    >
-                      <Eye size={14} />
-                      <span>VIEW</span>
-                    </button>
-                    <button
-                      onClick={() => setRejectModalGym(gym)}
-                      disabled={actionId !== null}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1 disabled:opacity-50"
-                    >
-                      <X size={14} />
-                      <span>REJECT</span>
-                    </button>
-                    <button
-                      onClick={() => handleApprove(gym)}
-                      disabled={actionId !== null}
-                      className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 flex items-center gap-1 transition-all disabled:opacity-50"
-                    >
-                      {actionId === gym._id && actionType === 'approve' ? (
-                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Check size={14} />
-                      )}
-                      <span>APPROVE</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
+                  <td className="p-4 text-right">
+                    <div className="flex gap-2 items-center justify-end shrink-0">
+                      <button
+                        onClick={() => setSelectedGym(gym)}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-surface-card hover:bg-surface-divider text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1"
+                      >
+                        <Eye size={14} />
+                        <span className="hidden xl:inline">VIEW</span>
+                      </button>
+                      <button
+                        onClick={() => setRejectModalGym(gym)}
+                        disabled={actionId !== null}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <X size={14} />
+                        <span className="hidden xl:inline">REJECT</span>
+                      </button>
+                      <button
+                        onClick={() => handleApprove(gym)}
+                        disabled={actionId !== null}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20 flex items-center gap-1 transition-all disabled:opacity-50"
+                      >
+                        {actionId === gym._id && actionType === 'approve' ? (
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Check size={14} />
+                        )}
+                        <span className="hidden xl:inline">APPROVE</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
           {filteredRequests.length > 10 && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(filteredRequests.length / 10)}
-              onPageChange={setCurrentPage}
-            />
+            <div className="p-4 border-t border-border">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredRequests.length / 10)}
+                onPageChange={setCurrentPage}
+              />
+            </div>
           )}
         </div>
       )}
