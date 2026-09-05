@@ -619,7 +619,7 @@ const PaymentLedger = () => {
             {loading ? (
                 <>
                     {/* Skeleton for dashboard cards */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
+                    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 mb-8">
                         {[...Array(4)].map((_, i) => (
                             <div key={i} className="card bg-surface-divider/80 border-border backdrop-blur-md p-3.5 sm:p-6 rounded-2xl shadow-lg border border-border/50">
                                 <div className="flex items-center gap-2.5 sm:gap-4">
@@ -667,14 +667,14 @@ const PaymentLedger = () => {
             ) : (
                 <>
                     {/* TOP DASHBOARD CARDS */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
+                    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 mb-8">
                         <div className="card bg-surface-divider/80 border-border backdrop-blur-md p-3.5 sm:p-6 rounded-2xl shadow-lg border border-border/50">
                             <div className="flex items-center gap-2.5 sm:gap-4">
                                 <div className="p-2.5 sm:p-4 rounded-xl bg-blue-500/10 text-blue-400 shrink-0">
                                     <CircleDollarSign size={20} className="sm:w-7 sm:h-7" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Total Revenue</p>
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1">Total Revenue</p>
                                     <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{totalRevenue.toLocaleString()}</h3>
                                 </div>
                             </div>
@@ -686,7 +686,7 @@ const PaymentLedger = () => {
                                     <TrendingUp size={20} className="sm:w-7 sm:h-7" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Amount Received</p>
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1">Amount Received</p>
                                     <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{netAmount.toLocaleString()}</h3>
                                     <p className="text-[10px] text-text-muted truncate hidden sm:block">After ₹{gatewayFee.toLocaleString()} Fee</p>
                                 </div>
@@ -699,7 +699,7 @@ const PaymentLedger = () => {
                                     <TrendingDown size={20} className="sm:w-7 sm:h-7" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Overall Expenses</p>
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1">Overall Expenses</p>
                                     <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{overallExpensesTotal.toLocaleString()}</h3>
                                 </div>
                             </div>
@@ -711,7 +711,7 @@ const PaymentLedger = () => {
                                     <CreditCard size={20} className="sm:w-7 sm:h-7" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1 truncate">Profit</p>
+                                    <p className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-0.5 sm:mb-1">Profit</p>
                                     <h3 className="text-lg sm:text-2xl font-black text-text-primary truncate">₹{profit.toLocaleString()}</h3>
                                 </div>
                             </div>

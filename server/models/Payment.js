@@ -30,7 +30,8 @@ const paymentSchema = new mongoose.Schema({
   invoiceMessageId: { type: String, default: null },
   invoicePDFUrl: { type: String, default: null },
   invoiceError: { type: String, default: null },
-  whatsappSendCount: { type: Number, default: 0 }
+  whatsappSendCount: { type: Number, default: 0 },
+  isEdited: { type: Boolean, default: false }
 }, { timestamps: true });
 
 paymentSchema.index({ clientId: 1 });

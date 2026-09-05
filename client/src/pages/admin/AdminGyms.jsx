@@ -410,7 +410,7 @@ const AdminGyms = () => {
                       >
                         <span className="flex items-center gap-1">
                           <Eye size={11} />
-                          <span className="hidden lg:inline">Profile</span>
+                          <span className="hidden xl:inline">Profile</span>
                         </span>
                       </ActionBtn>
 
@@ -423,7 +423,7 @@ const AdminGyms = () => {
                       >
                         <span className="flex items-center gap-1">
                           <Eye size={11} />
-                          <span className="hidden lg:inline">View</span>
+                          <span className="hidden xl:inline">View</span>
                         </span>
                       </ActionBtn>
 
@@ -435,7 +435,7 @@ const AdminGyms = () => {
                       >
                         <span className="flex items-center gap-1">
                           <Power size={11} />
-                          <span className="hidden lg:inline">
+                          <span className="hidden xl:inline">
                             {gym.isActive ? 'Deactivate' : 'Activate'}
                           </span>
                         </span>
@@ -449,7 +449,7 @@ const AdminGyms = () => {
                       >
                         <span className="flex items-center gap-1">
                           <Trash2 size={11} />
-                          <span className="hidden lg:inline">Delete</span>
+                          <span className="hidden xl:inline">Delete</span>
                         </span>
                       </ActionBtn>
                     </div>

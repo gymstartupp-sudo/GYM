@@ -191,7 +191,18 @@ const Transactions = () => {
 
     const handlePaymentSave = async (paymentData) => {
         try {
-            if (selectedPayment || paymentData._isUpdate) {
+            if (paymentData._isOverride) {
+                const paymentIdToUpdate = selectedPayment?._id || paymentData._paymentId;
+                await api.put(`/payment/${paymentIdToUpdate}/override`, {
+                    planId: paymentData.planId,
+                    amount: paymentData.amount,
+                    paidAmount: paymentData.paidAmount,
+                    startDate: paymentData.startDate,
+                    dueDate: paymentData.dueDate,
+                    paymentMethod: paymentData.paymentMethod
+                });
+                toast.success("Payment plan updated successfully");
+            } else if (selectedPayment || paymentData._isUpdate) {
                 // Update existing payment
                 const additionalAmount = Number(paymentData.paidAmount);
                 if (additionalAmount <= 0) {
@@ -572,7 +583,12 @@ const Transactions = () => {
                                                 <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-widest">Partially Paid</span>
                                             )}
                                         </div>
-                                        <h3 className="text-sm font-black text-gray-900">Invoice No : {selectedPayment.paymentId}</h3>
+                                        <h3 className="text-sm font-black text-gray-900 flex items-center justify-end gap-2">
+                                            Invoice No : {selectedPayment.paymentId}
+                                            {selectedPayment.isEdited && (
+                                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-purple-500/10 text-purple-600 border border-purple-500/20 uppercase tracking-widest">Edited</span>
+                                            )}
+                                        </h3>
                                         <p className="text-[10px] text-text-muted mt-0.5">Date: {new Date(selectedPayment.createdAt || selectedPayment.date).toLocaleDateString('en-GB').replace(/\//g, '-')}</p>
                                     </div>
                                 </div>
