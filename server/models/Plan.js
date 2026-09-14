@@ -10,7 +10,9 @@ const planSchema = new mongoose.Schema({
   isCustom: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   partialPaymentDueDays: { type: Number, default: 15 },
-  normalizedName: { type: String, trim: true, lowercase: true }
+  normalizedName: { type: String, trim: true, lowercase: true },
+  planType: { type: String, enum: ['regular', 'pt'], default: 'regular' },
+  totalSessions: { type: Number, default: 0 }
 }, { timestamps: true });
 
 // Pre-validate hook to normalize plan name
@@ -22,10 +24,10 @@ planSchema.pre('validate', function(next) {
 });
 
 // Enforce unique name among active plans (case-insensitive via normalizedName)
-planSchema.index({ normalizedName: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
+planSchema.index({ normalizedName: 1, planType: 1 }, { unique: true, partialFilterExpression: { isActive: true } });
 
 // Enforce unique duration among active standard plans
-planSchema.index({ durationMonths: 1 }, { unique: true, partialFilterExpression: { isCustom: false, isActive: true } });
+planSchema.index({ durationMonths: 1, planType: 1 }, { unique: true, partialFilterExpression: { isCustom: false, isActive: true } });
 
 const Plan = createTenantModelProxy('Plan', planSchema);
 Plan.schema = planSchema;

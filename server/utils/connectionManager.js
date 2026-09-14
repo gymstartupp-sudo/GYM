@@ -20,7 +20,7 @@ const getTenantConnection = async (dbName) => {
     throw new Error('Database name is required for tenant connection');
   }
 
-  if (mongoose.connection.readyState !== 1) {
+  if (mongoose.connection.readyState === 0) {
     throw new Error('Database is not connected');
   }
 
@@ -44,6 +44,9 @@ const getTenantConnection = async (dbName) => {
   const Feedback = conn.models.Feedback || conn.model('Feedback', require('../models/Feedback').schema);
   const Counter = conn.models.Counter || conn.model('Counter', require('../models/Counter').schema);
   const Setting = conn.models.Setting || conn.model('Setting', require('../models/Setting').schema);
+  const Staff = conn.models.Staff || conn.model('Staff', require('../models/Staff').schema);
+
+  PlanModel.syncIndexes().catch(console.error);
 
   // Migration: Run asynchronously in background to make connection retrieval instant
   // ponytail: runs on every new connection setup. If too many cold connections are established concurrently, background promises will run in parallel.
@@ -54,25 +57,28 @@ const getTenantConnection = async (dbName) => {
 
       for (const plan of plans) {
         const normName = plan.name ? plan.name.trim().replace(/\s+/g, ' ').toLowerCase() : '';
+        const pType = plan.planType || 'regular';
         
         if (plan.normalizedName !== normName) {
           await PlanModel.updateOne({ _id: plan._id }, { $set: { normalizedName: normName } });
         }
 
         // Check name duplication among active plans
-        if (seenNames.has(normName)) {
+        const nameKey = `${normName}_${pType}`;
+        if (seenNames.has(nameKey)) {
           await PlanModel.updateOne({ _id: plan._id }, { $set: { isActive: false } });
           continue;
         }
-        seenNames.add(normName);
+        seenNames.add(nameKey);
 
         // Check standard plan duration duplication
         if (!plan.isCustom) {
-          if (seenDurations.has(plan.durationMonths)) {
+          const durationKey = `${plan.durationMonths}_${pType}`;
+          if (seenDurations.has(durationKey)) {
             await PlanModel.updateOne({ _id: plan._id }, { $set: { isActive: false } });
             continue;
           }
-          seenDurations.add(plan.durationMonths);
+          seenDurations.add(durationKey);
         }
       }
 

@@ -364,6 +364,10 @@ exports.addClient = async (req, res, next) => {
       }
     });
 
+    // Remove the client from leads if they exist there
+    const Lead = require('../models/Lead');
+    await Lead.findOneAndDelete({ phone: personalInfo.mobileNo });
+
     // ── Create payment record — if this fails, rollback by deleting the client ──
     let paymentRecord;
     try {
@@ -385,8 +389,12 @@ exports.addClient = async (req, res, next) => {
     }
     // ────────────────────────────────────────────────────────────────────────
 
+    // Sync client status instantly so they are deactivated immediately if daysLeft <= -60
+    const { syncClientStatus } = require('../utils/syncStatus');
+    const updatedClient = await syncClientStatus(client._id, client);
+
     // Respond immediately — paymentHistory link and WhatsApp run in background
-    const enriched = calculateBalances(client, [paymentRecord]);
+    const enriched = calculateBalances(updatedClient || client, [paymentRecord]);
     res.status(201).json({ success: true, data: enriched });
 
     setImmediate(async () => {
@@ -429,6 +437,65 @@ exports.getClientById = async (req, res, next) => {
   }
 };
 
+// @desc    Update Client by ID (For Owner)
+// @route   PUT /api/client/:id
+// @access  Private (Owner)
+exports.updateClientById = async (req, res, next) => {
+  try {
+    const { personalInfo = {} } = req.body;
+    
+    // Explicitly allow mobileNo and email to be updated here by the owner
+    const ALLOWED_PERSONAL_INFO_FIELDS = [
+      'name', 'email', 'mobileNo', 'gender', 'dob', 'address',
+      'emergencyContact', 'city', 'state', 'pincode', 'bloodGroup',
+      'occupation', 'whatsappNumber', 'mobile', 'medicalCondition'
+    ];
+
+    const { sanitizePayload } = require('../utils/allowlist');
+    const { cleanData, hasInvalidFields } = sanitizePayload(personalInfo, ALLOWED_PERSONAL_INFO_FIELDS);
+    
+    if (hasInvalidFields) {
+      return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
+    }
+
+    const clientId = req.params.id;
+    const phoneRegex = /^[6-9]\d{9}$/;
+
+    if (cleanData.email) {
+      const emailExists = await Client.findOne({ 'personalInfo.email': cleanData.email, _id: { $ne: clientId } });
+      if (emailExists) return res.status(400).json({ success: false, message: 'Email already exists', field: 'email' });
+    }
+
+    if (cleanData.mobileNo) {
+      if (!phoneRegex.test(cleanData.mobileNo)) return res.status(400).json({ success: false, message: 'Enter a valid Indian mobile number', field: 'mobileNo' });
+      const mobileExists = await Client.findOne({ 'personalInfo.mobileNo': cleanData.mobileNo, _id: { $ne: clientId } });
+      if (mobileExists) return res.status(400).json({ success: false, message: 'Phone number already exists', field: 'mobileNo' });
+    }
+
+    const client = await Client.findById(clientId);
+    if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
+
+    // Explicitly copy only allowed fields into personalInfo
+    const currentPersonalInfo = client.personalInfo ? client.personalInfo.toObject() : {};
+    for (const field of ALLOWED_PERSONAL_INFO_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(cleanData, field)) {
+        currentPersonalInfo[field] = cleanData[field];
+      }
+    }
+    client.personalInfo = currentPersonalInfo;
+    await client.save();
+
+    // Fetch payments to return enriched doc
+    const Payment = require('../models/Payment');
+    const payments = await Payment.find({ clientId }).lean();
+    const enriched = calculateBalances(client, payments);
+    
+    res.status(200).json({ success: true, data: enriched });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Deactivate Client (soft delete)
 // @route   PUT /api/client/:id/deactivate
 // @access  Private (Owner)
@@ -453,13 +520,14 @@ exports.deleteClient = async (req, res, next) => {
     const client = await Client.findById(req.params.id);
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
     
-    client.isDeleted = true;
-    client.deletedAt = new Date();
-    client.deletedBy = req.user?._id || null;
+    // Hard delete associated payments first
+    const Payment = require('../models/Payment');
+    await Payment.deleteMany({ clientId: client._id.toString() });
     
-    await client.save();
+    // Hard delete the client
+    await Client.findByIdAndDelete(req.params.id);
     
-    res.status(200).json({ success: true, message: 'Client deleted successfully', data: {} });
+    res.status(200).json({ success: true, message: 'Client permanently deleted successfully', data: {} });
   } catch (err) {
     next(err);
   }

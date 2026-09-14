@@ -55,6 +55,7 @@ router.put('/restore/by-contact', protect, authorize('owner'), clientController.
 
 router.route('/:id')
   .get(protect, authorize('owner', 'superadmin', 'developer'), [mongoIdValidation('id', 'param')], validate, clientController.getClientById)
+  .put(protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.updateClientById)
   .delete(protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.deleteClient);
 
 router.put('/:id/restore', protect, authorize('owner'), [mongoIdValidation('id', 'param')], validate, clientController.restoreClient);

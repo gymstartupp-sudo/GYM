@@ -133,10 +133,6 @@ const InactiveClients = () => {
   const [reactivateClientId, setReactivateClientId] = useState(null);
   const [reactivateClientName, setReactivateClientName] = useState('');
 
-  // Delete confirmation modal states
-  const [deleteClientId, setDeleteClientId] = useState(null);
-  const [deleteClientName, setDeleteClientName] = useState('');
-
   // Payment Renewal Modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedClientForRenewal, setSelectedClientForRenewal] = useState(null);
@@ -262,24 +258,6 @@ const InactiveClients = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to process payment');
       throw error;
-    }
-  };
-
-  const handleDelete = async (client) => {
-    setDeleteClientId(client._id);
-    setDeleteClientName(client.personalInfo.name);
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteClientId) return;
-    try {
-      await api.delete(`/client/${deleteClientId}`);
-      toast.success('Client deleted successfully');
-      setDeleteClientId(null);
-      setDeleteClientName('');
-      fetchClients();
-    } catch (error) {
-      toast.error('Failed to delete client');
     }
   };
 
@@ -457,8 +435,6 @@ const InactiveClients = () => {
                   showReactivate={true}
                   onReactivate={handleReactivate}
                   onDuesClick={setDuesClient}
-                  onDelete={handleDelete}
-                  deleteLabel="Delete"
                   hideReminders
                 />
               ))}
@@ -589,15 +565,6 @@ const InactiveClients = () => {
         confirmLabel="Reactivate"
       />
 
-      <ConfirmModal
-        isOpen={!!deleteClientId}
-        onCancel={() => { setDeleteClientId(null); setDeleteClientName(''); }}
-        onConfirm={confirmDelete}
-        title="Delete Client"
-        message="Are you sure you want to delete this client? Their historical records will be preserved. If they register again with the same phone number or email, their previous details can be retrieved automatically."
-        confirmLabel="Delete"
-        danger
-      />
 
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { UserPlus, Check, X, Clock, AlertTriangle } from 'lucide-react';
+import { UserPlus, Check, X, Clock, AlertTriangle, Eye } from 'lucide-react';
 import Button from '../../components/Button';
 import PaymentModal from '../../components/PaymentModal';
 import Pagination from '../../components/Pagination';
@@ -23,6 +23,7 @@ const ClientRequests = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [rejectModalId, setRejectModalId] = useState(null);
+    const [viewModalClient, setViewModalClient] = useState(null);
 
     const fetchRequests = async () => {
         setLoading(true);
@@ -209,6 +210,13 @@ const ClientRequests = () => {
                                         <div className="flex gap-2 items-center justify-end shrink-0">
                                             {!isReadOnly ? (
                                                 <>
+                                                    <button
+                                                        onClick={() => setViewModalClient(req)}
+                                                        title="View Details"
+                                                        className="p-1.5 bg-surface-divider text-blue-400 hover:bg-blue-400/10 rounded-lg transition-colors border border-border"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
                                                     <Button
                                                         variant="secondary"
                                                         onClick={() => handleReject(req._id)}
@@ -327,6 +335,79 @@ const ClientRequests = () => {
                     </div>,
                     document.body
                 )
+            )}
+
+            {/* View Client Modal */}
+            {viewModalClient && createPortal(
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setViewModalClient(null)}></div>
+                    <div className="relative w-full max-w-2xl bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-2xl p-6 text-text-primary animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+                            <h2 className="text-xl font-bold flex items-center gap-2 text-text-primary">
+                                Client Registration Details
+                            </h2>
+                            <button
+                                onClick={() => setViewModalClient(null)}
+                                className="p-1 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Name</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.name || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Phone</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.mobileNo || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Email</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.email || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Gender</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.gender || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Date of Birth</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.dob ? new Date(viewModalClient.personalInfo.dob).toLocaleDateString('en-GB') : '-'}</p>
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Address</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.address || '-'}</p>
+                                </div>
+                            </div>
+                            <div className="border-t border-border pt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">State</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.state || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">City</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.city || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Pincode</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.pincode || '-'}</p>
+                                </div>
+                            </div>
+                            <div className="border-t border-border pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Emergency Contact</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.emergencyContact || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase tracking-wider text-text-muted font-semibold mb-1">Medical Condition</p>
+                                    <p className="font-medium text-text-primary">{viewModalClient.personalInfo?.medicalCondition || 'None'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

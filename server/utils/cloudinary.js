@@ -162,9 +162,41 @@ const uploadIssueAttachmentToCloudinary = async (filePath, type = 'image') => {
   }
 };
 
+const uploadCustomMessageMediaToCloudinary = async (filePath, type = 'image') => {
+  if (!filePath) {
+    throw new Error('File path is required for Cloudinary upload');
+  }
+
+  try {
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Local file not found at: ${filePath}`);
+    }
+
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: 'gym_campaigns',
+      resource_type: type === 'video' ? 'video' : 'image'
+    });
+
+    fs.unlink(filePath, (err) => {
+      if (err) console.error(`Failed to delete local campaign file at ${filePath}:`, err);
+    });
+
+    return result.secure_url;
+  } catch (error) {
+    if (fs.existsSync(filePath)) {
+      fs.unlink(filePath, (err) => {
+        if (err) console.error(`Failed to delete local campaign file on error at ${filePath}:`, err);
+      });
+    }
+    console.error('Cloudinary campaign upload error:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   uploadLogoToCloudinary,
   uploadBillToCloudinary,
   uploadPDFToCloudinary,
-  uploadIssueAttachmentToCloudinary
+  uploadIssueAttachmentToCloudinary,
+  uploadCustomMessageMediaToCloudinary
 };

@@ -108,7 +108,7 @@ const FeedbackList = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight flex items-center gap-3">
-          Client Feedback
+          Feedback & Complaints
         </h1>
         <p className="text-text-secondary mt-2 text-base md:text-lg">Monitor, read, and manage feedback submitted by your gym members.</p>
       </div>
@@ -135,6 +135,7 @@ const FeedbackList = () => {
                 <tr>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Client Info</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Type</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Subject</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Action</th>
@@ -159,6 +160,13 @@ const FeedbackList = () => {
                     {/* Date */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary text-center">
                       {formatDate(item.createdAt)}
+                    </td>
+
+                    {/* Type */}
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${item.type === 'complaint' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30' : 'bg-primary/10 text-primary border border-primary/30'}`}>
+                        {item.type || 'feedback'}
+                      </span>
                     </td>
 
                     {/* Subject */}
@@ -220,10 +228,12 @@ const FeedbackList = () => {
 
             {/* Modal Body */}
             <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
                 <div>
-                  <span className="block text-xs uppercase tracking-wider text-text-muted font-medium mb-1">Date</span>
-                  <div className="text-sm font-semibold text-text-primary">{formatDate(selectedFeedback.createdAt)}</div>
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <MessageSquare className={selectedFeedback.type === 'complaint' ? 'text-rose-500' : 'text-primary'} /> {selectedFeedback.type === 'complaint' ? 'Complaint Details' : 'Feedback Details'}
+                  </h2>
+                  <p className="text-xs text-text-secondary mt-1">Submitted on {formatDate(selectedFeedback.createdAt)}</p>
                 </div>
 
                 <div>

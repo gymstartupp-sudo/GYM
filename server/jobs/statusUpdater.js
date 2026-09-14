@@ -69,6 +69,20 @@ const runOverdueCheck = async () => {
               clientsSkipped++;
             }
           }
+
+          // 3. Auto-move clients to Inactive if endDate is more than 60 days in the past
+          const sixtyDaysAgo = new Date();
+          sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+          
+          await Client.updateMany(
+            { 
+              status: { $ne: 'Inactive' }, 
+              isDeleted: { $ne: true }, 
+              'membership.endDate': { $lt: sixtyDaysAgo } 
+            },
+            { $set: { status: 'Inactive', isActive: false } }
+          );
+
         });
       } catch (gymErr) {
         console.error(`Error in runOverdueCheck for gym ${gym.gymId} (${gym.dbName}):`, gymErr);
@@ -89,9 +103,9 @@ const runOverdueCheck = async () => {
   }
 };
 
-// Run every day at 11:00 AM IST
-cron.schedule('00 06 * * *', async () => {
-  console.log('Running statusUpdater job...');
+// Run every day at 12:00 AM IST
+cron.schedule('00 00 * * *', async () => {
+  console.log('Running statusUpdater job at midnight...');
   try {
     await runOverdueCheck();
     console.log('statusUpdater job completed.');

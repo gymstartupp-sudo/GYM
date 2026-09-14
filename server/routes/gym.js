@@ -33,4 +33,7 @@ router.put('/profile/logo', protect, authorize('owner'), uploadLogo.single('logo
 router.put('/change-password', protect, authorize('owner'), changePasswordValidation, validate, gymController.changeGymPassword);
 router.get('/dashboard', protect, authorize('owner'), gymController.getDashboardStats);
 
+router.get('/access-control', protect, authorize('owner'), gymController.getAccessControl);
+router.put('/access-control', protect, authorize('owner'), gymController.updateAccessControl);
+
 module.exports = router;

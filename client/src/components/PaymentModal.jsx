@@ -173,7 +173,7 @@ const PaymentModal = ({
                         const plan = plans.find(p => p._id === pendingPayment.planId);
                         if (plan) {
                             setSelectedPlan(plan);
-                            setPlanSearchQuery(plan.name);
+                            setPlanSearchQuery(plan.name + (plan.planType === 'pt' ? ' / PT' : ''));
                         }
                         setFormData(prev => ({
                             ...prev,
@@ -190,7 +190,7 @@ const PaymentModal = ({
             }
             if (planData) {
                 setSelectedPlan(planData);
-                setPlanSearchQuery(planData.name || '');
+                setPlanSearchQuery(planData.name ? (planData.name + (planData.planType === 'pt' ? ' / PT' : '')) : '');
                 setFormData(prev => ({
                     ...prev,
                     amount: initialData.amount !== undefined ? initialData.amount : planData.price,
@@ -283,11 +283,15 @@ const PaymentModal = ({
         }
     }, [paymentType, isUpdateMode, computedDueDateVal]);
 
+    const activePlanObj = selectedPlan || planData;
+    const planAllowsPartial = activePlanObj ? activePlanObj.partialPaymentDueDays !== 0 : true;
+    const canShowPartial = allowPartialPayments && planAllowsPartial;
+
     useEffect(() => {
-        if (!allowPartialPayments) {
+        if (!canShowPartial) {
             setPaymentType('full');
             setFormData(prev => {
-                const fullPayAmt = isUpdateMode ? outstandingBalance : (selectedPlan?.price || planData?.price || prev.amount || 0);
+                const fullPayAmt = isUpdateMode ? outstandingBalance : (activePlanObj?.price || prev.amount || 0);
                 return {
                     ...prev,
                     paidAmount: fullPayAmt,
@@ -295,7 +299,7 @@ const PaymentModal = ({
                 };
             });
         }
-    }, [allowPartialPayments, isUpdateMode, outstandingBalance, selectedPlan, planData]);
+    }, [canShowPartial, isUpdateMode, outstandingBalance, activePlanObj]);
 
     if (!isOpen) return null;
 
@@ -346,7 +350,7 @@ const PaymentModal = ({
                 const plan = plans.find(p => p._id === pendingPayment.planId);
                 if (plan) {
                     setSelectedPlan(plan);
-                    setPlanSearchQuery(plan.name);
+                    setPlanSearchQuery(plan.name + (plan.planType === 'pt' ? ' / PT' : ''));
                 }
                 setFormData(prev => ({
                     ...prev,
@@ -415,7 +419,7 @@ const PaymentModal = ({
 
     const handlePlanSelect = (plan) => {
         setSelectedPlan(plan);
-        setPlanSearchQuery(plan.name);
+        setPlanSearchQuery(plan.name + (plan.planType === 'pt' ? ' / PT' : ''));
         setShowPlanDropdown(false);
         setFormData(prev => ({
             ...prev,
@@ -723,7 +727,7 @@ const PaymentModal = ({
                                             onBlur={() => {
                                                 // Restore selected plan name if user didn't pick a new one
                                                 setTimeout(() => {
-                                                    if (selectedPlan) setPlanSearchQuery(selectedPlan.name);
+                                                    if (selectedPlan) setPlanSearchQuery(selectedPlan.name + (selectedPlan.planType === 'pt' ? ' / PT' : ''));
                                                 }, 200);
                                             }}
                                         />
@@ -735,7 +739,7 @@ const PaymentModal = ({
                                                 if (!selectedClient) return;
                                                 if (showPlanDropdown) {
                                                     setShowPlanDropdown(false);
-                                                    if (selectedPlan) setPlanSearchQuery(selectedPlan.name);
+                                                    if (selectedPlan) setPlanSearchQuery(selectedPlan.name + (selectedPlan.planType === 'pt' ? ' / PT' : ''));
                                                 } else {
                                                     setPlanSearchQuery('');
                                                     setShowPlanDropdown(true);
@@ -766,7 +770,11 @@ const PaymentModal = ({
                                                                 <Package size={16} />
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-bold text-text-primary group-hover:text-text-primary transition-colors">{p.name}</p>
+                                                                <p className="text-sm font-bold text-text-primary group-hover:text-text-primary transition-colors flex items-center gap-2">
+                                                                    {p.name}
+                                                                    {p.planType === 'pt' && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-black tracking-widest border border-primary/30">PT</span>}
+                                                                </p>
+                                                                <p className="text-[10px] text-text-muted font-bold">₹{p.price?.toLocaleString('en-IN')} for {p.durationMonths} Mo</p>
                                                             </div>
                                                         </div>
                                                         {selectedPlan?._id === p._id && <Check size={16} className="text-primary" />}
@@ -836,7 +844,9 @@ const PaymentModal = ({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Total Amount</label>
+                            <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">
+                                Plan Price
+                            </label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
                                 <input
@@ -849,109 +859,119 @@ const PaymentModal = ({
                         </div>
                         <div>
                             <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
-                            <select
-                                className="w-full bg-surface-primary border border-border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all appearance-none"
-                                value={formData.paymentMethod}
-                                onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                                disabled={isSubmitting}
-                            >
-                                <option value="cash">Cash</option>
-                                <option value="upi">UPI</option>
-                                <option value="card">Card</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    className="w-full bg-surface-primary border border-border rounded-xl p-3 pr-10 text-text-primary font-bold focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                    value={formData.paymentMethod}
+                                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                                    disabled={isSubmitting}
+                                >
+                                    <option value="cash">Cash</option>
+                                    <option value="upi">UPI</option>
+                                    <option value="card">Card</option>
+                                </select>
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={16} />
+                            </div>
                         </div>
                     </div>
 
                     {/* Payment Completion Type */}
-                    <div className="bg-surface-divider/50 p-4 rounded-xl border border-border space-y-4">
-                        {allowPartialPayments && !isUpdateMode && (
-                            <div>
-                                <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => handlePaymentTypeChange('full')}
-                                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-text-primary shadow-lg shadow-emerald-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
-                                    >
-                                        Fully Paid
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handlePaymentTypeChange('partial')}
-                                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-text-primary shadow-lg shadow-amber-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
-                                    >
-                                        Partially Paid
-                                    </button>
+                    {canShowPartial && (
+                        <div className="bg-surface-divider/50 p-4 rounded-xl border border-border space-y-4">
+                            {!isUpdateMode && (
+                                <div>
+                                    <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handlePaymentTypeChange('full')}
+                                            className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-text-primary shadow-lg shadow-emerald-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
+                                        >
+                                            Fully Paid
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handlePaymentTypeChange('partial')}
+                                            className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-text-primary shadow-lg shadow-amber-500/20' : 'bg-surface-primary text-text-muted border border-border hover:border-gray-600'}`}
+                                        >
+                                            Partially Paid
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        <div className={`${allowPartialPayments ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : 'block'}`}>
-                            <div>
-                                <label className="block text-[10px] text-text-secondary uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    max={outstandingBalance}
-                                    className={` w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'}`}
-                                    value={formData.paidAmount}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === '' || (Number(val) >= 0 && Number(val) <= outstandingBalance)) {
-                                            setFormData({ ...formData, paidAmount: val });
-                                        }
-                                    }}
-                                    onWheel={(e) => e.currentTarget.blur()}
-                                    disabled={isSubmitting || paymentType === 'full'}
-                                    placeholder="Enter amount"
-                                />
-                                <p className="text-[10px] text-text-muted mt-1.5 ml-1 font-bold uppercase tracking-tight">
-                                    {isUpdateMode ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] text-text-secondary uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        min="0"
+                                        max={outstandingBalance}
+                                        className={` w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'}`}
+                                        value={formData.paidAmount}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '' || (Number(val) >= 0 && Number(val) <= outstandingBalance)) {
+                                                setFormData({ ...formData, paidAmount: val });
+                                            }
+                                        }}
+                                        onWheel={(e) => e.currentTarget.blur()}
+                                        disabled={isSubmitting || paymentType === 'full'}
+                                        placeholder="Enter amount"
+                                    />
+                                    <p className="text-[10px] text-text-muted mt-1.5 ml-1 font-bold uppercase tracking-tight">
+                                        {isUpdateMode ? (
+                                            <>
+                                                Already Paid: <span className="text-emerald-500">₹{totalPaidSoFar}</span> | Bal: <span className="text-primary">₹{outstandingBalance}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                Max Allowed: <span className="text-primary">₹{originalPlanPrice}</span> (Plan Price)
+                                            </>
+                                        )}
+                                    </p>
+                                    {paymentType === 'partial' && (
+                                        isEffectivelyFullPayment ? (
+                                            <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-emerald-500 flex justify-between px-1 animate-in fade-in duration-200">
+                                                <span>✓ Full Balance Covered</span>
+                                                <span>₹0.00 remaining</span>
+                                            </p>
+                                        ) : (
+                                            <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-rose-500 flex justify-between px-1">
+                                                <span>Balance Due:</span>
+                                                <span>₹{balance.toFixed(2)}</span>
+                                            </p>
+                                        )
+                                    )}
+                                </div>
+                                <div>
+                                    {paymentType === 'partial' && !isEffectivelyFullPayment && (
                                         <>
-                                            Already Paid: <span className="text-emerald-500">₹{totalPaidSoFar}</span> | Bal: <span className="text-primary">₹{outstandingBalance}</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            Max Allowed: <span className="text-primary">₹{originalPlanPrice}</span> (Plan Price)
+                                            <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
+                                                Calculated Due Date
+                                            </label>
+                                            <div className="w-full bg-surface-divider/80 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-surface-primary flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
+                                                <span>{formatDisplayDate(formData.dueDate)}</span>
+                                                <Calendar size={14} className="opacity-30" />
+                                            </div>
                                         </>
                                     )}
-                                </p>
-                                {paymentType === 'partial' && (
-                                    isEffectivelyFullPayment ? (
-                                        <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-emerald-500 flex justify-between px-1 animate-in fade-in duration-200">
-                                            <span>✓ Full Balance Covered</span>
-                                            <span>₹0.00 remaining</span>
-                                        </p>
-                                    ) : (
-                                        <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-rose-500 flex justify-between px-1">
-                                            <span>Balance Due:</span>
-                                            <span>₹{balance.toFixed(2)}</span>
-                                        </p>
-                                    )
-                                )}
-                            </div>
-                            <div>
-                                {paymentType === 'partial' && !isEffectivelyFullPayment && (
-                                    <>
-                                        <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
-                                            Calculated Due Date
-                                        </label>
-                                        <div className="w-full bg-surface-divider/80 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-surface-primary flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
-                                            <span>{formatDisplayDate(formData.dueDate)}</span>
-                                            <Calendar size={14} className="opacity-30" />
-                                        </div>
-                                    </>
-                                )}
-                                {paymentType === 'partial' && isEffectivelyFullPayment && (
-                                    <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
-                                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
-                                        <p className="text-[9px] text-text-secondary mt-1">Amount covers full remaining balance</p>
-                                    </div>
-                                )}
+                                    {paymentType === 'partial' && isEffectivelyFullPayment && (
+                                        <>
+                                            <label className="block text-[10px] text-emerald-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in duration-200">
+                                                Status
+                                            </label>
+                                            <div className="w-full bg-surface-divider/80 border border-emerald-500/50 rounded-xl p-3 text-emerald-400 font-bold bg-surface-primary flex items-center justify-between animate-in fade-in duration-200">
+                                                <span>Will mark as PAID</span>
+                                                <Check size={14} />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {formError && (
                         <div className="flex items-start gap-3 p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">

@@ -10,8 +10,7 @@ const gymSchema = new mongoose.Schema({
   owner: {
     name: { type: String, required: true, maxlength: 35 },
     email: { type: String, required: true, trim: true },
-    mobile: { type: String, trim: true },
-    phone: { type: String, trim: true }
+    mobile: { type: String, trim: true }
   },
   address: { type: String, required: true, maxlength: 100 },
   city: { type: String, required: true },
@@ -31,34 +30,44 @@ const gymSchema = new mongoose.Schema({
     helpContact: { type: String, default: "" },
     addressOnBill: { type: String, default: "", maxlength: 35 },
     regards: { type: String, default: "", maxlength: 35 },
-    greetingText: { type: String, default: "", maxlength: 35 },
     allowPartialPayments: { type: Boolean, default: true }
   },
-  reminderSettings: {
-    whatsappNumber: { type: String, default: "" },
-    gmail: { type: String, default: "" },
-    phoneNumber: { type: String, default: "" }
-  },
   socialMediaLinks: [{ platform: String, url: String }],
+  alternateContacts: { type: String, default: "" },
+  googleReviewLink: { type: String, default: "" },
   dbName: { type: String, required: true },
   requestApproved: { type: Boolean, default: false },
   status: { type: String, default: 'Pending' },
-  subscription: { type: String, default: 'Premium' },
-  isActive: { type: Boolean, default: false }
+  isActive: { type: Boolean, default: false },
+  adminConfig: {
+    email: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    password: { type: String },
+    allowedTabs: [{ type: String, default: ['Dashboard', 'Clients', 'Inactive Clients', 'Deleted Clients', 'Plans', 'Clients Payment', 'Dues', 'Expired', 'Payment Ledger', 'Requests', 'Feedback', 'Staff', 'Leads', 'Custom Messages'] }]
+  }
 }, { timestamps: true });
 
 gymSchema.pre('save', async function (next) {
-  if (!this.isModified('password') || !this.password) return next();
-  if (this.password.startsWith('$2a$') || this.password.startsWith('$2b$') || this.password.startsWith('$2y$')) {
-    return next();
-  }
   const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+
+  if (this.isModified('password') && this.password && !this.password.startsWith('$2')) {
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+
+  if (this.isModified('adminConfig.password') && this.adminConfig?.password && !this.adminConfig.password.startsWith('$2')) {
+    this.adminConfig.password = await bcrypt.hash(this.adminConfig.password, salt);
+  }
+
   next();
 });
 
 gymSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+gymSchema.methods.matchAdminPassword = async function (enteredPassword) {
+  if (!this.adminConfig?.password) return false;
+  return await bcrypt.compare(enteredPassword, this.adminConfig.password);
 };
 
 module.exports = mongoose.model('Gym', gymSchema);

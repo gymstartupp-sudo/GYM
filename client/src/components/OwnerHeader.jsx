@@ -730,9 +730,17 @@ const OwnerHeader = ({
                   </div>
 
                   {/* Name */}
-                  <h3 className="text-lg font-bold text-text-primary tracking-wide text-center uppercase mb-1">
+                  <h3 className="text-lg font-bold text-text-primary tracking-wide text-center uppercase mb-1 flex items-center justify-center gap-2">
                     {gymName}
                   </h3>
+
+                  {user?.isMasterAdmin && (
+                    <div className="flex justify-center mb-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 tracking-wider">
+                        ADMIN ACCOUNT
+                      </span>
+                    </div>
+                  )}
 
                   {/* Email */}
                   <p className="text-xs text-text-secondary text-center mb-4 truncate max-w-full" title={gymEmail}>

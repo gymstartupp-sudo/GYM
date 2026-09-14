@@ -98,8 +98,16 @@ const syncClientStatus = async (clientId, preloadedClient = null) => {
       };
     }
 
-    if (client.membership && client.membership.status) {
-      client.membership.status = client.membership.status.toLowerCase();
+    if (client.membership) {
+      if (client.membership.status) {
+        client.membership.status = client.membership.status.toLowerCase();
+      }
+
+      // Auto-deactivate if plan expired 60 or more days ago
+      if (client.membership.daysLeft <= -60 && client.isActive !== false) {
+        client.isActive = false;
+        if (!client.deactivatedAt) client.deactivatedAt = new Date();
+      }
     }
 
     await client.save();

@@ -26,6 +26,7 @@ const Settings = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [targetAccount, setTargetAccount] = useState('admin');
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Password visibility states
@@ -100,7 +101,8 @@ const Settings = () => {
     try {
       await api.put('/gym/change-password', {
         currentPassword,
-        newPassword
+        newPassword,
+        targetAccount: user.isMasterAdmin ? targetAccount : 'gym'
       });
       toast.success('Password updated successfully');
       setCurrentPassword('');
@@ -115,8 +117,8 @@ const Settings = () => {
   };
 
   const handleSavePlanDueDays = async (planId, partialPaymentDueDays) => {
-    if (partialPaymentDueDays === '' || isNaN(Number(partialPaymentDueDays)) || Number(partialPaymentDueDays) < 1) {
-      toast.error('Please enter a valid number of days (at least 1)');
+    if (partialPaymentDueDays === '' || isNaN(Number(partialPaymentDueDays)) || Number(partialPaymentDueDays) < 0) {
+      toast.error('Please enter a valid number of days (0 or more)');
       return;
     }
     try {
@@ -243,7 +245,7 @@ const Settings = () => {
           <div className="space-y-4 pt-4 border-t border-border/60">
             <div className="space-y-1">
               <span className="text-sm font-bold text-text-primary block">Plan Due Days Offset</span>
-              <span className="text-xs text-text-secondary">Configure the number of days from the start date for partial payments to be completed for each plan.</span>
+              <span className="text-xs text-text-secondary">Configure the number of days from the start date for partial payments to be completed for each plan. Enter 0 if partial payments are NOT allowed for a specific plan.</span>
             </div>
             {loadingPlans ? (
               <div className="flex justify-center py-4">
@@ -256,19 +258,22 @@ const Settings = () => {
                 {plans.map((p) => (
                   <div key={p._id} className="flex items-center justify-between p-3.5 bg-surface-divider/40 border border-border/60 rounded-xl">
                     <div className="flex-1 min-w-0 pr-3">
-                      <span className="text-sm font-semibold text-text-primary block truncate">{p.name}</span>
+                      <span className="text-sm font-semibold text-text-primary flex items-center gap-2 truncate">
+                        {p.name}
+                        {p.planType === 'pt' && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-black tracking-widest border border-primary/30">PT</span>}
+                      </span>
                       <span className="text-xs text-text-muted">₹{p.price?.toLocaleString('en-IN')} • {p.durationMonths} Mo</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
-                        min="1"
+                        min="0"
                         max="365"
                         disabled={isReadOnly}
                         className={`w-20 bg-surface-primary border border-border rounded-lg px-2.5 py-1.5 text-center text-sm text-text-primary font-bold focus:border-primary outline-none ${isReadOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
                         value={p.partialPaymentDueDays ?? 15}
                         onChange={(e) => {
-                          const val = e.target.value === '' ? '' : Math.max(1, Number(e.target.value));
+                          const val = e.target.value === '' ? '' : Math.max(0, Number(e.target.value));
                           setPlans(prev => prev.map(item => item._id === p._id ? { ...item, partialPaymentDueDays: val } : item));
                         }}
                       />
@@ -297,6 +302,20 @@ const Settings = () => {
             <h2 className="text-xl font-semibold text-text-primary">Security & Password</h2>
           </div>
           <form onSubmit={handlePasswordChange} className="space-y-6 max-w-xl">
+            {user.isMasterAdmin && (
+              <div className="space-y-1.5">
+                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">Target Account</span>
+                <select
+                  value={targetAccount}
+                  onChange={(e) => setTargetAccount(e.target.value)}
+                  className="input-field w-full cursor-pointer"
+                >
+                  <option value="admin">Master Admin Password</option>
+                  <option value="gym">Gym Account Password</option>
+                </select>
+                <p className="text-[10px] text-text-secondary mt-1">Select which password you want to update.</p>
+              </div>
+            )}
             {/* Current Password */}
             <div className="space-y-1 block group">
               <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium block">Current Password</span>
@@ -307,6 +326,7 @@ const Settings = () => {
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
                   className="input-field password-toggle-field w-full"
+                  maxLength="30"
                   disabled={isUpdating}
                   required
                 />
@@ -330,6 +350,7 @@ const Settings = () => {
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Enter new password"
                   className="input-field password-toggle-field w-full"
+                  maxLength="30"
                   disabled={isUpdating}
                   required
                 />
@@ -356,6 +377,7 @@ const Settings = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
                   className="input-field password-toggle-field w-full"
+                  maxLength="30"
                   disabled={isUpdating}
                   required
                 />

@@ -82,8 +82,9 @@ exports.registerGymOwner = async (req, res, next) => {
     const {
       gymName, gst, tagline, address, state, city, pincode, gymEmail, gymContact, socialMediaLinks, gymType, operatingDays, operatingHours, password,
       name, mobileNo, mailId,
-      whatsappNumber, gmail, phoneNumber,
-      billingIdPrefix, helpContact, addressOnBill, regards, greetingText
+      whatsappNumber, gmail, phoneNumber, alternateContacts, googleReviewLink,
+      billingIdPrefix, helpContact, addressOnBill, regards, greetingText,
+      adminConfig // This will be sent from frontend as an object or JSON string
     } = req.body;
 
     // Check if gym email already exists
@@ -96,6 +97,17 @@ exports.registerGymOwner = async (req, res, next) => {
     const contactExists = await Gym.findOne({ gymContact });
     if (contactExists) {
       return res.status(400).json({ success: false, message: 'Gym with this contact number already exists' });
+    }
+
+    // Parse adminConfig if it's sent as string
+    let parsedAdminConfig = typeof adminConfig === 'string' ? JSON.parse(adminConfig) : adminConfig;
+    if (parsedAdminConfig) {
+      if (parsedAdminConfig.email === gymEmail || parsedAdminConfig.email === mailId) {
+        return res.status(400).json({ success: false, message: 'Admin email cannot be the same as Gym or Owner email' });
+      }
+      if (parsedAdminConfig.phone === gymContact || parsedAdminConfig.phone === mobileNo) {
+        return res.status(400).json({ success: false, message: 'Admin phone cannot be the same as Gym or Owner contact' });
+      }
     }
 
     let logoUrl = '';
@@ -132,11 +144,11 @@ exports.registerGymOwner = async (req, res, next) => {
       gymEmail,
       gymContact,
       password,
+      adminConfig: parsedAdminConfig || undefined,
       owner: {
         name,
         email: mailId,
-        mobile: mobileNo,
-        phone: mobileNo
+        mobile: mobileNo
       },
       address,
       city,
@@ -156,21 +168,17 @@ exports.registerGymOwner = async (req, res, next) => {
         greetingText: greetingText || "",
         allowPartialPayments: true
       },
-      reminderSettings: {
-        whatsappNumber: whatsappNumber || "",
-        gmail: gmail || "",
-        phoneNumber: phoneNumber || ""
-      },
       socialMediaLinks: parsedSocialMediaLinks,
+      alternateContacts: alternateContacts || "",
+      googleReviewLink: googleReviewLink || "",
       requestApproved: false,
       status: 'Pending',
-      subscription: 'Premium',
       isActive: false
     });
 
     res.status(201).json({
       success: true,
-      message: 'Gym registration submitted successfully. Please wait for Super Admin approval.',
+      message: 'Gym registered successfully. Pending admin approval.',
       data: {
         gymId: newGymId,
         gymName: gym.gymName,
@@ -394,12 +402,35 @@ exports.universalLogin = async (req, res, next) => {
             });
           }
         }
-      } else if (role === 'owner') {
+      } else if (role === 'owner' || role === 'admin') {
         const gymQuery = isEmail
           ? { gymEmail: loginId, gymId }
           : { gymContact: loginId, gymId };
-        const gym = await Gym.findOne(gymQuery);
+        let gym = await Gym.findOne(gymQuery);
+        let isMasterAdmin = false;
+
+        // If role was explicitly admin, we could skip normal match, but checking both is fine 
+        // in case they selected 'Gym' but typed 'Admin' password? No, it's safer to check both based on role or just in general.
+        if (role === 'admin') {
+          gym = null; // Force admin check
+        }
+
         if (gym && (await gym.matchPassword(password))) {
+          // Normal Owner match
+        } else {
+          // Try matching Admin
+          const adminQuery = isEmail
+            ? { 'adminConfig.email': loginId, gymId }
+            : { 'adminConfig.phone': loginId, gymId };
+          gym = await Gym.findOne(adminQuery);
+          if (gym && (await gym.matchAdminPassword(password))) {
+            isMasterAdmin = true;
+          } else {
+            gym = null; // No match
+          }
+        }
+
+        if (gym) {
           if (!gym.requestApproved || gym.status === 'Pending') {
             return res.status(403).json({
               success: false,
@@ -416,8 +447,14 @@ exports.universalLogin = async (req, res, next) => {
             userId: gym._id,
             userRole: 'owner',
             gymIdStr: gym.gymId,
-            responseData: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
-            extraTokenData: { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }
+            responseData: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail, isMasterAdmin },
+            extraTokenData: { 
+              gymId: gym.gymId, 
+              gymName: gym.gymName, 
+              dbName: gym.dbName,
+              isMasterAdmin,
+              allowedTabs: isMasterAdmin ? [] : (gym.adminConfig?.allowedTabs || [])
+            }
           });
         }
       } else if (role === 'client') {
@@ -467,10 +504,25 @@ exports.universalLogin = async (req, res, next) => {
       }
     }
 
-    // 2. Check Gym
+    // 2. Check Gym Owner
     const gymQuery = isEmail ? { gymEmail: loginId } : { gymContact: loginId };
-    const gym = await Gym.findOne(gymQuery);
+    let gym = await Gym.findOne(gymQuery);
+    let isMasterAdmin = false;
+
     if (gym && (await gym.matchPassword(password))) {
+      // Normal match
+    } else {
+      // Check Master Admin
+      const adminQuery = isEmail ? { 'adminConfig.email': loginId } : { 'adminConfig.phone': loginId };
+      gym = await Gym.findOne(adminQuery);
+      if (gym && (await gym.matchAdminPassword(password))) {
+        isMasterAdmin = true;
+      } else {
+        gym = null;
+      }
+    }
+
+    if (gym) {
       if (!gym.requestApproved || gym.status === 'Pending') {
         return res.status(403).json({
           success: false,
@@ -487,8 +539,14 @@ exports.universalLogin = async (req, res, next) => {
         userId: gym._id,
         userRole: 'owner',
         gymIdStr: gym.gymId,
-        responseData: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail },
-        extraTokenData: { gymId: gym.gymId, gymName: gym.gymName, dbName: gym.dbName }
+        responseData: { gymId: gym.gymId, gymName: gym.gymName, gymEmail: gym.gymEmail, isMasterAdmin },
+        extraTokenData: { 
+          gymId: gym.gymId, 
+          gymName: gym.gymName, 
+          dbName: gym.dbName,
+          isMasterAdmin,
+          allowedTabs: isMasterAdmin ? [] : (gym.adminConfig?.allowedTabs || [])
+        }
       });
     }
 
@@ -643,6 +701,17 @@ exports.findGyms = async (req, res, next) => {
         gymName: gym.gymName,
         role: 'owner'
       });
+    }
+
+    // 2.5 Check if loginId belongs to an Admin Configuration
+    const adminQuery = isEmail ? { 'adminConfig.email': loginId } : { 'adminConfig.phone': loginId };
+    const adminGyms = await Gym.find(adminQuery).lean();
+    for (const ag of adminGyms) {
+       matchingGyms.push({
+          gymId: ag.gymId,
+          gymName: ag.gymName,
+          role: 'admin'
+       });
     }
 
     // 3. Check if loginId belongs to Client in tenant databases

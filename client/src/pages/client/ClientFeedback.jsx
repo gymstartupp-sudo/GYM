@@ -16,6 +16,7 @@ const ClientFeedback = () => {
   // Form states
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [feedbackType, setFeedbackType] = useState('feedback');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchFeedbacks = async () => {
@@ -44,8 +45,8 @@ const ClientFeedback = () => {
 
     setIsSubmitting(true);
     try {
-      await api.post('/feedback/submit', { subject, message });
-      toast.success('Feedback submitted successfully!');
+      await api.post('/feedback/submit', { subject, message, type: feedbackType });
+      toast.success(`${feedbackType === 'complaint' ? 'Complaint' : 'Feedback'} submitted successfully!`);
       setSubject('');
       setMessage('');
       setIsSendModalOpen(false);
@@ -108,9 +109,14 @@ const ClientFeedback = () => {
           </h1>
           <p className="text-text-secondary mt-2 text-base md:text-lg">View and track your submitted feedback.</p>
         </div>
-        <Button onClick={() => setIsSendModalOpen(true)} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-          <Plus size={16} /> Send Feedback
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={() => { setFeedbackType('feedback'); setIsSendModalOpen(true); }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+            <Plus size={16} /> Send Feedback
+          </Button>
+          <Button onClick={() => { setFeedbackType('complaint'); setIsSendModalOpen(true); }} className="flex items-center justify-center gap-2 w-full sm:w-auto bg-rose-500 hover:bg-rose-600 border-none text-white shadow-rose-500/20">
+            <Plus size={16} /> Send Complaint
+          </Button>
+        </div>
       </div>
 
       {/* Content Section */}
@@ -134,8 +140,9 @@ const ClientFeedback = () => {
             <table className="min-w-full text-left border-collapse">
               <thead className="sticky top-0 bg-surface-secondary/80 border-b border-border z-10 backdrop-blur-sm">
                 <tr className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-left">Subject</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-left">Date</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Type</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Subject</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-center">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-text-secondary text-right">Action</th>
                 </tr>
@@ -143,10 +150,15 @@ const ClientFeedback = () => {
               <tbody className="divide-y divide-border bg-surface-card">
                 {feedbacks.map((item) => (
                   <tr key={item._id} className="bg-surface-card hover:bg-white/[0.02] transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary text-left">
                       {formatDate(item.createdAt)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md transition-colors text-left">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary text-center">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${item.type === 'complaint' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30' : 'bg-primary/10 text-primary border border-primary/30'}`}>
+                        {item.type || 'feedback'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-text-primary font-medium truncate max-w-xs md:max-w-md transition-colors text-center">
                       {item.subject || <span className="text-text-muted italic">No Subject</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -172,9 +184,9 @@ const ClientFeedback = () => {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !isSubmitting && setIsSendModalOpen(false)}></div>
 
           <div className="relative w-full max-w-lg bg-surface-secondary border border-border rounded-2xl overflow-hidden shadow-2xl p-6 text-text-primary animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <MessageSquare className="text-primary" /> Send Feedback
+                <MessageSquare className={feedbackType === 'complaint' ? 'text-rose-500' : 'text-primary'} /> {feedbackType === 'complaint' ? 'Send Complaint' : 'Send Feedback'}
               </h2>
               <button
                 onClick={() => !isSubmitting && setIsSendModalOpen(false)}
@@ -184,6 +196,12 @@ const ClientFeedback = () => {
                 <X size={20} />
               </button>
             </div>
+            
+            <p className="text-xs text-text-secondary mb-5 p-3 bg-surface-divider/50 rounded-lg border border-border leading-relaxed">
+              {feedbackType === 'complaint' 
+                ? "Complaints are strictly confidential and only seen by the gym owner/admin."
+                : "Feedback is visible to everyone in the gym. Thank you for your suggestions!"}
+            </p>
 
             <form onSubmit={handleSendFeedback} className="space-y-5">
               <div>

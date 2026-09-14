@@ -150,9 +150,16 @@ const ClientHome = () => {
 
       {profile.gym && (
         <div className="card space-y-6 bg-surface-secondary border-border shadow-xl rounded-2xl p-6 md:p-8 hover:shadow-2xl transition-all duration-300 animate-in fade-in duration-500">
-          <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Gym Timings & Info
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-4 gap-4">
+            <h2 className="text-xl font-semibold text-text-primary flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-primary" /> Gym Timings & Info
+            </h2>
+            {profile.gym.googleReviewLink && (
+              <a href={profile.gym.googleReviewLink} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/30 hover:bg-blue-500 hover:text-white transition-colors px-4 py-2 rounded-lg text-sm font-bold shadow-lg shrink-0">
+                Write a Google Review
+              </a>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             <div className="bg-surface-divider/80 rounded-xl p-5 border border-border shadow-inner hover:border-primary/30 transition-all duration-300 hover:translate-y-[-2px]">
               <p className="text-xs text-text-muted uppercase font-bold tracking-widest mb-2">Gym Name</p>
@@ -183,6 +190,11 @@ const ClientHome = () => {
                 <Phone size={14} className="text-primary" /> Contact
               </p>
               <p className="text-text-primary text-lg font-semibold">{profile.gym.gymContact || 'N/A'}</p>
+              {profile.gym.alternateContacts && (
+                <p className="text-xs text-text-secondary mt-1 text-orange-400/90 font-medium whitespace-pre-line leading-relaxed">
+                  Alt: {profile.gym.alternateContacts}
+                </p>
+              )}
               {profile.gym.gymEmail && (
                 <p className="text-xs text-text-secondary mt-1 flex items-center gap-1 truncate">
                   <Mail size={12} /> {profile.gym.gymEmail}

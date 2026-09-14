@@ -46,7 +46,9 @@ const tenantDbMiddleware = async (req, res, next) => {
         Expense: conn.models.Expense || conn.model('Expense', require('../models/Expense').schema),
         Feedback: conn.models.Feedback || conn.model('Feedback', require('../models/Feedback').schema),
         Counter: conn.models.Counter || conn.model('Counter', require('../models/Counter').schema),
-        Setting: conn.models.Setting || conn.model('Setting', require('../models/Setting').schema)
+        Setting: conn.models.Setting || conn.model('Setting', require('../models/Setting').schema),
+        Staff: conn.models.Staff || conn.model('Staff', require('../models/Staff').schema),
+        Lead: conn.models.Lead || conn.model('Lead', require('../models/Lead').schema)
       };
 
       req.tenantModels = models;
