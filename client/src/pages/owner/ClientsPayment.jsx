@@ -414,7 +414,13 @@ const Transactions = () => {
                                         <td className="p-5 text-center text-text-primary font-bold text-sm">₹{payment.invoiceAmount || payment.amount || 0}</td>
                                         <td className="p-5 text-center text-blue-400 font-bold text-sm">₹{payment.paidNow || payment.paidAmount || 0}</td>
                                         <td className="p-5 text-center text-emerald-400 font-bold text-sm">₹{payment.totalPaid || payment.paidAmount || 0}</td>
-                                        <td className="p-5 text-center text-rose-500 font-bold text-sm">₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}</td>
+                                        <td className={`p-5 text-center font-bold text-sm ${
+                                            (payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))) === 0 
+                                                ? 'text-emerald-500' 
+                                                : 'text-rose-500'
+                                        }`}>
+                                            ₹{payment.remainingBalance !== undefined ? payment.remainingBalance : (payment.amount - (payment.paidAmount || 0))}
+                                        </td>
                                         <td className="p-5 text-center">
                                             {getStatusBadge(payment)}
                                             {payment.status === 'partial' && !isPaymentCleared(payment) && payment.dueDate && (
@@ -660,9 +666,15 @@ const Transactions = () => {
                                             <span className="text-gray-500 font-medium">Paid Now</span>
                                             <span className="font-bold text-blue-600">₹{Number(selectedPayment.paidNow || selectedPayment.paidAmount || 0).toFixed(2)}</span>
                                         </div>
+                                        {(selectedPayment.paymentMethod || selectedPayment.mode)?.toLowerCase() === 'card' && (
+                                            <div className="flex justify-between py-0.5">
+                                                <span className="text-gray-500 font-medium">Card Fee (2%)</span>
+                                                <span className="font-bold text-purple-600">₹{(Number(selectedPayment.paidNow || selectedPayment.paidAmount || 0) * 0.02).toFixed(2)}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between py-0.5">
                                             <span className="text-gray-500 font-medium">Total Paid</span>
-                                            <span className="font-bold text-emerald-600">₹{Number(selectedPayment.totalPaid || selectedPayment.paidAmount || 0).toFixed(2)}</span>
+                                            <span className="font-bold text-emerald-600">₹{(Number(selectedPayment.totalPaid || selectedPayment.paidAmount || 0) + ((selectedPayment.paymentMethod || selectedPayment.mode)?.toLowerCase() === 'card' ? Number(selectedPayment.paidNow || selectedPayment.paidAmount || 0) * 0.02 : 0)).toFixed(2)}</span>
                                         </div>
                                         <div className="border-t border-gray-200 my-1"></div>
                                         <div className="flex justify-between py-1 items-baseline">

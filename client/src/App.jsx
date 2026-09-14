@@ -33,6 +33,10 @@ const ClientDetail = lazy(() => import('./pages/owner/ClientDetail'));
 const PaymentLedger = lazy(() => import('./pages/owner/PaymentLedger'));
 const FeedbackList = lazy(() => import('./pages/owner/FeedbackList'));
 const Settings = lazy(() => import('./pages/owner/Settings'));
+const OwnerStaff = lazy(() => import('./pages/owner/Staff'));
+const OwnerLeads = lazy(() => import('./pages/owner/Leads'));
+const CustomMessages = lazy(() => import('./pages/owner/CustomMessages'));
+const OwnerAccessControl = lazy(() => import('./pages/owner/AccessControl'));
 
 // Client - Lazy loaded for code splitting
 const ClientLayout = lazy(() => import('./layouts/ClientLayout'));
@@ -135,6 +139,10 @@ const AppContent = () => {
                 <Route path="requests" element={<OwnerRequests />} />
                 <Route path="feedback" element={<FeedbackList />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="staff" element={<OwnerStaff />} />
+                <Route path="leads" element={<OwnerLeads />} />
+                <Route path="custom-messages" element={<CustomMessages />} />
+                <Route path="access-control" element={<OwnerAccessControl />} />
                 <Route path="clients/:id" element={<ClientDetail />} />
               </Route>
               

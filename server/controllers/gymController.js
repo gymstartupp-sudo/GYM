@@ -42,7 +42,8 @@ exports.updateGymProfile = async (req, res, next) => {
     const ALLOWED_GYM_FIELDS = [
       'gymName', 'gymEmail', 'gymContact', 'address', 'city', 'state',
       'pincode', 'gst', 'gymLogo', 'tagline', 'gymType', 'operatingDays',
-      'operatingHours', 'billingInfo', 'reminderSettings', 'socialMediaLinks'
+      'operatingHours', 'billingInfo', 'reminderSettings', 'socialMediaLinks',
+      'alternateContacts', 'googleReviewLink'
     ];
     const ALLOWED_OWNER_FIELDS = ['name', 'email', 'mobile', 'phone', 'mobileNo', 'mailId'];
 
@@ -386,13 +387,13 @@ exports.getGymPublicProfile = async (req, res, next) => {
 // @access  Private (Owner)
 exports.changeGymPassword = async (req, res, next) => {
   try {
-    const ALLOWED_FIELDS = ['currentPassword', 'newPassword'];
+    const ALLOWED_FIELDS = ['currentPassword', 'newPassword', 'targetAccount'];
     const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ALLOWED_FIELDS);
     if (hasInvalidFields) {
       return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
     }
 
-    const { currentPassword, newPassword } = cleanData;
+    const { currentPassword, newPassword, targetAccount } = cleanData;
 
     // Validate password strength: min 8 characters, at least 1 uppercase and 1 number
     const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
@@ -410,12 +411,36 @@ exports.changeGymPassword = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Gym not found' });
     }
 
-    const isMatch = await gym.matchPassword(currentPassword);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Incorrect current password' });
+    const isMasterAdmin = req.user.isMasterAdmin === true;
+    const target = targetAccount || (isMasterAdmin ? 'admin' : 'gym');
+
+    if (target === 'admin') {
+      if (!isMasterAdmin) {
+        return res.status(403).json({ success: false, message: 'Only Master Admin can change the admin password.' });
+      }
+      const isMatch = await gym.matchAdminPassword(currentPassword);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, message: 'Incorrect current admin password' });
+      }
+      gym.adminConfig.password = newPassword;
+    } else {
+      if (isMasterAdmin) {
+        // Master Admin changing Gym Password: Verify Admin's current password
+        const isMatch = await gym.matchAdminPassword(currentPassword);
+        if (!isMatch) {
+          return res.status(400).json({ success: false, message: 'Incorrect current admin password' });
+        }
+        gym.password = newPassword;
+      } else {
+        // Normal Owner changing Gym Password: Verify Owner's current password
+        const isMatch = await gym.matchPassword(currentPassword);
+        if (!isMatch) {
+          return res.status(400).json({ success: false, message: 'Incorrect current password' });
+        }
+        gym.password = newPassword;
+      }
     }
 
-    gym.password = newPassword;
     await gym.save();
 
     res.status(200).json({ success: true, message: 'Password updated successfully' });
@@ -458,6 +483,59 @@ exports.updateGymLogo = async (req, res, next) => {
         gymLogo: logoUrl,
         logo: logoUrl
       }
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get Access Control
+// @route   GET /api/gym/access-control
+// @access  Private (Owner/MasterAdmin)
+exports.getAccessControl = async (req, res, next) => {
+  try {
+    if (!req.user.isMasterAdmin) {
+      return res.status(403).json({ success: false, message: 'Only Master Admin can view access controls.' });
+    }
+    const gym = await Gym.findById(req.user._id).select('adminConfig.allowedTabs');
+    if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
+    
+    res.status(200).json({
+      success: true,
+      data: gym.adminConfig?.allowedTabs || []
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Update Access Control
+// @route   PUT /api/gym/access-control
+// @access  Private (Owner/MasterAdmin)
+exports.updateAccessControl = async (req, res, next) => {
+  try {
+    if (!req.user.isMasterAdmin) {
+      return res.status(403).json({ success: false, message: 'Only Master Admin can update access controls.' });
+    }
+    const { allowedTabs } = req.body;
+    
+    if (!Array.isArray(allowedTabs)) {
+      return res.status(400).json({ success: false, message: 'allowedTabs must be an array' });
+    }
+
+    const gym = await Gym.findById(req.user._id);
+    if (!gym) return res.status(404).json({ success: false, message: 'Gym not found' });
+    
+    if (!gym.adminConfig) {
+       gym.adminConfig = {};
+    }
+    gym.adminConfig.allowedTabs = allowedTabs;
+    await gym.save();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Access controls updated successfully',
+      data: gym.adminConfig.allowedTabs
     });
   } catch (err) {
     next(err);

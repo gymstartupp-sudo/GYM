@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   UserMinus,
-  UserPlus
+  UserPlus,
+  Lock
 } from 'lucide-react';
 import api from '../utils/api';
 
@@ -68,8 +69,9 @@ export default function OwnerLayout() {
   const gymEmail = gymProfile?.gym?.gymEmail || gymProfile?.owner?.mailId || user?.email || '';
   const ownerName = gymProfile?.owner?.name || gymName;
 
-  const navItems = [
+  let navItems = [
     { to: '/owner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/owner/leads', label: 'Leads', icon: UserPlus },
     { to: '/owner/clients', label: 'Clients', icon: Users },
     { to: '/owner/inactive-clients', label: 'Inactive Clients', icon: UserMinus },
     { to: '/owner/plans', label: 'Plans', icon: Tag },
@@ -78,8 +80,17 @@ export default function OwnerLayout() {
     { to: '/owner/payment-ledger', label: 'Payment Ledger', icon: CircleDollarSign },
     { to: '/owner/requests', label: 'Requests', icon: UserPlus },
     { to: '/owner/feedback', label: 'Feedback', icon: MessageSquare },
+    { to: '/owner/staff', label: 'Staff', icon: Users },
+    { to: '/owner/custom-messages', label: 'Custom Messages', icon: MessageSquare },
     { to: '/owner/settings', label: 'Settings', icon: Settings },
   ];
+
+  if (!isReadOnly && user?.isMasterAdmin) {
+    navItems.push({ to: '/owner/access-control', label: 'Access Control', icon: Lock });
+  } else if (!isReadOnly && user?.allowedTabs && Array.isArray(user.allowedTabs)) {
+    // If not master admin, filter based on allowedTabs
+    navItems = navItems.filter(item => item.label === 'Settings' || user.allowedTabs.includes(item.label));
+  }
 
   const sidebarWidth = isMobile
     ? 'w-[260px] min-w-[260px]'

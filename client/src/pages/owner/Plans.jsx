@@ -25,11 +25,10 @@ const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = 
   return (
     <div className="relative" ref={containerRef}>
       <div
-        className={`${className} flex justify-between items-center ${errorClassName} ${
-          disabled 
-            ? 'opacity-50 cursor-not-allowed bg-surface-divider' 
-            : 'cursor-pointer'
-        } ${isOpen && !disabled ? 'border-primary ring-1 ring-primary/50' : ''}`}
+        className={`${className} flex justify-between items-center ${errorClassName} ${disabled
+          ? 'opacity-50 cursor-not-allowed bg-surface-divider'
+          : 'cursor-pointer'
+          } ${isOpen && !disabled ? 'border-primary ring-1 ring-primary/50' : ''}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         tabIndex={disabled ? -1 : 0}
       >
@@ -66,7 +65,9 @@ const PlanDetailModal = ({ plan, onClose }) => {
       <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex justify-between items-start p-6 border-b border-border">
           <div>
-            <h2 className="text-2xl font-bold text-text-primary">{plan.name}</h2>
+            <h2 className="text-2xl font-bold text-text-primary">
+              {plan.name} {plan.planType === 'pt' ? '/ Personal Training' : ''}
+            </h2>
             <p className="text-primary text-sm mt-1">{plan.durationMonths} month{plan.durationMonths !== 1 ? 's' : ''} plan</p>
           </div>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors mt-1 ml-4">
@@ -106,48 +107,60 @@ const PlanCard = ({ plan, onEdit, onDelete, onViewDetails }) => {
   const { role } = useAuth();
   const isReadOnly = role === 'superadmin' && !!sessionStorage.getItem('viewGymId');
   return (
-  <div className="card relative flex flex-col group border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-primary/10 hover:shadow-xl">
-    {/* Hover actions */}
-    {!isReadOnly && (
-      <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <button
-          onClick={() => onEdit(plan)}
-          title="Edit plan"
-          className="text-blue-400 hover:text-blue-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
-        >
-          <Edit2 size={14} />
-        </button>
-        <button
-          onClick={() => onDelete(plan)}
-          title="Delete plan"
-          className="text-red-400 hover:text-red-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
-        >
-          <Trash2 size={14} />
-        </button>
+    <div className="card relative flex flex-col group border-primary/20 hover:border-primary/50 transition-all duration-300 hover:shadow-primary/10 hover:shadow-xl">
+      {/* Hover actions */}
+      {!isReadOnly && (
+        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            onClick={() => onEdit(plan)}
+            title="Edit plan"
+            className="text-blue-400 hover:text-blue-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
+          >
+            <Edit2 size={14} />
+          </button>
+          <button
+            onClick={() => onDelete(plan)}
+            title="Delete plan"
+            className="text-red-400 hover:text-red-300 bg-surface-divider hover:bg-surface-hover p-1.5 rounded-lg transition-colors"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Header info */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xs font-medium text-text-secondary bg-surface-divider border border-border px-2.5 py-1 rounded-full flex items-center gap-1.5" title="Clients using this plan">
+          <Users size={12} className="text-primary" /> {plan.clientCount || 0} client{plan.clientCount !== 1 ? 's' : ''}
+        </span>
       </div>
-    )}
 
-    {/* Header info */}
-    <div className="flex items-center gap-2 mb-4">
-      <span className="text-xs font-medium text-text-secondary bg-surface-divider border border-border px-2.5 py-1 rounded-full flex items-center gap-1.5" title="Clients using this plan">
-        <Users size={12} className="text-primary" /> {plan.clientCount || 0} client{plan.clientCount !== 1 ? 's' : ''}
-      </span>
+      <div className="flex justify-between items-start gap-2 mb-1">
+        <h3 className="text-xl font-bold text-text-primary">
+          {plan.name} {plan.planType === 'pt' ? '/ Personal Training' : ''}
+        </h3>
+        {plan.planType === 'pt' && (
+          <span className="text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded uppercase font-black tracking-widest shrink-0 mt-1">PT Plan</span>
+        )}
+      </div>
+      <p className="text-primary text-3xl font-black mb-1">
+        ₹{plan.price?.toLocaleString('en-IN')}
+        <span className="text-sm text-text-secondary font-normal"> / {plan.durationMonths} mon</span>
+      </p>
+      {plan.planType === 'pt' ? (
+        <p className="text-xs text-text-secondary font-medium mb-5">{plan.totalSessions || 0} Sessions </p>
+      ) : (
+        <div className="mb-5 h-4"></div>
+      )}
+
+      {/* View Details button — description hidden by default */}
+      <button
+        onClick={() => onViewDetails(plan)}
+        className="mt-auto w-full flex items-center justify-center gap-2 py-2.5 bg-surface-divider hover:bg-surface-hover text-text-primary rounded-lg transition-colors text-sm font-medium border border-border hover:border-gray-600"
+      >
+        <Eye size={15} /> View Details
+      </button>
     </div>
-
-    <h3 className="text-xl font-bold text-text-primary mb-1">{plan.name}</h3>
-    <p className="text-primary text-3xl font-black mb-6">
-      ₹{plan.price?.toLocaleString('en-IN')}
-      <span className="text-sm text-text-secondary font-normal"> / {plan.durationMonths} mon</span>
-    </p>
-
-    {/* View Details button — description hidden by default */}
-    <button
-      onClick={() => onViewDetails(plan)}
-      className="mt-auto w-full flex items-center justify-center gap-2 py-2.5 bg-surface-divider hover:bg-surface-hover text-text-primary rounded-lg transition-colors text-sm font-medium border border-border hover:border-gray-600"
-    >
-      <Eye size={15} /> View Details
-    </button>
-  </div>
   );
 };
 
@@ -160,7 +173,9 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
     durationMonths: editingPlan?.durationMonths || '',
     price: editingPlan?.price || '',
     description: editingPlan?.description || '',
-    partialPaymentDueDays: editingPlan?.partialPaymentDueDays ?? 15
+    partialPaymentDueDays: editingPlan?.partialPaymentDueDays ?? 15,
+    planType: editingPlan?.planType || 'regular',
+    totalSessions: editingPlan?.totalSessions || ''
   });
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -192,8 +207,8 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
     } else if (name === 'partialPaymentDueDays') {
       const num = Number(val);
       if (val !== '') {
-        if (isNaN(num) || !Number.isInteger(num) || num < 1) {
-          errMessage = 'Due days must be a positive whole number';
+        if (isNaN(num) || !Number.isInteger(num) || num < 0) {
+          errMessage = 'Due days must be 0 or a positive whole number';
         } else if (num > 90) {
           errMessage = 'Due days cannot exceed 90 days';
         }
@@ -201,6 +216,13 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
     } else if (name === 'description') {
       if (val.length > 150) {
         errMessage = 'Plan description cannot exceed 150 characters';
+      }
+    } else if (name === 'totalSessions') {
+      const num = Number(val);
+      if (val !== '') {
+        if (isNaN(num) || !Number.isInteger(num) || num < 1) {
+          errMessage = 'Sessions must be a positive whole number';
+        }
       }
     }
 
@@ -257,7 +279,7 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Object.keys(errors).length > 0) {
-      toast.error("Please fix validation errors first");
+      toast.error("Please fix errors first");
       return;
     }
 
@@ -277,14 +299,21 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
     }
     if (formData.partialPaymentDueDays !== '') {
       const dueDaysNum = Number(formData.partialPaymentDueDays);
-      if (isNaN(dueDaysNum) || !Number.isInteger(dueDaysNum) || dueDaysNum < 1 || dueDaysNum > 90) {
-        toast.error("Partial payment due limit must be a whole number between 1 and 90 days");
+      if (isNaN(dueDaysNum) || !Number.isInteger(dueDaysNum) || dueDaysNum < 0 || dueDaysNum > 90) {
+        toast.error("Partial payment due limit must be a whole number between 0 and 90 days");
         return;
       }
     }
     if (formData.description && formData.description.length > 150) {
       toast.error("Plan description cannot exceed 150 characters");
       return;
+    }
+    if (formData.planType === 'pt') {
+      const sessNum = Number(formData.totalSessions);
+      if (isNaN(sessNum) || !Number.isInteger(sessNum) || sessNum < 1) {
+        setErrors(prev => ({ ...prev, totalSessions: "Total Sessions must be a positive whole number" }));
+        return;
+      }
     }
 
     // Protect historical membership changes on submit
@@ -302,10 +331,11 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
     const nameConflict = plans.some(p => {
       if (editingPlan && p._id === editingPlan._id) return false;
       const pNorm = p.name.trim().replace(/\s+/g, ' ').toLowerCase();
-      return pNorm === normalizedName;
+      // Ensure we allow the same name if one is PT and one is Regular
+      return pNorm === normalizedName && p.planType === formData.planType;
     });
     if (nameConflict) {
-      toast.error(`A membership plan named "${cleanName}" already exists. Please choose another name.`);
+      toast.error(`A ${formData.planType === 'pt' ? 'PT' : 'regular'} membership plan named "${cleanName}" already exists. Please choose another name.`);
       return;
     }
 
@@ -313,19 +343,19 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
     if (!isCustom) {
       const durationConflict = plans.some(p => {
         if (editingPlan && p._id === editingPlan._id) return false;
-        return !p.isCustom && Number(p.durationMonths) === Number(formData.durationMonths);
+        return !p.isCustom && Number(p.durationMonths) === Number(formData.durationMonths) && p.planType === formData.planType;
       });
       if (durationConflict) {
-        toast.error(`A standard ${formData.durationMonths} Month membership plan already exists. Only one active standard plan is allowed for each duration.`);
+        toast.error(`A standard ${formData.durationMonths} Month ${formData.planType === 'pt' ? 'PT' : 'regular'} membership plan already exists. Only one active standard plan is allowed for each duration per plan type.`);
         return;
       }
     }
 
     setSaving(true);
     try {
-      const payload = { 
-        ...formData, 
-        name: cleanName, 
+      const payload = {
+        ...formData,
+        name: cleanName,
         isCustom,
         partialPaymentDueDays: formData.partialPaymentDueDays ? Number(formData.partialPaymentDueDays) : 15
       };
@@ -346,13 +376,13 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-surface-secondary border border-border w-full max-w-md rounded-xl shadow-2xl animate-in zoom-in-95 duration-200">
-        <div className="flex justify-between items-center p-6 border-b border-border">
+      <div className="bg-surface-secondary border border-border w-full max-w-md rounded-xl shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div className="flex justify-between items-center p-6 border-b border-border shrink-0">
           <h2 className="text-xl font-bold text-text-primary">{editingPlan ? 'Edit Plan' : 'Create New Plan'}</h2>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors"><X size={20} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
+
           {/* Assigned Locked Banner */}
           {editingPlan?.isAssigned && (
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-xs text-yellow-500 flex items-start gap-2 leading-relaxed mb-2">
@@ -404,25 +434,45 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
           ) : (
             <div>
               <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Plan Name *</label>
-              <input 
-                name="name" 
-                value={formData.name} 
-                onChange={handleChange} 
-                required 
-                className="input-field" 
-                placeholder="e.g. Special Offer" 
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="input-field"
+                placeholder="e.g. Special Offer"
                 maxLength="25"
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
           )}
 
+          {/* Plan Type Selection */}
+          <div className="grid grid-cols-2 gap-3">
+            <label className={`flex flex-col p-3 rounded-lg border cursor-pointer transition-colors ${formData.planType === 'regular' ? 'bg-primary/10 border-primary text-primary' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-500'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <input type="radio" name="planType" value="regular" checked={formData.planType === 'regular'} onChange={handleChange} className="hidden" />
+                <span className="font-bold text-sm">Regular Plan</span>
+              </div>
+              <span className="text-xs opacity-80 leading-snug">Standard membership access</span>
+            </label>
+            <label className={`flex flex-col p-3 rounded-lg border cursor-pointer transition-colors ${formData.planType === 'pt' ? 'bg-primary/10 border-primary text-primary' : 'bg-surface-divider border-border text-text-secondary hover:border-gray-500'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <input type="radio" name="planType" value="pt" checked={formData.planType === 'pt'} onChange={handleChange} className="hidden" />
+                <span className="font-bold text-sm">Personal Training</span>
+              </div>
+              <span className="text-xs opacity-80 leading-snug">Session-based training program</span>
+            </label>
+          </div>
+
+
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Duration (Mon) *</label>
-              <input 
-                name="durationMonths" 
-                value={formData.durationMonths} 
+              <input
+                name="durationMonths"
+                value={formData.durationMonths}
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -433,18 +483,18 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
                   setFormData(prev => ({ ...prev, durationMonths: clamped }));
                   validateField('durationMonths', clamped);
                 }}
-                required 
+                required
                 readOnly={!isCustom || editingPlan?.isAssigned}
-                className={`input-field ${(!isCustom || editingPlan?.isAssigned) ? 'opacity-50 cursor-not-allowed bg-surface-divider' : ''}`} 
-                placeholder="1-12" 
+                className={`input-field ${(!isCustom || editingPlan?.isAssigned) ? 'opacity-50 cursor-not-allowed bg-surface-divider' : ''}`}
+                placeholder="1-12"
               />
               {errors.durationMonths && <p className="text-red-500 text-xs mt-1">{errors.durationMonths}</p>}
             </div>
             <div>
               <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Price (₹) *</label>
-              <input 
-                name="price" 
-                value={formData.price} 
+              <input
+                name="price"
+                value={formData.price}
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
@@ -454,19 +504,41 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
                   setFormData(prev => ({ ...prev, price: clamped }));
                   validateField('price', clamped);
                 }}
-                required 
-                className="input-field" 
-                placeholder="e.g. 1500" 
+                required
+                className="input-field"
+                placeholder="e.g. 1500"
               />
               {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
             </div>
           </div>
 
+          {formData.planType === 'pt' && (
+            <div>
+              <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Total Sessions *</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                name="totalSessions"
+                value={formData.totalSessions}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setFormData(prev => ({ ...prev, totalSessions: raw }));
+                  validateField('totalSessions', raw);
+                }}
+                required
+                className="input-field"
+                placeholder="E.g. 12"
+              />
+              {errors.totalSessions && <p className="text-red-500 text-xs mt-1">{errors.totalSessions}</p>}
+            </div>
+          )}
+
           <div>
             <label className="text-xs text-text-secondary mb-1 block uppercase tracking-wider">Partial Payment Due Limit (Days) *</label>
-            <input 
-              name="partialPaymentDueDays" 
-              value={formData.partialPaymentDueDays} 
+            <input
+              name="partialPaymentDueDays"
+              value={formData.partialPaymentDueDays}
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
@@ -476,11 +548,15 @@ const PlanFormModal = ({ plans = [], editingPlan, onClose, onSuccess }) => {
                 setFormData(prev => ({ ...prev, partialPaymentDueDays: clamped }));
                 validateField('partialPaymentDueDays', clamped);
               }}
-              required 
-              className="input-field" 
-              placeholder="e.g. 15" 
+              required
+              className="input-field"
+              placeholder="e.g. 15"
             />
-            {errors.partialPaymentDueDays && <p className="text-red-500 text-xs mt-1">{errors.partialPaymentDueDays}</p>}
+            {errors.partialPaymentDueDays ? (
+              <p className="text-red-500 text-xs mt-1">{errors.partialPaymentDueDays}</p>
+            ) : (
+              <p className="text-[10px] text-text-secondary mt-1">Enter 0 if partial payments are NOT allowed for this plan.</p>
+            )}
           </div>
 
           <div>
@@ -554,40 +630,40 @@ const Plans = () => {
 
   return (
     <div className="p-4 sm:p-8 pt-10">
-        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Gym Plans</h1>
-            <p className="text-text-secondary mt-1">Manage your membership packages.</p>
-          </div>
-          {!isReadOnly && (
-            <Button onClick={handleCreateNew} className="gap-2 w-full sm:w-auto justify-center">
-              <Plus size={18} /> Create Plan
-            </Button>
-          )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Gym Plans</h1>
+          <p className="text-text-secondary mt-1">Manage your membership packages.</p>
         </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : plans.length === 0 ? (
-          <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
-            <p className="font-medium">No plans yet</p>
-            <p className="text-sm mt-1 text-gray-600">Click "Create Plan" to add your first membership plan.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {plans.map(plan => (
-              <PlanCard
-                key={plan._id}
-                plan={plan}
-                onEdit={handleEdit}
-                onDelete={handleDeleteClick}
-                onViewDetails={setDetailPlan}
-              />
-            ))}
-          </div>
+        {!isReadOnly && (
+          <Button onClick={handleCreateNew} className="gap-2 w-full sm:w-auto justify-center">
+            <Plus size={18} /> Create Plan
+          </Button>
         )}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : plans.length === 0 ? (
+        <div className="card bg-surface-secondary border-border text-center py-16 text-text-secondary">
+          <p className="font-medium">No plans yet</p>
+          <p className="text-sm mt-1 text-gray-600">Click "Create Plan" to add your first membership plan.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {plans.map(plan => (
+            <PlanCard
+              key={plan._id}
+              plan={plan}
+              onEdit={handleEdit}
+              onDelete={handleDeleteClick}
+              onViewDetails={setDetailPlan}
+            />
+          ))}
+        </div>
+      )}
 
       {showFormModal && (
         <PlanFormModal

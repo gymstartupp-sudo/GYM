@@ -34,11 +34,21 @@ const protect = async (req, res, next) => {
           if (!gym || gym.isActive === false) {
             return res.status(403).json({ success: false, message: 'Not authorized, gym account is inactive or suspended' });
           }
-          user = { _id: decoded.id, gymId: decoded.gymId, gymName: decoded.gymName };
+          user = { 
+            _id: decoded.id, 
+            gymId: decoded.gymId, 
+            gymName: decoded.gymName,
+            isMasterAdmin: decoded.isMasterAdmin || false,
+            allowedTabs: decoded.allowedTabs || []
+          };
         } else {
           user = await Gym.findById(decoded.id).select('-password').lean();
           if (user && user.isActive === false) {
             return res.status(403).json({ success: false, message: 'Not authorized, gym account is inactive or suspended' });
+          }
+          if (user) {
+            user.isMasterAdmin = decoded.isMasterAdmin || false;
+            user.allowedTabs = decoded.allowedTabs || [];
           }
         }
         role = 'owner';

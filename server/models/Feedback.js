@@ -41,6 +41,11 @@ const feedbackSchema = new mongoose.Schema({
     enum: ['Unread', 'Read', 'Resolved'],
     default: 'Unread'
   },
+  type: {
+    type: String,
+    enum: ['feedback', 'complaint'],
+    default: 'feedback'
+  },
   readAt: {
     type: Date
   },

@@ -851,8 +851,9 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
             setValue('planType', val, { shouldValidate: true, shouldDirty: true });
             setValue('planId', val, { shouldValidate: true, shouldDirty: true });
           }}
-          options={plans.map(p => ({ label: `${p.name} (${p.durationMonths} months)`, value: String(p._id) }))}
+          options={plans.map(p => ({ label: `${p.name}${p.planType === 'pt' ? ' / PT' : ''} (${p.durationMonths} months)`, value: String(p._id) }))}
           placeholder="Select a plan"
+          showSearch={true}
           className={fieldClassName('planType', 'text-text-secondary bg-surface-secondary')}
         />
         {showFieldError('planType') && <p className="text-red-500 text-xs mt-1">{errors.planType.message}</p>}

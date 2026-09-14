@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../utils/api';
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { ChevronLeft } from 'lucide-react';
-import Button from '../../components/Button';
-import CustomDatePicker from '../../components/CustomDatePicker';
-import { DATE_RULES, getDobYearBounds, validateDob } from '../../utils/dateInput';
-import { STATES_LIST, getCitiesForState } from '../../utils/indianStatesCities';
+import api from '../utils/api';
+import Button from './Button';
+import CustomDatePicker from './CustomDatePicker';
+import { DATE_RULES, getDobYearBounds, validateDob } from '../utils/dateInput';
+import { STATES_LIST, getCitiesForState } from '../utils/indianStatesCities';
 
-
-// ─── Constants ───────────────────────────────────────────────────────────────
 const phoneRegex = /^[6-9]\d{9}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const errorInputClass = 'border-red-500 focus:ring-red-500/50 shadow-[0_0_8px_rgba(239,68,68,0.2)]';
 
-// ─── Component: Reusable Field ────────────────────
 const Field = ({ label, value, onChange, disabled = false, textarea = false, type = "text", error, maxLength, ...rest }) => {
   const Component = textarea ? 'textarea' : 'input';
   const baseClass = `input-field ${textarea ? 'h-24 resize-none' : ''}`;
@@ -137,31 +133,20 @@ const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select
   );
 };
 
-const ClientProfile = () => {
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState(null);
-  const [formState, setFormState] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
+export default function EditClientModal({ isOpen, onClose, client, onSuccess }) {
+  const [formState, setFormState] = useState(client ? JSON.parse(JSON.stringify(client)) : null);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const { minYear: dobMinYear, maxYear: dobMaxYear } = getDobYearBounds();
 
-  const fetchProfile = async () => {
-    try {
-      const res = await api.get('/client/profile');
-      setProfile(res.data.data);
-      setFormState(res.data.data);
-    } catch (error) {
-      toast.error('Failed to load profile');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    if (client) {
+      setFormState(JSON.parse(JSON.stringify(client)));
+      setErrors({});
+    }
+  }, [client]);
+
+  if (!isOpen || !formState) return null;
 
   const validateSingleField = (key, value) => {
     let errMsg = '';
@@ -187,10 +172,6 @@ const ClientProfile = () => {
       } else {
         errMsg = validateDob(value) || '';
       }
-    } else if (key === 'city') {
-      // No validation
-    } else if (key === 'state') {
-      // No validation
     } else if (key === 'pincode') {
       if (value && value.length !== 6) errMsg = 'Enter a valid 6-digit pincode';
     }
@@ -247,12 +228,6 @@ const ClientProfile = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleCancel = () => {
-    setFormState(profile);
-    setEditing(false);
-    setErrors({});
-  };
-
   const handleSave = async () => {
     if (!validate()) {
       toast.error('Please fix validation errors');
@@ -263,7 +238,7 @@ const ClientProfile = () => {
     try {
       const cleanPersonalInfo = {};
       const allowed = [
-        'name', 'gender', 'dob', 'address',
+        'name', 'email', 'mobileNo', 'gender', 'dob', 'address',
         'emergencyContact', 'city', 'state', 'pincode', 'medicalCondition'
       ];
       for (const key of allowed) {
@@ -272,71 +247,41 @@ const ClientProfile = () => {
         }
       }
 
-      const res = await api.put('/client/profile', { personalInfo: cleanPersonalInfo });
-      setProfile(res.data.data);
-      setFormState(res.data.data);
-      setEditing(false);
-      setErrors({});
-      toast.success('Profile updated successfully');
-      window.dispatchEvent(new Event('profileUpdated'));
+      // We call PUT /client/:id to update the client details as an owner
+      await api.put(`/client/${client._id}`, { personalInfo: cleanPersonalInfo });
+      
+      toast.success('Client updated successfully');
+      if (onSuccess) onSuccess();
     } catch (error) {
       const serverError = error.response?.data;
       if (serverError?.field) {
         setErrors(prev => ({ ...prev, [serverError.field]: serverError.message }));
         toast.error(serverError.message);
       } else {
-        toast.error(serverError?.message || 'Failed to update profile');
+        toast.error(serverError?.message || 'Failed to update client');
       }
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading || !formState) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className="flex flex-row items-center justify-between gap-4 border-b border-border pb-6">
-        <div className="flex flex-row items-center gap-3 min-w-0 flex-1">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 text-text-secondary hover:text-text-primary hover:bg-surface-divider rounded-lg transition-colors shrink-0"
-          >
-            <ChevronLeft size={20} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+      <div className="bg-surface-secondary w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden border border-border my-8">
+        <div className="p-6 border-b border-border flex justify-between items-center sticky top-0 bg-surface-secondary z-10">
+          <h2 className="text-xl font-bold text-text-primary">Edit Client Details</h2>
+          <button onClick={onClose} className="p-2 text-text-muted hover:text-text-primary transition-colors">
+            <X size={20} />
           </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight truncate">{profile?.personalInfo?.name || 'Client Profile'}</h1>
-            <p className="text-text-secondary mt-1 text-xs sm:text-sm md:text-base leading-relaxed truncate">{profile?.personalInfo?.email || 'Manage profile'}</p>
-          </div>
         </div>
-        <div className="flex gap-2 shrink-0 self-center">
-          {editing ? (
-            <>
-              <Button type="button" variant="secondary" onClick={handleCancel} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Cancel</Button>
-              <Button type="button" onClick={handleSave} isLoading={saving} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Save</Button>
-            </>
-          ) : (
-            <Button type="button" variant="secondary" onClick={() => setEditing(true)} className="px-3 py-1.5 text-xs sm:text-sm sm:px-4 sm:py-2">Edit Profile</Button>
-          )}
-        </div>
-      </div>
 
-      <div className="card space-y-6 bg-surface-secondary border-border rounded-2xl p-6 md:p-8 shadow-xl">
-        <h2 className="text-xl font-semibold text-text-primary border-b border-border pb-4">Personal Info</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto">
           <Field label="Client ID" value={formState.clientId} disabled />
           <Field label="Gym ID" value={formState.gymId} disabled />
 
           <Field
             label="Full Name *"
             value={formState.personalInfo?.name}
-            disabled={!editing}
             maxLength={35}
             error={errors.name}
             onChange={e => setPersonalInfo('name', e.target.value)}
@@ -347,8 +292,7 @@ const ClientProfile = () => {
             <select
               value={formState.personalInfo?.gender || ''}
               onChange={e => setPersonalInfo('gender', e.target.value)}
-              disabled={!editing}
-              className={`input-field bg-surface-secondary border border-border text-text-primary rounded-xl ${!editing ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : ''}`}
+              className="input-field bg-surface-secondary border border-border text-text-primary rounded-xl"
             >
               <option value="Male">Male</option>
               <option value="Female">Female</option>
@@ -356,20 +300,19 @@ const ClientProfile = () => {
             </select>
           </label>
 
+          {/* owner CAN edit email and phone */}
           <Field
-            label="Email Address"
+            label="Email Address *"
             value={formState.personalInfo?.email}
             type="email"
-            disabled={true}
             error={errors.email}
             onChange={e => setPersonalInfo('email', e.target.value)}
           />
 
           <Field
-            label="Mobile Number"
+            label="Mobile Number *"
             value={formState.personalInfo?.mobileNo || ''}
             type="tel"
-            disabled={true}
             error={errors.mobileNo}
             maxLength={10}
             onChange={e => {
@@ -382,11 +325,10 @@ const ClientProfile = () => {
             <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">Date of Birth *</span>
             <CustomDatePicker
               value={formState.personalInfo?.dob ? formState.personalInfo.dob.slice(0, 10) : ''}
-              disabled={!editing}
               validationRule={DATE_RULES.DOB}
               minDate={`${dobMinYear}-01-01`}
               maxDate={`${dobMaxYear}-12-31`}
-              className={`input-field ${!editing ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : ''} ${errors.dob ? errorInputClass : ''}`.trim()}
+              className={`input-field ${errors.dob ? errorInputClass : ''}`.trim()}
               onChange={handleDobChange}
               onValidationError={(message) => {
                 setErrors(prev => {
@@ -397,14 +339,13 @@ const ClientProfile = () => {
                 });
               }}
             />
-            {errors.dob && editing && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.dob}</p>}
+            {errors.dob && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.dob}</p>}
           </label>
 
           <Field
             label="Emergency Contact"
             value={formState.personalInfo?.emergencyContact || ''}
             type="tel"
-            disabled={!editing}
             error={errors.emergencyContact}
             maxLength={10}
             onChange={e => {
@@ -418,7 +359,6 @@ const ClientProfile = () => {
               label="Residential Address *"
               value={formState.personalInfo?.address}
               textarea
-              disabled={!editing}
               maxLength={100}
               error={errors.address}
               onChange={e => setPersonalInfo('address', e.target.value)}
@@ -426,56 +366,47 @@ const ClientProfile = () => {
           </div>
 
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {editing ? (
-              <div className="space-y-1 block group">
-                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">State *</span>
-                <SearchableSelect
-                  value={formState.personalInfo?.state || ''}
-                  onChange={(newState) => {
-                    const cities = getCitiesForState(newState);
-                    const currentCity = formState.personalInfo?.city;
-                    const newCity = cities.includes(currentCity) ? currentCity : (cities[0] || '');
-                    setFormState(c => ({
-                      ...c,
-                      personalInfo: {
-                        ...c.personalInfo,
-                        state: newState,
-                        city: newCity
-                      }
-                    }));
-                    validateSingleField('state', newState);
-                    validateSingleField('city', newCity);
-                  }}
-                  options={STATES_LIST}
-                  placeholder="Select State"
-                  error={errors.state}
-                />
-                {errors.state && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.state}</p>}
-              </div>
-            ) : (
-              <Field label="State *" value={formState.personalInfo?.state} disabled />
-            )}
+            <div className="space-y-1 block group">
+              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">State *</span>
+              <SearchableSelect
+                value={formState.personalInfo?.state || ''}
+                onChange={(newState) => {
+                  const cities = getCitiesForState(newState);
+                  const currentCity = formState.personalInfo?.city;
+                  const newCity = cities.includes(currentCity) ? currentCity : (cities[0] || '');
+                  setFormState(c => ({
+                    ...c,
+                    personalInfo: {
+                      ...c.personalInfo,
+                      state: newState,
+                      city: newCity
+                    }
+                  }));
+                  validateSingleField('state', newState);
+                  validateSingleField('city', newCity);
+                }}
+                options={STATES_LIST}
+                placeholder="Select State"
+                error={errors.state}
+              />
+              {errors.state && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.state}</p>}
+            </div>
 
-            {editing ? (
-              <div className="space-y-1 block group">
-                <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">City *</span>
-                <SearchableSelect
-                  value={formState.personalInfo?.city || ''}
-                  onChange={(newCity) => setPersonalInfo('city', newCity)}
-                  options={getCitiesForState(formState.personalInfo?.state)}
-                  placeholder={formState.personalInfo?.state ? "Select City" : "Select State First"}
-                  error={errors.city}
-                />
-                {errors.city && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.city}</p>}
-              </div>
-            ) : (
-              <Field label="City *" value={formState.personalInfo?.city} disabled />
-            )}
+            <div className="space-y-1 block group">
+              <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">City *</span>
+              <SearchableSelect
+                value={formState.personalInfo?.city || ''}
+                onChange={(newCity) => setPersonalInfo('city', newCity)}
+                options={getCitiesForState(formState.personalInfo?.state)}
+                placeholder={formState.personalInfo?.state ? "Select City" : "Select State First"}
+                error={errors.city}
+              />
+              {errors.city && <p className="text-red-500 text-[11px] mt-1 italic font-medium">{errors.city}</p>}
+            </div>
 
             <Field
               label="Pincode"
               value={formState.personalInfo?.pincode || ''}
-              disabled={!editing}
               maxLength={6}
               error={errors.pincode}
               onChange={e => {
@@ -490,16 +421,18 @@ const ClientProfile = () => {
               label="Medical Condition / Health Notes"
               value={formState.personalInfo?.medicalCondition}
               textarea
-              disabled={!editing}
               maxLength={100}
               error={errors.medicalCondition}
               onChange={e => setPersonalInfo('medicalCondition', e.target.value)}
             />
           </div>
         </div>
-      </div>
-    </>
-  );
-};
 
-export default ClientProfile;
+        <div className="p-6 border-t border-border flex justify-end gap-3 bg-surface-secondary">
+          <Button variant="secondary" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button onClick={handleSave} isLoading={saving}>Save Changes</Button>
+        </div>
+      </div>
+    </div>
+  );
+}

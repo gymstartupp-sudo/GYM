@@ -140,6 +140,9 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/expenses', require('./routes/expense'));
 app.use('/api/feedback', require('./routes/feedback'));
 app.use('/api/issues', require('./routes/issues'));
+app.use('/api/staff', require('./routes/staffRoutes'));
+app.use('/api/leads', require('./routes/leadRoutes'));
+app.use('/api/custom-messages', require('./routes/customMessageRoutes'));
 
 // Error Handler Middleware
 app.use(errorHandler);

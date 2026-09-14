@@ -557,6 +557,53 @@ const sendForgotPasswordOTP = async ({ phone, otp, clientId, gymId }) => {
   });
 };
 
+const sendCustomTemplateMessage = async ({ phone, templateName, messageContent, mediaUrl, mediaType, clientId, gymId }) => {
+  let components = [];
+
+  // Assuming Meta Templates are structured as:
+  // msg: Body(1 param)
+  // msg_imag: Header(Image), Body(1 param)
+  // msg_video: Header(Video), Body(1 param)
+
+  if (templateName === 'msg_imag' && mediaUrl) {
+    components.push({
+      type: 'header',
+      parameters: [
+        {
+          type: 'image',
+          image: { link: mediaUrl }
+        }
+      ]
+    });
+  } else if (templateName === 'msg_video' && mediaUrl) {
+    components.push({
+      type: 'header',
+      parameters: [
+        {
+          type: 'video',
+          video: { link: mediaUrl }
+        }
+      ]
+    });
+  }
+
+  components.push({
+    type: 'body',
+    parameters: [
+      { type: 'text', text: String(messageContent) }
+    ]
+  });
+
+  return sendMetaWhatsApp({
+    to: phone,
+    templateName,
+    components,
+    reminderType: 'Custom Campaign',
+    clientId,
+    gymId
+  });
+};
+
 module.exports = {
   sendExpiringSoonReminder,
   sendExpiringSoonPendingReminder,
@@ -569,5 +616,6 @@ module.exports = {
   sendPaymentReceived,
   sendPaymentReceivedTemplate,
   sendWhatsAppDocument,
-  sendForgotPasswordOTP
+  sendForgotPasswordOTP,
+  sendCustomTemplateMessage
 };

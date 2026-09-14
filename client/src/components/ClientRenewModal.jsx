@@ -181,8 +181,11 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
     }
   }, [isOpen]);
 
+  const planAllowsPartial = selectedPlan ? selectedPlan.partialPaymentDueDays !== 0 : true;
+  const canShowPartial = allowPartialPayments && planAllowsPartial;
+
   useEffect(() => {
-    if (!allowPartialPayments && isOpen) {
+    if (!canShowPartial && isOpen) {
       setPaymentType('full');
       setRenewalForm(prev => {
         const maxLimit = detectedPendingPayment ? (
@@ -195,7 +198,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
         };
       });
     }
-  }, [allowPartialPayments, isOpen, selectedPlan, detectedPendingPayment]);
+  }, [canShowPartial, isOpen, selectedPlan, detectedPendingPayment]);
 
   const computedDueDateVal = React.useMemo(() => {
     if (!selectedPlan || !renewalForm.startDate) return '';
@@ -513,9 +516,9 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="bg-gray-900 border border-gray-700/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+      <div className="bg-surface-secondary border border-border/50 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/50 shrink-0">
+        <div className="p-6 border-b border-border/50 flex justify-between items-center bg-surface-primary/50 shrink-0">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Receipt className="text-primary" />
             Renew Membership
@@ -559,13 +562,16 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
               <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Search Membership Plan</label>
               {selectedPlan ? (
                 <div className="relative">
-                  <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-xl">
+                  <div className="flex items-center justify-between p-3 bg-surface-divider/50 border border-border rounded-xl">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
                         <Package size={18} />
                       </div>
                       <div>
-                        <p className="text-white font-bold text-sm">{selectedPlan.name}</p>
+                        <p className="text-white font-bold text-sm flex items-center gap-2">
+                          {selectedPlan.name}
+                          {selectedPlan.planType === 'pt' && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-black tracking-widest border border-primary/30">PT</span>}
+                        </p>
                         <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">₹{selectedPlan.price?.toLocaleString('en-IN')}</p>
                       </div>
                     </div>
@@ -573,7 +579,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                       <button
                         type="button"
                         onClick={() => setShowPlanDropdown(!showPlanDropdown)}
-                        className="text-xs text-gray-400 hover:text-white bg-gray-800 px-2.5 py-1 rounded-md border border-gray-700 flex items-center gap-1"
+                        className="text-xs text-text-muted hover:text-text-primary bg-surface-primary px-2.5 py-1 rounded-md border border-border flex items-center gap-1"
                       >
                         Change <ChevronDown size={14} className={`transition-transform duration-200 ${showPlanDropdown ? 'rotate-180' : ''}`} />
                       </button>
@@ -581,21 +587,24 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                   </div>
 
                   {showPlanDropdown && (
-                    <div className="absolute z-[10000] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                    <div className="absolute z-[10000] left-0 right-0 mt-2 bg-surface-divider border border-border rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                       {availablePlans.length > 0 ? (
                         availablePlans.map(p => (
                           <button
                             key={p._id}
                             type="button"
-                            className="w-full flex items-center justify-between p-3.5 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-0 group"
+                            className="w-full flex items-center justify-between p-3.5 hover:bg-surface-hover/50 transition-colors text-left border-b border-border/50 last:border-0 group"
                             onClick={() => handlePlanSelect(p)}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-gray-400 group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
+                              <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center text-text-muted group-hover:bg-primary/20 group-hover:text-primary transition-colors font-bold text-xs">
                                 <Package size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-gray-200 group-hover:text-white">{p.name}</p>
+                                <p className="text-sm font-bold text-gray-200 group-hover:text-white flex items-center gap-2">
+                                  {p.name}
+                                  {p.planType === 'pt' && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-black tracking-widest border border-primary/30">PT</span>}
+                                </p>
                                 <p className="text-[10px] text-gray-500 font-bold">₹{p.price?.toLocaleString('en-IN')} for {p.durationMonths} Mo</p>
                               </div>
                             </div>
@@ -616,7 +625,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                     required
                     readOnly
                     disabled={!!detectedPendingPayment}
-                    className={`w-full bg-dark border border-gray-700 rounded-xl pl-11 pr-4 py-3.5 text-white focus:border-primary outline-none ${detectedPendingPayment ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`w-full bg-surface-primary border border-border rounded-xl pl-11 pr-4 py-3.5 text-text-primary focus:border-primary outline-none ${detectedPendingPayment ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     placeholder="Click to select a membership plan"
                     value={planSearchQuery}
                     onClick={() => !detectedPendingPayment && setShowPlanDropdown(true)}
@@ -624,13 +633,13 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
 
                   {showPlanDropdown && (
-                    <div className="absolute z-[10000] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                    <div className="absolute z-[10000] left-0 right-0 mt-2 bg-surface-divider border border-border rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                       {availablePlans.length > 0 ? (
                         availablePlans.map(p => (
                           <button
                             key={p._id}
                             type="button"
-                            className="w-full flex items-center justify-between p-3.5 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-0 group"
+                            className="w-full flex items-center justify-between p-3.5 hover:bg-surface-hover/50 transition-colors text-left border-b border-border/50 last:border-0 group"
                             onClick={() => handlePlanSelect(p)}
                           >
                             <div className="flex items-center gap-3">
@@ -638,7 +647,10 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                                 <Package size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-gray-200 group-hover:text-white">{p.name}</p>
+                                <p className="text-sm font-bold text-gray-200 group-hover:text-white flex items-center gap-2">
+                                  {p.name}
+                                  {p.planType === 'pt' && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded uppercase font-black tracking-widest border border-primary/30">PT</span>}
+                                </p>
                                 <p className="text-[10px] text-gray-500 font-bold">₹{p.price?.toLocaleString('en-IN')} for {p.durationMonths} Mo</p>
                               </div>
                             </div>
@@ -704,13 +716,15 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
               {/* Financial Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in duration-200">
                 <div>
-                  <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Total Amount</label>
+                  <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">
+                    Plan price
+                  </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
                     <input
                       type="number"
                       readOnly
-                      className="w-full bg-gray-800/30 border border-gray-800 rounded-xl pl-8 pr-4 py-3 text-white font-bold outline-none cursor-not-allowed"
+                      className="w-full bg-surface-divider/80 border border-border rounded-xl pl-8 pr-4 py-3 bg-surface-primary text-text-primary font-bold outline-none cursor-not-allowed"
                       value={detectedPendingPayment ? (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) : selectedPlan.price}
                     />
                   </div>
@@ -721,7 +735,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                     <button
                       type="button"
                       onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
-                      className="w-full bg-dark border border-gray-700 rounded-xl py-3 pl-4 pr-4 text-white font-bold flex items-center justify-between outline-none cursor-pointer text-sm"
+                      className="w-full bg-surface-primary border border-border rounded-xl py-3 pl-4 pr-4 text-text-primary font-bold flex items-center justify-between outline-none cursor-pointer text-sm"
                     >
                       <span>
                         {renewalForm.paymentMethod === 'upi' ? 'UPI (Razorpay)' : 'Card (Razorpay)'}
@@ -730,7 +744,7 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                     </button>
 
                     {showPaymentDropdown && (
-                      <div className="absolute z-[10001] left-0 right-0 mt-2 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="absolute z-[10001] left-0 right-0 mt-2 bg-surface-divider border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
                         <button
                           type="button"
                           className={`w-full text-left py-2.5 px-4 text-sm font-bold border-b border-gray-700/50 transition-colors flex items-center justify-between group
@@ -769,94 +783,112 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
               </div>
 
               {/* Payment Type Toggles */}
-              <div className="bg-gray-800/20 p-4 rounded-xl border border-gray-800 space-y-4 animate-in fade-in duration-200">
-                {allowPartialPayments && !detectedPendingPayment && (
-                  <div>
-                    <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handlePaymentTypeChange('full')}
-                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
-                      >
-                        Fully Paid
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handlePaymentTypeChange('partial')}
-                        className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
-                      >
-                        Partially Paid
-                      </button>
+              {canShowPartial && (
+                <div className="bg-surface-divider/50 p-4 rounded-xl border border-border space-y-4 animate-in fade-in duration-200">
+                  {!detectedPendingPayment && (
+                    <div>
+                      <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 ml-1">Payment Completion Type</label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handlePaymentTypeChange('full')}
+                          className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'full' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                        >
+                          Fully Paid
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePaymentTypeChange('partial')}
+                          className={`flex-1 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${paymentType === 'partial' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-dark text-gray-500 border border-gray-700 hover:border-gray-600'}`}
+                        >
+                          Partially Paid
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2">
+                    <div>
+                      <label className="block text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max={detectedPendingPayment ? (
+                          (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                        ) : selectedPlan.price}
+                        className={`w-full bg-surface-primary border rounded-xl p-3 text-text-primary font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-border' : 'border-border'}`}
+                        value={renewalForm.paidAmount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const maxLimit = detectedPendingPayment ? (
+                            (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                          ) : selectedPlan.price;
+                          if (val === '' || (Number(val) >= 0 && Number(val) <= maxLimit)) {
+                            setRenewalForm({ ...renewalForm, paidAmount: val });
+                          }
+                        }}
+                        disabled={paymentType === 'full' || isPaying}
+                        placeholder="Enter paid amount"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-1.5 ml-1 font-bold uppercase tracking-tight">
+                        {detectedPendingPayment ? (
+                          <>
+                            Already Paid: <span className="text-emerald-500">₹{detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0}</span> | Bal: <span className="text-primary">₹{(detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)}</span>
+                          </>
+                        ) : (
+                          <>
+                            Max Allowed: <span className="text-primary">₹{selectedPlan.price}</span> (Plan Price)
+                          </>
+                        )}
+                      </p>
+                      {paymentType === 'partial' && (
+                        <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-rose-500 flex justify-between px-1">
+                          <span>Balance Due:</span>
+                          <span>₹{(
+                            (detectedPendingPayment ? (
+                              (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                            ) : selectedPlan.price) - (Number(renewalForm.paidAmount) || 0)
+                          ).toFixed(2)}</span>
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      {paymentType === 'partial' && (Number(renewalForm.paidAmount) || 0) < (
+                        detectedPendingPayment ? (
+                          (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                        ) : selectedPlan.price
+                      ) && (
+                          <>
+                            <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1 animate-in fade-in slide-in-from-bottom-1">
+                              Calculated Due Date
+                            </label>
+                            <div className="w-full bg-dark border border-amber-500/50 rounded-xl p-3 text-amber-500 font-bold flex items-center justify-between animate-in fade-in slide-in-from-bottom-1">
+                              <span>
+                                {computedDueDateVal ? (
+                                  new Date(computedDueDateVal).toLocaleDateString('en-GB')
+                                ) : (
+                                  <span className="text-amber-500/50">Select Start Date first</span>
+                                )}
+                              </span>
+                              <Calendar size={14} className="opacity-50" />
+                            </div>
+                          </>
+                        )}
+                      {paymentType === 'partial' && (Number(renewalForm.paidAmount) || 0) >= (
+                        detectedPendingPayment ? (
+                          (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
+                        ) : selectedPlan.price
+                      ) && (
+                          <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in slide-in-from-bottom-1">
+                            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">✓ No due date needed</p>
+                            <p className="text-[9px] text-gray-500 mt-1">Amount covers full remaining balance</p>
+                          </div>
+                        )}
                     </div>
                   </div>
-                )}
-
-                <div className={`${allowPartialPayments ? 'grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2' : 'block col-span-2'}`}>
-                  <div>
-                    <label className="block text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1.5 ml-1">Paid Amount (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      max={detectedPendingPayment ? (
-                        (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
-                      ) : selectedPlan.price}
-                      className={`w-full bg-dark border rounded-xl p-3 text-white font-bold focus:border-primary outline-none transition-all ${paymentType === 'full' ? 'opacity-50 cursor-not-allowed border-gray-800' : 'border-gray-700'}`}
-                      value={renewalForm.paidAmount}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const maxLimit = detectedPendingPayment ? (
-                          (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
-                        ) : selectedPlan.price;
-                        if (val === '' || (Number(val) >= 0 && Number(val) <= maxLimit)) {
-                          setRenewalForm({ ...renewalForm, paidAmount: val });
-                        }
-                      }}
-                      disabled={paymentType === 'full' || isPaying}
-                      placeholder="Enter paid amount"
-                    />
-                    <p className="text-[10px] text-gray-500 mt-1.5 ml-1 font-bold uppercase tracking-tight">
-                      {detectedPendingPayment ? (
-                        <>
-                          Already Paid: <span className="text-emerald-500">₹{detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0}</span> | Bal: <span className="text-primary">₹{(detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)}</span>
-                        </>
-                      ) : (
-                        <>
-                          Max Allowed: <span className="text-primary">₹{selectedPlan.price}</span> (Plan Price)
-                        </>
-                      )}
-                    </p>
-                    {paymentType === 'partial' && (
-                      <p className="text-[10px] mt-1.5 font-bold uppercase tracking-widest text-rose-500 flex justify-between px-1">
-                        <span>Balance Due:</span>
-                        <span>₹{(
-                          (detectedPendingPayment ? (
-                            (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
-                          ) : selectedPlan.price) - (Number(renewalForm.paidAmount) || 0)
-                        ).toFixed(2)}</span>
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    {paymentType === 'partial' && (Number(renewalForm.paidAmount) || 0) < (
-                      detectedPendingPayment ? (
-                        (detectedPendingPayment.invoiceAmount || detectedPendingPayment.amount || 0) - (detectedPendingPayment.totalPaid || detectedPendingPayment.paidNow || detectedPendingPayment.paidAmount || 0)
-                      ) : selectedPlan.price
-                    ) && (
-                        <>
-                          <label className="block text-[10px] text-amber-500 uppercase font-black tracking-widest mb-1.5 ml-1">
-                            Calculated Due Date
-                          </label>
-                          <div className="w-full bg-gray-800/30 border border-amber-500/50 rounded-xl p-3 text-amber-400 font-bold bg-dark flex items-center justify-between animate-in fade-in duration-200">
-                            <span>{formatDisplayDate(renewalForm.dueDate)}</span>
-                            <Calendar size={14} className="opacity-30" />
-                          </div>
-                        </>
-                      )}
-                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
 

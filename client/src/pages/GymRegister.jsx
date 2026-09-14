@@ -179,6 +179,8 @@ const schema = yup.object({
   gst: yup.string().trim().nullable().max(15, 'Max 15 chars'),
   gymType: yup.string().trim().nullable().max(50, 'Max 50 chars'),
   tagline: yup.string().trim().nullable().max(30, 'Max 30 chars'),
+  alternateContacts: yup.string().trim().nullable().max(100, 'Max 100 chars'),
+  googleReviewLink: optionalUrl,
   instagramUrl: optionalUrl,
   facebookUrl: optionalUrl,
   websiteUrl: optionalUrl,
@@ -201,19 +203,25 @@ const schema = yup.object({
   addressOnBill: yup.string().trim().required('Billing address is required').max(35, 'Max 35 chars'),
   regards: yup.string().trim().required('Regards text is required').max(35, 'Max 35 chars'),
   greetingText: yup.string().trim().nullable().max(35, 'Max 35 chars'),
-  logo: yup.mixed().nullable()
+  logo: yup.mixed().nullable(),
+  adminEmail: yup.string().trim().email('Please enter a valid email address').matches(gmailRegex, gmailError).max(50, 'Email cannot exceed 50 characters').required('Admin email is required'),
+  adminPhone: yup.string().matches(phoneRegex, phoneError).required(phoneError),
+  adminPassword: yup.string().min(8, passwordError).max(30, 'Max 30 chars').matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]).+$/, passwordError).required(passwordError),
+  adminConfirmPassword: yup.string().max(30, 'Max 30 chars').oneOf([yup.ref('adminPassword')], 'Passwords do not match').required('Please confirm admin password')
 });
 
 const stepRequiredFields = {
   1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'password', 'confirmPassword', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm'],
   2: ['name', 'mobileNo', 'mailId'],
-  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards']
+  3: ['adminEmail', 'adminPhone', 'adminPassword', 'adminConfirmPassword'],
+  4: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards']
 };
 
 const stepAllFields = {
-  1: ['gymName', 'gymEmail', 'gymContact', 'address', 'state', 'city', 'pincode', 'gst', 'gymType', 'tagline', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm', 'password', 'confirmPassword'],
+  1: ['gymName', 'gymEmail', 'gymContact', 'alternateContacts', 'address', 'state', 'city', 'pincode', 'gst', 'gymType', 'tagline', 'googleReviewLink', 'instagramUrl', 'facebookUrl', 'websiteUrl', 'operatingDays', 'operatingOpenHour', 'operatingOpenMinute', 'operatingOpenAmpm', 'operatingCloseHour', 'operatingCloseMinute', 'operatingCloseAmpm', 'password', 'confirmPassword'],
   2: ['name', 'mobileNo', 'mailId'],
-  3: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'logo']
+  3: ['adminEmail', 'adminPhone', 'adminPassword', 'adminConfirmPassword'],
+  4: ['billingIdPrefix', 'helpContact', 'addressOnBill', 'regards', 'logo']
 };
 
 const GymRegister = () => {
@@ -446,7 +454,30 @@ const GymRegister = () => {
       }
     }
 
+    if (step === 3) {
+      const adminEmailVal = values.adminEmail?.trim();
+      const adminPhoneVal = values.adminPhone?.trim();
 
+      const gymEmails = [values.gymEmail, values.mailId, values.gmail].filter(Boolean).map(e => e.trim().toLowerCase());
+      const gymPhones = [values.gymContact, values.mobileNo, values.whatsappNumber, values.phoneNumber].filter(Boolean).map(p => p.trim());
+
+      let hasConflict = false;
+
+      if (adminEmailVal && gymEmails.includes(adminEmailVal.toLowerCase())) {
+        setError('adminEmail', { type: 'manual', message: 'Admin email cannot be the same as Gym email' });
+        hasConflict = true;
+      }
+
+      if (adminPhoneVal && gymPhones.includes(adminPhoneVal)) {
+        setError('adminPhone', { type: 'manual', message: 'Admin mobile cannot be the same as Gym mobile' });
+        hasConflict = true;
+      }
+
+      if (hasConflict) {
+        toast.error('Admin credentials MUST be different from the Gym credentials.');
+        return;
+      }
+    }
 
     const isStepValid = await trigger(stepRequiredFields[step]);
 
@@ -499,6 +530,8 @@ const GymRegister = () => {
         gst: data.gst || '',
         gymType: data.gymType || '',
         tagline: data.tagline || '',
+        alternateContacts: data.alternateContacts || '',
+        googleReviewLink: data.googleReviewLink?.trim() || '',
         password: data.password,
         confirmPassword: data.confirmPassword,
         name: data.name,
@@ -512,6 +545,11 @@ const GymRegister = () => {
         addressOnBill: data.addressOnBill,
         regards: data.regards,
         greetingText: data.greetingText || '',
+        adminConfig: JSON.stringify({
+          email: data.adminEmail,
+          phone: data.adminPhone,
+          password: data.adminPassword
+        }),
         socialMediaLinks: JSON.stringify(socialMediaLinks),
         operatingDays: JSON.stringify(data.operatingDays || []),
         operatingHours: JSON.stringify(operatingHours)
@@ -526,18 +564,26 @@ const GymRegister = () => {
       const res = await api.post('/auth/gym/register', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const { gymId, gymName } = res.data.data || {};
+      
+      const { token, role, sessionId } = res.data || {};
+      const { gymId, gymName } = res.data?.data || {};
 
-      toast.success('Registration submitted for approval');
-      navigate('/registration-success', {
-        state: {
-          gymId,
-          gymName: gymName || data.gymName,
-          gymEmail: res.data?.data?.email || data.gymEmail,
-          gymContact: res.data?.data?.phone || data.gymContact,
-          isPendingApproval: true
-        }
-      });
+      if (token) {
+        login(token, role, sessionId);
+        toast.success('Registration successful! Welcome to your dashboard.');
+        navigate('/owner/access-control');
+      } else {
+        toast.success('Registration submitted for approval');
+        navigate('/registration-success', {
+          state: {
+            gymId,
+            gymName: gymName || data.gymName,
+            gymEmail: res.data?.data?.email || data.gymEmail,
+            gymContact: res.data?.data?.phone || data.gymContact,
+            isPendingApproval: true
+          }
+        });
+      }
     } catch (error) {
       const apiError = error.response?.data;
       if (apiError?.errors && Array.isArray(apiError.errors) && apiError.errors.length > 0) {
@@ -572,13 +618,14 @@ const GymRegister = () => {
           <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800 -translate-y-1/2 -z-10 rounded-full"></div>
           <div
             className="absolute top-1/2 left-0 h-[2px] bg-primary -translate-y-1/2 -z-10 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${step === 1 ? '0%' : step === 2 ? '50%' : '100%'}` }}
+            style={{ width: `${step === 1 ? '0%' : step === 2 ? '33.33%' : step === 3 ? '66.66%' : '100%'}` }}
           ></div>
 
           {[
             { num: 1, label: 'Gym Info', icon: Building2 },
             { num: 2, label: 'Owner & Comm', icon: User },
-            { num: 3, label: 'Billing & Brand', icon: CreditCard }
+            { num: 3, label: 'Admin Config', icon: Lock },
+            { num: 4, label: 'Billing & Brand', icon: CreditCard }
           ].map((s) => {
             const Icon = s.icon;
             const isCompleted = step > s.num;
@@ -675,7 +722,28 @@ const GymRegister = () => {
               </div>
             </div>
 
+            {/* Alternate Contacts */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-text-secondary font-medium">Alternate Contacts <span className="text-text-secondary font-normal">(Optional)</span></p>
+              </div>
+              <input {...register('alternateContacts')} placeholder="E.g. Trainer: 9876543210" className={fieldClassName('alternateContacts')} maxLength="100" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('alternateContacts') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.alternateContacts.message}</p>}
+              </div>
+            </div>
 
+
+            {/* Gym Type */}
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-text-secondary font-medium">Gym Type <span className="text-text-secondary font-normal">(Optional)</span></p>
+              </div>
+              <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="50" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('gymType') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymType.message}</p>}
+              </div>
+            </div>
 
             {/* GST Number */}
             <div>
@@ -688,16 +756,7 @@ const GymRegister = () => {
               </div>
             </div>
 
-            {/* Gym Type */}
-            <div>
-              <div className="flex items-center h-5 mb-1.5">
-                <p className="text-xs text-text-secondary font-medium">Gym Type <span className="text-text-secondary font-normal">(Optional)</span></p>
-              </div>
-              <input {...register('gymType')} placeholder="E.g. CrossFit Studio, Gym" className={fieldClassName('gymType')} maxLength="50" />
-              <div className="min-h-[20px] mt-1">
-                {showFieldError('gymType') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.gymType.message}</p>}
-              </div>
-            </div>
+
 
 
 
@@ -899,11 +958,18 @@ const GymRegister = () => {
                       {showFieldError('instagramUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.instagramUrl.message}</p>}
                     </div>
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <p className="text-xs text-text-secondary mb-1">Facebook URL <span className="text-[10px] text-text-secondary">(Optional)</span></p>
                     <input {...register('facebookUrl')} placeholder="E.g. https://facebook.com/gym" className={fieldClassName('facebookUrl')} />
                     <div className="min-h-[20px] mt-1">
                       {showFieldError('facebookUrl') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.facebookUrl.message}</p>}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-secondary mb-1">Google Review Link <span className="text-[10px] text-text-secondary">(Optional)</span></p>
+                    <input {...register('googleReviewLink')} type="url" placeholder="https://g.page/r/..." className={fieldClassName('googleReviewLink')} />
+                    <div className="min-h-[20px] mt-1">
+                      {showFieldError('googleReviewLink') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.googleReviewLink.message}</p>}
                     </div>
                   </div>
                 </div>
@@ -982,8 +1048,60 @@ const GymRegister = () => {
           </div>
         )}
 
-        {/* STEP 3: BILLING & BRANDING */}
+        {/* STEP 3: ADMIN CONFIGURATION */}
         {step === 3 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="md:col-span-2 mb-2">
+              <h3 className="text-lg font-bold text-text-primary mb-1">Master Admin Configuration</h3>
+              <p className="text-xs text-slate-400">Set up the Master Admin credentials. These MUST be different from the normal Gym/Owner credentials.</p>
+            </div>
+
+            <div>
+              <p className="text-xs text-text-secondary mb-1.5 font-medium">Admin Email <span className="text-red-500">*</span></p>
+              <input {...register('adminEmail')} type="email" placeholder="master@gmail.com" className={fieldClassName('adminEmail')} maxLength="50" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('adminEmail') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.adminEmail.message}</p>}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs text-text-secondary mb-1.5 font-medium">Admin Mobile <span className="text-red-500">*</span></p>
+              <input {...register('adminPhone')} type="tel" placeholder="10-digit number" className={fieldClassName('adminPhone')} onInput={handlePhoneInput} maxLength="10" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('adminPhone') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.adminPhone.message}</p>}
+              </div>
+            </div>
+
+            <div className="md:col-start-1">
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-text-secondary font-medium flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span>Password <span className="text-red-500">*</span></span>
+                </p>
+              </div>
+              <PasswordInput {...register('adminPassword')} placeholder="Min 8 characters" className={fieldClassName('adminPassword')} maxLength="30" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('adminPassword') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.adminPassword.message}</p>}
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center h-5 mb-1.5">
+                <p className="text-xs text-text-secondary font-medium flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-slate-500" />
+                  <span>Confirm Password <span className="text-red-500">*</span></span>
+                </p>
+              </div>
+              <PasswordInput {...register('adminConfirmPassword')} placeholder="Retype password" className={fieldClassName('adminConfirmPassword')} maxLength="30" />
+              <div className="min-h-[20px] mt-1">
+                {showFieldError('adminConfirmPassword') && <p className="text-red-500 text-xs font-medium leading-tight">{errors.adminConfirmPassword.message}</p>}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: BILLING & BRANDING */}
+        {step === 4 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-2 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="md:col-span-2 mb-2">
               <h3 className="text-lg font-bold text-text-primary mb-1">Billing & Branding</h3>
@@ -1174,7 +1292,7 @@ const GymRegister = () => {
             <div />
           )}
 
-          {step < 3 ? (
+          {step < 4 ? (
             <Button
               type="button"
               onClick={handleNext}

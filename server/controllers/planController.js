@@ -2,7 +2,7 @@ const Plan = require('../models/Plan');
 const { sanitizePayload } = require('../utils/allowlist');
 
 const ALLOWED_PLAN_FIELDS = [
-  'name', 'durationMonths', 'price', 'description', 'isCustom', 'partialPaymentDueDays'
+  'name', 'durationMonths', 'price', 'description', 'isCustom', 'partialPaymentDueDays', 'planType', 'totalSessions'
 ];
 
 // @desc    Create a new plan
@@ -15,7 +15,7 @@ exports.createPlan = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
     }
 
-    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays } = cleanData;
+    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays, planType, totalSessions } = cleanData;
     const gymId = req.user.gymId;
 
     if (!price) {
@@ -40,11 +40,12 @@ exports.createPlan = async (req, res, next) => {
     const normalizedName = cleanName.toLowerCase();
 
     // Check Case-Insensitive Duplicate Name across all active plans
-    const nameConflict = await Plan.findOne({ normalizedName, isActive: true });
+    const finalPlanType = planType || 'regular';
+    const nameConflict = await Plan.findOne({ normalizedName, planType: finalPlanType, isActive: true });
     if (nameConflict) {
       return res.status(400).json({
         success: false,
-        message: `A membership plan named "${cleanName}" already exists.`
+        message: `A ${finalPlanType === 'pt' ? 'PT' : 'regular'} membership plan named "${cleanName}" already exists.`
       });
     }
 
@@ -52,13 +53,14 @@ exports.createPlan = async (req, res, next) => {
     if (!isCustom) {
       const durationConflict = await Plan.findOne({
         durationMonths: Number(durationMonths),
+        planType: finalPlanType,
         isCustom: false,
         isActive: true
       });
       if (durationConflict) {
         return res.status(400).json({
           success: false,
-          message: `A standard ${durationMonths} Month membership plan already exists.`
+          message: `A standard ${durationMonths} Month ${finalPlanType === 'pt' ? 'PT' : 'regular'} membership plan already exists.`
         });
       }
     }
@@ -70,7 +72,9 @@ exports.createPlan = async (req, res, next) => {
       price,
       description,
       isCustom: !!isCustom,
-      partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : 15
+      partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : 15,
+      planType: finalPlanType,
+      totalSessions: totalSessions ? Number(totalSessions) : 0
     });
 
     res.status(201).json({ success: true, data: plan });
@@ -128,7 +132,7 @@ exports.updatePlan = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
     }
 
-    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays } = cleanData;
+    const { name, durationMonths, price, description, isCustom, partialPaymentDueDays, planType, totalSessions } = cleanData;
 
     if (name && name.length > 25) {
       return res.status(400).json({ success: false, message: 'Plan name cannot exceed 25 characters' });
@@ -173,10 +177,12 @@ exports.updatePlan = async (req, res, next) => {
     const normalizedName = cleanName.toLowerCase();
 
     // Check Case-Insensitive Duplicate Name excluding this plan
+    const finalPlanType = planType || plan.planType;
     if (cleanName) {
       const nameConflict = await Plan.findOne({
         _id: { $ne: req.params.id },
         normalizedName,
+        planType: finalPlanType,
         isActive: true
       });
       if (nameConflict) {
@@ -194,6 +200,7 @@ exports.updatePlan = async (req, res, next) => {
       const durationConflict = await Plan.findOne({
         _id: { $ne: req.params.id },
         durationMonths: finalDurationMonths,
+        planType: finalPlanType,
         isCustom: false,
         isActive: true
       });
@@ -212,7 +219,9 @@ exports.updatePlan = async (req, res, next) => {
         price: price !== undefined ? price : plan.price,
         description: description !== undefined ? description : plan.description,
         isCustom: finalIsCustom,
-        partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : plan.partialPaymentDueDays
+        partialPaymentDueDays: partialPaymentDueDays !== undefined ? Number(partialPaymentDueDays) : plan.partialPaymentDueDays,
+        planType: finalPlanType,
+        totalSessions: totalSessions !== undefined ? Number(totalSessions) : plan.totalSessions
       }
     }, { new: true, runValidators: true });
 

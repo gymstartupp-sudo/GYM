@@ -20,7 +20,7 @@ const CustomPortalDropdown = ({ selectedGym, onSelect, gyms }) => {
     const formatGymLabel = (g) => {
         if (!g) return '-- Choose Gym / Portal --';
         const gymIdPrefix = g.gymId && g.gymId !== 'admin' ? `${g.gymId}:` : '';
-        const roleLabel = g.role === 'client' ? 'Member' : g.role === 'owner' ? 'Owner' : 'Super Admin';
+        const roleLabel = g.role === 'client' ? 'Member' : g.role === 'owner' ? 'Gym' : g.role === 'admin' ? 'Owner/Admin' : 'Super Admin';
         return `${gymIdPrefix}${g.gymName} (${roleLabel})`;
     };
 

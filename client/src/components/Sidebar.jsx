@@ -9,6 +9,7 @@ const Sidebar = () => {
 
   const navLinks = [
     { name: 'Dashboard', path: '/owner', icon: <LayoutDashboard size={20} /> },
+    { name: 'Leads', path: '/owner/leads', icon: <UserPlus size={20} /> },
     { name: 'Clients', path: '/owner/clients', icon: <Users size={20} /> },
     { name: 'Inactive Clients', path: '/owner/inactive-clients', icon: <UserMinus size={20} /> },
     { name: 'Deleted Clients', path: '/owner/deleted-clients', icon: <Trash2 size={20} /> },
@@ -19,6 +20,7 @@ const Sidebar = () => {
     { name: 'Payment Ledger', path: '/owner/payment-ledger', icon: <CreditCard size={20} /> },
     { name: 'Requests', path: '/owner/requests', icon: <UserPlus size={20} /> },
     { name: 'Feedback', path: '/owner/feedback', icon: <MessageSquare size={20} /> },
+    { name: 'Staff', path: '/owner/staff', icon: <Users size={20} /> },
   ];
 
   const isLinkActive = (link) => {

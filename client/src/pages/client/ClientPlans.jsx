@@ -11,8 +11,13 @@ const PlanDetailModal = ({ plan, onClose }) => {
             <div className="bg-surface-secondary border border-border rounded-xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-start p-6 border-b border-border">
                     <div>
-                        <h2 className="text-2xl font-bold text-text-primary">{plan.name}</h2>
-                        <p className="text-primary text-sm mt-1">{plan.durationMonths} month{plan.durationMonths !== 1 ? 's' : ''} plan</p>
+                        <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+                            {plan.name}
+                            {plan.planType === 'pt' && (
+                                <span className="text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded uppercase font-black tracking-widest shrink-0 mt-1">PT</span>
+                            )}
+                        </h2>
+                        <p className="text-primary text-sm mt-1">{plan.durationMonths} month{plan.durationMonths !== 1 ? 's' : ''} {plan.planType === 'pt' ? 'Personal Training' : 'plan'}</p>
                     </div>
                     <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors mt-1 ml-4">
                         <X size={22} />
@@ -27,6 +32,12 @@ const PlanDetailModal = ({ plan, onClose }) => {
                         <span className="text-text-secondary text-sm uppercase tracking-wider">Duration</span>
                         <span className="text-text-primary font-semibold">{plan.durationMonths} Month{plan.durationMonths !== 1 ? 's' : ''}</span>
                     </div>
+                    {plan.planType === 'pt' && (
+                        <div className="flex justify-between items-center bg-surface-hover/60 rounded-xl p-4 border border-border/70">
+                            <span className="text-text-secondary text-sm uppercase tracking-wider">Total Sessions</span>
+                            <span className="text-text-primary font-semibold">{plan.totalSessions || 0}</span>
+                        </div>
+                    )}
                     <div className="bg-surface-hover/60 rounded-xl p-4 border border-border/70">
                         <p className="text-text-secondary text-sm uppercase tracking-wider mb-2">Description</p>
                         <p className="text-text-primary text-sm leading-relaxed">
@@ -49,11 +60,23 @@ const PlanCard = ({ plan, onViewDetails }) => (
                 <Users size={12} className="text-primary" /> {plan.clientCount || 0} client{plan.clientCount !== 1 ? 's' : ''}
             </span>
         </div>
-        <h3 className="text-xl font-bold text-text-primary mb-1">{plan.name}</h3>
-        <p className="text-primary text-3xl font-black mb-6">
+        <div className="flex justify-between items-start gap-2 mb-1">
+            <h3 className="text-xl font-bold text-text-primary">
+                {plan.name} {plan.planType === 'pt' ? '/ Personal Training' : ''}
+            </h3>
+            {plan.planType === 'pt' && (
+                <span className="text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded uppercase font-black tracking-widest shrink-0 mt-1">PT Plan</span>
+            )}
+        </div>
+        <p className="text-primary text-3xl font-black mb-1">
             ₹{plan.price?.toLocaleString('en-IN')}
             <span className="text-sm text-text-secondary font-normal"> / {plan.durationMonths} mo</span>
         </p>
+        {plan.planType === 'pt' ? (
+            <p className="text-xs text-text-secondary font-medium mb-5">{plan.totalSessions || 0} Sessions</p>
+        ) : (
+            <div className="mb-5 h-4"></div>
+        )}
         <button
             onClick={() => onViewDetails(plan)}
             className="mt-auto w-full flex items-center justify-center gap-2 py-2.5 bg-surface-divider hover:bg-primary/20 hover:border-primary/40 text-text-primary rounded-lg transition-all text-sm font-medium border border-border"

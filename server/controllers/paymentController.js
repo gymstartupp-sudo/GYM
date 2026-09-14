@@ -93,6 +93,11 @@ exports.recordPayment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Selected plan not found or is inactive' });
     }
 
+    // Block partial payments if plan explicitly disables them (partialPaymentDueDays = 0)
+    if (planDetails.partialPaymentDueDays === 0 && Number(paidAmount) < (Number(amount) || planDetails.price)) {
+      return res.status(400).json({ success: false, message: 'Partial payments are not allowed for this plan' });
+    }
+
     // Securely derive client parameters if call is initiated from client login
     if (req.userRole === 'client') {
       clientId = req.user._id.toString();

@@ -9,6 +9,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { formatDisplayDate, calculateDaysLeft, getPlanStatus, getPaymentStatus, getClientPlans, toLocalDateString } from '../../utils/membership';
 import ClientProfileHeader from '../../components/ClientProfileHeader';
 import PaymentModal from '../../components/PaymentModal';
+import EditClientModal from '../../components/EditClientModal';
 
 const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) => {
     const { id: paramId } = useParams();
@@ -27,6 +28,7 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
     const [plans, setPlans] = useState([]);
     const [allPayments, setAllPayments] = useState([]);
     const [editPaymentData, setEditPaymentData] = useState(null);
+    const [showEditClientModal, setShowEditClientModal] = useState(false);
 
     const getWhatsAppInvoiceTooltip = (payment) => {
         const sentCount = payment.whatsappSendCount || 0;
@@ -274,8 +276,18 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                         <div className={simplified ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 lg:grid-cols-2 gap-6"}>
                             {/* Registration Details */}
                             <div className="card bg-surface-secondary border-border">
-                                <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2 border-b border-border pb-4">
-                                    <User size={20} className="text-primary" /> Registration Details
+                                <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center justify-between border-b border-border pb-4">
+                                    <div className="flex items-center gap-2">
+                                        <User size={20} className="text-primary" /> Registration Details
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowEditClientModal(true)}
+                                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-hover/50 border border-border/50 text-text-secondary hover:text-primary hover:bg-primary/10 hover:border-primary/20 transition-all shadow-sm"
+                                        title="Edit Registration Details"
+                                    >
+                                        <Edit2 size={12} />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider">Edit</span>
+                                    </button>
                                 </h3>
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-2 gap-4">
@@ -640,6 +652,19 @@ const ClientDetail = ({ clientId: propClientId, onClose, simplified = false }) =
                         startDate: editPaymentData.startDate ? toLocalDateString(editPaymentData.startDate) : '',
                         paymentMethod: editPaymentData.paymentMethod || 'cash',
                         id: editPaymentData._id
+                    }}
+                />
+            )}
+
+            {showEditClientModal && (
+                <EditClientModal
+                    isOpen={showEditClientModal}
+                    onClose={() => setShowEditClientModal(false)}
+                    client={client}
+                    onSuccess={async () => {
+                        setShowEditClientModal(false);
+                        const res = await api.get(`/client/${id}`);
+                        setClient(res.data.data);
                     }}
                 />
             )}

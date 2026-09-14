@@ -476,6 +476,8 @@ const Profile = () => {
 
       gymEmail: 'gymEmail',
       gymContact: 'gymContact',
+      alternateContacts: 'alternateContacts',
+      googleReviewLink: 'googleReviewLink',
       address: 'address',
       city: 'city',
       state: 'state',
@@ -636,6 +638,8 @@ const Profile = () => {
           gymContact: formState.gym.gymContact,
           gymType: formState.gym.gymType,
           gymLogo: formState.gym.gymLogo,
+          alternateContacts: formState.gym.alternateContacts,
+          googleReviewLink: formState.gym.googleReviewLink,
           socialMediaLinks: [
             { platform: 'instagram', url: formState.gym.instagramUrl },
             { platform: 'facebook', url: formState.gym.facebookUrl },
@@ -770,6 +774,7 @@ const Profile = () => {
           <Field label="Tagline" value={formState.gym.tagline} disabled={!isEditing} maxLength={30} error={errors.tagline} onChange={e => setSectionValue('gym', 'tagline', e.target.value)} />
           <Field label="Gym Email *" value={formState.gym.gymEmail} type="email" disabled={!isEditing} error={errors.gymEmail} onChange={e => setSectionValue('gym', 'gymEmail', e.target.value)} />
           <Field label="Gym Contact *" value={formState.gym.gymContact} type="tel" disabled={!isEditing} error={errors.gymContact} maxLength={10} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10)} onChange={e => setSectionValue('gym', 'gymContact', e.target.value)} />
+          <Field label="Alternate Contacts" value={formState.gym.alternateContacts} disabled={!isEditing} maxLength={100} onChange={e => setSectionValue('gym', 'alternateContacts', e.target.value)} />
           <Field label="GST Number" value={formState.gym.gst} disabled={!isEditing} maxLength={15} onChange={e => setSectionValue('gym', 'gst', e.target.value)} />
 
           {/* Operating Days */}
@@ -821,9 +826,6 @@ const Profile = () => {
             {errors.operatingDays && <p className="text-red-500 text-xs mt-1 italic">{errors.operatingDays}</p>}
           </div>
 
-          <Field label="Instagram URL" value={formState.gym.instagramUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'instagramUrl', e.target.value)} />
-          <Field label="Facebook URL" value={formState.gym.facebookUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'facebookUrl', e.target.value)} />
-          <Field label="Website URL" value={formState.gym.websiteUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'websiteUrl', e.target.value)} />
           <div className="grid grid-cols-2 gap-3">
             <TimeField
               label="Open Time *"
@@ -894,6 +896,16 @@ const Profile = () => {
             <Field label="City *" value={formState.gym.city} disabled />
           )}
           <Field label="Pincode *" value={formState.gym.pincode} disabled={!isEditing} maxLength={6} error={errors.pincode} onInput={e => e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6)} onChange={e => setSectionValue('gym', 'pincode', e.target.value)} />
+        </div>
+      </ProfileSection>
+
+      {/* ── Section: Social Media & Marketing ── */}
+      <ProfileSection title="Social Media & Marketing">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Field label="Instagram URL" value={formState.gym.instagramUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'instagramUrl', e.target.value)} />
+          <Field label="Facebook URL" value={formState.gym.facebookUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'facebookUrl', e.target.value)} />
+          <Field label="Website URL" value={formState.gym.websiteUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'websiteUrl', e.target.value)} />
+          <Field label="Google Review Link" value={formState.gym.googleReviewLink} disabled={!isEditing} type="url" onChange={e => setSectionValue('gym', 'googleReviewLink', e.target.value)} />
         </div>
       </ProfileSection>
 

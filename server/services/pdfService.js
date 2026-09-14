@@ -349,12 +349,22 @@ const generatePaymentPDF = async (payment, client, gym) => {
       doc.font(fontBold).fillColor('#111827').text(`${currencySymbol}${Number(totalAmountVal).toFixed(2)}`, 430, calcY, { width: 125, align: 'right' });
 
       calcY += 16;
+      const isCard = String(payment.paymentMethod || payment.mode || '').toLowerCase() === 'card';
+      const paidNowVal = Number(payment.paidNow || payment.paidAmount || 0);
+      const cardFeeVal = isCard ? paidNowVal * 0.02 : 0;
+      
       doc.font(fontName).fillColor('#4b5563').text('Paid Now', 40, calcY);
-      doc.font(fontBold).fillColor('#111827').text(`${currencySymbol}${Number(payment.paidNow || payment.paidAmount || 0).toFixed(2)}`, 430, calcY, { width: 125, align: 'right' });
+      doc.font(fontBold).fillColor('#111827').text(`${currencySymbol}${paidNowVal.toFixed(2)}`, 430, calcY, { width: 125, align: 'right' });
+
+      if (isCard) {
+        calcY += 16;
+        doc.font(fontName).fillColor('#4b5563').text('Card Fee (2%)', 40, calcY);
+        doc.font(fontBold).fillColor('#111827').text(`${currencySymbol}${cardFeeVal.toFixed(2)}`, 430, calcY, { width: 125, align: 'right' });
+      }
 
       calcY += 16;
       doc.fillColor('#4b5563').font(fontName).text('Total Paid', 40, calcY);
-      doc.font(fontBold).fillColor('#111827').text(`${currencySymbol}${Number(payment.totalPaid || payment.paidAmount || 0).toFixed(2)}`, 430, calcY, { width: 125, align: 'right' });
+      doc.font(fontBold).fillColor('#111827').text(`${currencySymbol}${(Number(payment.totalPaid || payment.paidAmount || 0) + cardFeeVal).toFixed(2)}`, 430, calcY, { width: 125, align: 'right' });
 
       calcY += 14;
       doc.strokeColor('#e5e7eb').lineWidth(1).moveTo(40, calcY).lineTo(555, calcY).stroke();

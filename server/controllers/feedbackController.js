@@ -6,12 +6,12 @@ const { sanitizePayload } = require('../utils/allowlist');
 // @access  Private (Client)
 const submitFeedback = async (req, res) => {
   try {
-    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ['subject', 'message']);
+    const { cleanData, hasInvalidFields } = sanitizePayload(req.body, ['subject', 'message', 'type']);
     if (hasInvalidFields) {
       return res.status(400).json({ success: false, message: 'Request contains restricted or invalid fields.' });
     }
 
-    const { subject, message } = cleanData;
+    const { subject, message, type } = cleanData;
     const clientObjectId = req.user._id;
     const gymId = req.user.gymId;
     const clientId = req.user.clientId;
@@ -34,6 +34,7 @@ const submitFeedback = async (req, res) => {
       clientAvatar,
       subject,
       message,
+      type: type || 'feedback',
       status: 'Unread'
     });
 
@@ -66,7 +67,12 @@ const getClientFeedback = async (req, res) => {
 // @access  Private (Owner/Admin)
 const getGymFeedback = async (req, res) => {
   try {
-    const feedbacks = await Feedback.find({})
+    const filter = {};
+    if (!req.user.isMasterAdmin) {
+      filter.type = { $ne: 'complaint' };
+    }
+
+    const feedbacks = await Feedback.find(filter)
       .sort({ createdAt: -1 });
 
     res.status(200).json(feedbacks);

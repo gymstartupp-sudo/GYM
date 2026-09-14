@@ -90,4 +90,22 @@ const uploadIssueFiles = multer({
   limits: { fileSize: 20 * 1024 * 1024, files: 6 } // 5 screenshots + 1 video
 });
 
-module.exports = { uploadLogo, uploadBill, uploadIssueFiles };
+const campaignRoot = path.join(__dirname, '..', 'uploads', 'campaigns');
+if (!fs.existsSync(campaignRoot)) fs.mkdirSync(campaignRoot, { recursive: true });
+
+const campaignStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, campaignRoot),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const rand = crypto.randomBytes(8).toString('hex');
+    cb(null, `campaign-${Date.now()}-${rand}${ext}`);
+  }
+});
+
+const uploadCampaignMedia = multer({
+  storage: campaignStorage,
+  fileFilter: issueFileFilter,
+  limits: { fileSize: 20 * 1024 * 1024 }
+});
+
+module.exports = { uploadLogo, uploadBill, uploadIssueFiles, uploadCampaignMedia };
