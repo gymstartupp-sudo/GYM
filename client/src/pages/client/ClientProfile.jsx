@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, LogOut, Download, AlertTriangle, Check } from 'lucide-react';
 import Button from '../../components/Button';
+import CustomDropdown from '../../components/CustomDropdown';
 import CustomDatePicker from '../../components/CustomDatePicker';
 import { DATE_RULES, getDobYearBounds, validateDob } from '../../utils/dateInput';
 import { STATES_LIST, getCitiesForState } from '../../utils/indianStatesCities';
+import AvatarUpload from '../../components/AvatarUpload';
 
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -121,12 +123,13 @@ const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select
                     onChange(opt);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors ${value === opt
-                    ? 'bg-primary text-black font-bold'
-                    : 'text-text-primary hover:bg-primary hover:text-black'
+                  className={`flex items-center justify-between w-full text-left px-3 py-2 text-xs transition-colors rounded-md hover:bg-primary hover:text-black ${value === opt
+                    ? 'text-primary font-bold'
+                    : 'text-text-primary font-semibold'
                     }`}
                 >
-                  {opt}
+                  <span className="truncate">{opt}</span>
+                  {value === opt && <Check size={14} className="shrink-0 font-extrabold" />}
                 </button>
               ))
             )}
@@ -141,11 +144,13 @@ const ClientProfile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [formState, setFormState] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const { minYear: dobMinYear, maxYear: dobMaxYear } = getDobYearBounds();
+  const fileInputRef = React.useRef(null);
 
   const fetchProfile = async () => {
     try {
@@ -162,6 +167,36 @@ const ClientProfile = () => {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  const handleLogoClick = () => {
+    if (!editing) return;
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Supports: JPG, JPEG, PNG, WEBP.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File is too large. Limit is 5MB.');
+      return;
+    }
+
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormState(curr => ({ ...curr, tempAvatarPreview: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const validateSingleField = (key, value) => {
     let errMsg = '';
@@ -249,6 +284,7 @@ const ClientProfile = () => {
 
   const handleCancel = () => {
     setFormState(profile);
+    setAvatarFile(null);
     setEditing(false);
     setErrors({});
   };
@@ -272,7 +308,28 @@ const ClientProfile = () => {
         }
       }
 
-      const res = await api.put('/client/profile', { personalInfo: cleanPersonalInfo });
+      let avatarUrl = null;
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+        try {
+          const uploadRes = await api.post('/upload/avatar', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          avatarUrl = uploadRes.data.data.url;
+        } catch (err) {
+          toast.error('Failed to upload avatar image');
+          setSaving(false);
+          return;
+        }
+      }
+
+      const payload = { personalInfo: cleanPersonalInfo };
+      if (avatarUrl) {
+        payload.avatar = avatarUrl;
+      }
+
+      const res = await api.put('/client/profile', payload);
       setProfile(res.data.data);
       setFormState(res.data.data);
       setEditing(false);
@@ -310,6 +367,37 @@ const ClientProfile = () => {
           >
             <ChevronLeft size={20} />
           </button>
+          
+          <div
+            onClick={editing ? handleLogoClick : undefined}
+            className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 ${!editing ? 'cursor-default' : 'cursor-pointer group'}`}
+            title={editing ? "Click to change photo" : undefined}
+          >
+            {formState?.tempAvatarPreview || (profile?.avatar && profile.avatar.length > 1) ? (
+              <img src={formState?.tempAvatarPreview || profile.avatar} alt={profile?.personalInfo?.name} className={`w-full h-full object-cover ${editing ? 'transition-transform duration-200 group-hover:scale-105' : ''}`} />
+            ) : (
+              <div className={`w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-xl sm:text-2xl ${editing ? 'transition-transform duration-200 group-hover:scale-105' : ''}`}>
+                {profile?.personalInfo?.name?.charAt(0).toUpperCase() || 'C'}
+              </div>
+            )}
+            
+            {editing && (
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-text-primary gap-1 select-none">
+                <span className="text-[9px] font-extrabold uppercase tracking-wider text-primary text-center px-1">
+                  Change Photo
+                </span>
+              </div>
+            )}
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleLogoChange}
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            className="hidden"
+          />
+
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-text-primary tracking-tight truncate">{profile?.personalInfo?.name || 'Client Profile'}</h1>
             <p className="text-text-secondary mt-1 text-xs sm:text-sm md:text-base leading-relaxed truncate">{profile?.personalInfo?.email || 'Manage profile'}</p>
@@ -344,16 +432,17 @@ const ClientProfile = () => {
 
           <label className="space-y-1 block group">
             <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">Gender *</span>
-            <select
+            <CustomDropdown
               value={formState.personalInfo?.gender || ''}
-              onChange={e => setPersonalInfo('gender', e.target.value)}
+              onChange={val => setPersonalInfo('gender', val)}
               disabled={!editing}
-              className={`input-field bg-surface-secondary border border-border text-text-primary rounded-xl ${!editing ? 'bg-surface-hover/60 text-text-muted cursor-not-allowed' : ''}`}
-            >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
+              options={[
+                { label: 'Male', value: 'Male' },
+                { label: 'Female', value: 'Female' },
+                { label: 'Other', value: 'Other' }
+              ]}
+              className={`w-full ${!editing ? 'opacity-70 pointer-events-none' : ''}`}
+            />
           </label>
 
           <Field

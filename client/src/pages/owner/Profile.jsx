@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Check } from 'lucide-react';
 import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { sortOperatingDays } from '../../utils/membership';
@@ -139,8 +139,8 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
       </span>
 
       <div className={`flex items-center gap-1.5 h-11 px-3 bg-surface-card border rounded-input transition-all duration-200 ${disabled
-          ? 'bg-surface-hover/60 border-border text-text-muted cursor-not-allowed'
-          : 'border-border hover:border-primary hover:shadow-[0_0_8px_rgba(255,189,7,0.25)] focus-within:border-primary'
+        ? 'bg-surface-hover/60 border-border text-text-muted cursor-not-allowed'
+        : 'border-border hover:border-primary hover:shadow-[0_0_8px_rgba(255,189,7,0.25)] focus-within:border-primary'
         }`}>
 
         {/* Hour Picker */}
@@ -165,8 +165,8 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
                     setOpenDropdown(null);
                   }}
                   className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${String(hour) === String(h)
-                      ? 'bg-primary text-black font-bold'
-                      : 'text-text-primary hover:bg-primary hover:text-black'
+                    ? 'bg-primary text-black font-bold'
+                    : 'text-text-primary hover:bg-primary hover:text-black'
                     }`}
                 >
                   {h}
@@ -200,8 +200,8 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
                     setOpenDropdown(null);
                   }}
                   className={`w-full text-center px-3 py-1.5 text-xs font-semibold cursor-pointer transition-colors ${String(minute) === String(m)
-                      ? 'bg-primary text-black font-bold'
-                      : 'text-text-primary hover:bg-primary hover:text-black'
+                    ? 'bg-primary text-black font-bold'
+                    : 'text-text-primary hover:bg-primary hover:text-black'
                     }`}
                 >
                   {m}
@@ -233,8 +233,8 @@ const TimeField = ({ label, hour, minute, ampm, disabled, onHourChange, onMinute
                     setOpenDropdown(null);
                   }}
                   className={`w-full text-center px-3 py-1.5 text-xs font-bold cursor-pointer transition-colors ${String(ampm) === String(ap)
-                      ? 'bg-primary text-black font-bold'
-                      : 'text-text-primary hover:bg-primary hover:text-black'
+                    ? 'bg-primary text-black font-bold'
+                    : 'text-text-primary hover:bg-primary hover:text-black'
                     }`}
                 >
                   {ap}
@@ -325,12 +325,13 @@ const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select
                     onChange(opt);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors ${value === opt
-                      ? 'bg-primary text-black font-bold'
-                      : 'text-text-primary hover:bg-primary hover:text-black'
+                  className={`flex items-center justify-between w-full text-left px-3 py-2 text-xs transition-colors rounded-md hover:bg-primary hover:text-black ${value === opt
+                    ? 'text-primary font-bold'
+                    : 'text-text-primary font-semibold'
                     }`}
                 >
-                  {opt}
+                  <span className="truncate">{opt}</span>
+                  {value === opt && <Check size={14} className="shrink-0 font-extrabold" />}
                 </button>
               ))
             )}
@@ -352,6 +353,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = React.useRef(null);
 
   const handleLogoClick = () => {
@@ -361,7 +363,7 @@ const Profile = () => {
     }
   };
 
-  const handleLogoChange = async (e) => {
+  const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -378,45 +380,12 @@ const Profile = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('logo', file);
-
-    try {
-      toast.info('Uploading new profile picture...');
-      const res = await api.put('/gym/profile/logo', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      const newLogoUrl = res.data.data.gymLogo;
-
-      setFormState(curr => ({
-        ...curr,
-        gym: {
-          ...curr.gym,
-          gymLogo: newLogoUrl,
-          billingInfo: {
-            ...curr.gym.billingInfo,
-            logo: newLogoUrl
-          }
-        }
-      }));
-
-      setProfile(curr => ({
-        ...curr,
-        gym: {
-          ...curr.gym,
-          gymLogo: newLogoUrl,
-          billingInfo: {
-            ...curr.gym.billingInfo,
-            logo: newLogoUrl
-          }
-        }
-      }));
-
-      toast.success('Profile picture updated successfully!');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile picture');
-    }
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormState(curr => ({ ...curr, tempAvatarPreview: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const fetchProfile = async () => {
@@ -624,6 +593,23 @@ const Profile = () => {
         formState.gym.operatingCloseAmpm
       );
 
+      let finalLogoUrl = formState.gym.gymLogo;
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append('logo', avatarFile);
+        try {
+          const uploadRes = await api.put('/gym/profile/logo', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          finalLogoUrl = uploadRes.data.data.gymLogo;
+          window.dispatchEvent(new Event('profileUpdated'));
+        } catch (err) {
+          toast.error('Failed to upload profile picture');
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const payload = {
         gymData: {
           gymName: formState.gym.gymName,
@@ -637,7 +623,7 @@ const Profile = () => {
           gymEmail: formState.gym.gymEmail,
           gymContact: formState.gym.gymContact,
           gymType: formState.gym.gymType,
-          gymLogo: formState.gym.gymLogo,
+          gymLogo: finalLogoUrl,
           alternateContacts: formState.gym.alternateContacts,
           googleReviewLink: formState.gym.googleReviewLink,
           socialMediaLinks: [
@@ -652,7 +638,7 @@ const Profile = () => {
             phoneNumber: formState.gym.reminderSettings?.phoneNumber,
             gmail: formState.gym.reminderSettings?.gmail
           },
-          billingInfo: { ...formState.gym.billingInfo }
+          billingInfo: { ...formState.gym.billingInfo, logo: finalLogoUrl }
         },
         ownerData: {
           name: formState.owner.name,
@@ -667,9 +653,11 @@ const Profile = () => {
 
       setProfile(updatedProfile);
       setFormState(buildFormState(updatedProfile));
+      setAvatarFile(null);
       setIsEditing(false);
       setErrors({});
       toast.success('Profile updated successfully');
+      window.dispatchEvent(new Event('profileUpdated'));
     } catch (error) {
       const serverError = error.response?.data;
       if (serverError?.field) {
@@ -706,28 +694,30 @@ const Profile = () => {
           <div className="flex items-center gap-3 sm:gap-5 min-w-0 flex-1">
             {/* Logo Preview */}
             <div
-              onClick={isReadOnly ? undefined : handleLogoClick}
-              className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 ${isReadOnly ? 'cursor-default' : 'cursor-pointer group'}`}
-              title={isReadOnly ? undefined : "Click to change logo"}
+              onClick={(!isReadOnly && isEditing) ? handleLogoClick : undefined}
+              className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-border shadow-md bg-surface-secondary flex items-center justify-center shrink-0 ${(!isReadOnly && isEditing) ? 'cursor-pointer group' : 'cursor-default'}`}
+              title={(!isReadOnly && isEditing) ? "Click to change logo" : undefined}
             >
-              {formState.gym.gymLogo || formState.gym.billingInfo?.logo ? (
+              {formState?.tempAvatarPreview || formState.gym.gymLogo || formState.gym.billingInfo?.logo ? (
                 <img
                   src={
-                    (formState.gym.gymLogo || formState.gym.billingInfo?.logo).startsWith('http')
-                      ? (formState.gym.gymLogo || formState.gym.billingInfo?.logo)
-                      : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${formState.gym.gymLogo || formState.gym.billingInfo?.logo}`
+                    formState?.tempAvatarPreview || (
+                      (formState.gym.gymLogo || formState.gym.billingInfo?.logo).startsWith('http')
+                        ? (formState.gym.gymLogo || formState.gym.billingInfo?.logo)
+                        : `${(import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace('/api', '')}${formState.gym.gymLogo || formState.gym.billingInfo?.logo}`
+                    )
                   }
                   alt="Gym Logo"
-                  className={`w-full h-full object-cover ${isReadOnly ? '' : 'transition-transform duration-200 group-hover:scale-105'}`}
+                  className={`w-full h-full object-cover ${(!isReadOnly && isEditing) ? 'transition-transform duration-200 group-hover:scale-105' : ''}`}
                 />
               ) : (
-                <div className={`w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-xl sm:text-2xl ${isReadOnly ? '' : 'transition-transform duration-200 group-hover:scale-105'}`}>
+                <div className={`w-full h-full bg-primary/10 flex items-center justify-center text-primary font-black text-xl sm:text-2xl ${(!isReadOnly && isEditing) ? 'transition-transform duration-200 group-hover:scale-105' : ''}`}>
                   {formState.gym.gymName?.charAt(0).toUpperCase() || 'G'}
                 </div>
               )}
 
               {/* Instagram-style Hover Overlay */}
-              {!isReadOnly && (
+              {(!isReadOnly && isEditing) && (
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-text-primary gap-1 select-none">
                   <span className="text-[9px] font-extrabold uppercase tracking-wider text-primary text-center px-1">
                     Change Photo
@@ -787,12 +777,12 @@ const Profile = () => {
                   <label
                     key={day}
                     className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2.5 border select-none transition-all duration-200 ${!isEditing
-                        ? isChecked
-                          ? 'opacity-90 cursor-not-allowed bg-primary/10 border-primary/30 text-primary font-semibold'
-                          : 'opacity-50 cursor-not-allowed bg-surface-divider/50 border-border/50 text-text-muted'
-                        : isChecked
-                          ? 'cursor-pointer bg-primary/15 border-primary/50 text-primary font-bold shadow-sm'
-                          : 'cursor-pointer bg-surface-card border-border text-text-secondary hover:border-primary/40 hover:text-text-primary'
+                      ? isChecked
+                        ? 'opacity-90 cursor-not-allowed bg-primary/10 border-primary/30 text-primary font-semibold'
+                        : 'opacity-50 cursor-not-allowed bg-surface-divider/50 border-border/50 text-text-muted'
+                      : isChecked
+                        ? 'cursor-pointer bg-primary/15 border-primary/50 text-primary font-bold shadow-sm'
+                        : 'cursor-pointer bg-surface-card border-border text-text-secondary hover:border-primary/40 hover:text-text-primary'
                       }`}
                   >
                     <input
@@ -900,7 +890,7 @@ const Profile = () => {
       </ProfileSection>
 
       {/* ── Section: Social Media & Marketing ── */}
-      <ProfileSection title="Social Media & Marketing">
+      <ProfileSection title="Social Media Links">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Field label="Instagram URL" value={formState.gym.instagramUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'instagramUrl', e.target.value)} />
           <Field label="Facebook URL" value={formState.gym.facebookUrl} disabled={!isEditing} onChange={e => setSectionValue('gym', 'facebookUrl', e.target.value)} />

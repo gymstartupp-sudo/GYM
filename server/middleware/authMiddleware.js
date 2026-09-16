@@ -30,7 +30,7 @@ const protect = async (req, res, next) => {
       } else if (decoded.role === 'owner') {
         if (decoded.gymId) {
           // Verify gym is active in the database
-          const gym = await Gym.findOne({ gymId: decoded.gymId }).select('isActive').lean();
+          const gym = await Gym.findOne({ gymId: decoded.gymId }).select('isActive dbName').lean();
           if (!gym || gym.isActive === false) {
             return res.status(403).json({ success: false, message: 'Not authorized, gym account is inactive or suspended' });
           }
@@ -39,7 +39,8 @@ const protect = async (req, res, next) => {
             gymId: decoded.gymId, 
             gymName: decoded.gymName,
             isMasterAdmin: decoded.isMasterAdmin || false,
-            allowedTabs: decoded.allowedTabs || []
+            allowedTabs: decoded.allowedTabs || [],
+            dbName: gym.dbName
           };
         } else {
           user = await Gym.findById(decoded.id).select('-password').lean();

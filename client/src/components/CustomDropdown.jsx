@@ -59,14 +59,14 @@ const CustomDropdown = ({
                   onChange(opt.value);
                   setOpen(false);
                 }}
-                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-xs text-left font-semibold transition-all duration-150 cursor-pointer ${
+                className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-xs text-left transition-all duration-150 cursor-pointer hover:bg-primary hover:text-black ${
                   isSelected
-                    ? 'bg-primary text-black font-bold shadow-sm'
-                    : 'text-text-primary hover:bg-primary hover:text-black font-bold'
+                    ? 'text-primary font-bold'
+                    : 'text-text-primary font-medium'
                 }`}
               >
                 <span className="truncate">{opt.label}</span>
-                {isSelected && <Check size={14} className="shrink-0 font-extrabold text-black" />}
+                {isSelected && <Check size={14} className="shrink-0 font-extrabold" />}
               </button>
             );
           })}

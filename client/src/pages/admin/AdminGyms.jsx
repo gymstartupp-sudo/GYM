@@ -113,6 +113,14 @@ const GymProfileModal = ({ gymId, onClose }) => {
               <InfoRow icon={<Mail size={14} />} label="Owner Email" value={owner.mailId || '—'} />
             </Section>
 
+            {/* Admin Config */}
+            {gym.adminConfig && (
+              <Section title="Admin Configuration">
+                <InfoRow icon={<Mail size={14} />} label="Admin Email" value={gym.adminConfig.email || '—'} />
+                <InfoRow icon={<Phone size={14} />} label="Admin Mobile" value={gym.adminConfig.phone || '—'} />
+              </Section>
+            )}
+
             {/* Operating */}
             <Section title="Operating Details">
               <InfoRow icon={<Calendar size={14} />} label="Operating Days" value={operatingDays} />

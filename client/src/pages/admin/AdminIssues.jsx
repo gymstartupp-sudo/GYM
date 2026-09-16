@@ -11,6 +11,7 @@ import {
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import { createPortal } from 'react-dom';
+import CustomDropdown from '../../components/CustomDropdown';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CATEGORIES = ['Bug', 'Feature Request', 'Billing', 'Member Management', 'WhatsApp Notifications', 'Payments', 'Other'];
@@ -429,21 +430,27 @@ const AdminIssues = () => {
                   onFocus={e => e.currentTarget.style.borderColor = '#6366f1'}
                   onBlur={e => e.currentTarget.style.borderColor = 'var(--border-color)'} />
               </div>
-              <select value={filters.category}
-                onChange={e => { setFilters(p => ({ ...p, category: e.target.value })); setPage(1); }}
-                className="rounded-xl px-3 py-2.5 text-sm outline-none cursor-pointer"
-                style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
-                <option value="">All Categories</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <select value={filters.status}
-                onChange={e => { setFilters(p => ({ ...p, status: e.target.value })); setPage(1); }}
-                className="rounded-xl px-3 py-2.5 text-sm outline-none cursor-pointer"
-                style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>
-                <option value="">All Statuses</option>
-                <option value="Open">Open</option>
-                <option value="Resolved">Resolved</option>
-              </select>
+              <CustomDropdown
+                value={filters.category}
+                onChange={val => { setFilters(p => ({ ...p, category: val })); setPage(1); }}
+                options={[
+                  { label: 'All Categories', value: '' },
+                  ...CATEGORIES.map(c => ({ label: c, value: c }))
+                ]}
+                placeholder="All Categories"
+                className="w-48"
+              />
+              <CustomDropdown
+                value={filters.status}
+                onChange={val => { setFilters(p => ({ ...p, status: val })); setPage(1); }}
+                options={[
+                  { label: 'All Statuses', value: '' },
+                  { label: 'Open', value: 'Open' },
+                  { label: 'Resolved', value: 'Resolved' }
+                ]}
+                placeholder="All Statuses"
+                className="w-40"
+              />
               {hasFilters && (
                 <button onClick={() => { setFilters({ search: '', category: '', status: '' }); setDebouncedSearch(''); setPage(1); }}
                   className="rounded-xl px-3 py-2.5 text-xs font-bold flex items-center gap-1.5"

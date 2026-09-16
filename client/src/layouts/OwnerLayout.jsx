@@ -62,6 +62,13 @@ export default function OwnerLayout() {
       }
     };
     fetchGymProfile();
+
+    const handleProfileUpdate = () => {
+      fetchGymProfile();
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
   }, []);
 
 

@@ -435,7 +435,11 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(16,185,129,0.35)';
               }}
             >
-              {clientAvatar}
+              {profile?.avatar && profile.avatar.length > 1 ? (
+                <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-xl object-cover" />
+              ) : (
+                clientAvatar
+              )}
             </button>
 
             {/* Chrome-style Dropdown Menu */}
@@ -459,13 +463,16 @@ const ClientHeader = ({ clientName = 'Member', clientEmail = '', isMobile = fals
                 <div className="flex flex-col items-center pt-2">
                   {/* Avatar with thick gold border */}
                   <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl text-white shadow-md mb-4 border-[3px]"
+                    className="w-20 h-20 rounded-full flex items-center justify-center font-bold text-3xl text-white shadow-md mb-4"
                     style={{
                       background: 'linear-gradient(135deg, #10B981, #059669)',
-                      borderColor: '#FFBD07',
                     }}
                   >
-                    {clientAvatar}
+                    {profile?.avatar && profile.avatar.length > 1 ? (
+                      <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      clientAvatar
+                    )}
                   </div>
 
                   {/* Name */}

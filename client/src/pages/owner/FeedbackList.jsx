@@ -147,8 +147,12 @@ const FeedbackList = () => {
                     {/* Client Info */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
-                          {item.clientAvatar || item.clientName?.charAt(0).toUpperCase() || 'C'}
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300 overflow-hidden">
+                          {item.clientAvatar && item.clientAvatar.length > 1 ? (
+                            <img src={item.clientAvatar} alt={item.clientName} className="w-full h-full object-cover" />
+                          ) : (
+                            item.clientName?.charAt(0).toUpperCase() || 'C'
+                          )}
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-text-primary text-sm truncate max-w-[150px] group-hover:text-primary transition-colors">{item.clientName}</h4>
@@ -212,9 +216,13 @@ const FeedbackList = () => {
               <div className="flex items-center gap-3">
                 <div
                   style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#10B981', borderColor: 'rgba(16, 185, 129, 0.25)' }}
-                  className="w-12 h-12 rounded-xl flex justify-center items-center font-bold text-lg border shadow-inner"
+                  className="w-12 h-12 rounded-xl flex justify-center items-center font-bold text-lg border shadow-inner overflow-hidden"
                 >
-                  {selectedFeedback.clientAvatar || selectedFeedback.clientName?.charAt(0).toUpperCase() || 'C'}
+                  {selectedFeedback.clientAvatar && selectedFeedback.clientAvatar.length > 1 ? (
+                    <img src={selectedFeedback.clientAvatar} alt={selectedFeedback.clientName} className="w-full h-full object-cover" />
+                  ) : (
+                    selectedFeedback.clientName?.charAt(0).toUpperCase() || 'C'
+                  )}
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-bold text-text-primary text-base leading-tight truncate max-w-[200px]">{selectedFeedback.clientName}</h3>

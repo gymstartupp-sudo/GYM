@@ -7,6 +7,7 @@ import Button from '../../components/Button';
 import { useTheme } from '../../context/ThemeContext';
 import ThemeToggle from '../../components/ThemeToggle';
 import LogoutModal from '../../components/LogoutModal';
+import CustomDropdown from '../../components/CustomDropdown';
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
@@ -305,14 +306,15 @@ const Settings = () => {
             {user.isMasterAdmin && (
               <div className="space-y-1.5">
                 <span className="text-xs uppercase tracking-wider text-text-muted font-medium block">Target Account</span>
-                <select
+                <CustomDropdown
                   value={targetAccount}
-                  onChange={(e) => setTargetAccount(e.target.value)}
-                  className="input-field w-full cursor-pointer"
-                >
-                  <option value="admin">Master Admin Password</option>
-                  <option value="gym">Gym Account Password</option>
-                </select>
+                  onChange={(val) => setTargetAccount(val)}
+                  options={[
+                    { label: 'Master Admin Password', value: 'admin' },
+                    { label: 'Gym Account Password', value: 'gym' }
+                  ]}
+                  className="w-full"
+                />
                 <p className="text-[10px] text-text-secondary mt-1">Select which password you want to update.</p>
               </div>
             )}

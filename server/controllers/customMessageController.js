@@ -38,16 +38,27 @@ const processMessageCampaign = async (campaignId, gymId, dbName, recipients) => 
       const formattedWhatsApp = `+91${cleanMobile}`;
       
       let campaignRecord;
-      await runWithTenantContext({ tenantDb: conn, models: { CustomMessageCampaign: CampaignModel } }, async () => {
+      let clientName = 'Member';
+
+      await runWithTenantContext({ tenantDb: conn, models: { CustomMessageCampaign: CampaignModel, Client: conn.models.Client || conn.model('Client', Client.schema), Lead: conn.models.Lead || conn.model('Lead', Lead.schema) } }, async () => {
         campaignRecord = await CampaignModel.findById(campaignId);
+        
+        let user = await conn.models.Client.findById(recipient.recipientId).select('personalInfo.name name');
+        if (user) {
+          clientName = user.personalInfo?.name || user.name || 'Member';
+        } else {
+          user = await conn.models.Lead.findById(recipient.recipientId).select('name');
+          if (user) clientName = user.name || 'Member';
+        }
       });
       
       if (!campaignRecord) break;
       
-      const mediaType = campaignRecord.templateName === 'msg_video' ? 'video' : (campaignRecord.templateName === 'msg_imag' ? 'image' : null);
+      const mediaType = campaignRecord.templateName === 'msg_video' ? 'video' : (campaignRecord.templateName === 'msg_img' ? 'image' : null);
 
       const result = await sendCustomTemplateMessage({
         phone: formattedWhatsApp,
+        clientName: clientName,
         templateName: campaignRecord.templateName,
         messageContent: campaignRecord.messageContent,
         mediaUrl: campaignRecord.mediaUrl,
@@ -118,14 +129,14 @@ exports.sendCampaign = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing required fields' });
     }
 
-    let mediaUrl = null;
+    let mediaUrl = req.body.mediaUrl || null;
     if (req.file) {
       const isVideo = req.file.mimetype.startsWith('video');
       mediaUrl = await uploadCustomMessageMediaToCloudinary(req.file.path, isVideo ? 'video' : 'image');
     }
 
-    if ((templateName === 'msg_imag' || templateName === 'msg_video') && !mediaUrl) {
-      return res.status(400).json({ success: false, message: 'Media file is required for this template' });
+    if ((templateName === 'msg_img' || templateName === 'msg_video') && !mediaUrl) {
+      return res.status(400).json({ success: false, message: 'Media file or URL is required for this template' });
     }
 
     // Fetch recipients
@@ -199,5 +210,183 @@ exports.sendCampaign = async (req, res) => {
   } catch (error) {
     console.error('Error creating custom message campaign:', error);
     return res.status(500).json({ success: false, message: 'Failed to create campaign' });
+  }
+};
+
+exports.saveTemplate = async (req, res) => {
+  try {
+    const { gymId, dbName } = req.user;
+    const { title, templateType, content } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ success: false, message: 'Title and content are required' });
+    }
+
+    const conn = await getTenantConnection(dbName);
+    const SavedMessageTemplate = require('../models/SavedMessageTemplate');
+    const TemplateModel = conn.models.SavedMessageTemplate || conn.model('SavedMessageTemplate', SavedMessageTemplate.schema);
+
+    let newTemplate;
+    await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+      newTemplate = new TemplateModel({
+        gymId,
+        title,
+        templateType: templateType || 'msg',
+        mediaUrl: req.file ? 'uploading...' : null,
+        content,
+        createdBy: req.user._id
+      });
+      await newTemplate.save();
+    });
+
+    if (req.file) {
+      // Run Cloudinary upload in the background
+      (async () => {
+        try {
+          const isVideo = req.file.mimetype.startsWith('video');
+          const uploadedUrl = await uploadCustomMessageMediaToCloudinary(req.file.path, isVideo ? 'video' : 'image');
+          await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+            await TemplateModel.findByIdAndUpdate(newTemplate._id, { mediaUrl: uploadedUrl });
+          });
+        } catch (error) {
+          console.error('Background upload failed for template:', error);
+          await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+            await TemplateModel.findByIdAndUpdate(newTemplate._id, { mediaUrl: null });
+          });
+        }
+      })();
+    }
+
+    return res.status(201).json({ success: true, message: 'Template saved successfully', data: newTemplate });
+  } catch (error) {
+    console.error('Error saving template:', error);
+    return res.status(500).json({ success: false, message: 'Failed to save template' });
+  }
+};
+
+exports.getCampaignHistory = async (req, res) => {
+  try {
+    const { gymId, dbName } = req.user;
+    const conn = await getTenantConnection(dbName);
+    const CustomMessageCampaign = require('../models/CustomMessageCampaign');
+    const CampaignModel = conn.models.CustomMessageCampaign || conn.model('CustomMessageCampaign', CustomMessageCampaign.schema);
+
+    const campaigns = await CampaignModel.find({ gymId }).sort({ createdAt: -1 }).lean();
+    
+    const history = {};
+    for (const campaign of campaigns) {
+      if (!campaign.recipients) continue;
+      for (const rec of campaign.recipients) {
+        if (!rec.recipientId) continue;
+        const id = String(rec.recipientId);
+        if (!history[id]) {
+          history[id] = {
+            templateName: campaign.templateName,
+            status: rec.status,
+            date: rec.sentAt || campaign.createdAt,
+            error: rec.error
+          };
+        }
+      }
+    }
+
+    return res.status(200).json({ success: true, data: history });
+  } catch (error) {
+    console.error('Error fetching campaign history:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch campaign history' });
+  }
+};
+
+exports.getTemplates = async (req, res) => {
+  try {
+    const { gymId, dbName } = req.user;
+    const conn = await getTenantConnection(dbName);
+    const SavedMessageTemplate = require('../models/SavedMessageTemplate');
+    const TemplateModel = conn.models.SavedMessageTemplate || conn.model('SavedMessageTemplate', SavedMessageTemplate.schema);
+
+    let templates = [];
+    await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+      templates = await TemplateModel.find({ gymId }).sort({ createdAt: -1 });
+    });
+
+    return res.status(200).json({ success: true, data: templates });
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch templates' });
+  }
+};
+
+exports.deleteTemplate = async (req, res) => {
+  try {
+    const { gymId, dbName } = req.user;
+    const { id } = req.params;
+
+    const conn = await getTenantConnection(dbName);
+    const SavedMessageTemplate = require('../models/SavedMessageTemplate');
+    const TemplateModel = conn.models.SavedMessageTemplate || conn.model('SavedMessageTemplate', SavedMessageTemplate.schema);
+
+    await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+      await TemplateModel.findOneAndDelete({ _id: id, gymId });
+    });
+
+    return res.status(200).json({ success: true, message: 'Template deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting template:', error);
+    return res.status(500).json({ success: false, message: 'Failed to delete template' });
+  }
+};
+
+exports.updateTemplate = async (req, res) => {
+  try {
+    const { gymId, dbName } = req.user;
+    const { id } = req.params;
+    const { title, templateType, content } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ success: false, message: 'Title and content are required' });
+    }
+
+    const conn = await getTenantConnection(dbName);
+    const SavedMessageTemplate = require('../models/SavedMessageTemplate');
+    const TemplateModel = conn.models.SavedMessageTemplate || conn.model('SavedMessageTemplate', SavedMessageTemplate.schema);
+
+    let updatedTemplate;
+    await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+      let updateFields = { title, templateType, content };
+      if (req.file) updateFields.mediaUrl = 'uploading...';
+
+      updatedTemplate = await TemplateModel.findOneAndUpdate(
+        { _id: id, gymId },
+        updateFields,
+        { new: true }
+      );
+    });
+
+    if (req.file && updatedTemplate) {
+      // Run Cloudinary upload in the background
+      (async () => {
+        try {
+          const isVideo = req.file.mimetype.startsWith('video');
+          const uploadedUrl = await uploadCustomMessageMediaToCloudinary(req.file.path, isVideo ? 'video' : 'image');
+          await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+            await TemplateModel.findByIdAndUpdate(updatedTemplate._id, { mediaUrl: uploadedUrl });
+          });
+        } catch (error) {
+          console.error('Background upload failed for template:', error);
+          await runWithTenantContext({ tenantDb: conn, models: { SavedMessageTemplate: TemplateModel } }, async () => {
+            await TemplateModel.findByIdAndUpdate(updatedTemplate._id, { mediaUrl: null });
+          });
+        }
+      })();
+    }
+
+    if (!updatedTemplate) {
+      return res.status(404).json({ success: false, message: 'Template not found' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Template updated successfully', data: updatedTemplate });
+  } catch (error) {
+    console.error('Error updating template:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update template' });
   }
 };

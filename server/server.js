@@ -143,6 +143,7 @@ app.use('/api/issues', require('./routes/issues'));
 app.use('/api/staff', require('./routes/staffRoutes'));
 app.use('/api/leads', require('./routes/leadRoutes'));
 app.use('/api/custom-messages', require('./routes/customMessageRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
 
 // Error Handler Middleware
 app.use(errorHandler);

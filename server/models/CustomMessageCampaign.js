@@ -3,7 +3,7 @@ const { createTenantModelProxy } = require('../utils/tenantContext');
 
 const customMessageCampaignSchema = new mongoose.Schema({
   gymId: { type: String, required: true },
-  templateName: { type: String, required: true, enum: ['msg', 'msg_imag', 'msg_video'] },
+  templateName: { type: String, required: true, enum: ['msg', 'msg_img', 'msg_video'] },
   messageContent: { type: String, required: true },
   mediaUrl: { type: String, default: null },
   audienceType: { 

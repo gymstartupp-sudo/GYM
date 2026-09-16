@@ -29,8 +29,12 @@ const ClientCard = ({ client, onView, onRenew, onReactivate, onDuesClick, onRemi
     <tr className="flex flex-col md:table-row bg-surface-secondary md:bg-surface-card border border-border md:border-0 md:border-b hover:bg-white/[0.02] transition-colors group mb-4 md:mb-0 rounded-xl md:rounded-none overflow-hidden">
       <td className="p-4 md:align-middle flex items-center md:table-cell border-b border-border/50 md:border-0 bg-surface-card md:bg-transparent rounded-t-xl md:rounded-none">
         <div className="flex gap-3 items-center min-w-0 w-full">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300">
-            {avatarText}
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-lg border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300 overflow-hidden">
+            {client?.avatar && client.avatar.length > 1 ? (
+              <img src={client.avatar} alt={name} className="w-full h-full object-cover" />
+            ) : (
+              avatarText
+            )}
           </div>
           <div className="flex flex-col min-w-0">
             <h3 className="font-semibold text-text-primary truncate group-hover:text-primary transition-colors">{name}</h3>

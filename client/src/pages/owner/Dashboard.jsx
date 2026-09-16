@@ -41,8 +41,12 @@ const ClientDashboardTable = ({ clients, onView }) => (
                     <tr key={client._id} className="group">
                         <td>
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-base border border-primary/20 shrink-0 group-hover:bg-primary group-hover:text-black transition-all duration-200">
-                                    {client.personalInfo?.name?.charAt(0).toUpperCase()}
+                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-base border border-primary/20 shrink-0 shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-300 overflow-hidden">
+                                    {client?.avatar && client.avatar.length > 1 ? (
+                                        <img src={client.avatar} alt={client.personalInfo?.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        client.personalInfo?.name?.charAt(0).toUpperCase() || 'C'
+                                    )}
                                 </div>
                                 <div className="flex flex-col min-w-0">
                                     <span className="text-text-primary font-semibold truncate group-hover:text-primary transition-colors">{client.personalInfo?.name}</span>

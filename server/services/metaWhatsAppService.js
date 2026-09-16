@@ -557,15 +557,20 @@ const sendForgotPasswordOTP = async ({ phone, otp, clientId, gymId }) => {
   });
 };
 
-const sendCustomTemplateMessage = async ({ phone, templateName, messageContent, mediaUrl, mediaType, clientId, gymId }) => {
+const sendCustomTemplateMessage = async ({ phone, clientName, templateName, messageContent, mediaUrl, mediaType, clientId, gymId }) => {
   let components = [];
 
   // Assuming Meta Templates are structured as:
-  // msg: Body(1 param)
-  // msg_imag: Header(Image), Body(1 param)
-  // msg_video: Header(Video), Body(1 param)
+  // msg: Body(2 params) -> {{1}}: client name, {{2}}: custom message
+  // msg_img: Header(Image), Body(2 params)
+  // msg_video: Header(Video), Body(2 params)
 
-  if (templateName === 'msg_imag' && mediaUrl) {
+  let metaTemplateName = templateName;
+  if (templateName === 'msg_img') {
+    metaTemplateName = 'msg_img';
+  }
+
+  if (templateName === 'msg_img' && mediaUrl) {
     components.push({
       type: 'header',
       parameters: [
@@ -587,16 +592,18 @@ const sendCustomTemplateMessage = async ({ phone, templateName, messageContent, 
     });
   }
 
+  // Inject body parameters for {{1}} and {{2}}
   components.push({
     type: 'body',
     parameters: [
-      { type: 'text', text: String(messageContent) }
+      { type: 'text', text: String(clientName || 'Member') },
+      { type: 'text', text: String(messageContent || '') }
     ]
   });
 
   return sendMetaWhatsApp({
     to: phone,
-    templateName,
+    templateName: metaTemplateName,
     components,
     reminderType: 'Custom Campaign',
     clientId,

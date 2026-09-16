@@ -73,9 +73,24 @@ const getGymFeedback = async (req, res) => {
     }
 
     const feedbacks = await Feedback.find(filter)
+      .populate('clientObjectId', 'avatar personalInfo')
       .sort({ createdAt: -1 });
 
-    res.status(200).json(feedbacks);
+    const formattedFeedbacks = feedbacks.map(f => {
+      const feedbackObj = f.toObject();
+      if (f.clientObjectId) {
+        if (f.clientObjectId.avatar) {
+          feedbackObj.clientAvatar = f.clientObjectId.avatar;
+        }
+        if (f.clientObjectId.personalInfo && f.clientObjectId.personalInfo.name) {
+          feedbackObj.clientName = f.clientObjectId.personalInfo.name;
+        }
+        feedbackObj.clientObjectId = f.clientObjectId._id;
+      }
+      return feedbackObj;
+    });
+
+    res.status(200).json(formattedFeedbacks);
   } catch (error) {
     console.error('Error fetching gym feedback:', error);
     res.status(500).json({ message: 'Server error' });

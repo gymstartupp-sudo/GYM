@@ -104,7 +104,11 @@ exports.getClients = async (req, res, next) => {
 
     const selectedPlan = planName || plan;
     if (selectedPlan && selectedPlan.toLowerCase() !== 'all') {
-      query['membership.planName'] = selectedPlan;
+      if (selectedPlan.match(/^[0-9a-fA-F]{24}$/)) {
+        query['membership.planId'] = selectedPlan;
+      } else {
+        query['membership.planName'] = selectedPlan;
+      }
     }
 
     // Reminder status filtering
@@ -179,7 +183,7 @@ const { sanitizePayload } = require('../utils/allowlist');
 // @access  Private (Client)
 exports.updateClientProfile = async (req, res, next) => {
   try {
-    const ALLOWED_TOP_LEVEL = ['personalInfo'];
+    const ALLOWED_TOP_LEVEL = ['personalInfo', 'avatar'];
     const ALLOWED_PERSONAL_INFO_FIELDS = [
       'name', 'email', 'mobileNo', 'gender', 'dob', 'address',
       'emergencyContact', 'city', 'state', 'pincode', 'bloodGroup',
@@ -223,6 +227,9 @@ exports.updateClientProfile = async (req, res, next) => {
       }
     }
     client.personalInfo = currentPersonalInfo;
+    if (req.body.avatar) {
+      client.avatar = req.body.avatar;
+    }
     await client.save();
 
     // Fetch payments before calling calculateBalances to avoid showing zero balances
@@ -296,6 +303,29 @@ exports.addClient = async (req, res, next) => {
       });
     }
 
+    const Gym = require('../models/Gym');
+    const gymInfo = await Gym.findOne({ gymId: gymIdStr });
+    if (gymInfo) {
+      const email = personalInfo.email?.toLowerCase();
+      const mobile = personalInfo.mobileNo;
+      const restrictedEmails = [
+        gymInfo.gymEmail?.toLowerCase(),
+        gymInfo.owner?.email?.toLowerCase(),
+        gymInfo.adminConfig?.email?.toLowerCase()
+      ].filter(Boolean);
+      
+      const restrictedMobiles = [
+        gymInfo.gymContact,
+        gymInfo.owner?.mobile,
+        gymInfo.owner?.phone,
+        gymInfo.adminConfig?.phone
+      ].filter(Boolean);
+
+      if (restrictedEmails.includes(email) || restrictedMobiles.includes(mobile)) {
+         return res.status(400).json({ success: false, message: 'Cannot use gym owner, gym, or admin email/mobile as client' });
+      }
+    }
+
     // Run plan lookup, gym lookup, and client ID generation in parallel
     const isCustom = membership?.planType === 'Custom';
     const [plan, gym, clientId] = await Promise.all([
@@ -344,7 +374,7 @@ exports.addClient = async (req, res, next) => {
     // Now create the client
     const client = await Client.create({
       clientId, gymId: gymIdStr, gymName: gymNameStr, personalInfo, password,
-      avatar: personalInfo.name.charAt(0).toUpperCase(),
+      avatar: req.body.avatar || personalInfo.name.charAt(0).toUpperCase(),
       hasPartialPayment: paidAmountVal > 0 && paidAmountVal < planPriceVal,
       paymentStatus: paidAmountVal >= planPriceVal ? 'paid' : (paidAmountVal > 0 ? 'partial' : 'overdue'),
       overdueReminders: {
@@ -442,7 +472,7 @@ exports.getClientById = async (req, res, next) => {
 // @access  Private (Owner)
 exports.updateClientById = async (req, res, next) => {
   try {
-    const { personalInfo = {} } = req.body;
+    const { personalInfo = {}, avatar } = req.body;
     
     // Explicitly allow mobileNo and email to be updated here by the owner
     const ALLOWED_PERSONAL_INFO_FIELDS = [
@@ -472,6 +502,29 @@ exports.updateClientById = async (req, res, next) => {
       if (mobileExists) return res.status(400).json({ success: false, message: 'Phone number already exists', field: 'mobileNo' });
     }
 
+    const Gym = require('../models/Gym');
+    const gymInfo = await Gym.findOne({ gymId: req.user.gymId });
+    if (gymInfo) {
+      const email = cleanData.email?.toLowerCase();
+      const mobile = cleanData.mobileNo;
+      const restrictedEmails = [
+        gymInfo.gymEmail?.toLowerCase(),
+        gymInfo.owner?.email?.toLowerCase(),
+        gymInfo.adminConfig?.email?.toLowerCase()
+      ].filter(Boolean);
+      
+      const restrictedMobiles = [
+        gymInfo.gymContact,
+        gymInfo.owner?.mobile,
+        gymInfo.owner?.phone,
+        gymInfo.adminConfig?.phone
+      ].filter(Boolean);
+
+      if ((email && restrictedEmails.includes(email)) || (mobile && restrictedMobiles.includes(mobile))) {
+         return res.status(400).json({ success: false, message: 'Cannot use gym owner, gym, or admin email/mobile as client' });
+      }
+    }
+
     const client = await Client.findById(clientId);
     if (!client) return res.status(404).json({ success: false, message: 'Client not found' });
 
@@ -483,6 +536,9 @@ exports.updateClientById = async (req, res, next) => {
       }
     }
     client.personalInfo = currentPersonalInfo;
+    if (avatar) {
+      client.avatar = avatar;
+    }
     await client.save();
 
     // Fetch payments to return enriched doc
