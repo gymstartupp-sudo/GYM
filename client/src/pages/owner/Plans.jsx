@@ -3,7 +3,7 @@ import api from '../../utils/api';
 import { toast } from 'react-toastify';
 import Button from '../../components/Button';
 import ConfirmModal from '../../components/ConfirmModal';
-import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, ChevronDown, ChevronUp, Eye, Users, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = '', className = '', disabled = false }) => {
@@ -42,13 +42,14 @@ const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = 
           {options.map((option) => (
             <li
               key={option.value}
-              className={`px-4 py-2.5 cursor-pointer transition-colors border border-transparent rounded-md text-text-primary hover:bg-surface-hover hover:text-primary hover:border-primary ${String(value) === String(option.value) ? 'font-medium bg-surface-hover/50' : ''}`}
+              className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors border border-transparent rounded-md hover:bg-primary hover:text-black ${String(value) === String(option.value) ? 'text-primary font-bold' : 'text-text-primary'}`}
               onClick={() => {
                 onChange(option.value);
                 setIsOpen(false);
               }}
             >
-              {option.label}
+              <span className="truncate">{option.label}</span>
+              {String(value) === String(option.value) && <Check size={16} className="shrink-0 font-extrabold" />}
             </li>
           ))}
         </ul>

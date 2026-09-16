@@ -18,4 +18,10 @@ const checkPermission = (req, res, next) => {
 
 router.post('/send', checkPermission, uploadCampaignMedia.single('media'), customMessageController.sendCampaign);
 
+router.get('/history', checkPermission, customMessageController.getCampaignHistory);
+router.post('/templates', checkPermission, uploadCampaignMedia.single('media'), customMessageController.saveTemplate);
+router.get('/templates', checkPermission, customMessageController.getTemplates);
+router.delete('/templates/:id', checkPermission, customMessageController.deleteTemplate);
+router.put('/templates/:id', checkPermission, uploadCampaignMedia.single('media'), customMessageController.updateTemplate);
+
 module.exports = router;

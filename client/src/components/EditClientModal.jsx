@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 import Button from './Button';
+import CustomDropdown from './CustomDropdown';
 import CustomDatePicker from './CustomDatePicker';
 import { DATE_RULES, getDobYearBounds, validateDob } from '../utils/dateInput';
 import { STATES_LIST, getCitiesForState } from '../utils/indianStatesCities';
+import AvatarUpload from './AvatarUpload';
 
 const phoneRegex = /^[6-9]\d{9}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -117,12 +119,13 @@ const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select
                     onChange(opt);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors ${value === opt
-                    ? 'bg-primary text-black font-bold'
-                    : 'text-text-primary hover:bg-primary hover:text-black'
+                  className={`flex items-center justify-between w-full text-left px-3 py-2 text-xs transition-colors rounded-md hover:bg-primary hover:text-black ${value === opt
+                    ? 'text-primary font-bold'
+                    : 'text-text-primary font-semibold'
                     }`}
                 >
-                  {opt}
+                  <span className="truncate">{opt}</span>
+                  {value === opt && <Check size={14} className="shrink-0 font-extrabold" />}
                 </button>
               ))
             )}
@@ -135,6 +138,7 @@ const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select
 
 export default function EditClientModal({ isOpen, onClose, client, onSuccess }) {
   const [formState, setFormState] = useState(client ? JSON.parse(JSON.stringify(client)) : null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const { minYear: dobMinYear, maxYear: dobMaxYear } = getDobYearBounds();
@@ -236,6 +240,22 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
 
     setSaving(true);
     try {
+      let avatarUrl = null;
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+        try {
+          const uploadRes = await api.post('/upload/avatar', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          avatarUrl = uploadRes.data.data.url;
+        } catch (err) {
+          toast.error('Failed to upload avatar image');
+          setSaving(false);
+          return;
+        }
+      }
+
       const cleanPersonalInfo = {};
       const allowed = [
         'name', 'email', 'mobileNo', 'gender', 'dob', 'address',
@@ -247,8 +267,11 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
         }
       }
 
+      const updatePayload = { personalInfo: cleanPersonalInfo };
+      if (avatarUrl) updatePayload.avatar = avatarUrl;
+
       // We call PUT /client/:id to update the client details as an owner
-      await api.put(`/client/${client._id}`, { personalInfo: cleanPersonalInfo });
+      await api.put(`/client/${client._id}`, updatePayload);
       
       toast.success('Client updated successfully');
       if (onSuccess) onSuccess();
@@ -276,6 +299,12 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto">
+          <div className="md:col-span-2">
+            <AvatarUpload 
+              onAvatarChange={setAvatarFile} 
+              defaultAvatar={formState.avatar && formState.avatar.length > 1 ? formState.avatar : null}
+            />
+          </div>
           <Field label="Client ID" value={formState.clientId} disabled />
           <Field label="Gym ID" value={formState.gymId} disabled />
 
@@ -289,15 +318,16 @@ export default function EditClientModal({ isOpen, onClose, client, onSuccess }) 
 
           <label className="space-y-1 block group">
             <span className="text-xs uppercase tracking-wider text-text-muted group-focus-within:text-primary transition-colors font-medium">Gender *</span>
-            <select
+            <CustomDropdown
               value={formState.personalInfo?.gender || ''}
-              onChange={e => setPersonalInfo('gender', e.target.value)}
-              className="input-field bg-surface-secondary border border-border text-text-primary rounded-xl"
-            >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
+              onChange={val => setPersonalInfo('gender', val)}
+              options={[
+                { label: 'Male', value: 'Male' },
+                { label: 'Female', value: 'Female' },
+                { label: 'Other', value: 'Other' }
+              ]}
+              className="w-full"
+            />
           </label>
 
           {/* owner CAN edit email and phone */}

@@ -4,6 +4,7 @@ import { X, Receipt, Search, ChevronDown, Check, Package, AlertTriangle, Calenda
 import Button from './Button';
 import CustomDatePicker from './CustomDatePicker';
 import { formatDisplayDate, calculateEndDate } from '../utils/membership';
+import CustomDropdown from './CustomDropdown';
 import api from '../utils/api';
 import { DATE_RULES } from '../utils/dateInput';
 
@@ -852,26 +853,25 @@ const PaymentModal = ({
                                 <input
                                     type="number"
                                     readOnly
-                                    className="w-full bg-surface-divider/80 border border-border rounded-xl pl-8 pr-4 py-3 bg-surface-primary text-text-primary font-bold outline-none cursor-not-allowed"
+                                    className="w-full h-11 bg-surface-divider/80 border border-border rounded-xl pl-8 pr-4 py-2.5 bg-surface-primary text-text-primary font-bold outline-none cursor-not-allowed"
                                     value={originalPlanPrice}
                                 />
                             </div>
                         </div>
                         <div>
                             <label className="block text-[10px] text-text-muted uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
-                            <div className="relative">
-                                <select
-                                    className="w-full bg-surface-primary border border-border rounded-xl p-3 pr-10 text-text-primary font-bold focus:border-primary outline-none transition-all appearance-none cursor-pointer"
-                                    value={formData.paymentMethod}
-                                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                                    disabled={isSubmitting}
-                                >
-                                    <option value="cash">Cash</option>
-                                    <option value="upi">UPI</option>
-                                    <option value="card">Card</option>
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" size={16} />
-                            </div>
+                            <CustomDropdown
+                                value={formData.paymentMethod}
+                                onChange={(val) => setFormData({ ...formData, paymentMethod: val })}
+                                disabled={isSubmitting}
+                                options={[
+                                    { label: 'Cash', value: 'cash' },
+                                    { label: 'UPI', value: 'upi' },
+                                    { label: 'Card', value: 'card' }
+                                ]}
+                                className="w-full"
+                                buttonClassName="h-11"
+                            />
                         </div>
                     </div>
 

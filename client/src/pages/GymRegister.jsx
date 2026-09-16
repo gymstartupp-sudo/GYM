@@ -108,10 +108,11 @@ const CustomSelect = ({ options = [], value, onChange, placeholder = 'Select', c
                     onChange(opt);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-primary/10 hover:text-primary ${value === opt ? 'bg-primary/15 text-primary font-bold' : 'text-white'
+                  className={`w-full flex items-center justify-between text-left px-3 py-1.5 text-xs transition-colors hover:bg-primary hover:text-black ${value === opt ? 'text-primary font-bold' : 'text-white font-medium'
                     }`}
                 >
-                  {opt}
+                  <span className="truncate">{opt}</span>
+                  {value === opt && <Check size={14} className="shrink-0 font-extrabold" />}
                 </button>
               ))
             )}

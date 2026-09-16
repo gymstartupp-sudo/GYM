@@ -44,12 +44,11 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', c
         onClick={() => setOpen(prev => !prev)}
         className={`w-full flex items-center justify-between gap-2 px-3.5 py-2 rounded-md border text-sm font-medium transition-all cursor-pointer whitespace-nowrap
           ${isFiltered
-            ? 'bg-primary/10 border-primary/50 text-primary'
+            ? 'bg-primary/10 border-primary/50 text-white'
             : 'bg-surface-divider border-border text-text-secondary hover:border-gray-500 hover:text-text-primary'
           }`}
       >
         <span className="flex items-center gap-1.5 truncate">
-          {selected?.dot && <span className={`w-2 h-2 rounded-full shrink-0 ${selected.dot}`} />}
           {selected?.label || placeholder}
         </span>
         <ChevronDown
@@ -66,14 +65,13 @@ const CustomDropdown = ({ value, onChange, options, placeholder = 'Select...', c
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left transition-colors
+              className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left transition-colors hover:bg-primary hover:text-black
                 ${opt.value === value
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-text-secondary hover:bg-surface-divider hover:text-text-primary'
+                  ? 'text-primary font-bold'
+                  : 'text-text-secondary font-medium'
                 }`}
             >
               <span className="flex items-center gap-2">
-                {opt.dot && <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />}
                 {opt.label}
               </span>
               {opt.value === value && <Check size={13} className="shrink-0 text-primary" />}
@@ -151,7 +149,7 @@ const InactiveClients = () => {
   // Build plan options dynamically from fetched plans
   const planOptions = [
     { value: 'All', label: 'All Plans' },
-    ...plans.map(p => ({ value: p.name, label: p.name }))
+    ...plans.map(p => ({ value: p._id, label: p.planType === 'pt' ? `${p.name} (PT)` : p.name }))
   ];
 
   // Fetch clients whenever either filter changes
@@ -355,7 +353,7 @@ const InactiveClients = () => {
             )}
             {hasPlanFilter && (
               <FilterBadge
-                label={`Plan: ${filterPlan}`}
+                label={`Plan: ${planOptions.find(p => String(p.value) === String(filterPlan))?.label || filterPlan}`}
                 onClear={() => setFilterPlan('All')}
               />
             )}

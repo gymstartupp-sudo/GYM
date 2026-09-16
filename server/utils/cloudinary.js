@@ -193,10 +193,38 @@ const uploadCustomMessageMediaToCloudinary = async (filePath, type = 'image') =>
   }
 };
 
+/**
+ * Uploads a buffer directly to Cloudinary without writing to disk
+ * @param {Buffer} buffer - The image buffer
+ * @param {string} folder - The Cloudinary folder to upload to
+ * @returns {Promise<string>} Secure URL of the uploaded image
+ */
+const uploadBufferToCloudinary = (buffer, folder = 'gym_avatars') => {
+  return new Promise((resolve, reject) => {
+    if (!buffer) {
+      return reject(new Error('Buffer is required for Cloudinary upload'));
+    }
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: 'image', allowed_formats: ['jpg', 'jpeg', 'png', 'webp'] },
+      (error, result) => {
+        if (error) {
+          console.error('Cloudinary buffer upload error:', error);
+          return reject(error);
+        }
+        resolve(result.secure_url);
+      }
+    );
+    
+    uploadStream.end(buffer);
+  });
+};
+
 module.exports = {
   uploadLogoToCloudinary,
   uploadBillToCloudinary,
   uploadPDFToCloudinary,
   uploadIssueAttachmentToCloudinary,
-  uploadCustomMessageMediaToCloudinary
+  uploadCustomMessageMediaToCloudinary,
+  uploadBufferToCloudinary
 };

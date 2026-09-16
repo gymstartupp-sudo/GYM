@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Check } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -10,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import PaymentModal from './PaymentModal';
 import { formatDateToYYYYMMDD } from '../utils/dateInput';
 import CustomDatePicker from './CustomDatePicker';
+import AvatarUpload from './AvatarUpload';
 import {
   DATE_RULES,
   DOB_MESSAGES,
@@ -88,13 +90,14 @@ const CustomSelect = ({ value, onChange, options, placeholder, errorClassName = 
               filteredOptions.map((option) => (
                 <li
                   key={option.value}
-                  className={`px-4 py-2.5 cursor-pointer transition-colors border border-transparent rounded-md text-text-primary hover:bg-surface-hover hover:text-primary hover:border-primary ${String(value) === String(option.value) ? 'font-medium bg-surface-hover/50' : ''}`}
+                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-all duration-150 rounded-md hover:bg-primary hover:text-black ${String(value) === String(option.value) ? 'text-primary font-bold' : 'text-text-primary font-medium'}`}
                   onClick={() => {
                     onChange(option.value);
                     setIsOpen(false);
                   }}
                 >
-                  {option.label}
+                  <span className="truncate">{option.label}</span>
+                  {String(value) === String(option.value) && <Check size={14} className="shrink-0 font-extrabold" />}
                 </li>
               ))
             )}
@@ -213,6 +216,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const [duplicateModal, setDuplicateModal] = useState(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const [restoringClientId, setRestoringClientId] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
 
   const isOwner = mode === 'owner';
 
@@ -394,6 +398,21 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const selfStepTwoDisabled = fetchingGym || selfStepTwoFields.some((field) => !hasValue(field)) || hasErrorsForFields(selfStepTwoFields);
   const ownerSubmitDisabled = fetchingGym || ownerRequiredFields.some((field) => !hasValue(field)) || hasErrorsForFields(ownerRequiredFields);
 
+  const uploadAvatar = async () => {
+    if (!avatarFile) return null;
+    const formData = new FormData();
+    formData.append('avatar', avatarFile);
+    try {
+      const res = await api.post('/upload/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data.data.url;
+    } catch (err) {
+      toast.error('Failed to upload avatar image');
+      throw err;
+    }
+  };
+
   const onSubmit = async (data) => {
     setLoading(true);
 
@@ -440,6 +459,7 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           return;
         } else {
           const payload = {
+            avatar: await uploadAvatar().catch(() => null),
             gymId: data.gymId,
             name: data.name,
             gender: data.gender,
@@ -490,8 +510,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
   const handleFinalSubmit = async (paymentData) => {
     setLoading(true);
     try {
+      const avatarUrl = await uploadAvatar().catch(() => null);
       const payload = {
         ...pendingClientData,
+        ...(avatarUrl && { avatar: avatarUrl }),
         membership: {
           ...pendingClientData.membership,
           startDate: paymentData.startDate
@@ -560,15 +582,15 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           }
           if (data.duplicateFields && Array.isArray(data.duplicateFields)) {
             data.duplicateFields.forEach(f => {
-              if (f === 'email') setError('email', { type: 'manual', message: 'Email already exists' });
-              if (f === 'phone') setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+              if (f === 'email') setError('email', { type: 'manual', message: data.isRestricted ? data.message : 'Email already exists' });
+              if (f === 'phone') setError('mobileNo', { type: 'manual', message: data.isRestricted ? data.message : 'Phone number already exists' });
             });
           } else {
             if (data.message?.toLowerCase().includes('email')) {
-              setError('email', { type: 'manual', message: 'Email already exists' });
+              setError('email', { type: 'manual', message: data.isRestricted ? data.message : 'Email already exists' });
             }
             if (data.message?.toLowerCase().includes('phone') || data.message?.toLowerCase().includes('mobile')) {
-              setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+              setError('mobileNo', { type: 'manual', message: data.isRestricted ? data.message : 'Phone number already exists' });
             }
           }
           return;
@@ -611,15 +633,15 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
           }
           if (data.duplicateFields && Array.isArray(data.duplicateFields)) {
             data.duplicateFields.forEach(f => {
-              if (f === 'email') setError('email', { type: 'manual', message: 'Email already exists' });
-              if (f === 'phone') setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+              if (f === 'email') setError('email', { type: 'manual', message: data.isRestricted ? data.message : 'Email already exists' });
+              if (f === 'phone') setError('mobileNo', { type: 'manual', message: data.isRestricted ? data.message : 'Phone number already exists' });
             });
           } else {
             if (data.message?.toLowerCase().includes('email')) {
-              setError('email', { type: 'manual', message: 'Email already exists' });
+              setError('email', { type: 'manual', message: data.isRestricted ? data.message : 'Email already exists' });
             }
             if (data.message?.toLowerCase().includes('phone') || data.message?.toLowerCase().includes('mobile')) {
-              setError('mobileNo', { type: 'manual', message: 'Phone number already exists' });
+              setError('mobileNo', { type: 'manual', message: data.isRestricted ? data.message : 'Phone number already exists' });
             }
           }
           return;
@@ -705,6 +727,10 @@ const ClientForm = ({ mode = 'self', onSuccess, onCancel, showCancel = false, on
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in">
       <div className="md:col-span-2">
         <h3 className="text-xl text-text-primary my-2 border-b border-border pb-2">Personal Info</h3>
+      </div>
+
+      <div className="md:col-span-2">
+        <AvatarUpload onAvatarChange={setAvatarFile} disabled={isRestoring} />
       </div>
 
       {renderGymContext()}

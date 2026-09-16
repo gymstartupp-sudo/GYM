@@ -203,6 +203,36 @@ exports.checkExists = async (req, res, next) => {
       try {
         const gym = await Gym.findOne({ gymId: gymId.trim().toUpperCase() }).lean();
         if (gym) {
+          const restrictedEmails = [
+            gym.gymEmail?.toLowerCase(),
+            gym.owner?.email?.toLowerCase(),
+            gym.adminConfig?.email?.toLowerCase()
+          ].filter(Boolean);
+          
+          const restrictedMobiles = [
+            gym.gymContact,
+            gym.owner?.mobile,
+            gym.owner?.phone,
+            gym.adminConfig?.phone
+          ].filter(Boolean);
+
+          const emailConflictRestricted = email && restrictedEmails.includes(email.toLowerCase());
+          const phoneConflictRestricted = phone && restrictedMobiles.includes(phone);
+
+          if (emailConflictRestricted || phoneConflictRestricted) {
+            const duplicateFields = [];
+            if (emailConflictRestricted) duplicateFields.push('email');
+            if (phoneConflictRestricted) duplicateFields.push('phone');
+            
+            return res.status(409).json({
+              success: false,
+              message: 'Cannot use gym owner, gym, or admin email/mobile as client',
+              duplicateFields,
+              exists: true,
+              isRestricted: true
+            });
+          }
+
           const conn = await getTenantConnection(gym.dbName);
           const TenantClient = conn.model('Client');
 
@@ -334,7 +364,7 @@ exports.registerClient = async (req, res, next) => {
         status: 'pending',
         requestApproved: false
       },
-      avatar: name.charAt(0).toUpperCase()
+      avatar: req.body.avatar || name.charAt(0).toUpperCase()
     });
 
     res.status(201).json({

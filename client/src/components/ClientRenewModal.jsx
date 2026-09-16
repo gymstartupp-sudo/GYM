@@ -7,6 +7,7 @@ import Button from './Button';
 import CustomDatePicker from './CustomDatePicker';
 import { formatDisplayDate, calculateEndDate } from '../utils/membership';
 import { DATE_RULES } from '../utils/dateInput';
+import CustomDropdown from './CustomDropdown';
 
 const getLatestExpiryDate = (clientDoc) => {
   if (!clientDoc) return null;
@@ -731,51 +732,16 @@ const ClientRenewModal = ({ isOpen, onClose, profile, onSuccess }) => {
                 </div>
                 <div className="relative">
                   <label className="block text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1.5 ml-1">Payment Method</label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowPaymentDropdown(!showPaymentDropdown)}
-                      className="w-full bg-surface-primary border border-border rounded-xl py-3 pl-4 pr-4 text-text-primary font-bold flex items-center justify-between outline-none cursor-pointer text-sm"
-                    >
-                      <span>
-                        {renewalForm.paymentMethod === 'upi' ? 'UPI (Razorpay)' : 'Card (Razorpay)'}
-                      </span>
-                      <ChevronDown size={16} className={`text-gray-500 transition-transform duration-200 ${showPaymentDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {showPaymentDropdown && (
-                      <div className="absolute z-[10001] left-0 right-0 mt-2 bg-surface-divider border border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-                        <button
-                          type="button"
-                          className={`w-full text-left py-2.5 px-4 text-sm font-bold border-b border-gray-700/50 transition-colors flex items-center justify-between group
-                            ${renewalForm.paymentMethod === 'upi'
-                              ? 'bg-primary text-black'
-                              : 'text-gray-200 hover:bg-primary hover:text-black'}`}
-                          onClick={() => {
-                            setRenewalForm({ ...renewalForm, paymentMethod: 'upi' });
-                            setShowPaymentDropdown(false);
-                          }}
-                        >
-                          <span>UPI (Razorpay)</span>
-                          {renewalForm.paymentMethod === 'upi' && <Check size={16} className="text-black" />}
-                        </button>
-                        <button
-                          type="button"
-                          className={`w-full text-left py-2.5 px-4 text-sm font-bold transition-colors flex items-center justify-between group
-                            ${renewalForm.paymentMethod === 'card'
-                              ? 'bg-primary text-black'
-                              : 'text-gray-200 hover:bg-primary hover:text-black'}`}
-                          onClick={() => {
-                            setRenewalForm({ ...renewalForm, paymentMethod: 'card' });
-                            setShowPaymentDropdown(false);
-                          }}
-                        >
-                          <span>Card (Razorpay)</span>
-                          {renewalForm.paymentMethod === 'card' && <Check size={16} className="text-black" />}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <CustomDropdown
+                    value={renewalForm.paymentMethod}
+                    onChange={(val) => setRenewalForm({ ...renewalForm, paymentMethod: val })}
+                    options={[
+                      { label: 'UPI (Razorpay)', value: 'upi' },
+                      { label: 'Card (Razorpay)', value: 'card' }
+                    ]}
+                    className="w-full"
+                    buttonClassName="h-[50px] bg-surface-primary"
+                  />
                   <p className="text-[10px] text-amber-500 font-bold uppercase tracking-tight mt-1.5 ml-1">
                     ⚠️ Online payments are temporarily disabled for test phase.
                   </p>

@@ -29,6 +29,20 @@ exports.addLead = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'This mobile number is already registered to a client.' });
     }
 
+    const Gym = require('../models/Gym');
+    const gymInfo = await Gym.findOne({ gymId: req.user.gymId });
+    if (gymInfo) {
+      const restrictedMobiles = [
+        gymInfo.gymContact,
+        gymInfo.owner?.mobile,
+        gymInfo.owner?.phone,
+        gymInfo.adminConfig?.phone
+      ].filter(Boolean);
+      if (restrictedMobiles.includes(phone)) {
+        return res.status(400).json({ success: false, message: 'Cannot use gym owner, gym, or admin mobile as lead' });
+      }
+    }
+
     // Check if lead already exists in this gym by phone
     const existingLead = await Lead.findOne({ phone });
     if (existingLead) {
@@ -64,6 +78,20 @@ exports.updateLead = async (req, res, next) => {
       const existingClient = await Client.findOne({ 'personalInfo.mobileNo': phone });
       if (existingClient) {
         return res.status(400).json({ success: false, message: 'This mobile number is already registered to a client.' });
+      }
+
+      const Gym = require('../models/Gym');
+      const gymInfo = await Gym.findOne({ gymId: req.user.gymId });
+      if (gymInfo) {
+        const restrictedMobiles = [
+          gymInfo.gymContact,
+          gymInfo.owner?.mobile,
+          gymInfo.owner?.phone,
+          gymInfo.adminConfig?.phone
+        ].filter(Boolean);
+        if (restrictedMobiles.includes(phone)) {
+          return res.status(400).json({ success: false, message: 'Cannot use gym owner, gym, or admin mobile as lead' });
+        }
       }
 
       const existingLead = await Lead.findOne({ phone });
